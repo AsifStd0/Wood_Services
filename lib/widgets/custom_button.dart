@@ -3,12 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_fonts.dart';
 
-// CustomButtonUtils.primary(
-//   onPressed: () {
-//     print('Primary button pressed!');
-//   },
-//   child: const Text('Primary Button'),
-// ),
 enum ButtonType { primary, secondary, outline, text, danger, success, warning }
 
 enum ButtonSize { small, medium, large, extraLarge }
@@ -378,6 +372,46 @@ class CustomButtonUtils {
       elevation: elevation,
       shadowColor: shadowColor,
       borderWidth: borderWidth,
+    );
+  }
+
+  // Add this new method for the sign-up button style
+  static CustomButton signUp({
+    Key? key,
+    required VoidCallback? onPressed,
+    VoidCallback? onLongPress,
+    required Widget child,
+    bool isLoading = false,
+    bool disabled = false,
+    double? width,
+    double? height,
+    EdgeInsetsGeometry? padding,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+    bool hapticFeedback = true,
+    double? elevation,
+    Color? shadowColor,
+  }) {
+    return CustomButton(
+      key: key,
+      onPressed: onPressed,
+      backgroundColor: AppColors.brightOrange,
+      onLongPress: onLongPress,
+      type: ButtonType.primary,
+      size: ButtonSize.extraLarge,
+      isLoading: isLoading,
+      disabled: disabled,
+      width: width ?? double.infinity, // Full width by default
+      height: height ?? 56, // Fixed height similar to the screenshot
+      borderRadius: 12.0, // Rounded corners
+      padding: padding ?? const EdgeInsets.symmetric(vertical: 16),
+      prefixIcon: prefixIcon,
+      suffixIcon: suffixIcon,
+      hapticFeedback: hapticFeedback,
+      elevation: elevation ?? 4.0, // Slightly more elevation
+      shadowColor: shadowColor,
+      borderWidth: 0,
+      child: child, // No border
     );
   }
 

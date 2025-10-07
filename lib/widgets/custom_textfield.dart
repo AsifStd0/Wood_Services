@@ -6,6 +6,7 @@ import 'package:wood_service/core/utils/debouncer.dart';
 
 enum TextFieldType {
   text,
+  name,
   email,
   password,
   confrimpassword,
@@ -38,6 +39,8 @@ class CustomTextFormField extends StatelessWidget {
     this.minLength = 1,
     this.minline = 1,
     this.originalPasswordController,
+    this.focusNode,
+    this.onSubmitted,
   });
 
   final TextEditingController? controller;
@@ -54,16 +57,20 @@ class CustomTextFormField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final bool enabled;
   final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
   final TextInputAction? textInputAction;
   final TextInputType? textInputType;
   final int minLength;
   final int minline;
   final TextEditingController? originalPasswordController;
+  final FocusNode? focusNode;
 
   // Validator with confirm password logic
   String? validator(String? value) {
     if (value == null || value.trim().isEmpty) {
       switch (textFieldType) {
+        case TextFieldType.name:
+          return 'Please enter your name';
         case TextFieldType.email:
           return 'Please enter your email';
         case TextFieldType.password:
@@ -82,6 +89,12 @@ class CustomTextFormField extends StatelessWidget {
     }
 
     switch (textFieldType) {
+      case TextFieldType.name:
+        final regex = RegExp(r'^[A-Za-z ]+$');
+        if (!regex.hasMatch(value)) return 'Name can only contain letters';
+        if (value.trim().length < 3)
+          return 'Name must be at least 3 characters';
+        break;
       case TextFieldType.alphabet:
         final regex = RegExp(r'^[A-Za-z_ .,]+$');
         if (!regex.hasMatch(value)) return 'Invalid data format';
@@ -154,26 +167,32 @@ class CustomTextFormField extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 color: Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: const [
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
                   BoxShadow(
-                    // ! color: Color(0xffD6D2B5),
-                    blurRadius: 0,
-                    offset: Offset(4, 5),
+                    color: AppColors.greyLight.withOpacity(0.5),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: TextFormField(
                 controller: controller,
+                focusNode: focusNode,
                 onChanged: (text) {
                   _debouncer.run(() {
                     onChanged?.call(text);
                     fieldState.didChange(text);
                   });
                 },
+                onFieldSubmitted: onSubmitted,
                 textAlign: textAlign ?? TextAlign.left,
                 obscureText: obscureText ?? false,
-                style: theme.textTheme.bodyMedium,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 15,
+                  color: Colors.black,
+                  fontWeight: FontWeight.w400,
+                ),
                 inputFormatters: inputFormatters ?? [],
                 keyboardType: textInputType ?? keyboardType(textFieldType),
                 textInputAction: textInputAction,
@@ -182,51 +201,45 @@ class CustomTextFormField extends StatelessWidget {
                 maxLength: maxLength,
                 enabled: enabled,
                 decoration: InputDecoration(
+                  isDense: true,
+                  filled: true,
+                  fillColor: Colors.white,
                   contentPadding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 12,
+                    vertical: 18,
+                    horizontal: 8,
                   ),
-                  floatingLabelBehavior: FloatingLabelBehavior.always,
                   hintText: hintText,
                   hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: AppColors.textSecondary.withOpacity(0.7),
+                    fontSize: 16,
                   ),
-                  enabled: enabled,
+                  // Borders
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(
-                      color: AppColors.greyLight,
-                      width: 2,
-                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.grey, width: 0.5),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: theme.primaryColor, width: 2),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.grey, width: 0.5),
                   ),
                   errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
                       color: AppColors.error,
-                      width: 2,
+                      width: 1.0,
                     ),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
                       color: AppColors.error,
-                      width: 2,
+                      width: 1.5,
                     ),
                   ),
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: const BorderSide(
-                      color: AppColors.greyLight,
-                      width: 2,
-                    ),
-                  ),
+                  // Prefix & Suffix icons
                   prefixIcon: prefixIcon != null
                       ? Padding(
-                          padding: const EdgeInsets.only(left: 12, right: 8),
+                          padding: const EdgeInsets.only(left: 16, right: 12),
                           child: prefixIcon,
                         )
                       : null,
@@ -236,7 +249,7 @@ class CustomTextFormField extends StatelessWidget {
                   ),
                   suffixIcon: suffixIcon != null
                       ? Padding(
-                          padding: const EdgeInsets.only(right: 12),
+                          padding: const EdgeInsets.only(right: 16, left: 12),
                           child: suffixIcon,
                         )
                       : null,
@@ -244,23 +257,20 @@ class CustomTextFormField extends StatelessWidget {
                     minHeight: 24,
                     minWidth: 24,
                   ),
-                  helperMaxLines: helperMaxLines,
-                  helperText: helperText,
-                  helperStyle: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.error,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  errorStyle: const TextStyle(height: 0),
-                  border: InputBorder.none,
                 ),
               ),
             ),
             if (fieldState.errorText != null)
               Padding(
-                padding: const EdgeInsets.only(left: 12, top: 6),
+                padding: const EdgeInsets.only(left: 16, top: 8),
                 child: Text(
                   fieldState.errorText!,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppColors.error,
+                    fontSize: 12,
                   ),
                 ),
               ),

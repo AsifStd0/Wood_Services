@@ -25,7 +25,7 @@ class AppColors {
 
   // Background colors
   static const Color background = Color(0xFFFAFAFA);
-  static const Color backgroundDark = Color(0xFF303030);
+  // static const Color backgroundDark = Color(0xFF303030);
 
   // Text colors
   static const Color textPrimary = Color(0xFF212121);
@@ -41,4 +41,9 @@ class AppColors {
   // Border colors
   static const Color border = Color(0xFFE0E0E0);
   static const Color borderDark = Color(0xFF424242);
+
+  // ! *****
+  static const brightOrange = Color(0xffFA8232);
+  static const socialOrange = Color(0xffF4F8FF);
+  static const chairBackColor = Color(0xffF4F8FF);
 }

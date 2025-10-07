@@ -5,21 +5,27 @@ import 'app_styles.dart';
 
 class AppTheme {
   static final ThemeData lightTheme = ThemeData(
-    primaryColor: AppColors.primary,
-    scaffoldBackgroundColor: AppColors.background,
+    primaryColor: AppColors.white,
+    // scaffoldBackgroundColor: AppColors.background,
+    scaffoldBackgroundColor: AppColors.white, // 👈 make screen background white
+
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.primary,
-      titleTextStyle: AppStyles.appBarTitle,
-      iconTheme: const IconThemeData(color: AppColors.white),
+      backgroundColor: AppColors.white,
+      // titleTextStyle: AppStyles.appBarTitle,
+      // iconTheme: const IconThemeData(color: AppColors.white),
     ),
-    textTheme: TextTheme(
-      displayLarge: AppStyles.heading1,
-      displayMedium: AppStyles.heading2,
-      bodyLarge: AppStyles.bodyLarge,
-      bodyMedium: AppStyles.bodyMedium,
+    textTheme: const TextTheme(
+      displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+      displayMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+      displaySmall: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      headlineMedium: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+      headlineSmall: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+      bodyLarge: TextStyle(fontSize: 16),
+      bodyMedium: TextStyle(fontSize: 14),
     ),
     buttonTheme: ButtonThemeData(
-      buttonColor: AppColors.primary,
+      buttonColor: AppColors.white,
       textTheme: ButtonTextTheme.primary,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ),
@@ -30,7 +36,7 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.primary),
+        borderSide: const BorderSide(color: AppColors.white),
       ),
       filled: true,
       fillColor: AppColors.white,
@@ -38,17 +44,22 @@ class AppTheme {
   );
 
   static final ThemeData darkTheme = ThemeData(
-    primaryColor: AppColors.primaryDark,
-    scaffoldBackgroundColor: AppColors.backgroundDark,
+    primaryColor: AppColors.white,
+    scaffoldBackgroundColor: AppColors.white,
+
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.primaryDark,
-      titleTextStyle: AppStyles.appBarTitle.copyWith(color: AppColors.white),
+      backgroundColor: AppColors.white,
+      // titleTextStyle: AppStyles.appBarTitle.copyWith(color: AppColors.white),
     ),
-    textTheme: TextTheme(
-      displayLarge: AppStyles.heading1.copyWith(color: AppColors.white),
-      displayMedium: AppStyles.heading2.copyWith(color: AppColors.white),
-      bodyLarge: AppStyles.bodyLarge.copyWith(color: AppColors.white),
-      bodyMedium: AppStyles.bodyMedium.copyWith(color: AppColors.white),
+    textTheme: const TextTheme(
+      displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+      displayMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+      displaySmall: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      headlineMedium: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+      headlineSmall: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+      bodyLarge: TextStyle(fontSize: 16),
+      bodyMedium: TextStyle(fontSize: 14),
     ),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
@@ -57,7 +68,7 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.primary),
+        borderSide: const BorderSide(color: AppColors.white),
       ),
       filled: true,
       fillColor: AppColors.greyDark,
