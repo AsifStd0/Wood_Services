@@ -334,6 +334,155 @@ class CustomButton extends StatelessWidget {
 
 // Utility class with static methods for common button types
 class CustomButtonUtils {
+  // "I'm Buying" and "I'm Selling" buttons
+  static CustomButton categorySelection({
+    Key? key,
+    required VoidCallback? onPressed,
+    required Widget child,
+    Color color = AppColors.blueLight,
+    bool isLoading = false,
+    bool disabled = false,
+    double? width,
+    bool hapticFeedback = true,
+  }) {
+    return CustomButton(
+      key: key,
+      onPressed: onPressed,
+      child: child,
+      type: ButtonType.outline,
+      size: ButtonSize.large,
+      isLoading: isLoading,
+      disabled: disabled,
+      width: width ?? double.infinity,
+      height: 60, // Tall height for category buttons
+      borderRadius: 16.0, // More rounded corners
+      // padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      hapticFeedback: hapticFeedback,
+      // elevation: 2.0,
+      borderWidth: 2.0, // Thicker border
+      backgroundColor: color,
+    );
+  }
+
+  // "Google" button
+  static CustomButton googleSignIn({
+    Key? key,
+    required VoidCallback? onPressed,
+    bool isLoading = false,
+    bool disabled = false,
+    double? width,
+    bool hapticFeedback = true,
+  }) {
+    return CustomButton(
+      key: key,
+      onPressed: onPressed,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.g_mobiledata, size: 24), // Placeholder icon
+          const SizedBox(width: 12),
+          Text(
+            'Google',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          ),
+        ],
+      ),
+      type: ButtonType.outline,
+      size: ButtonSize.large,
+      isLoading: isLoading,
+      disabled: disabled,
+      width: width ?? double.infinity,
+      height: 56,
+      borderRadius: 12.0,
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      hapticFeedback: hapticFeedback,
+      borderWidth: 1.5,
+      borderColor: AppColors.greyDim,
+      backgroundColor: AppColors.white,
+
+      foregroundColor: Colors.black87,
+    );
+  }
+
+  // "Apple" button
+  static CustomButton appleSignIn({
+    Key? key,
+    required VoidCallback? onPressed,
+    bool isLoading = false,
+    bool disabled = false,
+    double? width,
+    bool hapticFeedback = true,
+  }) {
+    return CustomButton(
+      key: key,
+      onPressed: onPressed,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.apple, size: 24), // Apple icon
+          const SizedBox(width: 12),
+          Text(
+            'Apple',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              color: Colors.black,
+            ),
+          ),
+        ],
+      ),
+      type: ButtonType.primary,
+      size: ButtonSize.large,
+      isLoading: isLoading,
+      disabled: disabled,
+      width: width ?? double.infinity,
+      height: 56,
+      borderRadius: 12.0,
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      hapticFeedback: hapticFeedback,
+      elevation: 0,
+      borderWidth: 1.5,
+      borderColor: AppColors.greyDim,
+      backgroundColor: AppColors.white,
+
+      foregroundColor: AppColors.black,
+    );
+  }
+
+  // Login button (for the Password login)
+  static CustomButton login({
+    Key? key,
+    required String title,
+    Color? backgroundColor,
+    required VoidCallback? onPressed,
+    bool isLoading = false,
+    bool disabled = false,
+    double? width,
+    bool hapticFeedback = true,
+    EdgeInsetsGeometry? padding,
+  }) {
+    return CustomButton(
+      key: key,
+      onPressed: onPressed,
+      child: Text(
+        title,
+        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+      ),
+      type: ButtonType.primary,
+      size: ButtonSize.large,
+      isLoading: isLoading,
+      disabled: disabled,
+      width: width ?? double.infinity,
+      height: 50,
+      backgroundColor: backgroundColor ?? AppColors.buttonColor,
+      borderRadius: 15.0,
+      padding: padding ?? EdgeInsets.symmetric(vertical: 16),
+      hapticFeedback: hapticFeedback,
+      elevation: 4.0,
+      borderWidth: 0,
+    );
+  }
+
   static CustomButton primary({
     Key? key,
     required VoidCallback? onPressed,
@@ -352,9 +501,11 @@ class CustomButtonUtils {
     double? elevation,
     Color? shadowColor,
     double borderWidth = 1.0,
+    Color? backgroundColor = AppColors.buttonColor,
   }) {
     return CustomButton(
       key: key,
+
       onPressed: onPressed,
       onLongPress: onLongPress,
       child: child,
@@ -366,52 +517,13 @@ class CustomButtonUtils {
       height: height,
       borderRadius: borderRadius,
       padding: padding,
+      backgroundColor: backgroundColor,
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       hapticFeedback: hapticFeedback,
       elevation: elevation,
       shadowColor: shadowColor,
       borderWidth: borderWidth,
-    );
-  }
-
-  // Add this new method for the sign-up button style
-  static CustomButton signUp({
-    Key? key,
-    required VoidCallback? onPressed,
-    VoidCallback? onLongPress,
-    required Widget child,
-    bool isLoading = false,
-    bool disabled = false,
-    double? width,
-    double? height,
-    EdgeInsetsGeometry? padding,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    bool hapticFeedback = true,
-    double? elevation,
-    Color? shadowColor,
-  }) {
-    return CustomButton(
-      key: key,
-      onPressed: onPressed,
-      backgroundColor: AppColors.brightOrange,
-      onLongPress: onLongPress,
-      type: ButtonType.primary,
-      size: ButtonSize.extraLarge,
-      isLoading: isLoading,
-      disabled: disabled,
-      width: width ?? double.infinity, // Full width by default
-      height: height ?? 56, // Fixed height similar to the screenshot
-      borderRadius: 12.0, // Rounded corners
-      padding: padding ?? const EdgeInsets.symmetric(vertical: 16),
-      prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon,
-      hapticFeedback: hapticFeedback,
-      elevation: elevation ?? 4.0, // Slightly more elevation
-      shadowColor: shadowColor,
-      borderWidth: 0,
-      child: child, // No border
     );
   }
 

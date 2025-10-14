@@ -1,99 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:wood_service/core/constant/image_paths.dart';
-import 'package:wood_service/core/theme/app_test_style.dart';
+import 'package:wood_service/core/theme/app_colors.dart';
+import 'package:wood_service/widgets/custom_button.dart';
+import 'package:wood_service/widgets/custom_text_style.dart';
 
-class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key});
+class SelectionScreen extends StatelessWidget {
+  const SelectionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // Bottom image
-          GestureDetector(
-            onTap: () {
-              context.push('/slides');
-            },
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Image.asset(AssetImages.blackChair, fit: BoxFit.cover),
-            ),
-          ),
-
-          // Center content slightly above center
-          Align(
-            alignment: const Alignment(0, -0.3), // 👈 moves it a bit up
+      body: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(AssetImages.simpleSofa, width: 60, height: 60),
-                const SizedBox(height: 12),
-                CustomText(
-                  'FURNI EXPO',
-                  type: CustomTextType.mainheadingLarge,
-                  fontSize: 36,
+                const SizedBox(height: 80),
+                Text('FurniFind', style: AppCustomTextStyle.appTitle(context)),
+                const SizedBox(height: 10),
+                Text(
+                  'Find Perfect Furniture',
+                  style: AppCustomTextStyle.appSubtitle(context),
                 ),
+                const SizedBox(height: 40),
+                CustomButtonUtils.categorySelection(
+                  color: AppColors.bluePrimary,
+                  onPressed: () {
+                    context.push('/login');
+                  },
+                  child: Text(
+                    "I'm Buying",
+                    style: AppCustomTextStyle.buttonText(context),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                CustomButtonUtils.categorySelection(
+                  onPressed: () {
+                    context.push('/seller_signup');
+                  },
+                  child: Text(
+                    "I'm Selling",
+                    style: AppCustomTextStyle.buttonText(
+                      context,
+                    ).copyWith(color: AppColors.bluePrimary),
+                  ),
+                ),
+                const SizedBox(height: 50),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 }
-
-
-
-// import 'package:flutter/material.dart';
-// import 'package:go_router/go_router.dart';
-// import 'package:wood_service/core/constant/image_paths.dart';
-// import 'package:wood_service/core/theme/app_test_style.dart';
-
-// class SelectionScreen extends StatelessWidget {
-//   const SelectionScreen({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: Stack(
-//         children: [
-//           // Bottom image
-//           GestureDetector(
-//             onTap: () {
-//               context.push('/slides');
-//             },
-//             child: Align(
-//               alignment: Alignment.bottomCenter,
-//               child: Image.asset(AssetImages.blackChair, fit: BoxFit.cover),
-//             ),
-//           ),
-
-//           // Center content slightly above center
-//           Align(
-//             alignment: const Alignment(0, -0.3), // 👈 moves it a bit up
-//             child: Column(
-//               mainAxisSize: MainAxisSize.min,
-//               children: [
-//                 Image.asset(AssetImages.simpleSofa, width: 60, height: 60),
-//                 const SizedBox(height: 12),
-//                 CustomText(
-//                   'FurniFind',
-//                   type: CustomTextType.mainheadingLarge,
-//                   fontSize: 36,
-//                 ),
-//                 CustomText(
-//                   'Furni Perfect Furniture',
-//                   type: CustomTextType.mainheadingLarge,
-//                   fontSize: 36,
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-

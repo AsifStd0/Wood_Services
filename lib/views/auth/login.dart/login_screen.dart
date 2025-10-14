@@ -1,143 +1,156 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
-import 'package:wood_service/core/theme/app_icons.dart';
-import 'package:wood_service/views/auth/login.dart/auth_provider.dart';
+import 'package:wood_service/core/theme/app_test_style.dart';
+import 'package:wood_service/widgets/auth_button_txt.dart';
 import 'package:wood_service/widgets/custom_button.dart';
-import 'package:wood_service/widgets/custom_data.dart';
-import 'package:wood_service/widgets/custom_text.dart';
+import 'package:wood_service/widgets/custom_text_style.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
-import 'package:wood_service/widgets/social_button.dart';
 
+//  WidgetsBinding.instance
+//                                       .addPostFrameCallback(
+//                                         (_) => context.push('/otp'),
+//                                       );
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            /// Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 80, bottom: 5),
+                        child: Text(
+                          'Welcome Back',
+                          style: AppCustomTextStyle.appTitle(context),
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.center,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: CustomText(
+                          'Login to continue your future journey',
+                        ),
+                      ),
+                    ),
+                    CustomTextFormField.email(
+                      controller: _emailController,
+                      hintText: 'Email Address',
+                      onChanged: (value) {
+                        print('Email: $value');
+                      },
+                      focusNode: _emailFocusNode,
+                    ),
+                    const SizedBox(height: 16),
+                    CustomTextFormField.password(
+                      controller: _passwordController,
+                      hintText: 'Password',
+                      onChanged: (value) {
+                        print('Password: $value');
+                      },
+                      focusNode: _passwordFocusNode,
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: CustomButtonUtils.text(
+                        onPressed: () {},
+                        child: Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                            color: AppColors.buttonColor.withOpacity(0.5),
+                          ),
+                        ),
+                      ),
+                    ),
+                    CustomButtonUtils.login(title: 'Login', onPressed: () {}),
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(child: Divider(color: AppColors.grey)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'Or continue with',
+                            style: TextStyle(
+                              color: AppColors.grey,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        Expanded(child: Divider(color: AppColors.grey)),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: CustomButtonUtils.googleSignIn(
+                            onPressed: () {},
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: CustomButtonUtils.appleSignIn(
+                            onPressed: () {},
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ),
+
+            /// Always at bottom
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: AuthBottomText(
+                questionText: "Don't have an account? ",
+                actionText: "Sign Up",
+                onPressed: () {
+                  print('object');
+                  WidgetsBinding.instance.addPostFrameCallback(
+                    (_) => context.push('/signup'),
+                  );
+                  // Navigator.pushNamed(context, '/signup');
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppColors.chairBackColor,
-        toolbarHeight: 10,
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: Column(
-            children: [
-              // 📌 Scrollable part
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        WelcomeFurni(onBack: () {}),
-                        const SizedBox(height: 20),
-
-                        CustomTextFormField(
-                          controller: _emailController,
-                          textFieldType: TextFieldType.email,
-                          hintText: 'Email',
-                          prefixIcon: AppIcons.email,
-                        ),
-                        const SizedBox(height: 20),
-
-                        CustomTextFormField(
-                          controller: _passwordController,
-                          textFieldType: TextFieldType.password,
-                          hintText: 'Password',
-                          obscureText: true,
-                          prefixIcon: AppIcons.lock,
-                        ),
-                        const SizedBox(height: 16),
-
-                        RememberForgot(
-                          initialRememberValue: false,
-                          onRememberChanged: (value) {},
-                          onForgotPassword: () {
-                            Navigator.pushNamed(context, '/forgot-password');
-                          },
-                          rememberText: "Remember me",
-                          forgotText: "Forgot Password?",
-                          rememberTextColor: Colors.grey,
-                          forgotTextColor: Colors.orange,
-                          textSize: 14,
-                        ),
-                        const SizedBox(height: 24),
-
-                        CustomButtonUtils.signUp(
-                          onPressed: authProvider.isLoading
-                              ? null
-                              : () {
-                                  context.push('/home');
-                                  // if (_formKey.currentState!.validate()) {
-                                  //   authProvider.login(
-                                  //     _emailController.text,
-                                  //     _passwordController.text,
-                                  //   );
-                                  // }
-                                },
-                          isLoading: authProvider.isLoading,
-                          width: double.infinity,
-                          child: const Text('Login'),
-                        ),
-                        const SizedBox(height: 20),
-
-                        Row(
-                          children: [
-                            Expanded(child: Divider(color: Colors.grey[300])),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              child: Text(
-                                'or Login With',
-                                style: TextStyle(color: Colors.grey[600]),
-                              ),
-                            ),
-                            Expanded(child: Divider(color: Colors.grey[300])),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-
-                        SocialButtons(),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // 📌 Fixed footer at bottom
-              AuthFooterText(
-                questionText: "Don't have an account? ",
-                actionText: "Register",
-                onTap: () {
-                  context.push('/signup');
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

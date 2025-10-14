@@ -1,276 +1,203 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
-import 'package:wood_service/core/theme/app_icons.dart';
-import 'package:wood_service/views/auth/login.dart/auth_provider.dart';
+import 'package:wood_service/core/theme/app_test_style.dart';
+import 'package:wood_service/widgets/auth_button_txt.dart';
 import 'package:wood_service/widgets/custom_button.dart';
-import 'package:wood_service/widgets/custom_data.dart';
-import 'package:wood_service/widgets/custom_text.dart';
+import 'package:wood_service/widgets/custom_text_style.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
-import 'package:wood_service/widgets/social_button.dart';
 
-class SignupScreen extends StatefulWidget {
-  const SignupScreen({super.key});
-
+class SignUpScreen extends StatefulWidget {
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+class _SignUpScreenState extends State<SignUpScreen> {
+  final TextEditingController _fullNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
+  final FocusNode _fullNameFocusNode = FocusNode();
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
+  final FocusNode _locationFocusNode = FocusNode();
+
+  bool _agreeToTerms = false;
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppColors.chairBackColor,
-        toolbarHeight: 10,
-      ),
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: Column(
-            children: [
-              // 📌 Top scrollable form content
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        WelcomeFurni(onBack: () => Navigator.pop(context)),
-                        const SizedBox(height: 20),
-
-                        CustomTextFormField(
-                          controller: _nameController,
-                          textFieldType: TextFieldType.name,
-                          hintText: 'Name',
-                          prefixIcon: AppIcons.person,
-                        ),
-                        const SizedBox(height: 20),
-
-                        CustomTextFormField(
-                          controller: _emailController,
-                          textFieldType: TextFieldType.email,
-                          hintText: 'Email',
-                          prefixIcon: AppIcons.email,
-                        ),
-                        const SizedBox(height: 20),
-
-                        CustomTextFormField(
-                          controller: _passwordController,
-                          textFieldType: TextFieldType.password,
-                          hintText: 'Password',
-                          obscureText: true,
-                          prefixIcon: AppIcons.lock,
-                        ),
-                        const SizedBox(height: 20),
-
-                        CustomTextFormField(
-                          controller: _confirmPasswordController,
-                          textFieldType: TextFieldType.confrimpassword,
-                          hintText: 'Confirm Password',
-                          obscureText: true,
-                          prefixIcon: AppIcons.lock,
-                        ),
-                        const SizedBox(height: 24),
-
-                        CustomButtonUtils.signUp(
-                          onPressed: authProvider.isLoading
-                              ? null
-                              : () {
-                                  if (_formKey.currentState!.validate()) {
-                                    if (_passwordController.text !=
-                                        _confirmPasswordController.text) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Passwords do not match!',
-                                          ),
-                                        ),
-                                      );
-                                      return;
-                                    }
-
-                                    print('object data is here ....');
-                                    WidgetsBinding.instance
-                                        .addPostFrameCallback(
-                                          (_) => context.push('/otp'),
-                                        );
-                                  }
-                                },
-                          isLoading: authProvider.isLoading,
-                          width: double.infinity,
-                          child: const Text('Sign Up'),
-                        ),
-                        const SizedBox(height: 20),
-
-                        Row(
-                          children: [
-                            Expanded(child: Divider(color: Colors.grey[300])),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              child: Text(
-                                'or Sign up with',
-                                style: TextStyle(color: Colors.grey[600]),
-                              ),
-                            ),
-                            Expanded(child: Divider(color: Colors.grey[300])),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-
-                        SocialButtons(),
-                      ],
+        child: Column(
+          children: [
+            /// Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 70, bottom: 20),
+                      child: Text(
+                        'Create Account',
+                        style: AppCustomTextStyle.appTitle(context),
+                      ),
                     ),
-                  ),
+
+                    CustomText('Full Name'),
+                    // Full Name Field
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 8),
+                      child: CustomTextFormField(
+                        controller: _fullNameController,
+                        hintText: 'Enter Your Full Name',
+                        onChanged: (value) {
+                          print('Full Name: $value');
+                        },
+                        focusNode: _fullNameFocusNode,
+                      ),
+                    ),
+
+                    // Email Field
+                    CustomText('Email'),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 8),
+                      child: CustomTextFormField.email(
+                        controller: _emailController,
+                        hintText: 'Enter Your Email',
+                        onChanged: (value) {
+                          print('Email: $value');
+                        },
+                        focusNode: _emailFocusNode,
+                      ),
+                    ),
+
+                    // Password Field
+                    CustomText('Password'),
+
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 8),
+                      child: CustomTextFormField.password(
+                        controller: _passwordController,
+                        hintText: 'Enter Your Password',
+                        onChanged: (value) {
+                          print('Password: $value');
+                        },
+                        focusNode: _passwordFocusNode,
+                      ),
+                    ),
+
+                    // Location Field
+                    CustomText('Location'),
+
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 8),
+                      child: CustomTextFormField(
+                        controller: _locationController,
+                        hintText: 'Enter Your Location',
+                        onChanged: (value) {
+                          print('Location: $value');
+                        },
+                        focusNode: _locationFocusNode,
+                      ),
+                    ),
+
+                    // Terms and Conditions Radio Button with custom styling
+                    agreeCondition(),
+                    const SizedBox(height: 20),
+
+                    // Sign Up Button
+                    CustomButtonUtils.login(title: 'Login', onPressed: () {}),
+                  ],
                 ),
               ),
+            ),
 
-              // 📌 Fixed footer at bottom
-              AuthFooterText(
+            /// Always at bottom
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: AuthBottomText(
                 questionText: "Already have an account? ",
-                actionText: "Login",
-                onTap: () {
-                  context.push('/login');
+                actionText: "Sign In",
+                onPressed: () {
+                  Navigator.pushNamed(context, '/login');
                 },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
+
+  Row agreeCondition() {
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _agreeToTerms = !_agreeToTerms;
+            });
+          },
+          child: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: _agreeToTerms ? AppColors.buttonColor : Colors.grey,
+                width: 2,
+              ),
+              color: _agreeToTerms ? AppColors.buttonColor : Colors.transparent,
+            ),
+            child: _agreeToTerms
+                ? Icon(Icons.check, size: 16, color: Colors.white)
+                : null,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Wrap(
+            children: [
+              Text(
+                'I agree to ',
+                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              ),
+              GestureDetector(
+                onTap: () {
+                  // Navigate to terms and conditions
+                  print('Terms and Conditions tapped');
+                },
+                child: Text(
+                  'Terms and Conditions',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.buttonColor,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _locationController.dispose();
+    _fullNameFocusNode.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    _locationFocusNode.dispose();
+    super.dispose();
+  }
 }
-
-// import 'package:flutter/material.dart';
-// import '../../../app/index.dart';
-
-// class SignUpScreen extends StatelessWidget {
-//   const SignUpScreen({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final provider = context.watch<RegisterProvider>();
-//     final theme = Theme.of(context);
-
-//     return Scaffold(
-//       appBar: AppBar(title: const Text('Create Account')),
-//       body: Padding(
-//         padding: const EdgeInsets.all(20),
-//         child: ListView(
-//           children: [
-//             // Profile Image
-//             GestureDetector(
-//               onTap: () => provider.showImageSourceDialog(context),
-//               child: CircleAvatar(
-//                 radius: 50,
-//                 backgroundColor: Colors.grey[200],
-//                 backgroundImage: provider.profileImage != null
-//                     ? FileImage(provider.profileImage!)
-//                     : null,
-//                 child: provider.profileImage == null
-//                     ? const Icon(Icons.camera_alt, size: 40, color: Colors.grey)
-//                     : null,
-//               ),
-//             ),
-
-//             const SizedBox(height: 20),
-
-//             CustomTextFormField(
-//               hintText: 'Enter your full name',
-//               prefixIcon: Icon(Icons.person, color: theme.primaryColor),
-//               onChanged: provider.updateName,
-//             ),
-//             const SizedBox(height: 20),
-
-//             // Email Field
-//             CustomTextFormField(
-//               hintText: 'Enter your email',
-//               prefixIcon: Icon(Icons.email, color: theme.primaryColor),
-//               onChanged: provider.updateEmail,
-//             ),
-
-//             const SizedBox(height: 15),
-
-//             CustomTextFormField(
-//               hintText: 'Password',
-//               prefixIcon: Icon(
-//                 Icons.lock_open_outlined,
-//                 color: theme.primaryColor,
-//               ),
-//               onChanged: provider.updatePassword,
-//               obscureText: true,
-//             ),
-
-//             const SizedBox(height: 15),
-
-//             CustomTextFormField(
-//               hintText: 'Confirm Password',
-//               prefixIcon: Icon(Icons.lock_outline, color: theme.primaryColor),
-//               onChanged: provider.updateConfirmPassword,
-//               obscureText: true,
-//             ),
-//             const SizedBox(height: 15),
-
-//             // Terms Checkbox
-//             Row(
-//               children: [
-//                 Checkbox(
-//                   value: provider.termsAccepted,
-//                   onChanged: provider.toggleTerms,
-//                 ),
-//                 const Text('I agree to Terms and Conditions'),
-//               ],
-//             ),
-
-//             const SizedBox(height: 20),
-
-//             // Register Button
-//             ElevatedButton(
-//               onPressed: provider.isLoading
-//                   ? null
-//                   : () async {
-//                       final result = await provider.register();
-//                       ScaffoldMessenger.of(context).showSnackBar(
-//                         SnackBar(content: Text(result['message'])),
-//                       );
-//                       if (result['success'] == true) {
-//                         Navigator.pop(context);
-//                       }
-//                     },
-//               child: provider.isLoading
-//                   ? const CircularProgressIndicator()
-//                   : const Text('Create Account'),
-//             ),
-
-//             TextButton(
-//               onPressed: () => Navigator.pop(context),
-//               child: const Text('Already have an account? Login'),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }

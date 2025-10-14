@@ -41,6 +41,7 @@ class CustomTextFormField extends StatelessWidget {
     this.originalPasswordController,
     this.focusNode,
     this.onSubmitted,
+    this.fillcolor,
   });
 
   final TextEditingController? controller;
@@ -56,6 +57,8 @@ class CustomTextFormField extends StatelessWidget {
   final TextAlign? textAlign;
   final List<TextInputFormatter>? inputFormatters;
   final bool enabled;
+
+  final Color? fillcolor;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final TextInputAction? textInputAction;
@@ -165,6 +168,7 @@ class CustomTextFormField extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
+              // height: 50,
               decoration: BoxDecoration(
                 color: Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
@@ -203,10 +207,10 @@ class CustomTextFormField extends StatelessWidget {
                 decoration: InputDecoration(
                   isDense: true,
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: fillcolor ?? AppColors.white,
                   contentPadding: const EdgeInsets.symmetric(
                     vertical: 18,
-                    horizontal: 8,
+                    horizontal: 18,
                   ),
                   hintText: hintText,
                   hintStyle: theme.textTheme.bodyMedium?.copyWith(
@@ -215,22 +219,28 @@ class CustomTextFormField extends StatelessWidget {
                   ),
                   // Borders
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppColors.grey, width: 0.5),
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(
+                      color: AppColors.grey.withOpacity(0.6),
+                      width: 1,
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppColors.grey, width: 0.5),
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(
+                      color: AppColors.grey.withOpacity(0.6),
+                      width: 1,
+                    ),
                   ),
                   errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(20),
                     borderSide: const BorderSide(
                       color: AppColors.error,
                       width: 1.0,
                     ),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(20),
                     borderSide: const BorderSide(
                       color: AppColors.error,
                       width: 1.5,
@@ -257,9 +267,7 @@ class CustomTextFormField extends StatelessWidget {
                     minHeight: 24,
                     minWidth: 24,
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  border: InputBorder.none,
                 ),
               ),
             ),
@@ -277,6 +285,163 @@ class CustomTextFormField extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  // Password field with visibility toggle
+  static CustomTextFormField password({
+    Key? key,
+    TextEditingController? controller,
+    String? hintText = 'Password',
+    ValueChanged<String>? onChanged,
+    FocusNode? focusNode,
+    ValueChanged<String>? onSubmitted,
+    bool enabled = true,
+  }) {
+    return CustomTextFormField(
+      key: key,
+      controller: controller,
+      textFieldType: TextFieldType.password,
+      hintText: hintText,
+      onChanged: onChanged,
+      focusNode: focusNode,
+      onSubmitted: onSubmitted,
+      enabled: enabled,
+      obscureText: true,
+      prefixIcon: Icon(Icons.lock_outline, color: AppColors.grey, size: 20),
+    );
+  }
+
+  // Email field
+  static CustomTextFormField email({
+    Key? key,
+    TextEditingController? controller,
+    String? hintText = 'Email',
+    ValueChanged<String>? onChanged,
+    FocusNode? focusNode,
+    ValueChanged<String>? onSubmitted,
+    bool enabled = true,
+  }) {
+    return CustomTextFormField(
+      key: key,
+      controller: controller,
+      textFieldType: TextFieldType.email,
+      hintText: hintText,
+      onChanged: onChanged,
+      focusNode: focusNode,
+      onSubmitted: onSubmitted,
+      enabled: enabled,
+
+      prefixIcon: Icon(
+        Icons.email_outlined,
+        color: AppColors.color7a808a,
+        size: 20,
+      ),
+    );
+  }
+
+  // Phone number field
+  static CustomTextFormField phone({
+    Key? key,
+    TextEditingController? controller,
+    String? hintText = 'Phone Number',
+    ValueChanged<String>? onChanged,
+    FocusNode? focusNode,
+    ValueChanged<String>? onSubmitted,
+    bool enabled = true,
+  }) {
+    return CustomTextFormField(
+      key: key,
+      controller: controller,
+      textFieldType: TextFieldType.phoneNumber,
+      hintText: hintText,
+      onChanged: onChanged,
+      focusNode: focusNode,
+      onSubmitted: onSubmitted,
+      enabled: enabled,
+      prefixIcon: Icon(
+        Icons.phone_outlined,
+        color: AppColors.color7a808a,
+        size: 20,
+      ),
+    );
+  }
+
+  // Name field
+  static CustomTextFormField name({
+    Key? key,
+    TextEditingController? controller,
+    String? hintText = 'Full Name',
+    ValueChanged<String>? onChanged,
+    FocusNode? focusNode,
+    ValueChanged<String>? onSubmitted,
+    bool enabled = true,
+  }) {
+    return CustomTextFormField(
+      key: key,
+      controller: controller,
+      textFieldType: TextFieldType.name,
+      hintText: hintText,
+      onChanged: onChanged,
+      focusNode: focusNode,
+      onSubmitted: onSubmitted,
+      enabled: enabled,
+      prefixIcon: Icon(
+        Icons.person_outline,
+        color: AppColors.color7a808a,
+        size: 20,
+      ),
+    );
+  }
+
+  // Search field (for future use)
+  static CustomTextFormField search({
+    Key? key,
+    TextEditingController? controller,
+    String? hintText = 'Search...',
+    ValueChanged<String>? onChanged,
+    FocusNode? focusNode,
+    ValueChanged<String>? onSubmitted,
+    bool enabled = true,
+  }) {
+    return CustomTextFormField(
+      key: key,
+      controller: controller,
+      textFieldType: TextFieldType.text,
+      hintText: hintText,
+      onChanged: onChanged,
+      focusNode: focusNode,
+      onSubmitted: onSubmitted,
+      enabled: enabled,
+      prefixIcon: Icon(Icons.search, color: AppColors.color7a808a, size: 20),
+    );
+  }
+
+  // Simple text field
+  static CustomTextFormField text({
+    Key? key,
+    TextEditingController? controller,
+    String? hintText,
+    ValueChanged<String>? onChanged,
+    FocusNode? focusNode,
+    ValueChanged<String>? onSubmitted,
+    bool enabled = true,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+    int maxLines = 1,
+  }) {
+    return CustomTextFormField(
+      key: key,
+      controller: controller,
+      textFieldType: TextFieldType.text,
+      hintText: hintText,
+      onChanged: onChanged,
+      focusNode: focusNode,
+      onSubmitted: onSubmitted,
+      enabled: enabled,
+      prefixIcon: prefixIcon,
+      suffixIcon: suffixIcon,
+      maxLines: maxLines,
     );
   }
 }
