@@ -12,10 +12,8 @@ export 'package:wood_service/core/utils/enums.dart';
 export 'package:wood_service/core/utils/validators.dart';
 export 'package:wood_service/data/models/base_view_model.dart';
 export 'package:wood_service/data/models/user_model.dart';
-export 'package:wood_service/views/auth/login.dart/auth_provider.dart';
 export 'package:wood_service/data/repositories/image_upload_service.dart';
 export 'package:wood_service/app/locator.dart';
-export 'package:wood_service/views/auth/register.dart/register_provider.dart';
 export 'package:wood_service/widgets/custom_button.dart';
 export 'package:wood_service/widgets/custom_textfield.dart';
 

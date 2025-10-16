@@ -42,6 +42,7 @@ class CustomTextFormField extends StatelessWidget {
     this.focusNode,
     this.onSubmitted,
     this.fillcolor,
+    this.contentPadding,
   });
 
   final TextEditingController? controller;
@@ -59,6 +60,7 @@ class CustomTextFormField extends StatelessWidget {
   final bool enabled;
 
   final Color? fillcolor;
+  final EdgeInsetsGeometry? contentPadding;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final TextInputAction? textInputAction;
@@ -158,6 +160,7 @@ class CustomTextFormField extends StatelessWidget {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return FormField<String>(
@@ -167,107 +170,99 @@ class CustomTextFormField extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              // height: 50,
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.greyLight.withOpacity(0.5),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+            // REMOVE the Container with shadow and use TextFormField directly
+            TextFormField(
+              controller: controller,
+              focusNode: focusNode,
+              onChanged: (text) {
+                _debouncer.run(() {
+                  onChanged?.call(text);
+                  fieldState.didChange(text);
+                });
+              },
+              onFieldSubmitted: onSubmitted,
+              textAlign: textAlign ?? TextAlign.left,
+              obscureText: obscureText ?? false,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: 15,
+                color: Colors.black,
+                fontWeight: FontWeight.w400,
               ),
-              child: TextFormField(
-                controller: controller,
-                focusNode: focusNode,
-                onChanged: (text) {
-                  _debouncer.run(() {
-                    onChanged?.call(text);
-                    fieldState.didChange(text);
-                  });
-                },
-                onFieldSubmitted: onSubmitted,
-                textAlign: textAlign ?? TextAlign.left,
-                obscureText: obscureText ?? false,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontSize: 15,
-                  color: Colors.black,
-                  fontWeight: FontWeight.w400,
+              inputFormatters: inputFormatters ?? [],
+              keyboardType: textInputType ?? keyboardType(textFieldType),
+              textInputAction: textInputAction,
+              minLines: minline,
+              maxLines: maxLines,
+              maxLength: maxLength,
+              enabled: enabled,
+              decoration: InputDecoration(
+                isDense: true,
+                filled: true,
+                fillColor: fillcolor ?? AppColors.white,
+                contentPadding:
+                    contentPadding ??
+                    const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+                hintText: hintText,
+                hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary.withOpacity(0.7),
+                  fontSize: 16,
                 ),
-                inputFormatters: inputFormatters ?? [],
-                keyboardType: textInputType ?? keyboardType(textFieldType),
-                textInputAction: textInputAction,
-                minLines: minline,
-                maxLines: maxLines,
-                maxLength: maxLength,
-                enabled: enabled,
-                decoration: InputDecoration(
-                  isDense: true,
-                  filled: true,
-                  fillColor: fillcolor ?? AppColors.white,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 18,
-                    horizontal: 18,
+                // Borders
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12), // Reduced radius
+                  borderSide: BorderSide(
+                    color: AppColors.grey.withOpacity(0.6),
+                    width: 1,
                   ),
-                  hintText: hintText,
-                  hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary.withOpacity(0.7),
-                    fontSize: 16,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12), // Reduced radius
+                  borderSide: BorderSide(
+                    color: AppColors.grey.withOpacity(0.6),
+                    width: 1,
                   ),
-                  // Borders
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(
-                      color: AppColors.grey.withOpacity(0.6),
-                      width: 1,
-                    ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12), // Reduced radius
+                  borderSide: const BorderSide(
+                    color: AppColors.error,
+                    width: 1.0,
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(
-                      color: AppColors.grey.withOpacity(0.6),
-                      width: 1,
-                    ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12), // Reduced radius
+                  borderSide: const BorderSide(
+                    color: AppColors.error,
+                    width: 1.5,
                   ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: const BorderSide(
-                      color: AppColors.error,
-                      width: 1.0,
-                    ),
+                ),
+                // Prefix & Suffix icons
+                prefixIcon: prefixIcon != null
+                    ? Padding(
+                        padding: const EdgeInsets.only(left: 16, right: 12),
+                        child: prefixIcon,
+                      )
+                    : null,
+                prefixIconConstraints: const BoxConstraints(
+                  minHeight: 24,
+                  minWidth: 24,
+                ),
+                suffixIcon: suffixIcon != null
+                    ? Padding(
+                        padding: const EdgeInsets.only(right: 16, left: 12),
+                        child: suffixIcon,
+                      )
+                    : null,
+                suffixIconConstraints: const BoxConstraints(
+                  minHeight: 24,
+                  minWidth: 24,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12), // Reduced radius
+                  borderSide: BorderSide(
+                    color: AppColors.grey.withOpacity(0.6),
+                    width: 1,
                   ),
-                  focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: const BorderSide(
-                      color: AppColors.error,
-                      width: 1.5,
-                    ),
-                  ),
-                  // Prefix & Suffix icons
-                  prefixIcon: prefixIcon != null
-                      ? Padding(
-                          padding: const EdgeInsets.only(left: 16, right: 12),
-                          child: prefixIcon,
-                        )
-                      : null,
-                  prefixIconConstraints: const BoxConstraints(
-                    minHeight: 24,
-                    minWidth: 24,
-                  ),
-                  suffixIcon: suffixIcon != null
-                      ? Padding(
-                          padding: const EdgeInsets.only(right: 16, left: 12),
-                          child: suffixIcon,
-                        )
-                      : null,
-                  suffixIconConstraints: const BoxConstraints(
-                    minHeight: 24,
-                    minWidth: 24,
-                  ),
-                  border: InputBorder.none,
                 ),
               ),
             ),

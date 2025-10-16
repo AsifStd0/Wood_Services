@@ -84,7 +84,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                    CustomButtonUtils.login(title: 'Login', onPressed: () {}),
+                    CustomButtonUtils.login(
+                      title: 'Login',
+                      onPressed: () {
+                        context.push('/buyer_signup');
+                      },
+                    ),
                     const SizedBox(height: 32),
                     Row(
                       children: [
@@ -133,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: () {
                   print('object');
                   WidgetsBinding.instance.addPostFrameCallback(
-                    (_) => context.push('/signup'),
+                    (_) => context.push('/buyer_signup'),
                   );
                   // Navigator.pushNamed(context, '/signup');
                 },

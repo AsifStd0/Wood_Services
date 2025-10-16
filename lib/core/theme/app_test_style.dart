@@ -4,9 +4,7 @@ import 'package:wood_service/core/theme/app_colors.dart';
 // ! End Helper
 enum CustomTextType {
   // 🎯 MAIN HEADINGS
-  mainheadingLarge,
-  mainheadingMedium,
-  mainheadingSmall,
+  // mainheadingSmall,
 
   // 🎯 HEADINGS
   headingLarge,
@@ -151,27 +149,6 @@ class CustomText extends StatelessWidget {
 
     switch (type) {
       // 🎯 MAIN HEADINGS
-      case CustomTextType.mainheadingLarge:
-        return theme.headlineLarge!.copyWith(
-          fontSize: 34,
-          color: AppColors.black,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1,
-        );
-
-      case CustomTextType.mainheadingMedium:
-        return theme.headlineMedium!.copyWith(
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          color: AppColors.black,
-        );
-
-      case CustomTextType.mainheadingSmall:
-        return theme.headlineSmall!.copyWith(
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-          color: AppColors.black,
-        );
 
       // 🎯 HEADINGS
       case CustomTextType.headingLarge:
@@ -220,7 +197,7 @@ class CustomText extends StatelessWidget {
       case CustomTextType.subtitleSmall:
         return theme.titleSmall!.copyWith(
           fontSize: 14,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w400,
           color: Colors.grey[600],
         );
 

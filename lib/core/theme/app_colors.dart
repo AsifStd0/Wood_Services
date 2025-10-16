@@ -65,5 +65,7 @@ class AppColors {
   // ! ****
   static const Color buttonColor = Color(0xFF7E12ED);
   // ! textfield
+  static const Color orangeLight = Color(0xFFF6DCC9);
+
   static const Color buttonLavender = Color(0xFFEBDFF7);
 }
