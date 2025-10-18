@@ -203,10 +203,18 @@ class CustomTextFormField extends StatelessWidget {
                     contentPadding ??
                     const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
                 hintText: hintText,
-                hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary.withOpacity(0.7),
-                  fontSize: 16,
+                hintStyle: theme.textTheme.bodyMedium!.copyWith(
+                  fontSize: 15,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.5),
+                  // fontStyle: FontStyle.italic,
                 ),
+
+                // theme.textTheme.bodyMedium?.copyWith(
+                //   color: AppColors.textSecondary.withOpacity(0.7),
+                //   fontSize: 16,
+                // ),
                 // Borders
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12), // Reduced radius

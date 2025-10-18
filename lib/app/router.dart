@@ -14,23 +14,33 @@ import 'package:wood_service/views/Buyer/buyer_main.dart';
 import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_signup.dart';
 import 'package:wood_service/views/Buyer/profile/profile.dart';
 import 'package:wood_service/views/Buyer/set_password/set_new_assword.dart';
+import 'package:wood_service/views/Seller/data/main_seller_screen.dart';
+import 'package:wood_service/views/Seller/data/views/noification_model.dart/seller_notificaion_screen.dart';
+import 'package:wood_service/views/Seller/data/views/order_data/order_screen.dart';
+import 'package:wood_service/views/Seller/data/views/seller_analytics_screen.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home_screen.dart';
+import 'package:wood_service/views/Seller/data/views/seller_order_screen.dart';
+import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/add_product_screen.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/seller_settings_screen.dart';
+import 'package:wood_service/views/Seller/seller_login.dart/seller_login.dart';
 import 'package:wood_service/views/Seller/signup.dart/seller_signup.dart';
-import 'package:wood_service/views/auth/login.dart/login_screen.dart';
-import 'package:wood_service/views/splash_screen.dart';
+import 'package:wood_service/views/Buyer/login.dart/login_screen.dart';
+import 'package:wood_service/views/splash/selection_screen.dart';
 import 'package:wood_service/views/Buyer/home/seller_home.dart';
+import 'package:wood_service/views/splash/splash_screen.dart';
 
 class AppRouter {
   static final router = GoRouter(
     initialLocation: '/',
     routes: [
       // Splash & Auth Routes
-      // GoRoute(
-      //   path: '/',
-      //   pageBuilder: (context, state) =>
-      //       const MaterialPage(child: SplashScreen()),
-      // ),
       GoRoute(
         path: '/',
+        pageBuilder: (context, state) =>
+            MaterialPage(child: OnboardingScreen()),
+      ),
+      GoRoute(
+        path: '/selction_screen',
         pageBuilder: (context, state) =>
             const MaterialPage(child: SelectionScreen()),
       ),
@@ -139,11 +149,55 @@ class AppRouter {
             MaterialPage(child: OrderConfirmationScreen()),
       ),
 
-      // ! ********
+      // ! ******** Seller
       GoRoute(
         path: '/seller_signup',
         pageBuilder: (context, state) => MaterialPage(child: SellerSignup()),
       ),
+      GoRoute(
+        path: '/seller_login',
+        pageBuilder: (context, state) => MaterialPage(child: SellerLogin()),
+      ),
+
+      GoRoute(
+        path: '/main_seller_screen',
+        pageBuilder: (context, state) =>
+            MaterialPage(child: MainSellerScreen()),
+      ),
+      GoRoute(
+        path: '/seller_home',
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: SellerHomeScreen()),
+      ),
+      GoRoute(
+        path: '/seller_order',
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: SellerOrdersScreen()),
+      ),
+      GoRoute(
+        path: '/seller_notificaion',
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: SellerNotificaionScreen()),
+      ),
+      GoRoute(
+        path: '/seller_setting',
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: SellerSettingsScreen()),
+      ),
+
+      GoRoute(
+        path: '/seller_order',
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: OrdersScreenSeller()),
+      ),
+
+      GoRoute(
+        path: '/seller_add_product',
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: AddProductScreen()),
+      ),
+
+      // VisitRequestsScreen
     ],
   );
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
+import 'package:wood_service/core/theme/app_test_style.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 import 'package:wood_service/widgets/custom_text_style.dart';
 
@@ -18,7 +19,8 @@ class SelectionScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 80),
-                Text('FurniFind', style: AppCustomTextStyle.appTitle(context)),
+                CustomText('FurniFind', type: CustomTextType.headingLarge),
+                // Text('FurniFind', style: AppCustomTexxtStyle.appTitle(context)),
                 const SizedBox(height: 10),
                 Text(
                   'Find Perfect Furniture',
@@ -40,7 +42,7 @@ class SelectionScreen extends StatelessWidget {
 
                 CustomButtonUtils.categorySelection(
                   onPressed: () {
-                    context.push('/seller_signup');
+                    context.push('/seller_login');
                   },
                   child: Text(
                     "I'm Selling",

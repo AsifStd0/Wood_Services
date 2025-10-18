@@ -1,12 +1,11 @@
-import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:country_code_picker/country_code_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_test_style.dart';
 import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_widge.dart';
 import 'package:wood_service/widgets/auth_button_txt.dart';
 import 'package:wood_service/widgets/custom_button.dart';
-import 'package:wood_service/widgets/custom_text_style.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
 
 class SellerSignup extends StatefulWidget {
@@ -29,9 +28,9 @@ class _SellerSignupState extends State<SellerSignup> {
   final FocusNode _businessNameFocusNode = FocusNode();
   final FocusNode _contactNameFocusNode = FocusNode();
   final FocusNode _addressFocusNode = FocusNode();
-  final FocusNode _descriptionFocusNode = FocusNode();
-  final FocusNode _bankNameFocusNode = FocusNode();
-  final FocusNode _ibanFocusNode = FocusNode();
+  final TextEditingController _phoneController = TextEditingController();
+  String _countryCode = '+1'; // Default country code
+  final FocusNode _phoneFocusNode = FocusNode();
 
   bool _agreeToTerms = false;
 
@@ -39,6 +38,12 @@ class _SellerSignupState extends State<SellerSignup> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        title: CustomText('SignUp', type: CustomTextType.appbar),
+        // const Text('SignUp'),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -50,74 +55,119 @@ class _SellerSignupState extends State<SellerSignup> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(top: 70, bottom: 5),
-                      child: Text(
-                        'Buyer Information',
-                        style: AppCustomTextStyle.headlineMedium(context),
+                      padding: const EdgeInsets.only(top: 20, bottom: 5),
+                      child: CustomText(
+                        'Start Selling Your Furniture with Giga Home',
+                        type: CustomTextType.headingLittleLarge,
                       ),
                     ),
-                    CustomText(
-                      'Tell us a bit about you and your business',
-                      fontSize: 14,
-                      color: AppColors.grayMedium,
-                    ),
-                    SizedBox(height: 15),
 
                     // Full Name Field
-                    CustomText('Name', type: CustomTextType.subtitleMedium),
                     Padding(
-                      padding: const EdgeInsets.only(top: 4, bottom: 8),
-                      child: CustomTextFormField(
-                        controller: _fullNameController,
-                        hintText: 'e.g. John Doe',
-                        onChanged: (value) {
-                          print('Full Name: $value');
-                        },
-                        focusNode: _fullNameFocusNode,
+                      padding: const EdgeInsets.only(top: 12, bottom: 10),
+                      child: CustomText(
+                        'Full Name',
+                        type: CustomTextType.subtitleMedium,
+                        color: AppColors.darkGrey,
                       ),
+                    ),
+                    CustomTextFormField(
+                      prefixIcon: Icon(Icons.person, color: AppColors.grey),
+                      controller: _fullNameController,
+                      hintText: 'Enter your full name',
+                      onChanged: (value) {
+                        print('Full Name: $value');
+                      },
+                      focusNode: _fullNameFocusNode,
                     ),
 
                     // Business Name Field
-                    CustomText(
-                      'Business Name',
-                      type: CustomTextType.subtitleMedium,
-                    ),
                     Padding(
-                      padding: const EdgeInsets.only(top: 4, bottom: 8),
-                      child: CustomTextFormField(
-                        controller: _businessNameController,
-                        hintText: 'e.g. Modern Design Co.',
-                        onChanged: (value) {
-                          print('Business Name: $value');
-                        },
-                        focusNode: _businessNameFocusNode,
+                      padding: const EdgeInsets.only(top: 12, bottom: 10),
+                      child: CustomText(
+                        'Business Email',
+                        type: CustomTextType.subtitleMedium,
+                        color: AppColors.darkGrey,
                       ),
                     ),
+                    CustomTextFormField(
+                      prefixIcon: Icon(Icons.email, color: AppColors.grey),
+                      controller: _businessNameController,
+                      hintText: 'Enter your business email',
+                      onChanged: (value) {
+                        print('Business Name: $value');
+                      },
+                      focusNode: _businessNameFocusNode,
+                    ),
 
-                    // Contact Name Field
-                    CustomText(
-                      'Contact Name',
-                      type: CustomTextType.subtitleMedium,
+                    // Contact Number Field with Country Code
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12, bottom: 10),
+                      child: CustomText(
+                        'Contact Number',
+                        type: CustomTextType.subtitleMedium,
+                        color: AppColors.darkGrey,
+                      ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(top: 4, bottom: 8),
+                      padding: const EdgeInsets.only(top: 4, bottom: 12),
                       child: CustomTextFormField(
-                        controller: _contactNameController,
-                        hintText: 'e.g. James Smith',
+                        prefixIcon: CountryCodePicker(
+                          onChanged: (CountryCode countryCode) {
+                            setState(() {
+                              _countryCode = countryCode.dialCode ?? '+1';
+                            });
+                          },
+                          initialSelection: 'US',
+                          favorite: ['+1', 'US'],
+                          showCountryOnly: false,
+                          showOnlyCountryWhenClosed: false,
+                          alignLeft: false,
+                          showFlag: true,
+                          showFlagDialog: true,
+                          padding: EdgeInsets.zero,
+                          textStyle: TextStyle(fontSize: 14),
+                        ),
+                        controller: _phoneController,
+                        hintText: 'Enter your phone number',
+                        // keyboardType: TextInputType.phone,
                         onChanged: (value) {
-                          print('Contact Name: $value');
+                          final fullNumber = '$_countryCode$value';
+                          print('Phone Number: $fullNumber');
                         },
-                        focusNode: _contactNameFocusNode,
+                        focusNode: _phoneFocusNode,
                       ),
                     ),
 
                     // Address Field
-                    CustomText('Address', type: CustomTextType.subtitleMedium),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.security_outlined,
+                          size: 18,
+                          color: AppColors.darkGrey,
+                        ),
+                        const SizedBox(width: 8),
+                        CustomText(
+                          'Secure Banking Details',
+                          type: CustomTextType.subtitleMedium,
+                          color: AppColors.darkGrey,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    CustomText(
+                      'Your information is encrypted and secure. We need this for seller payouts',
+                      type: CustomTextType.hint,
+                      color: AppColors.grey,
+                    ),
+                    const SizedBox(height: 8),
                     Padding(
-                      padding: const EdgeInsets.only(top: 4, bottom: 8),
+                      padding: const EdgeInsets.only(top: 4, bottom: 12),
                       child: CustomTextFormField(
+                        prefixIcon: Icon(Icons.lock, color: AppColors.grey),
                         controller: _addressController,
-                        hintText: 'Enter your full address',
+                        hintText: 'Enter your banking details',
                         onChanged: (value) {
                           print('Address: $value');
                         },
@@ -125,93 +175,21 @@ class _SellerSignupState extends State<SellerSignup> {
                       ),
                     ),
 
-                    // Description Field
-                    CustomText('Short Description (Optional)'),
-
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4, bottom: 8),
-                      child: CustomTextFormField(
-                        minline: 4,
-                        maxLines: 4,
-
-                        controller: _descriptionController,
-                        hintText: 'A little about your shop..',
-                        onChanged: (value) {
-                          print('Email: $value');
-                        },
-                        focusNode: _descriptionFocusNode,
-                      ),
-                    ),
-
-                    Divider(color: AppColors.greyDim),
-
-                    // Bank Details Section
-                    CustomText(
-                      'Bank Details',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4, bottom: 12),
-                      child: CustomText(
-                        'Where we should send your earnings',
-                        fontSize: 14,
-                        color: AppColors.grayMedium,
-                      ),
-                    ),
-
-                    // Bank Name Field
-                    CustomText(
-                      'Bank Name',
-                      type: CustomTextType.subtitleMedium,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4, bottom: 8),
-                      child: CustomTextFormField(
-                        controller: _bankNameController,
-                        hintText: 'e.g. Premier National Bank',
-                        onChanged: (value) {
-                          print('Bank Name: $value');
-                        },
-                        focusNode: _bankNameFocusNode,
-                      ),
-                    ),
-
-                    // IBAN Field
-                    CustomText('IBAN', type: CustomTextType.subtitleMedium),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4, bottom: 8),
-                      child: CustomTextFormField(
-                        controller: _ibanController,
-                        hintText: 'SA00 0000 0000 0000 0000 0000',
-                        onChanged: (value) {
-                          print('IBAN: $value');
-                        },
-                        focusNode: _ibanFocusNode,
-                      ),
-                    ),
-
-                    // Documents Section
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: CustomText(
-                        'Documents',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
                         UploadBox(
-                          title: "Company Logo",
+                          title: "Company Documents",
                           subtitle: "Click to upload",
-                          fileTypeNote: "PNG, JPG or GIF (MAX. 800x400px)",
+                          check: false,
+
+                          // fileTypeNote: "PNG, JPG or GIF (MAX. 800x400px)",
                         ),
                         UploadBox(
-                          title: "Commercial Registration (CR)",
+                          title: "Store Logo",
                           subtitle: "Click to upload",
-                          fileTypeNote: "PDF, PNG or JPG (MAX. 5MB)",
+                          // fileTypeNote: "PDF, PNG or JPG (MAX. 5MB)",
+                          check: false,
                         ),
                       ],
                     ),
@@ -219,9 +197,24 @@ class _SellerSignupState extends State<SellerSignup> {
 
                     // Submit Button
                     CustomButtonUtils.login(
-                      title: 'Submit Application',
+                      title: 'Register as Seller',
+                      padding: EdgeInsets.all(0),
+
                       backgroundColor: AppColors.brightOrange,
                       onPressed: _submitApplication,
+                    ),
+
+                    /// Always at bottom
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20),
+                      child: AuthBottomText(
+                        questionText: "Already have an account? ",
+                        actionText: "Sign In",
+                        onPressed: () {
+                          // Navigator.pushNamed(context, '/seller_login');
+                          context.push('/seller_login');
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -235,12 +228,16 @@ class _SellerSignupState extends State<SellerSignup> {
 
   // Submit application method
   void _submitApplication() {
-    context.push('/forgot');
+    // Get the complete phone number
+    final completePhoneNumber = '$_countryCode${_phoneController.text}';
+
     // // Collect all data from controllers
     // final sellerData = {
     //   'fullName': _fullNameController.text,
     //   'businessName': _businessNameController.text,
-    //   'contactName': _contactNameController.text,
+    //   'contactNumber': completePhoneNumber,
+    //   'countryCode': _countryCode,
+    //   'phoneNumber': _phoneController.text,
     //   'address': _addressController.text,
     //   'description': _descriptionController.text,
     //   'bankName': _bankNameController.text,
@@ -253,7 +250,7 @@ class _SellerSignupState extends State<SellerSignup> {
     // });
 
     // TODO: Add your API call or form validation here
-    // context.push('/forgot');
+    context.push('/main_seller_screen');
   }
 
   @override
@@ -266,15 +263,14 @@ class _SellerSignupState extends State<SellerSignup> {
     _descriptionController.dispose();
     _bankNameController.dispose();
     _ibanController.dispose();
+    _phoneController.dispose();
 
     // Dispose all focus nodes
     _fullNameFocusNode.dispose();
     _businessNameFocusNode.dispose();
     _contactNameFocusNode.dispose();
     _addressFocusNode.dispose();
-    _descriptionFocusNode.dispose();
-    _bankNameFocusNode.dispose();
-    _ibanFocusNode.dispose();
+    _phoneFocusNode.dispose();
 
     super.dispose();
   }

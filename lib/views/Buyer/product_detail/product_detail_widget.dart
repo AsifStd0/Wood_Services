@@ -1083,17 +1083,7 @@ class ProductActionButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        // boxShadow: [
-        //   BoxShadow(
-        //     color: Colors.black.withOpacity(0.15),
-        //     blurRadius: 20,
-        //     spreadRadius: 2,
-        //     offset: const Offset(0, 4),
-        //   ),
-        // ],
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
       child: Row(
         children: [
           // Add to Cart Button

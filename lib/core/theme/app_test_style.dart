@@ -8,6 +8,8 @@ enum CustomTextType {
 
   // 🎯 HEADINGS
   headingLarge,
+  headingLittleSmall,
+  headingLittleLarge,
   headingMedium,
   headingSmall,
   headingXSmall,
@@ -43,6 +45,7 @@ enum CustomTextType {
   success,
   warning,
   info,
+  appbar,
 
   // 🎯 CUSTOM BUSINESS TEXT
   productTitle,
@@ -153,9 +156,23 @@ class CustomText extends StatelessWidget {
       // 🎯 HEADINGS
       case CustomTextType.headingLarge:
         return theme.headlineLarge!.copyWith(
+          fontWeight: FontWeight.w700,
+          color: AppColors.black,
+          letterSpacing: 0.5,
+        );
+      case CustomTextType.headingLittleLarge:
+        return theme.headlineLarge!.copyWith(
+          fontWeight: FontWeight.w700,
+          color: AppColors.black,
+          fontSize: 24,
+          letterSpacing: 0.5,
+        );
+      case CustomTextType.headingLittleSmall:
+        return theme.headlineLarge!.copyWith(
+          fontWeight: FontWeight.w700,
+          color: AppColors.black,
           fontSize: 22,
-          color: AppColors.textSecondary,
-          // fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
         );
 
       case CustomTextType.headingMedium:
@@ -191,7 +208,7 @@ class CustomText extends StatelessWidget {
         return theme.titleMedium!.copyWith(
           fontSize: 16,
           fontWeight: FontWeight.w500,
-          color: Colors.grey[700],
+          color: AppColors.darkGrey,
         );
 
       case CustomTextType.subtitleSmall:
@@ -338,6 +355,13 @@ class CustomText extends StatelessWidget {
           fontSize: 14,
           color: Colors.blue[700],
           fontWeight: FontWeight.w500,
+        );
+
+      case CustomTextType.appbar:
+        return theme.bodyMedium!.copyWith(
+          fontSize: 20,
+          color: Colors.black,
+          fontWeight: FontWeight.w600,
         );
 
       // 🎯 CUSTOM BUSINESS TEXT

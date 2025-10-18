@@ -1,10 +1,8 @@
-import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_test_style.dart';
 import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_widge.dart';
-import 'package:wood_service/widgets/auth_button_txt.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 import 'package:wood_service/widgets/custom_text_style.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
@@ -32,8 +30,6 @@ class _BuyerSignupState extends State<BuyerSignup> {
   final FocusNode _descriptionFocusNode = FocusNode();
   final FocusNode _bankNameFocusNode = FocusNode();
   final FocusNode _ibanFocusNode = FocusNode();
-
-  bool _agreeToTerms = false;
 
   @override
   Widget build(BuildContext context) {
@@ -219,6 +215,8 @@ class _BuyerSignupState extends State<BuyerSignup> {
 
                     // Submit Button
                     CustomButtonUtils.login(
+                      padding: EdgeInsets.all(0),
+
                       title: 'Submit Application',
                       backgroundColor: AppColors.brightOrange,
                       onPressed: _submitApplication,

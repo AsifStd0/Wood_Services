@@ -23,15 +23,12 @@ class AuthBottomText extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            questionText,
-            style: TextStyle(color: AppColors.buttonColor.withOpacity(0.5)),
-          ),
+          Text(questionText, style: TextStyle(color: AppColors.brightOrange)),
           TextButton(
             onPressed: onPressed,
             child: Text(
               actionText,
-              style: TextStyle(color: AppColors.buttonColor.withOpacity(0.5)),
+              style: TextStyle(color: AppColors.brightOrange),
             ),
           ),
         ],

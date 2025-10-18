@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Align(
                       alignment: Alignment.center,
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 80, bottom: 5),
+                        padding: const EdgeInsets.only(top: 50, bottom: 40),
                         child: Text(
                           'Welcome Back',
                           style: AppCustomTextStyle.appTitle(context),
@@ -78,13 +78,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () {},
                         child: Text(
                           'Forgot Password?',
-                          style: TextStyle(
-                            color: AppColors.buttonColor.withOpacity(0.5),
-                          ),
+                          style: TextStyle(color: AppColors.brightOrange),
                         ),
                       ),
                     ),
                     CustomButtonUtils.login(
+                      padding: EdgeInsets.all(0),
+
+                      backgroundColor: AppColors.brightOrange,
+
                       title: 'Login',
                       onPressed: () {
                         context.push('/buyer_signup');

@@ -1,10 +1,41 @@
 import 'package:flutter/material.dart';
 
+//  Row(
+//       children: [
+//         Icon(Icons.security_outlined, size: 18, color: AppColors.darkGrey),
+//         const SizedBox(width: 8),
+//         CustomText(
+//           'Secure Banking Details',
+//           type: CustomTextType.subtitleMedium,
+//           color: AppColors.darkGrey,
+//         ),
+//       ],
+//     ),
+//     const SizedBox(height: 4),
+//     CustomText(
+//       'Your information is encrypted and secure. We need this for seller payouts',
+//       type: CustomTextType.hint,
+//       color: AppColors.grey,
+//     ),
+//     const SizedBox(height: 8),
+//     CustomTextFormField(
+
 class AppColors {
   // Primary colors
   static const Color primary = Color(0xFF795548);
   static const Color primaryDark = Color(0xFF5D4037);
   static const Color primaryLight = Color(0xFFD7CCC8);
+
+  // Grey Scale Colors
+  static const Color darkGrey = Color(
+    0xFF333333,
+  ); // For text and important elements
+  static const Color greySecondry = Color(0xFF666666); // For secondary text
+  static const Color mediumGrey = Color(
+    0xFF999999,
+  ); // For hints and disabled states
+  static const Color lightGrey = Color(0xFFCCCCCC); // For borders and dividers
+  static const Color extraLightGrey = Color(0xFFF5F5F5); // For backgrounds
 
   // Secondary colors
   static const Color secondary = Color(0xFF8D6E63);

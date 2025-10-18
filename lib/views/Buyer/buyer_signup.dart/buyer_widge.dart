@@ -6,13 +6,15 @@ import 'package:wood_service/core/theme/app_test_style.dart';
 class UploadBox extends StatelessWidget {
   final String title;
   final String subtitle;
-  final String fileTypeNote;
+  final String? fileTypeNote;
+  final bool? check;
 
   const UploadBox({
     super.key,
     required this.title,
     required this.subtitle,
-    required this.fileTypeNote,
+    this.fileTypeNote,
+    this.check = true,
   });
 
   @override
@@ -50,19 +52,21 @@ class UploadBox extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                       children: [
-                        TextSpan(
-                          text: "or drag and drop",
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontWeight: FontWeight.normal,
+                        if (check == true) ...[
+                          TextSpan(
+                            text: "or drag and drop",
+                            style: TextStyle(
+                              color: Colors.grey[700],
+                              fontWeight: FontWeight.normal,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    fileTypeNote,
+                    fileTypeNote ?? '',
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
                 ],
