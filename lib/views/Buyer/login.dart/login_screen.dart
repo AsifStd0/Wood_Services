@@ -74,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: CustomButtonUtils.text(
+                      child: CustomButtonUtils.textButton(
                         onPressed: () {},
                         child: Text(
                           'Forgot Password?',

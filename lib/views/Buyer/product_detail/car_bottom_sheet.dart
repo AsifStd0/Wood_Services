@@ -1,9 +1,9 @@
 // Method to navigate to checkout
 import 'package:flutter/material.dart';
-import 'package:wood_service/app/index.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/data/models/cart_Item.dart';
 import 'package:wood_service/views/Buyer/payment/checkout.dart';
+import 'package:wood_service/widgets/custom_textfield.dart';
 
 // Method to navigate to checkout
 void showCheckoutScreen(BuildContext context) {
@@ -65,19 +65,19 @@ class CartBottomSheet extends StatelessWidget {
 
   Widget _buildCartItems() {
     final cartItems = [
-      CartItem(
+      CartItemModel(
         name: 'Modern Sofa',
         seller: 'Home Decor',
         price: 500.00,
         quantity: 1,
       ),
-      CartItem(
+      CartItemModel(
         name: 'Dining Table',
         seller: 'Furniture World',
         price: 650.00,
         quantity: 1,
       ),
-      CartItem(
+      CartItemModel(
         name: 'Coffee Table',
         seller: 'Home Decor',
         price: 100.00,
@@ -94,7 +94,7 @@ class CartBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildCartItem(CartItem item) {
+  Widget _buildCartItem(CartItemModel item) {
     return Column(
       children: [
         Row(

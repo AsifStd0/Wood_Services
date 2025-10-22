@@ -23,6 +23,7 @@ enum CustomTextType {
   // 🎯 BODY TEXT
   bodyLarge,
   bodyMedium,
+  bodyMediumBold,
   bodySmall,
   bodyXSmall,
 
@@ -233,6 +234,13 @@ class CustomText extends StatelessWidget {
           height: 1.5,
         );
 
+      case CustomTextType.bodyMediumBold:
+        return theme.bodyMedium!.copyWith(
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+          height: 1,
+          color: AppColors.black.withOpacity(0.7),
+        );
       case CustomTextType.bodyMedium:
         return theme.bodyMedium!.copyWith(
           fontSize: 16,

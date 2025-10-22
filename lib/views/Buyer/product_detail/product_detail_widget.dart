@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
-import 'package:wood_service/core/theme/app_test_style.dart';
 import 'package:wood_service/views/Buyer/product_detail/car_bottom_sheet.dart';
-import 'package:wood_service/views/Buyer/product_detail/product_detail.dart';
-import 'package:wood_service/widgets/custom_button.dart';
+
+import '../../../app/index.dart';
 
 class ProductImageGallery extends StatefulWidget {
   const ProductImageGallery({super.key});

@@ -99,4 +99,7 @@ class AppColors {
   static const Color orangeLight = Color(0xFFF6DCC9);
 
   static const Color buttonLavender = Color(0xFFEBDFF7);
+  static const Color yellowButton = Color(0xFFFAC808);
+
+  static const Color yellowLight = Color(0xffEDC064);
 }

@@ -1,9 +1,6 @@
 // views/shop_settings_screen.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
-import 'package:wood_service/views/Seller/data/models/seller_shop_model.dart';
-import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 import 'package:wood_service/widgets/advance_appbar.dart';
 
 class SellerSettingsScreen extends StatelessWidget {
@@ -15,12 +12,6 @@ class SellerSettingsScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: CustomAppBar(title: 'Shop Settings', showBackButton: false),
 
-      // appBar: AppBar(
-      //   title: const Text('Shop Settings'),
-      //   backgroundColor: Colors.white,
-      //   foregroundColor: Colors.black,
-      //   elevation: 0,
-      // ),
       body: const _ShopSettingsContent(),
     );
   }

@@ -72,7 +72,7 @@ class _LoginScreenState extends State<SellerLogin> {
                     ),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: CustomButtonUtils.text(
+                      child: CustomButtonUtils.textButton(
                         onPressed: () {},
                         child: Text(
                           'Forgot Password?',

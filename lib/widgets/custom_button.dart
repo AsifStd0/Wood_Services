@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_fonts.dart';
 
-enum ButtonType { primary, secondary, outline, text, danger, success, warning }
+enum ButtonType { primary, secondary, outline, textButton, buyButton }
 
 enum ButtonSize { small, medium, large, extraLarge }
 
@@ -67,14 +67,10 @@ class CustomButton extends StatelessWidget {
         return AppColors.secondary;
       case ButtonType.outline:
         return Colors.transparent;
-      case ButtonType.text:
+      case ButtonType.textButton:
         return Colors.transparent;
-      case ButtonType.danger:
-        return AppColors.error;
-      case ButtonType.success:
-        return AppColors.success;
-      case ButtonType.warning:
-        return AppColors.warning;
+      case ButtonType buyButton:
+        return AppColors.yellowButton;
     }
   }
 
@@ -88,14 +84,10 @@ class CustomButton extends StatelessWidget {
         return AppColors.white;
       case ButtonType.outline:
         return Theme.of(context).primaryColor;
-      case ButtonType.text:
+      case ButtonType.textButton:
         return Theme.of(context).primaryColor;
-      case ButtonType.danger:
-        return AppColors.white;
-      case ButtonType.success:
-        return AppColors.white;
-      case ButtonType.warning:
-        return AppColors.white;
+      case ButtonType.buyButton:
+        return AppColors.yellowButton;
     }
   }
 
@@ -105,14 +97,13 @@ class CustomButton extends StatelessWidget {
     switch (type) {
       case ButtonType.primary:
       case ButtonType.secondary:
-      case ButtonType.danger:
-      case ButtonType.success:
-      case ButtonType.warning:
         return _getBackgroundColor(context);
       case ButtonType.outline:
         return Theme.of(context).primaryColor;
-      case ButtonType.text:
+      case ButtonType.textButton:
         return Colors.transparent;
+      case ButtonType.buyButton:
+        return AppColors.yellowButton;
     }
   }
 
@@ -120,13 +111,12 @@ class CustomButton extends StatelessWidget {
     switch (type) {
       case ButtonType.primary:
       case ButtonType.secondary:
-      case ButtonType.danger:
-      case ButtonType.success:
-      case ButtonType.warning:
         return AppColors.grey.withOpacity(0.5);
       case ButtonType.outline:
-      case ButtonType.text:
+      case ButtonType.textButton:
         return Colors.transparent;
+      case ButtonType.buyButton:
+        return AppColors.yellowButton;
     }
   }
 
@@ -134,13 +124,12 @@ class CustomButton extends StatelessWidget {
     switch (type) {
       case ButtonType.primary:
       case ButtonType.secondary:
-      case ButtonType.danger:
-      case ButtonType.success:
-      case ButtonType.warning:
         return AppColors.white.withOpacity(0.7);
       case ButtonType.outline:
-      case ButtonType.text:
+      case ButtonType.textButton:
         return AppColors.grey.withOpacity(0.7);
+      case ButtonType.buyButton:
+        return AppColors.yellowButton;
     }
   }
 
@@ -148,14 +137,13 @@ class CustomButton extends StatelessWidget {
     switch (type) {
       case ButtonType.primary:
       case ButtonType.secondary:
-      case ButtonType.danger:
-      case ButtonType.success:
-      case ButtonType.warning:
         return AppColors.grey.withOpacity(0.5);
       case ButtonType.outline:
         return AppColors.grey.withOpacity(0.5);
-      case ButtonType.text:
+      case ButtonType.textButton:
         return Colors.transparent;
+      case ButtonType.buyButton:
+        return AppColors.yellowButton;
     }
   }
 
@@ -187,7 +175,9 @@ class CustomButton extends StatelessWidget {
 
   double _getElevation() {
     return elevation ??
-        (type == ButtonType.text || type == ButtonType.outline ? 0.0 : 2.0);
+        (type == ButtonType.textButton || type == ButtonType.outline
+            ? 0.0
+            : 2.0);
   }
 
   TextStyle _getTextStyle(BuildContext context) {
@@ -534,7 +524,7 @@ class CustomButtonUtils {
     );
   }
 
-  static CustomButton text({
+  static CustomButton textButton({
     Key? key,
     required VoidCallback? onPressed,
     VoidCallback? onLongPress,
@@ -555,7 +545,7 @@ class CustomButtonUtils {
       onPressed: onPressed,
       onLongPress: onLongPress,
       child: child,
-      type: ButtonType.text,
+      type: ButtonType.textButton,
       size: size,
       isLoading: isLoading,
       disabled: disabled,
@@ -571,7 +561,7 @@ class CustomButtonUtils {
     );
   }
 
-  static CustomButton outline({
+  static CustomButton buyButton({
     Key? key,
     required VoidCallback? onPressed,
     VoidCallback? onLongPress,
@@ -581,117 +571,30 @@ class CustomButtonUtils {
     bool disabled = false,
     double? width,
     double? height,
-    double? borderRadius,
     EdgeInsetsGeometry? padding,
     Widget? prefixIcon,
     Widget? suffixIcon,
     Color? foregroundColor,
-    Color? borderColor,
     bool hapticFeedback = true,
-    double borderWidth = 1.0,
   }) {
     return CustomButton(
       key: key,
       onPressed: onPressed,
       onLongPress: onLongPress,
       child: child,
-      type: ButtonType.outline,
+      type: ButtonType.textButton,
       size: size,
       isLoading: isLoading,
       disabled: disabled,
       width: width,
       height: height,
-      borderRadius: borderRadius,
       padding: padding,
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       foregroundColor: foregroundColor,
-      borderColor: borderColor,
       hapticFeedback: hapticFeedback,
       elevation: 0,
-      borderWidth: borderWidth,
-    );
-  }
-
-  static CustomButton danger({
-    Key? key,
-    required VoidCallback? onPressed,
-    VoidCallback? onLongPress,
-    required Widget child,
-    ButtonSize size = ButtonSize.medium,
-    bool isLoading = false,
-    bool disabled = false,
-    double? width,
-    double? height,
-    double? borderRadius,
-    EdgeInsetsGeometry? padding,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    bool hapticFeedback = true,
-    double? elevation,
-    Color? shadowColor,
-    double borderWidth = 1.0,
-  }) {
-    return CustomButton(
-      key: key,
-      onPressed: onPressed,
-      onLongPress: onLongPress,
-      child: child,
-      type: ButtonType.danger,
-      size: size,
-      isLoading: isLoading,
-      disabled: disabled,
-      width: width,
-      height: height,
-      borderRadius: borderRadius,
-      padding: padding,
-      prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon,
-      hapticFeedback: hapticFeedback,
-      elevation: elevation,
-      shadowColor: shadowColor,
-      borderWidth: borderWidth,
-    );
-  }
-
-  static CustomButton success({
-    Key? key,
-    required VoidCallback? onPressed,
-    VoidCallback? onLongPress,
-    required Widget child,
-    ButtonSize size = ButtonSize.medium,
-    bool isLoading = false,
-    bool disabled = false,
-    double? width,
-    double? height,
-    double? borderRadius,
-    EdgeInsetsGeometry? padding,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    bool hapticFeedback = true,
-    double? elevation,
-    Color? shadowColor,
-    double borderWidth = 1.0,
-  }) {
-    return CustomButton(
-      key: key,
-      onPressed: onPressed,
-      onLongPress: onLongPress,
-      child: child,
-      type: ButtonType.success,
-      size: size,
-      isLoading: isLoading,
-      disabled: disabled,
-      width: width,
-      height: height,
-      borderRadius: borderRadius,
-      padding: padding,
-      prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon,
-      hapticFeedback: hapticFeedback,
-      elevation: elevation,
-      shadowColor: shadowColor,
-      borderWidth: borderWidth,
+      borderWidth: 0,
     );
   }
 }

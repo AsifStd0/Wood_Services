@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:wood_service/views/Buyer/Cart/cart_screen.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_screen.dart';
 import 'package:wood_service/views/Buyer/Messages/message_screen.dart';
+import 'package:wood_service/views/Buyer/home/asif/furniture_product.dart';
+import 'package:wood_service/views/Buyer/home/asif/model/home_screen.dart';
 import 'package:wood_service/views/Buyer/profile/profile.dart';
-import 'package:wood_service/views/Buyer/home/home_widget.dart';
 import 'package:wood_service/views/Buyer/home/seller_home.dart';
 
 class MainScreen extends StatefulWidget {
@@ -18,7 +19,7 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    const FurnitureHomeScreen(), // Index 0 - Home
+    SellerHomeScreen(), // Index 0 - Home
     const FavoritesScreen(), // Index 1 - Favorites
     const CartScreen(), // Index 2 - Cart
     const MessagesScreen(), // Index 3 - Messages
@@ -57,50 +58,49 @@ class _MainScreenState extends State<MainScreen> {
 
 // Sample data - Easy to customize
 final List<FurnitureProduct> products = [
-  const FurnitureProduct(
+  FurnitureProduct(
     id: '123',
     name: 'Modern Sofa',
     price: 499,
     category: 'Living Room',
-    imageUrl: 'assets/sofa.jpg',
+    image: 'assets/sofa.jpg',
     isNew: true,
   ),
-  const FurnitureProduct(
+  FurnitureProduct(
     id: '123',
     name: 'Dining Table',
     price: 249,
     category: 'Dining Room',
-    imageUrl: 'assets/dining_table.jpg',
+    image: 'assets/dining_table.jpg',
   ),
-  const FurnitureProduct(
+  FurnitureProduct(
     id: '123',
     name: 'Accent Chair',
     price: 149,
     category: 'Living Room',
-    imageUrl: 'assets/chair.jpg',
+    image: 'assets/chair.jpg',
   ),
-  const FurnitureProduct(
+  FurnitureProduct(
     id: '123',
     name: 'Queen Bed',
     price: 599,
     category: 'Bedroom',
-    imageUrl: 'assets/bed.jpg',
+    image: 'assets/bed.jpg',
     isNew: true,
   ),
-  const FurnitureProduct(
+  FurnitureProduct(
     id: '123',
     name: 'Storage Cabinet',
     price: 349,
     category: 'Bedroom',
-    imageUrl: 'assets/cabinet.jpg',
+    image: 'assets/cabinet.jpg',
   ),
-  const FurnitureProduct(
+  FurnitureProduct(
     id: '123',
     name: 'Patio Set',
     price: 799,
     category: 'Outdoor',
-    imageUrl: 'assets/patio.jpg',
-    isOutdoor: true,
+    image: 'assets/patio.jpg',
   ),
 ];
 

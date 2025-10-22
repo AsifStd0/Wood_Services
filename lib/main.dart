@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wood_service/views/Buyer/home/asif/model/home_view_model.dart';
 import 'package:wood_service/views/Seller/data/models/shop_model.dart';
 import 'package:wood_service/views/Seller/data/repository/order_repo.dart';
 import 'package:wood_service/views/Seller/data/repository/seller_product_repo.dart';
@@ -50,6 +51,10 @@ void main() async {
         ),
         ChangeNotifierProvider<ShopSettingsViewModel>(
           create: (context) => ShopSettingsViewModel(),
+        ),
+
+        ChangeNotifierProvider<HomeViewModel>(
+          create: (context) => HomeViewModel(),
         ),
       ],
       child: MyApp(),

@@ -1,10 +1,10 @@
-class CartItem {
+class CartItemModel {
   final String name;
   final String seller;
   final double price;
   final int quantity;
 
-  CartItem({
+  CartItemModel({
     required this.name,
     required this.seller,
     required this.price,

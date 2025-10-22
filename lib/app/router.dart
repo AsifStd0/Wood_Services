@@ -1,33 +1,5 @@
-import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
-import 'package:wood_service/views/Buyer/Cart/cart_screen.dart';
-import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_screen.dart';
-import 'package:wood_service/views/Buyer/Messages/message_screen.dart';
-import 'package:wood_service/views/Buyer/Notificaion/notificaion_screen.dart';
-import 'package:wood_service/views/Buyer/forgot_password/forgot_password.dart';
-import 'package:wood_service/views/Buyer/order_screen/order_screen.dart';
-import 'package:wood_service/views/Buyer/payment/checkout.dart';
-import 'package:wood_service/views/Buyer/payment/order_confirmation.dart';
-import 'package:wood_service/views/Buyer/phone_verification/phone_verification.dart';
-import 'package:wood_service/views/Buyer/product_detail/product_detail.dart';
-import 'package:wood_service/views/Buyer/buyer_main.dart';
-import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_signup.dart';
-import 'package:wood_service/views/Buyer/profile/profile.dart';
-import 'package:wood_service/views/Buyer/set_password/set_new_assword.dart';
-import 'package:wood_service/views/Seller/data/main_seller_screen.dart';
-import 'package:wood_service/views/Seller/data/views/noification_model.dart/seller_notificaion_screen.dart';
-import 'package:wood_service/views/Seller/data/views/order_data/order_screen.dart';
-import 'package:wood_service/views/Seller/data/views/seller_analytics_screen.dart';
-import 'package:wood_service/views/Seller/data/views/seller_home_screen.dart';
-import 'package:wood_service/views/Seller/data/views/seller_order_screen.dart';
-import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/add_product_screen.dart';
-import 'package:wood_service/views/Seller/data/views/shop_setting/seller_settings_screen.dart';
-import 'package:wood_service/views/Seller/seller_login.dart/seller_login.dart';
-import 'package:wood_service/views/Seller/signup.dart/seller_signup.dart';
-import 'package:wood_service/views/Buyer/login.dart/login_screen.dart';
-import 'package:wood_service/views/splash/selection_screen.dart';
-import 'package:wood_service/views/Buyer/home/seller_home.dart';
-import 'package:wood_service/views/splash/splash_screen.dart';
+import 'package:wood_service/app/index.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -85,7 +57,7 @@ class AppRouter {
       GoRoute(
         path: '/home',
         pageBuilder: (context, state) =>
-            const MaterialPage(child: FurnitureHomeScreen()),
+            const MaterialPage(child: SellerHomeScreen()),
       ),
       GoRoute(
         path: '/favorites',
