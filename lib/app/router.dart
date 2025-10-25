@@ -18,7 +18,8 @@ class AppRouter {
       ),
       GoRoute(
         path: '/buyer_login',
-        pageBuilder: (context, state) => MaterialPage(child: LoginScreen()),
+        pageBuilder: (context, state) =>
+            MaterialPage(child: BuyerLoginScreen()),
       ),
       GoRoute(
         path: '/buyer_signup',
@@ -26,7 +27,7 @@ class AppRouter {
       ),
 
       GoRoute(
-        path: '/forgot',
+        path: '/buyer_forgot',
         pageBuilder: (context, state) =>
             const MaterialPage(child: ForgotPassword()),
       ),
@@ -67,7 +68,7 @@ class AppRouter {
       GoRoute(
         path: '/cart',
         pageBuilder: (context, state) =>
-            const MaterialPage(child: CartScreen()),
+            const MaterialPage(child: BuyerCartScreen()),
       ),
       GoRoute(
         path: '/messages',

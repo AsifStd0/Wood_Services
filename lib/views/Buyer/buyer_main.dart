@@ -6,7 +6,6 @@ import 'package:wood_service/views/Buyer/Messages/message_screen.dart';
 import 'package:wood_service/views/Buyer/home/asif/furniture_product.dart';
 import 'package:wood_service/views/Buyer/home/asif/model/home_screen.dart';
 import 'package:wood_service/views/Buyer/profile/profile.dart';
-import 'package:wood_service/views/Buyer/home/seller_home.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,9 +18,9 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    SellerHomeScreen(), // Index 0 - Home
+    BuyerHomeScreen(), // Index 0 - Home
     const FavoritesScreen(), // Index 1 - Favorites
-    const CartScreen(), // Index 2 - Cart
+    const BuyerCartScreen(), // Index 2 - Cart
     const MessagesScreen(), // Index 3 - Messages
     const ProfileScreen(), // Index 4 - Profile
   ];

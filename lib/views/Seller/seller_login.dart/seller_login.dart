@@ -42,10 +42,6 @@ class _LoginScreenState extends State<SellerLogin> {
                         'Welcome Seller Login',
                         type: CustomTextType.headingLittleLarge,
                       ),
-                      // Text(
-                      //   'Seller Login',
-                      //   style: AppCustomTextStyle.appTitle(context),
-                      // ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 20),

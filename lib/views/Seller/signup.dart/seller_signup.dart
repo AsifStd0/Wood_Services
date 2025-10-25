@@ -32,8 +32,6 @@ class _SellerSignupState extends State<SellerSignup> {
   String _countryCode = '+1'; // Default country code
   final FocusNode _phoneFocusNode = FocusNode();
 
-  bool _agreeToTerms = false;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

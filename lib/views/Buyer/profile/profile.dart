@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wood_service/app/index.dart';
+import 'package:wood_service/views/Buyer/profile/profile_widget.dart';
 import 'package:wood_service/views/Buyer/setting/setting_screen.dart';
+import 'package:wood_service/widgets/advance_appbar.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -9,13 +12,9 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        centerTitle: true,
-        title: const Text(
-          'Profile',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
+      appBar: CustomAppBar(
+        title: 'Profile',
+        showBackButton: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -31,22 +30,26 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
+
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        child: Column(
-          children: [
-            // User Header Section
-            _buildUserHeader(),
+        child: Padding(
+          padding: EdgeInsets.only(left: 15, right: 15),
+          child: Column(
+            children: [
+              // User Header Section
+              _buildUserHeader(),
 
-            // Stats Section
-            _buildStatsSection(),
+              // Stats Section
+              _buildStatsSection(),
 
-            // Quick Actions
-            _buildQuickActions(),
+              // Quick Actions
+              buildQuickActions(),
 
-            // Main Menu Section
-            _buildMenuSection(context),
-          ],
+              // Main Menu Section
+              _buildMenuSection(context),
+            ],
+          ),
         ),
       ),
     );
@@ -56,8 +59,7 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildUserHeader() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -65,13 +67,6 @@ class ProfileScreen extends StatelessWidget {
           colors: [Colors.brown.shade50, Colors.orange.shade50],
         ),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.brown.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
       ),
       child: Row(
         children: [
@@ -152,8 +147,7 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildStatsSection() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -170,14 +164,8 @@ class ProfileScreen extends StatelessWidget {
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Activity Overview',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.brown,
-                ),
-              ),
+              CustomText('Activity ', type: CustomTextType.activityHeading),
+
               Text(
                 'This Month',
                 style: TextStyle(fontSize: 12, color: Colors.grey),
@@ -188,135 +176,19 @@ class ProfileScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatItem('12', 'Orders', Icons.shopping_bag),
-              _buildStatItem('8', 'Favorites', Icons.favorite),
-              _buildStatItem('4', 'Reviews', Icons.star),
-              _buildStatItem('2', 'Active', Icons.trending_up),
+              buildStatItem('12', 'Orders', Icons.shopping_bag),
+              buildStatItem('8', 'Favorites', Icons.favorite),
+              buildStatItem('4', 'Reviews', Icons.star),
             ],
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildStatItem(String value, String label, IconData icon) {
-    return Column(
-      children: [
-        Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: Colors.brown.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: Colors.brown, size: 20),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.brown,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Quick Actions Section
-  Widget _buildQuickActions() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Quick Actions',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.brown,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildQuickActionItem(
-                Icons.add_card,
-                'Add Payment',
-                Colors.green,
-              ),
-              _buildQuickActionItem(
-                Icons.location_on,
-                'Add Address',
-                Colors.blue,
-              ),
-
-              _buildQuickActionItem(
-                Icons.help_center,
-                'Support',
-                Colors.purple,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickActionItem(IconData icon, String label, Color color) {
-    return Column(
-      children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Icon(icon, color: color, size: 24),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.grey[700],
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
     );
   }
 
   // Enhanced Main Menu Section
   Widget _buildMenuSection(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -332,7 +204,7 @@ class ProfileScreen extends StatelessWidget {
         children: [
           // Orders & Purchases
           _buildMenuHeader('Orders & Management'),
-          _buildMenuTile(
+          buildMenuTile(
             context: context,
             icon: Icons.shopping_bag_outlined,
             title: 'My Orders',
@@ -340,88 +212,88 @@ class ProfileScreen extends StatelessWidget {
             onTap: () => GoRouter.of(context).push('/orders'),
             showBadge: true,
             badgeCount: 3,
-            gradient: [Colors.blue.shade400, Colors.blue.shade600],
+            // gradient: [Colors.blue.shade400, Colors.blue.shade600],
           ),
-          _buildMenuTile(
+          buildMenuTile(
             context: context,
             icon: Icons.receipt_long_outlined,
             title: 'Order History',
             subtitle: 'Complete purchase history',
             onTap: () {},
-            gradient: [Colors.green.shade400, Colors.green.shade600],
+            // gradient: [Colors.green.shade400, Colors.green.shade600],
           ),
-          _buildMenuTile(
+          buildMenuTile(
             context: context,
             icon: Icons.assignment_return_outlined,
             title: 'Returns & Refunds',
             subtitle: 'Manage returns and refund requests',
             onTap: () {},
-            gradient: [Colors.orange.shade400, Colors.orange.shade600],
+            // gradient: [Colors.orange.shade400, Colors.orange.shade600],
           ),
 
           const Divider(height: 20),
 
           // Account & Preferences
           _buildMenuHeader('Account & Preferences'),
-          _buildMenuTile(
+          buildMenuTile(
             context: context,
             icon: Icons.notifications_outlined,
             title: 'Notifications',
             subtitle: 'Manage alerts and preferences',
             onTap: () => GoRouter.of(context).push('/notifications'),
-            gradient: [Colors.purple.shade400, Colors.purple.shade600],
+            // gradient: [Colors.purple.shade400, Colors.purple.shade600],
           ),
-          _buildMenuTile(
+          buildMenuTile(
             context: context,
             icon: Icons.payment_outlined,
             title: 'Payment Methods',
             subtitle: 'Cards, wallets, and payment options',
             onTap: () {},
-            gradient: [Colors.teal.shade400, Colors.teal.shade600],
+            // gradient: [Colors.teal.shade400, Colors.teal.shade600],
           ),
-          _buildMenuTile(
+          buildMenuTile(
             context: context,
             icon: Icons.location_on_outlined,
             title: 'Saved Addresses',
             subtitle: 'Delivery and billing addresses',
             onTap: () {},
-            gradient: [Colors.red.shade400, Colors.red.shade600],
+            // gradient: [Colors.red.shade400, Colors.red.shade600],
           ),
 
           const Divider(height: 20),
 
           // Support & Information
           _buildMenuHeader('Support & Information'),
-          _buildMenuTile(
+          buildMenuTile(
             context: context,
             icon: Icons.help_outline,
             title: 'Help Center',
             subtitle: 'FAQs and support articles',
             onTap: () {},
-            gradient: [Colors.indigo.shade400, Colors.indigo.shade600],
+            // gradient: [Colors.indigo.shade400, Colors.indigo.shade600],
           ),
-          _buildMenuTile(
+          buildMenuTile(
             context: context,
             icon: Icons.contact_support_outlined,
             title: 'Contact Support',
             subtitle: '24/7 customer service',
             onTap: () {},
-            gradient: [Colors.pink.shade400, Colors.pink.shade600],
+            // gradient: [Colors.pink.shade400, Colors.pink.shade600],
           ),
-          _buildMenuTile(
+          buildMenuTile(
             context: context,
             icon: Icons.info_outline,
             title: 'About WoodMart',
             subtitle: 'App version 1.0.0',
             onTap: () {},
-            gradient: [Colors.cyan.shade400, Colors.cyan.shade600],
+            // gradient: [Colors.cyan.shade400, Colors.cyan.shade600],
           ),
 
           const Divider(height: 20),
 
           // Account Actions
           _buildMenuHeader('Account Actions'),
-          _buildMenuTile(
+          buildMenuTile(
             context: context,
             icon: Icons.logout_outlined,
             title: 'Sign Out',
@@ -429,7 +301,7 @@ class ProfileScreen extends StatelessWidget {
             onTap: () => _showLogoutDialog(context),
             iconColor: Colors.red,
             textColor: Colors.red,
-            gradient: [Colors.red.shade400, Colors.red.shade600],
+            // gradient: [Colors.red.shade400, Colors.red.shade600],
           ),
         ],
       ),
@@ -450,103 +322,6 @@ class ProfileScreen extends StatelessWidget {
             letterSpacing: -0.2,
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildMenuTile({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    bool showBadge = false,
-    int badgeCount = 0,
-    Color iconColor = Colors.white,
-    Color textColor = Colors.black,
-    List<Color>? gradient,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: gradient != null
-            ? LinearGradient(
-                colors: gradient,
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              )
-            : null,
-        color: gradient == null ? Colors.grey[50] : null,
-        boxShadow: gradient == null
-            ? [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : [
-                BoxShadow(
-                  color: gradient[0].withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: gradient != null
-                ? Colors.white.withOpacity(0.2)
-                : Colors.brown.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            icon,
-            color: gradient != null ? Colors.white : Colors.brown,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: gradient != null ? Colors.white : textColor,
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(
-            color: gradient != null
-                ? Colors.white.withOpacity(0.8)
-                : Colors.grey[600],
-            fontSize: 12,
-          ),
-        ),
-        trailing: showBadge
-            ? Badge(
-                label: Text(
-                  badgeCount.toString(),
-                  style: const TextStyle(color: Colors.white, fontSize: 10),
-                ),
-                backgroundColor: Colors.red,
-                child: Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 16,
-                  color: gradient != null ? Colors.white : Colors.grey,
-                ),
-              )
-            : Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: gradient != null ? Colors.white : Colors.grey,
-              ),
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
     );
   }

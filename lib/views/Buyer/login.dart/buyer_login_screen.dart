@@ -11,12 +11,12 @@ import 'package:wood_service/widgets/custom_textfield.dart';
 //                                       .addPostFrameCallback(
 //                                         (_) => context.push('/otp'),
 //                                       );
-class LoginScreen extends StatefulWidget {
+class BuyerLoginScreen extends StatefulWidget {
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<BuyerLoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<BuyerLoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FocusNode _emailFocusNode = FocusNode();
@@ -75,7 +75,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: CustomButtonUtils.textButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          context.push('/buyer_forgot');
+                        },
                         child: Text(
                           'Forgot Password?',
                           style: TextStyle(color: AppColors.brightOrange),

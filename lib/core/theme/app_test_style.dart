@@ -19,6 +19,8 @@ enum CustomTextType {
   subtitleMedium,
   subtitleSmall,
   subtitleXSmall,
+  // Setting heading
+  activityHeading,
 
   // 🎯 BODY TEXT
   bodyLarge,
@@ -231,6 +233,13 @@ class CustomText extends StatelessWidget {
         return theme.bodyLarge!.copyWith(
           fontSize: 18,
           fontWeight: FontWeight.normal,
+          color: Colors.brown,
+        );
+
+      case CustomTextType.activityHeading:
+        return theme.bodyLarge!.copyWith(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
           height: 1.5,
         );
 

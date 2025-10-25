@@ -43,7 +43,7 @@ export 'package:wood_service/views/Seller/data/views/seller_prduct.dart/add_prod
 export 'package:wood_service/views/Seller/data/views/shop_setting/seller_settings_screen.dart';
 export 'package:wood_service/views/Seller/seller_login.dart/seller_login.dart';
 export 'package:wood_service/views/Seller/signup.dart/seller_signup.dart';
-export 'package:wood_service/views/Buyer/login.dart/login_screen.dart';
+export 'package:wood_service/views/Buyer/login.dart/buyer_login_screen.dart';
 export 'package:wood_service/views/splash/selection_screen.dart';
 export 'package:wood_service/views/splash/splash_screen.dart';
 // views/home_screen.dart

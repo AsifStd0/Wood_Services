@@ -233,7 +233,7 @@ class _BuyerSignupState extends State<BuyerSignup> {
 
   // Submit application method
   void _submitApplication() {
-    context.push('/forgot');
+    context.push('/main_buyer');
     // // Collect all data from controllers
     // final sellerData = {
     //   'fullName': _fullNameController.text,

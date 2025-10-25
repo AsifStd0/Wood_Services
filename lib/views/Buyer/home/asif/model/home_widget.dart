@@ -76,6 +76,7 @@ Widget buildProviderFilter(HomeViewModel viewModel) {
       DropdownButtonFormField<String>(
         value: viewModel.selectedProvider,
         decoration: InputDecoration(
+          fillColor: AppColors.border,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 12,

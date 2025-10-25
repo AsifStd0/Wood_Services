@@ -4,12 +4,12 @@ import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/home/asif/model/home_widget.dart';
 import 'package:wood_service/widgets/advance_appbar.dart';
 
-class SellerHomeScreen extends StatefulWidget {
+class BuyerHomeScreen extends StatefulWidget {
   @override
-  State<SellerHomeScreen> createState() => _SellerHomeScreenState();
+  State<BuyerHomeScreen> createState() => _SellerHomeScreenState();
 }
 
-class _SellerHomeScreenState extends State<SellerHomeScreen> {
+class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   String selectedCategory = 'All';
   late PageController _pageController;
   int _currentPage = 0;
@@ -50,29 +50,40 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
       create: (context) => HomeViewModel(),
       child: Scaffold(
         backgroundColor: Colors.white,
-        // appBar: CustomAppBar(title: 'title'),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              // Wrap with SingleChildScrollView
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Categories Section
-                  _buildCategoriesSection(),
+        appBar: const CustomAppBar(
+          title: 'Search',
+          showBackButton: false,
+          showSearch: true, // 👈 this enables your special search bar
+        ),
+        body: GestureDetector(
+          onTap: () {
+            // Hide keyboard when tapping outside
+            FocusScope.of(context).unfocus();
+          },
+          behavior: HitTestBehavior.translucent,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                // Wrap with SingleChildScrollView
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Categories Section
+                    _buildCategoriesSection(),
 
-                  const SizedBox(height: 5),
-                  // NEW Section
-                  buildNewSection(),
+                    const SizedBox(height: 5),
+                    // NEW Section
+                    buildNewSection(),
 
-                  const SizedBox(height: 5),
-                  _buildFilterSection(),
-                  const SizedBox(height: 5),
+                    const SizedBox(height: 5),
+                    _buildFilterSection(),
+                    const SizedBox(height: 5),
 
-                  // Products Grid
-                  _buildProductsGrid(),
-                ],
+                    // Products Grid
+                    _buildProductsGrid(),
+                  ],
+                ),
               ),
             ),
           ),

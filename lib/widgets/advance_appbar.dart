@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:wood_service/app/index.dart';
 
-// lib/presentation/widgets/custom_app_bar.dart
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final bool showBackButton;
@@ -12,6 +12,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final int? notificationCount;
   final Color backgroundColor;
   final bool centerTitle;
+  final bool automaticallyImplyLeading;
 
   const CustomAppBar({
     super.key,
@@ -25,38 +26,87 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.notificationCount,
     this.backgroundColor = Colors.white,
     this.centerTitle = true,
+    this.automaticallyImplyLeading = false,
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight + 10);
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: Colors.black87,
-          letterSpacing: -0.5,
-        ),
-      ),
       backgroundColor: backgroundColor,
-      foregroundColor: Colors.black,
-      centerTitle: centerTitle,
-      automaticallyImplyLeading: false,
+      automaticallyImplyLeading: automaticallyImplyLeading,
       elevation: 0.5,
-      shadowColor: Colors.black.withOpacity(0.1),
+      centerTitle: centerTitle,
       leading: showBackButton ? _buildBackButton(context) : null,
+      title: showSearch ? _buildSearchBar(context) : _buildTitle(),
       actions: [
-        if (showSearch) _buildSearchButton(),
         if (showNotification) _buildNotificationButton(),
         ...?_buildActionButtons(),
         const SizedBox(width: 8),
       ],
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
+    );
+  }
+
+  Widget _buildTitle() {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: Colors.black87,
+        letterSpacing: -0.5,
+      ),
+    );
+  }
+
+  Widget _buildSearchBar(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(right: 10),
+
+      child: Row(
+        children: [
+          // Dropdown area ("All ▼")
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                bottomLeft: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: const [
+                Text(
+                  "All",
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
+                ),
+                SizedBox(width: 4),
+                Icon(Icons.arrow_drop_down, size: 18),
+              ],
+            ),
+          ),
+
+          Expanded(
+            child: TextField(
+              onChanged: onSearchChanged,
+              decoration: const InputDecoration(
+                hintText: "Search",
+                hintStyle: TextStyle(fontSize: 17),
+                border: InputBorder.none,
+                fillColor: Colors.white10,
+                contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              ),
+            ),
+          ),
+
+          // Search icon
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Icon(Icons.search, color: Colors.black54, size: 22),
+          ),
+        ],
       ),
     );
   }
@@ -82,42 +132,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  Widget _buildSearchButton() {
-    return IconButton(
-      icon: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.grey[200]!),
-        ),
-        child: const Icon(Icons.search_rounded, size: 20),
-      ),
-      onPressed: () {
-        // Show search overlay or navigate to search screen
-        // _showSearch(context);
-      },
-      tooltip: 'Search',
-    );
-  }
-
   Widget _buildNotificationButton() {
     return Stack(
       children: [
         IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey[200]!),
-            ),
-            child: const Icon(Icons.notifications_outlined, size: 20),
-          ),
-          onPressed: () {
-            // Handle notification press
-          },
-          tooltip: 'Notifications',
+          icon: const Icon(Icons.notifications_none_rounded, size: 24),
+          onPressed: () {},
         ),
         if (notificationCount != null && notificationCount! > 0)
           Positioned(
@@ -147,82 +167,32 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   List<Widget>? _buildActionButtons() {
     if (actions == null) return null;
-
-    return actions!.map((action) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: action,
-      );
-    }).toList();
-  }
-
-  // void _showSearch(BuildContext context) {
-  //   // You can implement search functionality here
-  //   if (onSearchChanged != null) {
-  //     showSearch(
-  //       context: context,
-  //       delegate: _CustomSearchDelegate(onSearchChanged: onSearchChanged!),
-  //     );
-  //   }
-  // }
-}
-
-class _CustomSearchDelegate extends SearchDelegate {
-  final ValueChanged<String> onSearchChanged;
-
-  _CustomSearchDelegate({required this.onSearchChanged});
-
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: const Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, null);
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    return _buildSearchContent();
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    return _buildSearchContent();
-  }
-
-  Widget _buildSearchContent() {
-    onSearchChanged(query);
-    return const Center(child: Text('Start typing to search...'));
+    return actions!
+        .map(
+          (action) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: action,
+          ),
+        )
+        .toList();
   }
 }
-// class AdvancedAppBar extends StatelessWidget implements PreferredSizeWidget {
+
+// // lib/presentation/widgets/custom_app_bar.dart
+// class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 //   final String title;
 //   final bool showBackButton;
 //   final List<Widget>? actions;
 //   final VoidCallback? onBackPressed;
 //   final bool showSearch;
 //   final ValueChanged<String>? onSearchChanged;
-//   final bool showFilter;
-//   final VoidCallback? onFilterPressed;
+//   final bool showNotification;
+//   final int? notificationCount;
 //   final Color backgroundColor;
 //   final bool centerTitle;
-//   final double elevation;
+//   final bool automaticallyImplyLeading;
 
-//   const AdvancedAppBar({
+//   const CustomAppBar({
 //     super.key,
 //     required this.title,
 //     this.showBackButton = true,
@@ -230,176 +200,139 @@ class _CustomSearchDelegate extends SearchDelegate {
 //     this.onBackPressed,
 //     this.showSearch = false,
 //     this.onSearchChanged,
-//     this.showFilter = false,
-//     this.onFilterPressed,
+//     this.showNotification = false,
+//     this.notificationCount,
 //     this.backgroundColor = Colors.white,
 //     this.centerTitle = true,
-//     this.elevation = 0,
+//     this.automaticallyImplyLeading = false,
 //   });
 
 //   @override
-//   Size get preferredSize =>
-//       const Size.fromHeight(kToolbarHeight + (kToolbarHeight * 0.5));
+//   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
 //   @override
 //   Widget build(BuildContext context) {
 //     return AppBar(
-//       title: !showSearch
-//           ? Text(
-//               title,
-//               style: const TextStyle(
-//                 fontSize: 18,
-//                 fontWeight: FontWeight.w600,
-//                 color: Colors.black,
-//               ),
-//             )
-//           : _buildSearchField(),
+//       title: Text(
+//         title,
+//         style: const TextStyle(
+//           fontSize: 18,
+//           fontWeight: FontWeight.w700,
+//           color: Colors.black87,
+//           letterSpacing: -0.5,
+//         ),
+//       ),
 //       backgroundColor: backgroundColor,
 //       foregroundColor: Colors.black,
 //       centerTitle: centerTitle,
-//       automaticallyImplyLeading: false,
-//       elevation: elevation,
+//       automaticallyImplyLeading: automaticallyImplyLeading,
+//       elevation: 0.5,
+//       shadowColor: Colors.black.withOpacity(0.1),
 //       leading: showBackButton ? _buildBackButton(context) : null,
 //       actions: [
-//         if (showFilter) _buildFilterButton(),
-//         if (showSearch) _buildSearchButton(context),
-//         ...?actions,
+//         if (showSearch) _buildSearchButton(),
+//         if (showNotification) _buildNotificationButton(),
+//         ...?_buildActionButtons(),
 //         const SizedBox(width: 8),
 //       ],
-//       bottom: showSearch ? _buildSearchBottom() : null,
+//       shape: const RoundedRectangleBorder(
+//         borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
+//       ),
 //     );
 //   }
 
 //   Widget _buildBackButton(BuildContext context) {
-//     return IconButton(
-//       icon: Container(
-//         padding: const EdgeInsets.all(8),
-//         decoration: BoxDecoration(
-//           color: Colors.grey[100],
-//           shape: BoxShape.circle,
+//     return Padding(
+//       padding: const EdgeInsets.only(left: 8),
+//       child: IconButton(
+//         icon: Container(
+//           width: 36,
+//           height: 36,
+//           decoration: BoxDecoration(
+//             color: Colors.grey[50],
+//             borderRadius: BorderRadius.circular(10),
+//             border: Border.all(color: Colors.grey[200]!),
+//           ),
+//           child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
 //         ),
-//         child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+//         onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
+//         tooltip: 'Back',
+//         splashRadius: 20,
 //       ),
-//       onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
-//       tooltip: 'Back',
 //     );
 //   }
 
-//   Widget _buildSearchButton(BuildContext context) {
+//   Widget _buildSearchButton() {
 //     return IconButton(
 //       icon: Container(
-//         padding: const EdgeInsets.all(8),
+//         padding: const EdgeInsets.all(6),
 //         decoration: BoxDecoration(
-//           color: Colors.grey[100],
+//           color: Colors.grey[50],
 //           shape: BoxShape.circle,
+//           border: Border.all(color: Colors.grey[200]!),
 //         ),
-//         child: const Icon(Icons.search, size: 20),
+//         child: const Icon(Icons.search_rounded, size: 20),
 //       ),
 //       onPressed: () {
-//         // Toggle search mode
-//         // _showSearchDialog(context);
+//         // Show search overlay or navigate to search screen
+//         // _showSearch(context);
 //       },
 //       tooltip: 'Search',
 //     );
 //   }
 
-//   Widget _buildFilterButton() {
-//     return IconButton(
-//       icon: Container(
-//         padding: const EdgeInsets.all(8),
-//         decoration: BoxDecoration(
-//           color: Colors.grey[100],
-//           shape: BoxShape.circle,
+//   Widget _buildNotificationButton() {
+//     return Stack(
+//       children: [
+//         IconButton(
+//           icon: Container(
+//             padding: const EdgeInsets.all(6),
+//             decoration: BoxDecoration(
+//               color: Colors.grey[50],
+//               shape: BoxShape.circle,
+//               border: Border.all(color: Colors.grey[200]!),
+//             ),
+//             child: const Icon(Icons.notifications_outlined, size: 20),
+//           ),
+//           onPressed: () {
+//             // Handle notification press
+//           },
+//           tooltip: 'Notifications',
 //         ),
-//         child: const Icon(Icons.filter_list_rounded, size: 20),
-//       ),
-//       onPressed: onFilterPressed,
-//       tooltip: 'Filter',
+//         if (notificationCount != null && notificationCount! > 0)
+//           Positioned(
+//             right: 8,
+//             top: 8,
+//             child: Container(
+//               padding: const EdgeInsets.all(2),
+//               decoration: const BoxDecoration(
+//                 color: Colors.red,
+//                 shape: BoxShape.circle,
+//               ),
+//               constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+//               child: Text(
+//                 notificationCount! > 9 ? '9+' : notificationCount.toString(),
+//                 style: const TextStyle(
+//                   color: Colors.white,
+//                   fontSize: 10,
+//                   fontWeight: FontWeight.bold,
+//                 ),
+//                 textAlign: TextAlign.center,
+//               ),
+//             ),
+//           ),
+//       ],
 //     );
 //   }
 
-//   Widget _buildSearchField() {
-//     return Container(
-//       height: 40,
-//       decoration: BoxDecoration(
-//         color: Colors.grey[50],
-//         borderRadius: BorderRadius.circular(12),
-//       ),
-//       child: TextField(
-//         onChanged: onSearchChanged,
-//         decoration: InputDecoration(
-//           hintText: 'Search...',
-//           hintStyle: const TextStyle(color: Colors.grey),
-//           prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 20),
-//           border: InputBorder.none,
-//           contentPadding: const EdgeInsets.symmetric(vertical: 8),
-//         ),
-//         style: const TextStyle(fontSize: 16),
-//       ),
-//     );
-//   }
+//   List<Widget>? _buildActionButtons() {
+//     if (actions == null) return null;
 
-//   PreferredSizeWidget? _buildSearchBottom() {
-//     return PreferredSize(
-//       preferredSize: const Size.fromHeight(1),
-//       child: Container(color: Colors.grey[200], height: 1),
-//     );
-//   }
-
-//   // void _showSearchDialog(BuildContext context) {
-//   //   showSearch(
-//   //     context: context,
-//   //     delegate: CustomSearchDelegate(onSearchChanged: onSearchChanged),
-//   //   );
-//   // }
-// }
-
-// class CustomSearchDelegate extends SearchDelegate {
-//   final ValueChanged<String>? onSearchChanged;
-
-//   CustomSearchDelegate({this.onSearchChanged});
-
-//   @override
-//   List<Widget> buildActions(BuildContext context) {
-//     return [
-//       IconButton(
-//         icon: const Icon(Icons.clear),
-//         onPressed: () {
-//           query = '';
-//         },
-//       ),
-//     ];
-//   }
-
-//   @override
-//   Widget buildLeading(BuildContext context) {
-//     return IconButton(
-//       icon: const Icon(Icons.arrow_back),
-//       onPressed: () {
-//         close(context, null);
-//       },
-//     );
-//   }
-
-//   @override
-//   Widget buildResults(BuildContext context) {
-//     return _buildSearchResults();
-//   }
-
-//   @override
-//   Widget buildSuggestions(BuildContext context) {
-//     return _buildSearchResults();
-//   }
-
-//   Widget _buildSearchResults() {
-//     return ListView.builder(
-//       itemCount: 0,
-//       itemBuilder: (context, index) => ListTile(
-//         title: Text('Result $index'),
-//         onTap: () {
-//           close(context, 'Result $index');
-//         },
-//       ),
-//     );
+//     return actions!.map((action) {
+//       return Padding(
+//         padding: const EdgeInsets.symmetric(horizontal: 4),
+//         child: action,
+//       );
+//     }).toList();
 //   }
 // }

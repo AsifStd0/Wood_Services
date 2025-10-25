@@ -1,55 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wood_service/core/theme/app_colors.dart';
+import 'package:wood_service/data/models/buyer_cart_Item.dart';
+import 'package:wood_service/views/Buyer/Cart/cart_widget.dart';
+import 'package:wood_service/widgets/advance_appbar.dart';
+import 'package:wood_service/widgets/custom_button.dart';
 
-class CartScreen extends StatefulWidget {
-  const CartScreen({super.key});
+class BuyerCartScreen extends StatefulWidget {
+  const BuyerCartScreen({super.key});
 
   @override
-  State<CartScreen> createState() => _CartScreenState();
+  State<BuyerCartScreen> createState() => _CartScreenState();
 }
 
-class _CartScreenState extends State<CartScreen> {
-  final List<CartItem> _cartItems = [
-    CartItem(
-      id: '1',
-      name: 'Premium Teak Wood Planks',
-      description: 'Grade A Teak, 2" x 4" x 8ft',
-      price: 299.99,
-      quantity: 2,
-      imageUrl:
-          'https://images.unsplash.com/photo-1596541223130-5ccd06ed6e78?w=150&h=150&fit=crop',
-      seller: 'Premium Timber Co.',
-      inStock: true,
-      deliveryDate: 'Jan 20-22',
-    ),
-    CartItem(
-      id: '2',
-      name: 'Mahogany Dining Table',
-      description: 'Solid Mahogany, 72" x 36"',
-      price: 899.99,
-      quantity: 1,
-      imageUrl:
-          'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=150&h=150&fit=crop',
-      seller: 'Luxury Furniture',
-      inStock: true,
-      deliveryDate: 'Jan 25-28',
-    ),
-    CartItem(
-      id: '3',
-      name: 'Oak Wood Chairs (Set of 4)',
-      description: 'Solid Oak, Upholstered Seats',
-      price: 349.99,
-      quantity: 1,
-      imageUrl:
-          'https://images.unsplash.com/photo-1503602642458-232111445657?w=150&h=150&fit=crop',
-      seller: 'Wood Crafts',
-      inStock: false,
-      deliveryDate: 'Out of Stock',
-    ),
-  ];
-
+class _CartScreenState extends State<BuyerCartScreen> {
   double get _subtotal {
-    return _cartItems.fold(
+    return buyerCartItems.fold(
       0,
       (sum, item) => sum + (item.price * item.quantity),
     );
@@ -71,81 +37,11 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text(
-          'My Cart',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Badge(
-              label: Text(_cartItems.length.toString()),
-              child: const Icon(Icons.shopping_cart_outlined),
-            ),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: _cartItems.isEmpty ? _buildEmptyCart() : _buildCartWithItems(),
-      bottomNavigationBar: _cartItems.isEmpty ? null : _buildCheckoutBar(),
-    );
-  }
-
-  Widget _buildEmptyCart() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: Colors.brown.shade50,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.shopping_cart_outlined,
-              size: 50,
-              color: Colors.brown,
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Your Cart is Empty',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.brown,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Add some quality wood products to get started',
-            style: TextStyle(fontSize: 14, color: Colors.grey),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () {
-              context.go('/home'); // Navigate to home
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.brown,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: const Icon(Icons.shopping_bag_outlined),
-            label: const Text(
-              'Start Shopping',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
+      appBar: CustomAppBar(title: 'My Cart', showBackButton: false),
+      body: buyerCartItems.isEmpty
+          ? buildEmptyCart(context)
+          : _buildCartWithItems(),
+      bottomNavigationBar: buyerCartItems.isEmpty ? null : _buildCheckoutBar(),
     );
   }
 
@@ -154,13 +50,13 @@ class _CartScreenState extends State<CartScreen> {
       children: [
         // Header with item count
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.only(right: 15, left: 15),
           color: Colors.white,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${_cartItems.length} ${_cartItems.length == 1 ? 'Item' : 'Items'}',
+                '${buyerCartItems.length} ${buyerCartItems.length == 1 ? 'Item' : 'Items'}',
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   color: Colors.brown,
@@ -179,9 +75,9 @@ class _CartScreenState extends State<CartScreen> {
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.only(bottom: 100),
-            itemCount: _cartItems.length,
+            itemCount: buyerCartItems.length,
             itemBuilder: (context, index) {
-              return _buildCartItem(_cartItems[index]);
+              return _buildCartItem(buyerCartItems[index]);
             },
           ),
         ),
@@ -189,32 +85,25 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _buildCartItem(CartItem item) {
+  Widget _buildCartItem(BuyerCartItem item) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.grey.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         children: [
           // Item Content
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(vertical: 10),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Product Image
                 Container(
-                  width: 80,
-                  height: 80,
+                  width: 90,
+                  height: 90,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     image: DecorationImage(
@@ -368,7 +257,7 @@ class _CartScreenState extends State<CartScreen> {
 
   Widget _buildCheckoutBar() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -382,83 +271,71 @@ class _CartScreenState extends State<CartScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Price Summary
-          _buildPriceRow('Subtotal', _subtotal),
-          _buildPriceRow('Shipping', _shipping),
-          _buildPriceRow('Tax', _tax),
-          const Divider(height: 20),
-          _buildPriceRow('Total', _total, isTotal: true),
-
-          const SizedBox(height: 16),
-
-          // Checkout Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _proceedToCheckout,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.brown,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 2,
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+          // Price Summary - More Compact
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Left side - Price breakdown
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.lock_outlined, size: 18),
-                  SizedBox(width: 8),
+                  _buildCompactPriceRow('Subtotal', _subtotal),
+                  _buildCompactPriceRow('Shipping', _shipping),
+                  _buildCompactPriceRow('Tax', _tax),
+                ],
+              ),
+
+              // Right side - Total and Button
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   Text(
-                    'Proceed to Checkout',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    '\$${_total.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.brown,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Total',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],
               ),
-            ),
+            ],
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
 
-          // Security Note
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.security_outlined, size: 14, color: Colors.green),
-              const SizedBox(width: 4),
-              Text(
-                'Secure checkout • SSL encrypted',
-                style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-              ),
-            ],
+          // Full width button
+          CustomButtonUtils.login(
+            padding: EdgeInsets.zero,
+            title: 'Proceed to Checkout',
+            backgroundColor: AppColors.brightOrange,
+            onPressed: _proceedToCheckout,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPriceRow(String label, double amount, {bool isTotal = false}) {
+  Widget _buildCompactPriceRow(String label, double amount) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 1),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            label,
-            style: TextStyle(
-              fontSize: isTotal ? 16 : 14,
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              color: isTotal ? Colors.brown : Colors.grey[700],
-            ),
+            '$label: ',
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
           ),
           Text(
             '\$${amount.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: isTotal ? 18 : 14,
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
-              color: isTotal ? Colors.brown : Colors.grey[700],
-            ),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -473,7 +350,7 @@ class _CartScreenState extends State<CartScreen> {
     }
 
     setState(() {
-      final item = _cartItems.firstWhere((item) => item.id == itemId);
+      final item = buyerCartItems.firstWhere((item) => item.id == itemId);
       item.quantity = newQuantity;
     });
   }
@@ -498,7 +375,7 @@ class _CartScreenState extends State<CartScreen> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  _cartItems.removeWhere((item) => item.id == itemId);
+                  buyerCartItems.removeWhere((item) => item.id == itemId);
                 });
                 Navigator.pop(context);
                 _showSnackBar('Item removed from cart');
@@ -509,13 +386,6 @@ class _CartScreenState extends State<CartScreen> {
         );
       },
     );
-  }
-
-  void _saveForLater(String itemId) {
-    setState(() {
-      _cartItems.removeWhere((item) => item.id == itemId);
-    });
-    _showSnackBar('Item saved for later');
   }
 
   void _clearCart() {
@@ -538,7 +408,7 @@ class _CartScreenState extends State<CartScreen> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  _cartItems.clear();
+                  buyerCartItems.clear();
                 });
                 Navigator.pop(context);
                 _showSnackBar('Cart cleared');
@@ -556,7 +426,9 @@ class _CartScreenState extends State<CartScreen> {
 
   void _proceedToCheckout() {
     // Check if any items are out of stock
-    final outOfStockItems = _cartItems.where((item) => !item.inStock).toList();
+    final outOfStockItems = buyerCartItems
+        .where((item) => !item.inStock)
+        .toList();
 
     if (outOfStockItems.isNotEmpty) {
       _showOutOfStockDialog(outOfStockItems);
@@ -564,10 +436,10 @@ class _CartScreenState extends State<CartScreen> {
     }
 
     // Navigate to checkout
-    context.push('/checkout', extra: _cartItems);
+    context.push('/checkout', extra: buyerCartItems);
   }
 
-  void _showOutOfStockDialog(List<CartItem> outOfStockItems) {
+  void _showOutOfStockDialog(List<BuyerCartItem> outOfStockItems) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -636,7 +508,7 @@ class _CartScreenState extends State<CartScreen> {
                         onPressed: () {
                           // Remove out of stock items and proceed
                           setState(() {
-                            _cartItems.removeWhere((item) => !item.inStock);
+                            buyerCartItems.removeWhere((item) => !item.inStock);
                           });
                           Navigator.pop(context);
                           _proceedToCheckout();
@@ -668,29 +540,4 @@ class _CartScreenState extends State<CartScreen> {
       ),
     );
   }
-}
-
-// Cart Item Model
-class CartItem {
-  final String id;
-  final String name;
-  final String description;
-  final double price;
-  int quantity;
-  final String imageUrl;
-  final String seller;
-  final bool inStock;
-  final String deliveryDate;
-
-  CartItem({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.price,
-    required this.quantity,
-    required this.imageUrl,
-    required this.seller,
-    required this.inStock,
-    required this.deliveryDate,
-  });
 }

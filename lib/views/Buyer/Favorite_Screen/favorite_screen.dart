@@ -11,23 +11,6 @@ class FavoritesScreen extends StatefulWidget {
 class _FavoritesScreenState extends State<FavoritesScreen> {
   final List<FavoriteProduct> _favoriteItems = [
     FavoriteProduct(
-      id: '1',
-      name: 'Premium Teak Wood Planks',
-      description: 'Grade A Teak, 2" x 4" x 8ft, Water Resistant',
-      price: 299.99,
-      originalPrice: 349.99,
-      imageUrl:
-          'https://images.unsplash.com/photo-1596541223130-5ccd06ed6e78?w=200&h=200&fit=crop',
-      seller: 'Premium Timber Co.',
-      rating: 4.8,
-      reviewCount: 124,
-      inStock: true,
-      isOnSale: true,
-      discountPercent: 15,
-      isSustainable: true,
-      addedDate: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    FavoriteProduct(
       id: '2',
       name: 'Solid Mahogany Dining Table',
       description: 'Handcrafted Mahogany, 72" x 36" x 30"',

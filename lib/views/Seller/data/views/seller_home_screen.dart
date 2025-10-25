@@ -1,6 +1,7 @@
 // lib/presentation/views/visit_requests_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Seller/data/models/visit_request_model.dart';
 import 'package:wood_service/views/Seller/data/repository/home_repo.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/view_request_provider.dart';
@@ -171,7 +172,7 @@ class _VisitRequestsContent extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Colors.blue.shade700, Colors.blue.shade500],
+          colors: [AppColors.brightOrange, AppColors.brightOrange],
         ),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(24),
@@ -278,7 +279,7 @@ class _VisitRequestsContent extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.blue : Colors.transparent,
+            color: isSelected ? AppColors.brightOrange : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
