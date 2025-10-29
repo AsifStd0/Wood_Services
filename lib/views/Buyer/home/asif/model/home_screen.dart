@@ -1,6 +1,7 @@
 // views/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
+import 'package:wood_service/views/Buyer/home/asif/furniture_product_model.dart';
 import 'package:wood_service/views/Buyer/home/asif/model/home_widget.dart';
 import 'package:wood_service/widgets/advance_appbar.dart';
 
@@ -53,7 +54,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
         appBar: const CustomAppBar(
           title: 'Search',
           showBackButton: false,
-          showSearch: true, // 👈 this enables your special search bar
+          showSearch: true,
         ),
         body: GestureDetector(
           onTap: () {
@@ -63,7 +64,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
           behavior: HitTestBehavior.translucent,
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.only(left: 10, right: 10),
               child: SingleChildScrollView(
                 // Wrap with SingleChildScrollView
                 child: Column(
@@ -72,13 +73,11 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
                     // Categories Section
                     _buildCategoriesSection(),
 
-                    const SizedBox(height: 5),
                     // NEW Section
                     buildNewSection(),
 
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 3),
                     _buildFilterSection(),
-                    const SizedBox(height: 5),
 
                     // Products Grid
                     _buildProductsGrid(),
@@ -118,7 +117,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 5),
 
             // Image Slider with Auto-slide
             _buildImageSlider(),
@@ -132,7 +131,8 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
     return Consumer<HomeViewModel>(
       builder: (context, viewModel, child) {
         return SizedBox(
-          height: 220,
+          height: 150,
+
           child: PageView.builder(
             controller: _pageController,
             itemCount: 4,
@@ -144,11 +144,12 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
             },
             itemBuilder: (context, index) {
               return Container(
+                margin: EdgeInsets.only(left: 5, right: 5),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   image: const DecorationImage(
                     image: AssetImage('assets/images/sofa.jpg'),
-                    fit: BoxFit.cover,
+                    fit: BoxFit.fitWidth,
                   ),
                 ),
                 child: Stack(
@@ -202,13 +203,13 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
     }).toList();
 
     return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(), // Disable GridView scroll
-      shrinkWrap: true, // Important for SingleChildScrollView
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.50,
+        crossAxisCount: 2, // Changed to 2 for better layout
+        crossAxisSpacing: 5,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.70, // Adjusted for new content
       ),
       itemCount: filteredProducts.length,
       itemBuilder: (context, index) {
@@ -218,6 +219,14 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   }
 
   Widget _buildProductCard(FurnitureProduct product, BuildContext context) {
+    final bool hasDiscount =
+        product.originalPrice != null && product.originalPrice! > product.price;
+    final double? discount = hasDiscount
+        ? ((product.originalPrice! - product.price) /
+                  product.originalPrice! *
+                  100)
+              .roundToDouble()
+        : null;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -233,66 +242,169 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Product Image with New Badge
+          // Product Image with Discount Badge and Share Icon
           Stack(
             children: [
               ClipRRect(
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(18),
-                  topRight: Radius.circular(18),
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
                 ),
                 child: Container(
-                  height: 110,
+                  height: 90,
                   color: Colors.grey[200],
                   child: Center(
                     child: Image.asset(
-                      'assets/images/sofa.jpg',
+                      product.image,
                       fit: BoxFit.cover,
-                      width: double.infinity, // Make image fill container
+                      width: double.infinity,
                     ),
                   ),
                 ),
               ),
+
+              // Discount Badge - Only show if product has discount
+              if (hasDiscount && discount != null && discount > 0)
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${discount.toInt()}% OFF',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
 
           // Product Details
           Padding(
-            padding: const EdgeInsets.only(top: 3, bottom: 3),
+            padding: const EdgeInsets.only(top: 8, left: 5, right: 5),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  product.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: CustomText(
+                        product.brand,
+                        type: CustomTextType.captionMedium,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Icon(Icons.star, size: 14, color: Colors.amber[600]),
+                    const SizedBox(width: 2),
+                    Text(
+                      product.rating.toString(),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  '\$${product.price.toInt()}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 2),
 
+                // Product Name
+                CustomText(
+                  product.name,
+                  type: CustomTextType.captionLarge,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                // Product Name
+                Text(
+                  product.description,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                // Price Section
+                Row(
+                  children: [
+                    // Current Price
+                    Text(
+                      '\$${product.price.toInt()}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+
+                    // Original Price (Crossed) - Only show if has discount
+                    if (hasDiscount)
+                      Text(
+                        '\$${product.originalPrice!.toInt()}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+
+                    const Spacer(),
+
+                    // Delivery Info - Only show if free delivery
+                    if (product.freeDelivery)
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.local_shipping_outlined,
+                            size: 14,
+                            color: Colors.green[700],
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            'Free Delivery',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.green[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+
+                // Order Button
+                SizedBox(height: 5),
                 SizedBox(
                   width: double.infinity,
                   child: CustomButton(
-                    onPressed: () {},
-                    child: CustomText(
-                      'Buy Now',
-                      fontSize: 15,
+                    onPressed: () {
+                      // Add to cart or order functionality
+                      context.push('/productDetail/${product.id}');
+                    },
+                    child: const CustomText(
+                      'Order',
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                     type: ButtonType.textButton,
                     backgroundColor: AppColors.yellowButton,
-
-                    height: 30,
-                    padding: EdgeInsets.only(left: 5, right: 5),
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                   ),
                 ),
               ],
@@ -365,7 +477,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
 
             // Expanded Filter Options
             if (viewModel.showMoreFilters) ...[
-              _buildCityFilter(viewModel),
+              buildCityFilter(viewModel),
               const SizedBox(height: 16),
               buildPriceFilter(viewModel),
               const SizedBox(height: 16),
@@ -383,39 +495,6 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildCityFilter(HomeViewModel viewModel) {
-    final cities = [
-      'New York',
-      'Los Angeles',
-      'Chicago',
-      'Miami',
-      'Dallas',
-      'All Cities',
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText('City', type: CustomTextType.bodySmall),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: cities.map((city) {
-            final isSelected = viewModel.selectedCity == city;
-            return FilterChip(
-              label: Text(city),
-              selected: isSelected,
-              onSelected: (selected) {
-                viewModel.setCity(selected ? city : null);
-              },
-            );
-          }).toList(),
-        ),
-      ],
     );
   }
 }

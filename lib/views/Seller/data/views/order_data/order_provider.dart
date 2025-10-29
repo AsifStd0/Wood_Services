@@ -6,6 +6,7 @@ import '../../repository/order_repo.dart';
 // lib/presentation/view_models/orders_view_model.dart
 class OrdersViewModel with ChangeNotifier {
   final OrderRepository _repository;
+  int amount = 20;
 
   OrdersViewModel(this._repository);
 

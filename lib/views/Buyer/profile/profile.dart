@@ -303,6 +303,16 @@ class ProfileScreen extends StatelessWidget {
             textColor: Colors.red,
             // gradient: [Colors.red.shade400, Colors.red.shade600],
           ),
+          buildMenuTile(
+            context: context,
+            icon: Icons.logout_outlined,
+            title: 'Delete Account',
+            subtitle: 'Permanently remove account',
+            onTap: () => _showLogoutDialog(context),
+            iconColor: Colors.red,
+            textColor: Colors.red,
+            // gradient: [Colors.red.shade400, Colors.red.shade600],
+          ),
         ],
       ),
     );

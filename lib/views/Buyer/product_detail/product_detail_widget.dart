@@ -70,7 +70,7 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
 
   Widget _buildMainSlider() {
     return SizedBox(
-      height: 300,
+      height: 200,
       child: Stack(
         children: [
           // Main PageView Slider
@@ -309,7 +309,7 @@ class ProductBasicInfo extends StatelessWidget {
           'Modern Velvet Sofa',
           type: CustomTextType.headingMedium,
           fontWeight: FontWeight.bold,
-          fontSize: 22,
+          fontSize: 20,
         ),
 
         const SizedBox(height: 3),
@@ -321,7 +321,7 @@ class ProductBasicInfo extends StatelessWidget {
               '\$899.00',
               type: CustomTextType.headingMedium,
               fontWeight: FontWeight.bold,
-              fontSize: 21,
+              fontSize: 19,
             ),
             const SizedBox(width: 10),
             CustomText(
@@ -330,7 +330,7 @@ class ProductBasicInfo extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: AppColors.grey,
               decoration: TextDecoration.lineThrough,
-              fontSize: 18,
+              fontSize: 17,
             ),
           ],
         ),

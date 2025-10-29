@@ -142,11 +142,7 @@ class AppRouter {
         pageBuilder: (context, state) =>
             const NoTransitionPage(child: SellerHomeScreen()),
       ),
-      GoRoute(
-        path: '/seller_order',
-        pageBuilder: (context, state) =>
-            const NoTransitionPage(child: SellerOrdersScreen()),
-      ),
+
       GoRoute(
         path: '/seller_notificaion',
         pageBuilder: (context, state) =>

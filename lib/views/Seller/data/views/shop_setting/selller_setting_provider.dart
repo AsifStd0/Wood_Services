@@ -1,54 +1,123 @@
 // view_models/shop_settings_view_model.dart
 import 'package:flutter/foundation.dart';
-import 'package:wood_service/views/Seller/data/models/seller_setting_model.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/shop_model.dart';
 
 class ShopSettingsViewModel with ChangeNotifier {
-  SellerShopModel _shop;
-  bool _isLoading = false;
-  String? _errorMessage;
+  ShopModel _shop = ShopModel(
+    sellerId: '',
+    shopName: 'Asif Khan',
+    ownerName: 'Asif Khan',
+    description: 'Description is here about ..... shop',
+    categories: ['Handmade Jewelry'],
+    phoneNumber: '+1234567890',
+    email: 'asif@example.com',
+    address: '123 Main Street, City, Country',
+  );
 
-  SellerShopModel get shop => _shop;
+  ShopModel get shop => _shop;
+
+  bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+  String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  ShopSettingsViewModel()
-    : _shop = SellerShopModel(
-        shopName: "Crafty Creations",
-        description: "Tell us about your shop...",
-        rating: 4.8,
-        reviewCount: 120,
-        categories: ["Handmade Jewelry"],
-        deliveryLeadTime: "1-3 Business Days",
-        returnPolicy: "30-Day Returns",
-        isVerified: true,
-      );
+  bool _isEditing = false;
+  bool get isEditing => _isEditing;
 
-  void updateShopName(String name) {
+  // Setters
+  void setShopName(String name) {
     _shop = _shop.copyWith(shopName: name);
     notifyListeners();
   }
 
-  void updateDescription(String description) {
+  void setOwnerName(String name) {
+    _shop = _shop.copyWith(ownerName: name);
+    notifyListeners();
+  }
+
+  void setDescription(String description) {
     _shop = _shop.copyWith(description: description);
     notifyListeners();
   }
 
-  void updateBannerImage(String imagePath) {
-    _shop = _shop.copyWith(bannerImage: imagePath);
+  void setBannerImage(String imageUrl) {
+    _shop = _shop.copyWith(bannerImage: imageUrl);
     notifyListeners();
   }
 
-  void updateDeliveryTime(String time) {
-    _shop = _shop.copyWith(deliveryLeadTime: time);
+  void setLogoImage(String imageUrl) {
+    _shop = _shop.copyWith(logoImage: imageUrl);
     notifyListeners();
   }
 
-  void updateReturnPolicy(String policy) {
+  void setCategories(List<String> categories) {
+    _shop = _shop.copyWith(categories: categories);
+    notifyListeners();
+  }
+
+  void setDeliveryLeadTime(int days) {
+    _shop = _shop.copyWith(deliveryLeadTime: days);
+    notifyListeners();
+  }
+
+  void setReturnPolicy(String policy) {
     _shop = _shop.copyWith(returnPolicy: policy);
     notifyListeners();
   }
 
-  Future<void> saveChanges() async {
+  void setPhoneNumber(String phone) {
+    _shop = _shop.copyWith(phoneNumber: phone);
+    notifyListeners();
+  }
+
+  void setEmail(String email) {
+    _shop = _shop.copyWith(email: email);
+    notifyListeners();
+  }
+
+  void setAddress(String address) {
+    _shop = _shop.copyWith(address: address);
+    notifyListeners();
+  }
+
+  void addDocument(ShopDocument document) {
+    final updatedDocuments = List<ShopDocument>.from(_shop.documents)
+      ..add(document);
+    _shop = _shop.copyWith(documents: updatedDocuments);
+    notifyListeners();
+  }
+
+  void removeDocument(String documentId) {
+    final updatedDocuments = List<ShopDocument>.from(_shop.documents)
+      ..removeWhere((doc) => doc.id == documentId);
+    _shop = _shop.copyWith(documents: updatedDocuments);
+    notifyListeners();
+  }
+
+  void setEditing(bool editing) {
+    _isEditing = editing;
+    notifyListeners();
+  }
+
+  // Validation
+  bool get isFormValid {
+    return _shop.shopName.isNotEmpty &&
+        _shop.ownerName.isNotEmpty &&
+        _shop.description.isNotEmpty &&
+        _shop.phoneNumber.isNotEmpty &&
+        _shop.email.isNotEmpty &&
+        _shop.address.isNotEmpty;
+  }
+
+  // Actions
+  Future<bool> saveChanges() async {
+    if (!isFormValid) {
+      _errorMessage = 'Please fill all required fields';
+      notifyListeners();
+      return false;
+    }
+
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -57,21 +126,74 @@ class ShopSettingsViewModel with ChangeNotifier {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
 
-      // Save logic here
+      _shop = _shop.copyWith(updatedAt: DateTime.now());
+      _isEditing = false;
       _isLoading = false;
       notifyListeners();
+      return true;
     } catch (e) {
       _isLoading = false;
-      _errorMessage = "Failed to save changes";
+      _errorMessage = 'Failed to save changes: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<void> loadShopData() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      // Simulate API call to load shop data
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Mock data - replace with actual API call
+      _shop = ShopModel(
+        sellerId: 'seller_123',
+        shopName: 'Asif Khan Handmade',
+        ownerName: 'Asif Khan',
+        description:
+            'Specializing in handmade jewelry and custom wood crafts. We create unique pieces with attention to detail and quality craftsmanship.',
+        bannerImage: null,
+        logoImage: null,
+        rating: 4.5,
+        reviewCount: 24,
+        categories: ['Handmade Jewelry', 'Wood Crafts', 'Custom Orders'],
+        deliveryLeadTime: 7,
+        returnPolicy: '30 days',
+        isVerified: true,
+        phoneNumber: '+1 (555) 123-4567',
+        email: 'asif@handmadecrafts.com',
+        address: '123 Artisan Street, Craftville, CA 90210',
+        documents: [
+          ShopDocument(
+            id: 'doc1',
+            name: 'Business License',
+            url: '',
+            type: 'license',
+            uploadDate: DateTime.now().subtract(const Duration(days: 30)),
+            isVerified: true,
+          ),
+          ShopDocument(
+            id: 'doc2',
+            name: 'Tax Certificate',
+            url: '',
+            type: 'tax_certificate',
+            uploadDate: DateTime.now().subtract(const Duration(days: 25)),
+            isVerified: true,
+          ),
+        ],
+      );
+    } catch (e) {
+      _errorMessage = 'Failed to load shop data: $e';
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }
 
-  void uploadDocuments() {
-    // Implement document upload logic
-  }
-
-  void previewShop() {
-    // Implement shop preview logic
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
   }
 }

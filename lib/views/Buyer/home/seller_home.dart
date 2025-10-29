@@ -260,7 +260,7 @@
 //                         Navigator.of(context).push(
 //                           MaterialPageRoute(builder: (context) => HomeScreen()),
 //                         );
-//                         // context.push('/productDetail/${product.id}');
+// context.push('/productDetail/${product.id}');
 
 //                         print('Navigating to product detail-----');
 //                       },

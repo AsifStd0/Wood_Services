@@ -15,10 +15,7 @@ class ProductDetailScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
-        actions: [
-          IconButton(icon: const Icon(Icons.favorite_border), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.share), onPressed: () {}),
-        ],
+        actions: [IconButton(icon: const Icon(Icons.share), onPressed: () {})],
       ),
       body: Stack(
         children: [
@@ -60,7 +57,7 @@ class ProductDetailContent extends StatelessWidget {
         // Product Images with Slider & Thumbnails
         const ProductImageGallery(),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: 14),
 
         // Product Basic Info
         const ProductBasicInfo(),

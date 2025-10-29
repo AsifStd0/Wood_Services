@@ -14,12 +14,44 @@ class BasicTab extends StatelessWidget {
     final product = viewModel.product;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Product Title
-          // _buildSectionTitle('Product Title'),
+          // Header
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+              border: Border.all(color: Colors.grey.withOpacity(0.1)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Basic Information',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Enter the basic details about your product',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
           CustomText('Product Title', type: CustomTextType.subtitleLarge),
           const SizedBox(height: 8),
           CustomTextFormField(
@@ -65,10 +97,7 @@ class BasicTab extends StatelessWidget {
             'Detailed product information',
             type: CustomTextType.subtitleSmall,
           ),
-          // Text(
-          //   'Detailed product information',
-          //   style: TextStyle(color: Colors.grey[600], fontSize: 12),
-          // ),
+
           const SizedBox(height: 8),
           Container(height: 1, color: Colors.grey[300]),
           const SizedBox(height: 16),
@@ -85,7 +114,9 @@ class BasicTab extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Category
-          _buildSectionTitle('Category'),
+          // _buildSectionTitle('Category'),
+          CustomText('Category', type: CustomTextType.subtitleLarge),
+
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             decoration: InputDecoration(
@@ -134,37 +165,8 @@ class BasicTab extends StatelessWidget {
               if (value != null) viewModel.setCategory(value);
             },
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 14),
 
-          // Tags
-          _buildSectionTitle('Tags'),
-          const SizedBox(height: 8),
-          CustomText(
-            'e.g., leather, wallet, handmade',
-            type: CustomTextType.subtitleSmall,
-          ),
-          // Text(
-          //   'e.g., leather, wallet, handmade',
-          //   style: TextStyle(color: Colors.grey[600], fontSize: 12),
-          // ),
-          const SizedBox(height: 8),
-          CustomTextFormField(
-            minline: 2,
-            maxLines: 2,
-
-            // controller: _descriptionController,
-            hintText: 'Add tags separated by commas',
-            onChanged: (value) {},
-            // focusNode: _descriptionFocusNode,
-            onSubmitted: (value) {
-              if (value.isNotEmpty) {
-                final tags = value.split(',').map((tag) => tag.trim()).toList();
-                viewModel.setTags([...product.tags, ...tags]);
-              }
-            },
-          ),
-
-          const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -181,7 +183,59 @@ class BasicTab extends StatelessWidget {
                 )
                 .toList(),
           ),
-          SizedBox(height: 60),
+          const SizedBox(height: 12),
+          if (product.tags.isNotEmpty) ...[
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: product.tags.map((tag) {
+                return Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          tag,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () {
+                            final newTags = List<String>.from(product.tags)
+                              ..remove(tag);
+                            viewModel.setTags(newTags);
+                          },
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 8),
+          ],
+          const SizedBox(height: 80),
         ],
       ),
     );
@@ -192,42 +246,5 @@ class BasicTab extends StatelessWidget {
       title,
       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
     );
-  }
-}
-
-// Placeholder tabs for other sections
-class _PricingTab extends StatelessWidget {
-  const _PricingTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('Pricing Tab - Under Development'));
-  }
-}
-
-class _InventoryTab extends StatelessWidget {
-  const _InventoryTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('Inventory Tab - Under Development'));
-  }
-}
-
-class _VariantsTab extends StatelessWidget {
-  const _VariantsTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('Variants Tab - Under Development'));
-  }
-}
-
-class _MediaTab extends StatelessWidget {
-  const _MediaTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('Media Tab - Under Development'));
   }
 }

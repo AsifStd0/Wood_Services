@@ -186,31 +186,6 @@ class _BuyerSignupState extends State<BuyerSignup> {
                         focusNode: _ibanFocusNode,
                       ),
                     ),
-
-                    // Documents Section
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: CustomText(
-                        'Documents',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        UploadBox(
-                          title: "Company Logo",
-                          subtitle: "Click to upload",
-                          fileTypeNote: "PNG, JPG or GIF (MAX. 800x400px)",
-                        ),
-                        UploadBox(
-                          title: "Commercial Registration (CR)",
-                          subtitle: "Click to upload",
-                          fileTypeNote: "PDF, PNG or JPG (MAX. 5MB)",
-                        ),
-                      ],
-                    ),
                     SizedBox(height: 20),
 
                     // Submit Button

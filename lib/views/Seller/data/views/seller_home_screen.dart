@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Seller/data/models/visit_request_model.dart';
 import 'package:wood_service/views/Seller/data/repository/home_repo.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home_screen_widget.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/view_request_provider.dart';
 import 'package:wood_service/widgets/advance_appbar.dart';
 
@@ -28,27 +29,29 @@ class _VisitRequestsScreenState extends State<SellerHomeScreen> {
     return ChangeNotifierProvider.value(
       value: _viewModel,
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
-        appBar: CustomAppBar(title: 'Visit Requests', showBackButton: false),
-        body: const _VisitRequestsContent(),
+        backgroundColor: Color(0xFFF8FAFC),
+        appBar: CustomAppBar(
+          title: 'Visit Requests',
+          showBackButton: false,
+          backgroundColor: Colors.white,
+        ),
+        body: VisitRequestsContent(),
       ),
     );
   }
 }
 
-class _VisitRequestsContent extends StatelessWidget {
-  const _VisitRequestsContent();
-
+class VisitRequestsContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<VisitRequestsViewModel>(
       builder: (context, viewModel, child) {
         if (viewModel.isLoading) {
-          return _buildLoadingState();
+          return buildLoadingState();
         }
 
         if (viewModel.hasError) {
-          return _buildErrorState(viewModel);
+          return buildErrorState(viewModel);
         }
 
         return Column(
@@ -57,102 +60,13 @@ class _VisitRequestsContent extends StatelessWidget {
             _buildHeaderStats(viewModel),
 
             // Filter Tabs
-            _buildFilterTabs(viewModel),
+            buildFilterTabs(viewModel),
 
             // Visit Requests List
             Expanded(child: _buildVisitList(viewModel)),
           ],
         );
       },
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: const CircularProgressIndicator(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Loading Visit Requests...',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState(VisitRequestsViewModel viewModel) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.error_outline,
-                size: 40,
-                color: Colors.red,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Oops! Something went wrong',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[800],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              viewModel.errorMessage,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: viewModel.loadVisitRequests,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.refresh, size: 20),
-              label: const Text('Try Again'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -167,43 +81,48 @@ class _VisitRequestsContent extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.brightOrange, AppColors.brightOrange],
+          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
         ),
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFF667EEA).withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Visit Overview',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatItem('Total', totalVisits.toString(), Icons.list_alt),
+              _buildStatItem(
+                'Total',
+                totalVisits.toString(),
+                Icons.assignment_rounded,
+                Color(0xFFFFD93D),
+              ),
               _buildStatItem(
                 'Pending',
                 pendingVisits.toString(),
-                Icons.pending,
+                Icons.pending_actions_rounded,
+                Color(0xFF6BCF7F),
               ),
               _buildStatItem(
                 'Accepted',
                 acceptedVisits.toString(),
-                Icons.check_circle,
+                Icons.verified_rounded,
+                Color(0xFF4D96FF),
               ),
             ],
           ),
@@ -212,87 +131,46 @@ class _VisitRequestsContent extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(String title, String value, IconData icon) {
+  Widget _buildStatItem(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Column(
       children: [
         Container(
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            shape: BoxShape.circle,
+            color: Colors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.3),
+              width: 1.5,
+            ),
           ),
-          child: Icon(icon, color: Colors.white, size: 24),
+          child: Icon(icon, color: Colors.white, size: 30),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Text(
           value,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
           ),
         ),
+        const SizedBox(height: 4),
         Text(
           title,
-          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.9),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
-    );
-  }
-
-  Widget _buildFilterTabs(VisitRequestsViewModel viewModel) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          _buildFilterTab('Active', VisitFilter.active, viewModel),
-          _buildFilterTab('Cancelled', VisitFilter.cancelled, viewModel),
-          _buildFilterTab('Completed', VisitFilter.completed, viewModel),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterTab(
-    String title,
-    VisitFilter filter,
-    VisitRequestsViewModel viewModel,
-  ) {
-    final isSelected = viewModel.currentFilter == filter;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => viewModel.setFilter(filter),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.brightOrange : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.grey[600],
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -300,82 +178,46 @@ class _VisitRequestsContent extends StatelessWidget {
     final visits = viewModel.filteredVisits;
 
     if (visits.isEmpty) {
-      return _buildEmptyState();
+      return buildEmptyState();
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       itemCount: visits.length,
       itemBuilder: (context, index) {
-        return _VisitRequestCard(visitRequest: visits[index]);
+        return VisitRequestCard(visitRequest: visits[index]);
       },
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.assignment_turned_in_outlined,
-                size: 50,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'No Visit Requests',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'When you receive visit requests, they will appear here',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
 
-class _VisitRequestCard extends StatelessWidget {
+class VisitRequestCard extends StatelessWidget {
   final VisitRequest visitRequest;
 
-  const _VisitRequestCard({required this.visitRequest});
+  const VisitRequestCard({required this.visitRequest});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.grey.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
+        border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.only(
+          left: 10,
+          right: 10,
+          top: 10,
+          bottom: 10,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -384,36 +226,51 @@ class _VisitRequestCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildStatusBadge(visitRequest.status),
-                Text(
-                  _getFormattedDate(visitRequest),
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                  ),
+                  child: Text(
+                    _getFormattedDate(visitRequest),
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-            // Address
+            // Address Section
             Row(
               children: [
                 Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.location_on,
-                    color: Colors.blue,
-                    size: 20,
+                    Icons.location_on_rounded,
+                    color: Colors.white,
+                    size: 16,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -421,56 +278,62 @@ class _VisitRequestCard extends StatelessWidget {
                       Text(
                         visitRequest.address,
                         style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
                           color: Colors.black87,
+                          height: 1.3,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Text(
-                        'Visit Request #${visitRequest.id}',
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
+                        'Request #${visitRequest.id}',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      // Text(
-                      //   'Visit Request #${visitRequest.id.length >= 8 ? visitRequest.id.substring(0, 8) : visitRequest.id}',
-                      //   style: const TextStyle(
-                      //     color: Colors.grey,
-                      //     fontSize: 12,
-                      //   ),
-                      // ),
                     ],
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
 
-            // Status and Details
+            // Status Info Card
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    _getStatusColor(visitRequest.status).withOpacity(0.05),
+                    _getStatusColor(visitRequest.status).withOpacity(0.02),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _getStatusColor(visitRequest.status).withOpacity(0.1),
+                  width: 1,
+                ),
               ),
               child: Row(
                 children: [
                   Icon(
                     _getStatusIcon(visitRequest.status),
                     color: _getStatusColor(visitRequest.status),
-                    size: 16,
+                    size: 18,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Status: ${visitRequest.statusText}',
                       style: TextStyle(
                         color: _getStatusColor(visitRequest.status),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
                       ),
                     ),
                   ),
@@ -478,10 +341,11 @@ class _VisitRequestCard extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 5),
 
             // Action Buttons
             _buildActionButtons(context, visitRequest),
+            SizedBox(height: 15),
           ],
         ),
       ),
@@ -490,26 +354,36 @@ class _VisitRequestCard extends StatelessWidget {
 
   Widget _buildStatusBadge(VisitStatus status) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: _getStatusColor(status).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          colors: [
+            _getStatusColor(status),
+            _getStatusColor(status).withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: _getStatusColor(status).withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            _getStatusIcon(status),
-            size: 12,
-            color: _getStatusColor(status),
-          ),
-          const SizedBox(width: 4),
+          Icon(_getStatusIcon(status), size: 14, color: Colors.white),
+          const SizedBox(width: 6),
           Text(
             _getStatusText(status),
-            style: TextStyle(
-              color: _getStatusColor(status),
+            style: const TextStyle(
+              color: Colors.white,
               fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -538,9 +412,9 @@ class _VisitRequestCard extends StatelessWidget {
       case VisitStatus.pending:
         return [
           _buildActionButton(
-            'Accept',
-            Colors.blue,
-            Icons.check_circle,
+            'Accept Request',
+            Color(0xFF6BCF7F),
+            Icons.check_circle_rounded,
             () => _handleStatusUpdate(context, visit.id, VisitStatus.accepted),
           ),
         ];
@@ -549,9 +423,9 @@ class _VisitRequestCard extends StatelessWidget {
       case VisitStatus.contractSent:
         return [
           _buildActionButton(
-            'Cancel',
-            Colors.red,
-            Icons.cancel,
+            'Cancel Visit',
+            Color(0xFFFF6B6B),
+            Icons.cancel_rounded,
             () => _handleStatusUpdate(context, visit.id, VisitStatus.cancelled),
           ),
         ];
@@ -560,14 +434,14 @@ class _VisitRequestCard extends StatelessWidget {
         return [
           _buildActionButton(
             'Cancel',
-            Colors.red,
-            Icons.cancel,
+            Color(0xFFFF6B6B),
+            Icons.cancel_rounded,
             () => _handleStatusUpdate(context, visit.id, VisitStatus.cancelled),
           ),
           _buildActionButton(
             'Confirm Visit',
-            Colors.green,
-            Icons.verified,
+            Color(0xFF4D96FF),
+            Icons.verified_rounded,
             () => _handleStatusUpdate(context, visit.id, VisitStatus.completed),
           ),
         ];
@@ -588,16 +462,20 @@ class _VisitRequestCard extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 0,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 2,
+        shadowColor: color.withOpacity(0.3),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 16),
-          const SizedBox(width: 6),
-          Text(text, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Icon(icon, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          ),
         ],
       ),
     );
@@ -614,13 +492,13 @@ class _VisitRequestCard extends StatelessWidget {
   String _getStatusText(VisitStatus status) {
     switch (status) {
       case VisitStatus.pending:
-        return 'Pending';
+        return 'Pending Review';
       case VisitStatus.accepted:
         return 'Accepted';
       case VisitStatus.contractSent:
         return 'Contract Sent';
       case VisitStatus.contractActive:
-        return 'Active';
+        return 'Active Contract';
       case VisitStatus.completed:
         return 'Completed';
       case VisitStatus.cancelled:
@@ -631,17 +509,17 @@ class _VisitRequestCard extends StatelessWidget {
   IconData _getStatusIcon(VisitStatus status) {
     switch (status) {
       case VisitStatus.pending:
-        return Icons.pending;
+        return Icons.pending_actions_rounded;
       case VisitStatus.accepted:
-        return Icons.check_circle;
+        return Icons.check_circle_rounded;
       case VisitStatus.contractSent:
-        return Icons.send;
+        return Icons.send_rounded;
       case VisitStatus.contractActive:
-        return Icons.play_circle;
+        return Icons.play_circle_fill_rounded;
       case VisitStatus.completed:
-        return Icons.verified;
+        return Icons.verified_rounded;
       case VisitStatus.cancelled:
-        return Icons.cancel;
+        return Icons.cancel_rounded;
     }
   }
 
@@ -657,17 +535,17 @@ class _VisitRequestCard extends StatelessWidget {
   Color _getStatusColor(VisitStatus status) {
     switch (status) {
       case VisitStatus.pending:
-        return Colors.orange;
+        return Color(0xFFFFA726);
       case VisitStatus.accepted:
-        return Colors.blue;
+        return Color(0xFF4D96FF);
       case VisitStatus.contractSent:
-        return Colors.purple;
+        return Color(0xFF9C27B0);
       case VisitStatus.contractActive:
-        return Colors.green;
+        return Color(0xFF6BCF7F);
       case VisitStatus.completed:
-        return Colors.green;
+        return Color(0xFF4CAF50);
       case VisitStatus.cancelled:
-        return Colors.red;
+        return Color(0xFFFF6B6B);
     }
   }
 }

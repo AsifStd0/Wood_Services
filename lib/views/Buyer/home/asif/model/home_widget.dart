@@ -164,7 +164,7 @@ Widget buildCategoryChip(
   return GestureDetector(
     onTap: onTap,
     child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
       decoration: BoxDecoration(
         color: isSelected ? Color(0xffEDC064) : Colors.transparent,
         borderRadius: BorderRadius.circular(16),
@@ -203,14 +203,17 @@ Widget buildNewSection() {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CustomText('NEW', type: CustomTextType.subtitleMedium),
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: CustomText('NEW', type: CustomTextType.subtitleMedium15bold),
+          ),
           _buildImagesRow(),
-          const SizedBox(height: 3),
 
+          // const SizedBox(height: 3),
           Column(
             children: chunks.map((chunk) {
               return Padding(
-                padding: const EdgeInsets.only(bottom: 5, top: 5),
+                padding: const EdgeInsets.only(top: 4, bottom: 3),
                 child: Row(
                   children: chunk.map((option) {
                     return Expanded(
@@ -244,7 +247,7 @@ Widget _buildProductCategoryChip(
   return GestureDetector(
     onTap: onTap,
     child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
         color: isSelected ? AppColors.yellowLight : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
@@ -267,36 +270,80 @@ Widget _buildImagesRow() {
   return Row(
     children: [
       Expanded(
-        child: Container(
-          height: 80,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10), // circular shape
+          child: Container(
+            height: 70,
             color: Colors.grey[300],
+            child: Image.asset('assets/images/sofa.jpg', fit: BoxFit.cover),
           ),
-          child: const Icon(Icons.image, size: 40, color: Colors.grey),
         ),
       ),
-      const SizedBox(width: 12),
+      const SizedBox(width: 6),
       Expanded(
-        child: Container(
-          height: 80,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            height: 70,
             color: Colors.grey[300],
+            child: Image.asset('assets/images/table2.jpg', fit: BoxFit.cover),
           ),
-          child: const Icon(Icons.image, size: 40, color: Colors.grey),
         ),
       ),
-      const SizedBox(width: 12),
+      const SizedBox(width: 6),
       Expanded(
-        child: Container(
-          height: 80,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            height: 70,
             color: Colors.grey[300],
+            child: Image.asset('assets/images/sofa.jpg', fit: BoxFit.cover),
           ),
-          child: const Icon(Icons.image, size: 40, color: Colors.grey),
         ),
+      ),
+      const SizedBox(width: 6),
+      Expanded(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            height: 70,
+            color: Colors.grey[300],
+            child: Image.asset('assets/images/table2.jpg', fit: BoxFit.cover),
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
+Widget buildCityFilter(HomeViewModel viewModel) {
+  final cities = [
+    'New York',
+    'Los Angeles',
+    'Chicago',
+    'Miami',
+    'Dallas',
+    'All Cities',
+  ];
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      CustomText('City', type: CustomTextType.bodySmall),
+      const SizedBox(height: 8),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: cities.map((city) {
+          final isSelected = viewModel.selectedCity == city;
+          return FilterChip(
+            label: Text(city),
+            selected: isSelected,
+            onSelected: (selected) {
+              viewModel.setCity(selected ? city : null);
+            },
+          );
+        }).toList(),
       ),
     ],
   );

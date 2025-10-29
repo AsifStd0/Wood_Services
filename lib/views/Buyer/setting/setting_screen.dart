@@ -159,37 +159,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ]),
 
-          // Data Management
-          _buildSettingsSection('Data Management', [
-            _buildSettingsTile(
-              icon: Icons.delete_outline,
-              title: 'Clear Cache',
-              subtitle: 'Clear temporary files (124 MB)',
-              onTap: _clearCache,
-              color: Colors.blue,
-            ),
-          ]),
-
-          // Account Actions
-          _buildSettingsSection('Account Actions', [
-            _buildSettingsTile(
-              icon: Icons.logout_outlined,
-              title: 'Sign Out',
-              subtitle: 'Logout from your account',
-              onTap: _showLogoutDialog,
-              color: Colors.red,
-              textColor: Colors.red,
-            ),
-            _buildSettingsTile(
-              icon: Icons.delete_forever_outlined,
-              title: 'Delete Account',
-              subtitle: 'Permanently remove account',
-              onTap: _showDeleteAccountDialog,
-              color: Colors.red,
-              textColor: Colors.red,
-            ),
-          ]),
-
           const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],
       ),

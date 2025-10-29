@@ -38,7 +38,6 @@ export 'package:wood_service/views/Seller/data/views/noification_model.dart/sell
 export 'package:wood_service/views/Seller/data/views/order_data/order_screen.dart';
 
 export 'package:wood_service/views/Seller/data/views/seller_home_screen.dart';
-export 'package:wood_service/views/Seller/data/views/seller_order_screen.dart';
 export 'package:wood_service/views/Seller/data/views/seller_prduct.dart/add_product_screen.dart';
 export 'package:wood_service/views/Seller/data/views/shop_setting/seller_settings_screen.dart';
 export 'package:wood_service/views/Seller/seller_login.dart/seller_login.dart';
@@ -51,5 +50,4 @@ export 'dart:async';
 
 export 'package:wood_service/core/theme/app_colors.dart';
 export 'package:wood_service/core/theme/app_test_style.dart';
-export 'package:wood_service/views/Buyer/home/asif/furniture_product.dart';
 export 'package:wood_service/views/Buyer/home/asif/model/home_view_model.dart';

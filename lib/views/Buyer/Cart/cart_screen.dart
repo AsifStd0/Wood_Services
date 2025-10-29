@@ -38,10 +38,23 @@ class _CartScreenState extends State<BuyerCartScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: CustomAppBar(title: 'My Cart', showBackButton: false),
-      body: buyerCartItems.isEmpty
-          ? buildEmptyCart(context)
-          : _buildCartWithItems(),
-      bottomNavigationBar: buyerCartItems.isEmpty ? null : _buildCheckoutBar(),
+      body: Stack(
+        children: [
+          // Main body content
+          buyerCartItems.isEmpty
+              ? buildEmptyCart(context)
+              : _buildCartWithItems(),
+
+          // Bottom Navigation Bar with some margin
+          if (buyerCartItems.isNotEmpty)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 16, // Add some space from bottom
+              child: _buildCheckoutBar(),
+            ),
+        ],
+      ),
     );
   }
 
@@ -294,12 +307,11 @@ class _CartScreenState extends State<BuyerCartScreen> {
                   Text(
                     '\$${_total.toStringAsFixed(2)}',
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.brown,
                     ),
                   ),
-                  const SizedBox(height: 4),
                   Text(
                     'Total',
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
@@ -324,21 +336,18 @@ class _CartScreenState extends State<BuyerCartScreen> {
   }
 
   Widget _buildCompactPriceRow(String label, double amount) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$label: ',
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-          ),
-          Text(
-            '\$${amount.toStringAsFixed(2)}',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$label: ',
+          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+        ),
+        Text(
+          '   \$${amount.toStringAsFixed(2)}',
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
+      ],
     );
   }
 

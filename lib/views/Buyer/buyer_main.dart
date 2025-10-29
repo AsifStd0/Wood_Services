@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:wood_service/views/Buyer/Cart/cart_screen.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_screen.dart';
 import 'package:wood_service/views/Buyer/Messages/message_screen.dart';
-import 'package:wood_service/views/Buyer/home/asif/furniture_product.dart';
+import 'package:wood_service/views/Buyer/home/asif/furniture_product_model.dart';
 import 'package:wood_service/views/Buyer/home/asif/model/home_screen.dart';
 import 'package:wood_service/views/Buyer/profile/profile.dart';
 
@@ -58,48 +58,80 @@ class _MainScreenState extends State<MainScreen> {
 // Sample data - Easy to customize
 final List<FurnitureProduct> products = [
   FurnitureProduct(
+    freeDelivery: false, // Has free delivery
+
     id: '123',
     name: 'Modern Sofa',
     price: 499,
     category: 'Living Room',
-    image: 'assets/sofa.jpg',
+    image: 'assets/images/sofa.jpg',
     isNew: true,
+    brand: 'Sofa Set',
+    description:
+        'Comfortable 3-seater sofa with premium fabric and wooden legs',
   ),
   FurnitureProduct(
+    originalPrice: 400,
+    freeDelivery: true, // Has free delivery
+
     id: '123',
     name: 'Dining Table',
     price: 249,
     category: 'Dining Room',
-    image: 'assets/dining_table.jpg',
+    image: 'assets/images/table.jpg',
+    brand: 'Sofa Set',
+    description:
+        'Comfortable 3-seater sofa with premium fabric and wooden legs',
   ),
   FurnitureProduct(
+    freeDelivery: true, // Has free delivery
+
     id: '123',
     name: 'Accent Chair',
     price: 149,
     category: 'Living Room',
-    image: 'assets/chair.jpg',
+    image: 'assets/images/chair.jpg',
+    brand: 'Sofa Set',
+    description:
+        'Comfortable 3-seater sofa with premium fabric and wooden legs',
   ),
   FurnitureProduct(
+    freeDelivery: false, // Has free delivery
+
     id: '123',
     name: 'Queen Bed',
     price: 599,
     category: 'Bedroom',
-    image: 'assets/bed.jpg',
+    image: 'assets/images/table2.jpg',
     isNew: true,
+    brand: 'Sofa Set',
+    description:
+        'Comfortable 3-seater sofa with premium fabric and wooden legs',
   ),
   FurnitureProduct(
+    originalPrice: 400,
+    freeDelivery: true, // Has free delivery
+
     id: '123',
     name: 'Storage Cabinet',
     price: 349,
     category: 'Bedroom',
-    image: 'assets/cabinet.jpg',
+    image: 'assets/images/sofa2.jpg',
+    brand: 'Sofa Set',
+    description:
+        'Comfortable 3-seater sofa with premium fabric and wooden legs',
   ),
   FurnitureProduct(
+    freeDelivery: true, // Has free delivery
+
     id: '123',
     name: 'Patio Set',
     price: 799,
     category: 'Outdoor',
-    image: 'assets/patio.jpg',
+    image: 'assets/images/sofa.jpg',
+    brand: 'Sofa Set',
+    description:
+        'Comfortable 3-seater sofa with premium fabric and wooden legs',
   ),
 ];
 

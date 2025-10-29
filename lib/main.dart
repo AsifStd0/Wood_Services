@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:wood_service/views/Buyer/home/asif/model/home_view_model.dart';
+import 'package:wood_service/views/Admin/admin_dashboard_view_model.dart';
+import 'package:wood_service/views/Admin/admin_repository.dart';
 import 'package:wood_service/views/Seller/data/models/shop_model.dart';
 import 'package:wood_service/views/Seller/data/repository/order_repo.dart';
 import 'package:wood_service/views/Seller/data/repository/seller_product_repo.dart';
@@ -7,6 +8,7 @@ import 'package:wood_service/views/Seller/data/services/shop_service.dart';
 import 'package:wood_service/views/Seller/data/view_models/seller_home_view_model.dart';
 import 'package:wood_service/views/Seller/data/view_models/seller_settings_view_model.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
+import 'package:wood_service/views/Seller/data/views/seller_chating/chat_view_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 import 'app/index.dart';
 
@@ -55,6 +57,15 @@ void main() async {
 
         ChangeNotifierProvider<HomeViewModel>(
           create: (context) => HomeViewModel(),
+        ),
+
+        ChangeNotifierProvider<SellerChatViewModel>(
+          create: (context) => SellerChatViewModel(),
+        ),
+
+        ChangeNotifierProvider<AdminDashboardViewModel>(
+          create: (context) =>
+              AdminDashboardViewModel(context.read<AdminRepository>()),
         ),
       ],
       child: MyApp(),

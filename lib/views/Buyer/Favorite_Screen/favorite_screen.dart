@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wood_service/views/Buyer/Favorite_Screen/favirute_widet.dart';
+import 'package:wood_service/views/Buyer/home/asif/model/favirute_model.dart';
+import 'package:wood_service/widgets/advance_appbar.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -9,78 +12,7 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  final List<FavoriteProduct> _favoriteItems = [
-    FavoriteProduct(
-      id: '2',
-      name: 'Solid Mahogany Dining Table',
-      description: 'Handcrafted Mahogany, 72" x 36" x 30"',
-      price: 1299.99,
-      originalPrice: 1499.99,
-      imageUrl:
-          'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&h=200&fit=crop',
-      seller: 'Luxury Furniture',
-      rating: 4.9,
-      reviewCount: 89,
-      inStock: true,
-      isOnSale: true,
-      discountPercent: 13,
-      isSustainable: false,
-      addedDate: DateTime.now().subtract(const Duration(days: 5)),
-    ),
-    FavoriteProduct(
-      id: '3',
-      name: 'Oak Wood Bookshelf',
-      description: 'Solid Oak, 5 Shelves, 60" Height',
-      price: 459.99,
-      originalPrice: 459.99,
-      imageUrl:
-          'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=200&h=200&fit=crop',
-      seller: 'Wood Crafts',
-      rating: 4.6,
-      reviewCount: 67,
-      inStock: false,
-      isOnSale: false,
-      discountPercent: 0,
-      isSustainable: true,
-      addedDate: DateTime.now().subtract(const Duration(days: 7)),
-    ),
-    FavoriteProduct(
-      id: '4',
-      name: 'Walnut Coffee Table',
-      description: 'Modern Design, 48" Round, Glass Top',
-      price: 599.99,
-      originalPrice: 699.99,
-      imageUrl:
-          'https://images.unsplash.com/photo-1533090368676-1fd25485db88?w=200&h=200&fit=crop',
-      seller: 'Modern Furniture',
-      rating: 4.7,
-      reviewCount: 203,
-      inStock: true,
-      isOnSale: true,
-      discountPercent: 14,
-      isSustainable: true,
-      addedDate: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    FavoriteProduct(
-      id: '5',
-      name: 'Maple Wood Chairs (Set of 4)',
-      description: 'Solid Maple, Upholstered Seats, Modern Design',
-      price: 399.99,
-      originalPrice: 499.99,
-      imageUrl:
-          'https://images.unsplash.com/photo-1503602642458-232111445657?w=200&h=200&fit=crop',
-      seller: 'Home Comfort',
-      rating: 4.5,
-      reviewCount: 156,
-      inStock: true,
-      isOnSale: true,
-      discountPercent: 20,
-      isSustainable: true,
-      addedDate: DateTime.now().subtract(const Duration(days: 3)),
-    ),
-  ];
-
-  bool _gridView = true;
+  // bool _gridView = true;
   String _sortBy = 'Recently Added';
   final List<String> _sortOptions = [
     'Recently Added',
@@ -91,7 +23,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   ];
 
   List<FavoriteProduct> get _sortedItems {
-    List<FavoriteProduct> items = List.from(_favoriteItems);
+    List<FavoriteProduct> items = List.from(favoriteItems);
 
     switch (_sortBy) {
       case 'Recently Added':
@@ -118,91 +50,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text(
-          'My Favorites',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        centerTitle: true,
+      appBar: CustomAppBar(
+        title: 'My Favorites',
         automaticallyImplyLeading: false,
-        actions: [
-          // View Toggle
-          IconButton(
-            icon: Icon(
-              _gridView ? Icons.view_list_rounded : Icons.grid_view_rounded,
-              color: Colors.brown,
-            ),
-            onPressed: () {
-              setState(() {
-                _gridView = !_gridView;
-              });
-            },
-          ),
-        ],
+        showBackButton: false,
       ),
-      body: _favoriteItems.isEmpty
-          ? _buildEmptyFavorites()
+      body: favoriteItems.isEmpty
+          ? buildEmptyFavorites(context)
           : _buildFavoritesContent(),
-    );
-  }
-
-  Widget _buildEmptyFavorites() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: Colors.brown.shade50,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.favorite_outline_rounded,
-              size: 50,
-              color: Colors.brown,
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'No Favorites Yet',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.brown,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40),
-            child: Text(
-              'Start saving your favorite wood products to easily find them later',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () {
-              context.go('/home');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.brown,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: const Icon(Icons.explore_outlined),
-            label: const Text(
-              'Explore Products',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -211,13 +66,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       children: [
         // Sort Info Bar
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           color: Colors.white,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${_favoriteItems.length} ${_favoriteItems.length == 1 ? 'Item' : 'Items'}',
+                '${favoriteItems.length} ${favoriteItems.length == 1 ? 'Item' : 'Items'}',
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   color: Colors.brown,
@@ -262,19 +117,19 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         const SizedBox(height: 8),
 
         // Products Grid/List
-        Expanded(child: _gridView ? _buildGridView() : _buildListView()),
+        Expanded(child: _buildGridView()),
       ],
     );
   }
 
   Widget _buildGridView() {
     return GridView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(left: 10, right: 10),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.51,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 10,
+        childAspectRatio: 0.50,
       ),
       itemCount: _sortedItems.length,
       itemBuilder: (context, index) {
@@ -283,17 +138,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  Widget _buildListView() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _sortedItems.length,
-      itemBuilder: (context, index) {
-        return _buildListItem(_sortedItems[index]);
-      },
-    );
-  }
-
   Widget _buildGridItem(FavoriteProduct product) {
+    bool hasDiscount =
+        product.originalPrice != null && product.originalPrice! > product.price;
+    final double? discount = hasDiscount
+        ? ((product.originalPrice! - product.price) /
+                  product.originalPrice! *
+                  100)
+              .roundToDouble()
+        : null;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -312,20 +165,48 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           // Product Image with Badges
           Stack(
             children: [
-              // Product Image
-              Container(
-                height: 120,
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                  image: DecorationImage(
-                    image: NetworkImage(product.imageUrl),
-                    fit: BoxFit.cover,
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+                child: Container(
+                  height: 120,
+                  color: Colors.grey[200],
+                  child: Center(
+                    child: Image.network(
+                      product.imageUrl,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                    ),
                   ),
                 ),
               ),
+
+              // Discount Badge - Only show if product has discount
+              if (hasDiscount && discount != null && discount > 0)
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${discount.toInt()}% OFF',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
 
               // Favorite Button
               Positioned(
@@ -365,6 +246,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Seller
+                Text(
+                  product.seller,
+                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+
                 // Product Name
                 Text(
                   product.name,
@@ -373,21 +263,23 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     fontWeight: FontWeight.w600,
                     height: 1.2,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                const SizedBox(height: 4),
-
-                // Seller
-                Text(
-                  product.seller,
-                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 4),
 
-                const SizedBox(height: 6),
+                // Product Name
+                Text(
+                  product.description,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 3),
 
                 // Rating
                 Row(
@@ -411,16 +303,46 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
                 const SizedBox(height: 8),
 
-                // Price
+                // Price Section
                 Row(
                   children: [
+                    // Current Price
                     Text(
-                      '\$${product.price.toStringAsFixed(2)}',
+                      '\$${product.price.toInt()}',
                       style: const TextStyle(
-                        fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Colors.brown,
+                        fontSize: 14,
+                        color: Colors.black,
                       ),
+                    ),
+                    const SizedBox(width: 2),
+
+                    // Original Price (Crossed) - Only show if has discount
+                    if (hasDiscount)
+                      Text(
+                        '\$${product.originalPrice!.toInt()}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+
+                    const Spacer(),
+
+                    // Delivery Info - Only show if free delivery
+                    // if (product.freeDelivery)
+                    Row(
+                      children: [
+                        Text(
+                          'Free Delivery',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.green[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -455,178 +377,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  Widget _buildListItem(FavoriteProduct product) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product Image
-          Container(
-            width: 100,
-            height: 120,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-              ),
-              image: DecorationImage(
-                image: NetworkImage(product.imageUrl),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-
-          // Product Details
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Product Name
-                  Text(
-                    product.name,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      height: 1.2,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  // Seller
-                  Text(
-                    product.seller,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Rating and Stock
-                  Row(
-                    children: [
-                      // Rating
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star_rounded,
-                            size: 14,
-                            color: Colors.amber,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            product.rating.toString(),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '(${product.reviewCount})',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const Spacer(),
-
-                      // Stock Status
-                      if (!product.inStock)
-                        Text(
-                          'Out of Stock',
-                          style: TextStyle(
-                            color: Colors.red.shade600,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Price and Actions
-                  Row(
-                    children: [
-                      // Price
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '\$${product.price.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.brown,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const Spacer(),
-
-                      // Action Buttons
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.delete_outline_rounded,
-                              size: 18,
-                            ),
-                            onPressed: () => _removeFromFavorites(product.id),
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 4),
-                          ElevatedButton(
-                            onPressed: () => _addToCart(product),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.brown,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 8,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: const Text(
-                              'Add to Cart',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // Favorite Actions
   void _removeFromFavorites(String productId) {
     showDialog(
@@ -648,7 +398,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  _favoriteItems.removeWhere((item) => item.id == productId);
+                  favoriteItems.removeWhere((item) => item.id == productId);
                 });
                 Navigator.pop(context);
                 _showSnackBar('Removed from favorites');
@@ -676,39 +426,4 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       ),
     );
   }
-}
-
-// Favorite Product Model
-class FavoriteProduct {
-  final String id;
-  final String name;
-  final String description;
-  final double price;
-  final double originalPrice;
-  final String imageUrl;
-  final String seller;
-  final double rating;
-  final int reviewCount;
-  final bool inStock;
-  final bool isOnSale;
-  final int discountPercent;
-  final bool isSustainable;
-  final DateTime addedDate;
-
-  FavoriteProduct({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.price,
-    required this.originalPrice,
-    required this.imageUrl,
-    required this.seller,
-    required this.rating,
-    required this.reviewCount,
-    required this.inStock,
-    required this.isOnSale,
-    required this.discountPercent,
-    required this.isSustainable,
-    required this.addedDate,
-  });
 }

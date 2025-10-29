@@ -17,6 +17,7 @@ enum CustomTextType {
   // 🎯 SUBTITLES
   subtitleLarge,
   subtitleMedium,
+  subtitleMedium15bold,
   subtitleSmall,
   subtitleXSmall,
   // Setting heading
@@ -214,6 +215,14 @@ class CustomText extends StatelessWidget {
           color: AppColors.darkGrey,
         );
 
+      case CustomTextType.subtitleMedium15bold:
+        return theme.titleMedium!.copyWith(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          fontStyle: FontStyle.italic,
+          color: AppColors.darkGrey,
+        );
+
       case CustomTextType.subtitleSmall:
         return theme.titleSmall!.copyWith(
           fontSize: 14,
@@ -275,9 +284,10 @@ class CustomText extends StatelessWidget {
       // 🎯 CAPTIONS & LABELS
       case CustomTextType.captionLarge:
         return theme.labelLarge!.copyWith(
+          fontWeight: FontWeight.bold,
           fontSize: 14,
-          color: Colors.grey[600],
-          fontWeight: FontWeight.w400,
+
+          height: 1.2,
         );
 
       case CustomTextType.captionMedium:
