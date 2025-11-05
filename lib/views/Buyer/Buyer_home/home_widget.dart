@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../app/index.dart';
+import '../../../app/index.dart';
 
 Widget buildPriceFilter(HomeViewModel viewModel) {
   return Column(
@@ -164,7 +164,7 @@ Widget buildCategoryChip(
   return GestureDetector(
     onTap: onTap,
     child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 2),
       decoration: BoxDecoration(
         color: isSelected ? Color(0xffEDC064) : Colors.transparent,
         borderRadius: BorderRadius.circular(16),
@@ -204,7 +204,7 @@ Widget buildNewSection() {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(top: 5),
+            padding: const EdgeInsets.only(top: 3),
             child: CustomText('NEW', type: CustomTextType.subtitleMedium15bold),
           ),
           _buildImagesRow(),

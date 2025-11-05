@@ -22,7 +22,102 @@ class ChatScreen extends StatelessWidget {
         children: [
           // _buildOrderInfo(),
           Expanded(child: _buildChatMessages()),
-          _buildMessageInput(),
+        ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: _buildFloatingMessageInput(),
+    );
+  }
+
+  Widget _buildFloatingMessageInput() {
+    return Container(
+      padding: const EdgeInsets.only(right: 10, left: 6, bottom: 20),
+      child: Row(
+        children: [
+          // Custom Chat Input Field (without borders/background)
+          Expanded(
+            child: TextField(
+              maxLines: null,
+              textInputAction: TextInputAction.send,
+              decoration: InputDecoration(
+                hintText: 'Type a message...',
+                hintStyle: const TextStyle(color: Colors.grey, fontSize: 16),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: const BorderSide(
+                    color: AppColors.greyLight,
+                    width: 1.5,
+                  ),
+                ),
+              ),
+              onChanged: (value) {},
+            ),
+          ),
+
+          const SizedBox(width: 6),
+
+          // Attachment Button
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.add_rounded,
+                color: Colors.grey.shade700,
+                size: 20,
+              ),
+              onPressed: () {},
+              padding: EdgeInsets.zero,
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Beautiful Send Button
+
+          // 🚀 Send Button (Floating Gradient Circle)
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 45,
+            height: 45,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF667EEA).withOpacity(0.4),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: const Icon(
+                Icons.send_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              onPressed: () {},
+            ),
+          ),
         ],
       ),
     );
@@ -335,56 +430,6 @@ class ChatScreen extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageInput() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: Row(
-                children: [
-                  Expanded(child: CustomTextFormField.compactSearch()),
-
-                  IconButton(
-                    icon: const Icon(Icons.camera_alt, color: Colors.grey),
-                    onPressed: () {},
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            width: 45,
-            height: 45,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
-              color: Color(0xFF667eea),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.send, color: Colors.white, size: 20),
-              onPressed: () {},
             ),
           ),
         ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wood_service/views/Seller/data/models/visit_request_model.dart';
 
 //  Row(
 //       children: [
@@ -49,6 +50,7 @@ class AppColors {
   static Color greyDim = Colors.grey.withOpacity(0.6);
   static const Color greyLight = Color(0xFFF5F5F5);
   static const Color greyDark = Color(0xFF616161);
+  static const Color redColor = Color.fromARGB(255, 182, 42, 42);
 
   // Background colors
   static const Color background = Color(0xFFFAFAFA);
@@ -102,4 +104,32 @@ class AppColors {
   static const Color yellowButton = Color(0xFFFAC808);
 
   static const Color yellowLight = Color(0xffEDC064);
+
+  // ! ***** Gradient
+  // NEW: Gradient colors
+  static const Color gradientStart = Color(0xFF667EEA);
+  static const Color gradientEnd = Color(0xFF764BA2);
+
+  // NEW: Gradient as a static method
+  static LinearGradient get primaryGradient => LinearGradient(
+    colors: [gradientStart, gradientEnd],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  static Color getStatusColor(VisitStatus status) {
+    switch (status) {
+      case VisitStatus.pending:
+        return Color(0xFFFFA726);
+      case VisitStatus.accepted:
+        return Color(0xFF4D96FF);
+      case VisitStatus.contractSent:
+        return Color(0xFF9C27B0);
+      case VisitStatus.contractActive:
+        return Color(0xFF6BCF7F);
+      case VisitStatus.completed:
+        return Color(0xFF4CAF50);
+      case VisitStatus.cancelled:
+        return Color(0xFFFF6B6B);
+    }
+  }
 }

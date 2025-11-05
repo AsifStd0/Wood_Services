@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favirute_widet.dart';
-import 'package:wood_service/views/Buyer/home/asif/model/favirute_model.dart';
+import 'package:wood_service/data/models/favirute_model.dart';
 import 'package:wood_service/widgets/advance_appbar.dart';
 
 class FavoritesScreen extends StatefulWidget {
@@ -127,9 +126,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       padding: const EdgeInsets.only(left: 10, right: 10),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 8,
+        crossAxisSpacing: 4,
         mainAxisSpacing: 10,
-        childAspectRatio: 0.50,
+        childAspectRatio: 0.58,
       ),
       itemCount: _sortedItems.length,
       itemBuilder: (context, index) {
@@ -242,16 +241,42 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
           // Product Details
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.only(top: 10, left: 5),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Seller
-                Text(
-                  product.seller,
-                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  children: [
+                    Text(
+                      product.seller,
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Spacer(),
+                    Row(
+                      children: [
+                        Icon(Icons.star_rounded, size: 12, color: Colors.amber),
+                        const SizedBox(width: 2),
+                        Text(
+                          product.rating.toString(),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '(${product.reviewCount})',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
 
@@ -282,26 +307,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 const SizedBox(height: 3),
 
                 // Rating
-                Row(
-                  children: [
-                    Icon(Icons.star_rounded, size: 12, color: Colors.amber),
-                    const SizedBox(width: 2),
-                    Text(
-                      product.rating.toString(),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '(${product.reviewCount})',
-                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
 
-                const SizedBox(height: 8),
+                // const SizedBox(height: 8),
 
                 // Price Section
                 Row(

@@ -1,8 +1,8 @@
 // views/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/views/Buyer/home/asif/furniture_product_model.dart';
-import 'package:wood_service/views/Buyer/home/asif/model/home_widget.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/furniture_product_model.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/home_widget.dart';
 import 'package:wood_service/widgets/advance_appbar.dart';
 
 class BuyerHomeScreen extends StatefulWidget {
@@ -58,7 +58,6 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
         ),
         body: GestureDetector(
           onTap: () {
-            // Hide keyboard when tapping outside
             FocusScope.of(context).unfocus();
           },
           behavior: HitTestBehavior.translucent,
@@ -66,7 +65,6 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
             child: Padding(
               padding: const EdgeInsets.only(left: 10, right: 10),
               child: SingleChildScrollView(
-                // Wrap with SingleChildScrollView
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -117,7 +115,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
               ),
             ),
 
-            const SizedBox(height: 5),
+            const SizedBox(height: 3),
 
             // Image Slider with Auto-slide
             _buildImageSlider(),
@@ -131,7 +129,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
     return Consumer<HomeViewModel>(
       builder: (context, viewModel, child) {
         return SizedBox(
-          height: 150,
+          height: 140,
 
           child: PageView.builder(
             controller: _pageController,
@@ -156,7 +154,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
                   children: [
                     // Indicators positioned at bottom center
                     Positioned(
-                      bottom: 16,
+                      bottom: 10,
                       left: 0,
                       right: 0,
                       child: _buildSliderIndicators(
@@ -197,7 +195,9 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   }
 
   Widget _buildProductsGrid() {
-    List<FurnitureProduct> filteredProducts = products.where((product) {
+    List<FurnitureProduct> filteredProducts = furnitureproducts.where((
+      product,
+    ) {
       final matchesCategory = selectedCategory == 'All';
       return matchesCategory;
     }).toList();
@@ -292,7 +292,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
 
           // Product Details
           Padding(
-            padding: const EdgeInsets.only(top: 8, left: 5, right: 5),
+            padding: const EdgeInsets.only(top: 3, left: 5, right: 5),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -388,7 +388,6 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
                 ),
 
                 // Order Button
-                SizedBox(height: 5),
                 SizedBox(
                   width: double.infinity,
                   child: CustomButton(
@@ -456,7 +455,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
             GestureDetector(
               onTap: () => viewModel.toggleMoreFilters(),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

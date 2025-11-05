@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:wood_service/views/Seller/data/views/noification_model.dart/seller_notificaion_screen.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_screen.dart';
 import 'package:wood_service/views/Seller/data/views/seller_chating/chat_screen.dart';
-import 'package:wood_service/views/Seller/data/views/seller_home_screen.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home/seller_home_screen.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/add_product_screen.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/seller_settings_screen.dart';
 
@@ -19,9 +18,7 @@ class _MainSellerScreenState extends State<MainSellerScreen> {
   final List<Widget> _screens = [
     const SellerHomeScreen(),
     const OrdersScreenSeller(),
-
     const AddProductScreen(),
-    const SellerNotificaionScreen(),
     const SellerChatingScreen(),
     const SellerSettingsScreen(),
   ];
@@ -47,10 +44,6 @@ class _MainSellerScreenState extends State<MainSellerScreen> {
             label: 'Orders',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Add'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: 'Notificaion',
-          ),
           BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),

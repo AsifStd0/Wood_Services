@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_test_style.dart';
-import 'package:wood_service/views/Admin/admin_dashboard_screen.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 
 class OnboardingScreen extends StatefulWidget {

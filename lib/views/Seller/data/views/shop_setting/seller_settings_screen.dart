@@ -93,11 +93,6 @@ class _ShopSettingsContent extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // Shop Policies
-              _buildShopPolicies(viewModel, context),
-
-              const SizedBox(height: 24),
-
               // Documents Section
               _buildDocumentsSection(viewModel),
 
@@ -235,7 +230,7 @@ class _ShopSettingsContent extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            viewModel.shop.isVerified ? 'Verified' : 'Pending',
+                            !viewModel.shop.isVerified ? 'Verified' : 'Pending',
                             style: TextStyle(
                               fontSize: 10,
                               color: viewModel.shop.isVerified
@@ -481,56 +476,6 @@ class _ShopSettingsContent extends StatelessWidget {
             Icons.location_on_rounded,
             viewModel.isEditing,
             (value) => viewModel.setAddress(value),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildShopPolicies(
-    ShopSettingsViewModel viewModel,
-    BuildContext context,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: Border.all(color: Colors.grey.withOpacity(0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Shop Policies',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey[800],
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildPolicyItem(
-            'Delivery Lead Time',
-            '${viewModel.shop.deliveryLeadTime} days',
-            Icons.schedule_rounded,
-            viewModel.isEditing,
-            () => _showDeliveryTimeDialog(viewModel, context),
-          ),
-          const SizedBox(height: 16),
-          _buildPolicyItem(
-            'Return Policy',
-            viewModel.shop.returnPolicy,
-            Icons.assignment_return_rounded,
-            viewModel.isEditing,
-            () => _showReturnPolicyDialog(viewModel, context),
           ),
         ],
       ),
@@ -811,53 +756,6 @@ class _ShopSettingsContent extends StatelessWidget {
     );
   }
 
-  Widget _buildPolicyItem(
-    String title,
-    String value,
-    IconData icon,
-    bool isEditing,
-    VoidCallback onEdit,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Color(0xFF667EEA), size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-          ),
-          if (isEditing)
-            IconButton(
-              icon: Icon(Icons.edit_rounded, size: 18, color: Colors.grey[500]),
-              onPressed: onEdit,
-            ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildEmptyDocumentsState() {
     return Container(
       padding: const EdgeInsets.all(32),
@@ -1042,47 +940,6 @@ class _ShopSettingsContent extends StatelessWidget {
               onChanged: (value) {
                 if (value != null) {
                   viewModel.setDeliveryLeadTime(value);
-                  Navigator.pop(context);
-                }
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showReturnPolicyDialog(ShopSettingsViewModel viewModel, context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Return Policy'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Set your shop\'s return policy'),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              isDense: true,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white, // 👈 makes sure it's white
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-              ),
-              focusColor: AppColors.white,
-
-              value: viewModel.shop.returnPolicy,
-              items: ['No returns', '7 days', '14 days', '30 days', '60 days']
-                  .map((policy) {
-                    return DropdownMenuItem(value: policy, child: Text(policy));
-                  })
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  viewModel.setReturnPolicy(value);
                   Navigator.pop(context);
                 }
               },

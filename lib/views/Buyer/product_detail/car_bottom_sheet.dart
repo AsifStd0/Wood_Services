@@ -34,7 +34,7 @@ class CartBottomSheet extends StatelessWidget {
             _buildHeader(context),
 
             // Cart Items
-            Expanded(child: _buildCartItems()),
+            _buildCartItems(),
 
             // Footer with Total and Checkout
             _buildFooter(context),
@@ -71,101 +71,130 @@ class CartBottomSheet extends StatelessWidget {
         price: 500.00,
         quantity: 1,
       ),
-      CartItemModel(
-        name: 'Dining Table',
-        seller: 'Furniture World',
-        price: 650.00,
-        quantity: 1,
-      ),
-      CartItemModel(
-        name: 'Coffee Table',
-        seller: 'Home Decor',
-        price: 100.00,
-        quantity: 1,
-      ),
     ];
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: cartItems.length,
-      itemBuilder: (context, index) {
-        return _buildCartItem(cartItems[index]);
-      },
-    );
+    final item = cartItems.first;
+
+    return _buildCartItem(item);
   }
 
   Widget _buildCartItem(CartItemModel item) {
     return Column(
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Product Image
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
+        Padding(
+          padding: EdgeInsets.only(left: 15, right: 15),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product Image
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/sofa.jpg'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
-              child: const Icon(Icons.chair, color: Colors.grey),
-            ),
 
-            const SizedBox(width: 12),
+              const SizedBox(width: 12),
 
-            // Product Details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
+              // Product Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Seller: ${item.seller}',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '\$${item.price.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.black,
+                    const SizedBox(height: 4),
+                    Text(
+                      'Seller: ${item.seller}',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      '\$${item.price.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            // Quantity Controls
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(8),
+              // Quantity Controls
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    // Minus Icon
+                    GestureDetector(
+                      onTap: () {
+                        // if (item.quantity > 1) {
+                        //   setState(() {
+                        //     item.quantity--;
+                        //   });
+                        // }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Icon(
+                          Icons.remove,
+                          size: 18,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ),
+
+                    // Quantity Display
+                    Container(
+                      width: 20,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Center(
+                        child: Text(
+                          item.quantity.toString(),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Plus Icon
+                    GestureDetector(
+                      onTap: () {
+                        // setState(() {
+                        //   item.quantity++;
+                        // });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Icon(
+                          Icons.add,
+                          size: 18,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.remove, size: 18),
-                    onPressed: () {},
-                    padding: EdgeInsets.zero,
-                  ),
-                  const SizedBox(width: 20, child: Center(child: Text('1'))),
-                  IconButton(
-                    icon: const Icon(Icons.add, size: 18),
-                    onPressed: () {},
-                    padding: EdgeInsets.zero,
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
         const Padding(
           padding: EdgeInsets.symmetric(vertical: 16),
@@ -247,22 +276,11 @@ class CartBottomSheet extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // View Full Cart
-          TextButton(
-            onPressed: () {
-              // Navigate to full cart screen
-            },
-            child: const Text('View Full Cart'),
-          ),
-
-          const SizedBox(height: 16),
-
           // Total
           _buildTotalRow('Total', '\$1,300.00', isTotal: true),
 
           const SizedBox(height: 16),
 
-          // Proceed to Checkout Button
           // Proceed to Checkout Button
           SizedBox(
             width: double.infinity,

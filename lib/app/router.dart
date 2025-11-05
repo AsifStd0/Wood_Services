@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
+import 'package:wood_service/views/Buyer/payment/order_rating_screen.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -120,6 +121,16 @@ class AppRouter {
         path: '/order_confirmation',
         pageBuilder: (context, state) =>
             MaterialPage(child: OrderConfirmationScreen()),
+      ),
+
+      GoRoute(
+        path: '/order_rating',
+        pageBuilder: (context, state) => MaterialPage(
+          child: OrderRatingScreen(
+            orderNumber: '12345678',
+            items: ['Modern Sofa', 'Coffee Table', 'Accent Chair'],
+          ),
+        ),
       ),
 
       // ! ******** Seller

@@ -10,542 +10,519 @@ class BuyerCartScreen extends StatefulWidget {
   const BuyerCartScreen({super.key});
 
   @override
-  State<BuyerCartScreen> createState() => _CartScreenState();
+  State<BuyerCartScreen> createState() => _BuyerCartScreenState();
 }
 
-class _CartScreenState extends State<BuyerCartScreen> {
-  double get _subtotal {
-    return buyerCartItems.fold(
-      0,
-      (sum, item) => sum + (item.price * item.quantity),
+class _BuyerCartScreenState extends State<BuyerCartScreen>
+    with SingleTickerProviderStateMixin {
+  double get _subtotal =>
+      buyerCartItems.fold(0, (sum, item) => sum + (item.price * item.quantity));
+  double get _shipping => buyerCartItems.isEmpty ? 0.0 : 49.99;
+  double get _tax => _subtotal * 0.08;
+  double get _total => _subtotal + _shipping + _tax;
+
+  late final AnimationController _sheetController;
+  late final Animation<double> _sheetAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _sheetController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
     );
-  }
+    _sheetAnim = CurvedAnimation(
+      parent: _sheetController,
+      curve: Curves.easeOutCubic,
+    );
 
-  double get _shipping {
-    return 49.99;
-  }
-
-  double get _tax {
-    return _subtotal * 0.08;
-  }
-
-  double get _total {
-    return _subtotal + _shipping + _tax;
+    // Show sheet if there are items at launch
+    if (buyerCartItems.isNotEmpty) _sheetController.forward();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: CustomAppBar(title: 'My Cart', showBackButton: false),
-      body: Stack(
-        children: [
-          // Main body content
-          buyerCartItems.isEmpty
-              ? buildEmptyCart(context)
-              : _buildCartWithItems(),
-
-          // Bottom Navigation Bar with some margin
-          if (buyerCartItems.isNotEmpty)
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 16, // Add some space from bottom
-              child: _buildCheckoutBar(),
-            ),
-        ],
-      ),
-    );
+  void dispose() {
+    _sheetController.dispose();
+    super.dispose();
   }
 
-  Widget _buildCartWithItems() {
-    return Column(
-      children: [
-        // Header with item count
-        Container(
-          padding: const EdgeInsets.only(right: 15, left: 15),
-          color: Colors.white,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${buyerCartItems.length} ${buyerCartItems.length == 1 ? 'Item' : 'Items'}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.brown,
-                ),
-              ),
-              TextButton.icon(
-                onPressed: _clearCart,
-                icon: const Icon(Icons.delete_outline, size: 16),
-                label: const Text('Clear Cart'),
-              ),
-            ],
-          ),
-        ),
-
-        // Cart Items List
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.only(bottom: 100),
-            itemCount: buyerCartItems.length,
-            itemBuilder: (context, index) {
-              return _buildCartItem(buyerCartItems[index]);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCartItem(BuyerCartItem item) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          // Item Content
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Product Image
-                Container(
-                  width: 90,
-                  height: 90,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    image: DecorationImage(
-                      image: NetworkImage(item.imageUrl),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-
-                // Product Details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Stock Status
-                      if (!item.inStock)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.red.shade50,
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: Colors.red.shade200),
-                          ),
-                          child: Text(
-                            'Out of Stock',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.red.shade700,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-
-                      const SizedBox(height: 4),
-
-                      // Product Name
-                      Text(
-                        item.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-
-                      const SizedBox(height: 4),
-
-                      // Description
-                      Text(
-                        item.description,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-
-                      const SizedBox(height: 4),
-
-                      // Seller
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.storefront_outlined,
-                            size: 12,
-                            color: Colors.grey[500],
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            item.seller,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Price and Quantity
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '\$${item.price.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.brown,
-                            ),
-                          ),
-
-                          // Quantity Selector
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey[50],
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.grey[300]!),
-                            ),
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.remove, size: 18),
-                                  onPressed: () => _updateQuantity(
-                                    item.id,
-                                    item.quantity - 1,
-                                  ),
-                                  padding: const EdgeInsets.all(4),
-                                  constraints: const BoxConstraints(),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  child: Text(
-                                    item.quantity.toString(),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.add, size: 18),
-                                  onPressed: () => _updateQuantity(
-                                    item.id,
-                                    item.quantity + 1,
-                                  ),
-                                  padding: const EdgeInsets.all(4),
-                                  constraints: const BoxConstraints(),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCheckoutBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Price Summary - More Compact
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Left side - Price breakdown
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildCompactPriceRow('Subtotal', _subtotal),
-                  _buildCompactPriceRow('Shipping', _shipping),
-                  _buildCompactPriceRow('Tax', _tax),
-                ],
-              ),
-
-              // Right side - Total and Button
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '\$${_total.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.brown,
-                    ),
-                  ),
-                  Text(
-                    'Total',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Full width button
-          CustomButtonUtils.login(
-            padding: EdgeInsets.zero,
-            title: 'Proceed to Checkout',
-            backgroundColor: AppColors.brightOrange,
-            onPressed: _proceedToCheckout,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactPriceRow(String label, double amount) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          '$label: ',
-          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-        ),
-        Text(
-          '   \$${amount.toStringAsFixed(2)}',
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-        ),
-      ],
-    );
-  }
-
-  // Cart Actions
-  void _updateQuantity(String itemId, int newQuantity) {
-    if (newQuantity < 1) {
-      _removeItem(itemId);
-      return;
-    }
-
+  void _updateQuantity(String id, int newQuantity) {
     setState(() {
-      final item = buyerCartItems.firstWhere((item) => item.id == itemId);
-      item.quantity = newQuantity;
+      final item = buyerCartItems.firstWhere((el) => el.id == id);
+      item.quantity = newQuantity.clamp(1, 99);
     });
   }
 
-  void _removeItem(String itemId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text('Remove Item'),
-          content: const Text(
-            'Are you sure you want to remove this item from your cart?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  buyerCartItems.removeWhere((item) => item.id == itemId);
-                });
-                Navigator.pop(context);
-                _showSnackBar('Item removed from cart');
-              },
-              child: const Text('Remove', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
+  void _removeItemWithUndo(BuyerCartItem removedItem, int index) {
+    setState(() {
+      buyerCartItems.removeWhere((i) => i.id == removedItem.id);
+      if (buyerCartItems.isEmpty) _sheetController.reverse();
+    });
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${removedItem.name} removed'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            setState(() {
+              buyerCartItems.insert(index, removedItem);
+              if (buyerCartItems.isNotEmpty) _sheetController.forward();
+            });
+          },
+          textColor: Colors.white,
+        ),
+        duration: const Duration(seconds: 4),
+        backgroundColor: Colors.brown,
+      ),
     );
   }
 
-  void _clearCart() {
+  void clearCartConfirm() {
+    if (buyerCartItems.isEmpty) return;
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+      builder: (context) => AlertDialog(
+        title: const Text('Clear Cart'),
+        content: const Text('Remove all items from your cart?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
           ),
-          title: const Text('Clear Cart'),
-          content: const Text(
-            'Are you sure you want to remove all items from your cart?',
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                buyerCartItems.clear();
+                _sheetController.reverse();
+              });
+            },
+            child: const Text('Clear', style: TextStyle(color: Colors.red)),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  buyerCartItems.clear();
-                });
-                Navigator.pop(context);
-                _showSnackBar('Cart cleared');
-              },
-              child: const Text(
-                'Clear All',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        );
-      },
+        ],
+      ),
     );
   }
 
   void _proceedToCheckout() {
-    // Check if any items are out of stock
-    final outOfStockItems = buyerCartItems
-        .where((item) => !item.inStock)
-        .toList();
-
-    if (outOfStockItems.isNotEmpty) {
-      _showOutOfStockDialog(outOfStockItems);
+    final outOfStock = buyerCartItems.where((i) => !i.inStock).toList();
+    if (outOfStock.isNotEmpty) {
+      _showOutOfStockDialog(outOfStock);
       return;
     }
-
-    // Navigate to checkout
     context.push('/checkout', extra: buyerCartItems);
   }
 
   void _showOutOfStockDialog(List<BuyerCartItem> outOfStockItems) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline,
+                color: Colors.orange.shade700,
+                size: 44,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Some items are out of stock',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              ...outOfStockItems.map(
+                (i) => ListTile(
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      i.imageUrl,
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  title: Text(
+                    i.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Continue Shopping'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          buyerCartItems.removeWhere((i) => !i.inStock);
+                        });
+                        Navigator.pop(ctx);
+                        _proceedToCheckout();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.brown,
+                      ),
+                      child: const Text('Remove & Checkout'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyCart() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.shopping_cart_outlined,
+              size: 86,
+              color: Colors.grey.shade300,
+            ),
+            const SizedBox(height: 18),
+            Text(
+              'Your cart is empty',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Looks like you haven\'t added anything yet. Browse our collection and add beautiful furniture to your cart.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: 220,
+              child: ElevatedButton(
+                onPressed: () => context.push('/home'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.brightOrange,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text('Start Shopping'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCartItemCard(BuyerCartItem item, int index) {
+    return Dismissible(
+      key: ValueKey(item.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        // padding: const EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          color: Colors.red.shade600,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.delete_forever, color: Colors.white),
+      ),
+      onDismissed: (_) => _removeItemWithUndo(item, index),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            children: [
+              // Image
+              Stack(
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      image: DecorationImage(
+                        image: NetworkImage(item.imageUrl),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  if (!item.inStock)
+                    Positioned(
+                      top: 4,
+                      left: 4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'OUT OF STOCK',
+                          style: TextStyle(
+                            fontSize: 8,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+
+              const SizedBox(width: 12),
+
+              // Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Name and stock
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(Icons.delete, size: 14, color: AppColors.grey),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      item.description,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Price and quantity
+                    Row(
+                      children: [
+                        Text(
+                          '\$${item.price.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                            color: Colors.brown,
+                          ),
+                        ),
+                        const Spacer(),
+                        QuantityStepper(
+                          quantity: item.quantity,
+                          onChanged: (q) => _updateQuantity(item.id, q),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Seller row
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.storefront_outlined,
+                          size: 14,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            item.seller,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderBar() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Text(
+            '${buyerCartItems.length} ${buyerCartItems.length == 1 ? "Item" : "Items"}',
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          const Spacer(),
+          TextButton.icon(
+            onPressed: clearCartConfirm,
+            icon: const Icon(Icons.delete_outline, size: 18),
+            label: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // animate sheet on items change
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (buyerCartItems.isNotEmpty) {
+        _sheetController.forward();
+      } else {
+        _sheetController.reverse();
+      }
+    });
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: const CustomAppBar(title: 'My Cart', showBackButton: false),
+      body: buyerCartItems.isEmpty
+          ? _buildEmptyCart()
+          : Column(
+              children: [
+                _buildHeaderBar(),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: buyerCartItems.length,
+                    itemBuilder: (context, i) =>
+                        _buildCartItemCard(buyerCartItems[i], i),
+                  ),
+                ),
+              ],
+            ),
+
+      // Sticky animated checkout sheet
+      bottomSheet: AnimatedBuilder(
+        animation: _sheetAnim,
+        builder: (context, child) {
+          return Transform.translate(
+            offset: Offset(0, (1 - _sheetAnim.value) * 100),
+            child: Opacity(opacity: _sheetAnim.value, child: child),
+          );
+        },
+        child: SafeArea(
           child: Container(
-            padding: const EdgeInsets.all(20),
+            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 48,
-                  color: Colors.orange.shade600,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Items Out of Stock',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${outOfStockItems.length} item(s) in your cart are currently out of stock:',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 16),
-                ...outOfStockItems
-                    .take(3)
-                    .map(
-                      (item) => ListTile(
-                        leading: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            image: DecorationImage(
-                              image: NetworkImage(item.imageUrl),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          item.name,
-                          style: const TextStyle(fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    )
-                    .toList(),
-                const SizedBox(height: 20),
+                // Compact price row
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Continue Shopping'),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SummaryLine(label: 'Subtotal', amount: _subtotal),
+                          const SizedBox(height: 4),
+                          SummaryLine(label: 'Shipping', amount: _shipping),
+                          const SizedBox(height: 4),
+                          SummaryLine(label: 'Tax', amount: _tax),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Remove out of stock items and proceed
-                          setState(() {
-                            buyerCartItems.removeWhere((item) => !item.inStock);
-                          });
-                          Navigator.pop(context);
-                          _proceedToCheckout();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.brown,
-                          foregroundColor: Colors.white,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '\$${_total.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.brown,
+                          ),
                         ),
-                        child: const Text('Remove & Checkout'),
-                      ),
+                        Text(
+                          'Total',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        SizedBox(
+                          width: 160,
+                          child: ElevatedButton(
+                            onPressed: _proceedToCheckout,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.brightOrange,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                            ),
+                            child: const Text('Proceed to Checkout'),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ],
             ),
           ),
-        );
-      },
-    );
-  }
-
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        backgroundColor: Colors.brown,
+        ),
       ),
     );
   }

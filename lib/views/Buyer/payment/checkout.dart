@@ -403,7 +403,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   void _showOrderConfirmation(BuildContext context) {
-    // Show order confirmation dialog or navigate to success screen
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -426,10 +425,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              context.push('/order_confirmation');
+              Navigator.pop(context); // Close dialog
 
-              // Navigator.popUntil(context, (route) => route.isFirst);
+              // Navigate to order confirmation first
+              context
+                  .push(
+                    // '/order_confirmation'
+                    '/order_rating',
+                  )
+                  .then((_) {
+                    // After order confirmation, show rating screen
+                    context.push(
+                      '/order_rating',
+                      extra: {
+                        'orderNumber': '12345678', // Pass actual order number
+                        'items': [
+                          'Modern Sofa',
+                          'Coffee Table',
+                          'Accent Chair',
+                        ],
+                      },
+                    );
+                  });
             },
             child: const Text('OK'),
           ),
@@ -437,6 +454,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
     );
   }
+  // void _showOrderConfirmation(BuildContext context) {
+  //   // Show order confirmation dialog or navigate to success screen
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: const Text('Order Placed!'),
+  //       content: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           const Text('Your order has been placed successfully.'),
+  //           const SizedBox(height: 8),
+  //           Text(
+  //             'Payment Method: ${_paymentMethods[_selectedPaymentIndex].title}',
+  //             style: const TextStyle(
+  //               fontWeight: FontWeight.bold,
+  //               color: Colors.green,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () {
+  //             Navigator.pop(context);
+  //             context.push('/order_confirmation');
+
+  //             // Navigator.popUntil(context, (route) => route.isFirst);
+  //           },
+  //           child: const Text('OK'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }
 
 class PaymentMethod {

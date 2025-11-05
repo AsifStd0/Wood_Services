@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:wood_service/views/Buyer/home/asif/model/product_type.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/product_type.dart';
 
 class HomeViewModel with ChangeNotifier {
   int _currentSliderIndex = 0;

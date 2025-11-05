@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:wood_service/views/Buyer/product_detail/car_bottom_sheet.dart';
 
 import '../../../app/index.dart';
@@ -252,50 +251,6 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
     );
   }
 }
-// class ProductImageGallery extends StatelessWidget {
-//   const ProductImageGallery({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return SizedBox(
-//       height: 300,
-//       child: Stack(
-//         children: [
-//           // Main Image
-//           Container(
-//             width: double.infinity,
-//             decoration: BoxDecoration(
-//               borderRadius: BorderRadius.circular(12),
-//               color: Colors.grey[100],
-//             ),
-//             child: Image.asset('assets/images/sofa.jpg', fit: BoxFit.cover),
-//           ),
-
-//           // Image Indicator
-//           Positioned(
-//             bottom: 16,
-//             right: 16,
-//             child: Container(
-//               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-//               decoration: BoxDecoration(
-//                 color: Colors.black54,
-//                 borderRadius: BorderRadius.circular(20),
-//               ),
-//               child: const Text(
-//                 '1/4',
-//                 style: TextStyle(
-//                   color: Colors.white,
-//                   fontSize: 12,
-//                   fontWeight: FontWeight.w500,
-//                 ),
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
 
 class ProductBasicInfo extends StatelessWidget {
   const ProductBasicInfo({super.key});
@@ -309,7 +264,7 @@ class ProductBasicInfo extends StatelessWidget {
           'Modern Velvet Sofa',
           type: CustomTextType.headingMedium,
           fontWeight: FontWeight.bold,
-          fontSize: 20,
+          fontSize: 19,
         ),
 
         const SizedBox(height: 3),
@@ -321,7 +276,7 @@ class ProductBasicInfo extends StatelessWidget {
               '\$899.00',
               type: CustomTextType.headingMedium,
               fontWeight: FontWeight.bold,
-              fontSize: 19,
+              fontSize: 18,
             ),
             const SizedBox(width: 10),
             CustomText(
@@ -330,7 +285,7 @@ class ProductBasicInfo extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: AppColors.grey,
               decoration: TextDecoration.lineThrough,
-              fontSize: 17,
+              fontSize: 16,
             ),
           ],
         ),
@@ -1095,7 +1050,7 @@ class ProductActionButtons extends StatelessWidget {
               borderRadius: 6,
 
               onPressed: () {
-                context.push('/new_password');
+                // context.push('/new_password');
               },
             ),
           ),
