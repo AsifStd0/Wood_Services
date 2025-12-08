@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/profile/profile_widget.dart';
 import 'package:wood_service/views/Buyer/setting/setting_screen.dart';
-import 'package:wood_service/widgets/advance_appbar.dart';
+import 'package:wood_service/widgets/custom_appbar.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -16,6 +16,7 @@ class ProfileScreen extends StatelessWidget {
         title: 'Profile',
         showBackButton: false,
         actions: [
+          // In ProfileScreen build method, update the settings icon button:
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
@@ -23,7 +24,7 @@ class ProfileScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const SettingsScreen(),
-                  fullscreenDialog: true, // Slide up animation
+                  // fullscreenDialog: true,
                 ),
               );
             },

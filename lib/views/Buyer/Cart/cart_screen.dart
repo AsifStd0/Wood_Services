@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/data/models/buyer_cart_Item.dart';
 import 'package:wood_service/views/Buyer/Cart/cart_widget.dart';
-import 'package:wood_service/widgets/advance_appbar.dart';
+import 'package:wood_service/widgets/custom_appbar.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 
 class BuyerCartScreen extends StatefulWidget {
@@ -130,7 +130,7 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
                 color: Colors.orange.shade700,
                 size: 44,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 5),
               Text(
                 'Some items are out of stock',
                 style: Theme.of(context).textTheme.titleMedium,
@@ -149,7 +149,7 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
                   ),
                   title: Text(
                     i.name,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -163,7 +163,7 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
                       child: const Text('Continue Shopping'),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 7),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {

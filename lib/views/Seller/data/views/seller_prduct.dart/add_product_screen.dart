@@ -1,13 +1,12 @@
 // lib/views/add_product_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
-import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/add_product_widget.dart';
+import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/tabs/varients_tab.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/tabs/inventry.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/tabs/media_tab.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/tabs/pricing_price.dart';
-import 'package:wood_service/widgets/advance_appbar.dart';
-import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/basic_tab_conent.dart';
+import 'package:wood_service/widgets/custom_appbar.dart';
+import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/tabs/basic_tab_conent.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
 
 class AddProductScreen extends StatelessWidget {

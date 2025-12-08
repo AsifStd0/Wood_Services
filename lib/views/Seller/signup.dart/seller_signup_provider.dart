@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:wood_service/views/Seller/signup.dart/eller_signup_service.dart';
+import 'package:wood_service/views/Seller/signup.dart/seller_signup_service.dart';
 import 'package:wood_service/views/Seller/signup.dart/seller_signup_model.dart';
 
 class SellerSignupViewModel extends ChangeNotifier {

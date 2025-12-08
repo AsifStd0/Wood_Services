@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/furniture_product_model.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/home_widget.dart';
-import 'package:wood_service/widgets/advance_appbar.dart';
+import 'package:wood_service/widgets/custom_appbar.dart';
 
 class BuyerHomeScreen extends StatefulWidget {
   @override
@@ -55,6 +55,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
           title: 'Search',
           showBackButton: false,
           showSearch: true,
+          actions: [Icon(Icons.notifications)],
         ),
         body: GestureDetector(
           onTap: () {

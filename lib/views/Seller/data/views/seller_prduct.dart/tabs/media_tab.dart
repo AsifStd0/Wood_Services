@@ -119,72 +119,48 @@ class MediaTab extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Video
-          _buildSectionHeader(
-            'Product Video',
-            'Add a video showcasing your product (Optional)',
-          ),
-          const SizedBox(height: 12),
-          Container(
-            height: 120,
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.grey.withOpacity(0.3),
-                // style: BorderStyle.dashed,
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.video_library_rounded,
-                  size: 32,
-                  color: Colors.grey[400],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Add Product Video',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'MP4, MOV up to 50MB',
-                  style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Documents
-          _buildSectionHeader(
-            'Product Documents',
-            'Add manuals, specifications, or certificates',
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
-            ),
-            child: Column(
-              children: [
-                _buildDocumentItem('Product Manual.pdf', '2.4 MB'),
-                const SizedBox(height: 12),
-                _buildDocumentItem('Specifications.docx', '1.2 MB'),
-                const SizedBox(height: 12),
-                _buildAddDocumentButton(),
-              ],
-            ),
-          ),
+          // // Video
+          // _buildSectionHeader(
+          //   'Product Video',
+          //   'Add a video showcasing your product (Optional)',
+          // ),
+          // const SizedBox(height: 12),
+          // Container(
+          //   height: 120,
+          //   decoration: BoxDecoration(
+          //     color: Colors.grey[50],
+          //     borderRadius: BorderRadius.circular(12),
+          //     border: Border.all(
+          //       color: Colors.grey.withOpacity(0.3),
+          //       // style: BorderStyle.dashed,
+          //     ),
+          //   ),
+          //   child: Column(
+          //     mainAxisAlignment: MainAxisAlignment.center,
+          //     children: [
+          //       Icon(
+          //         Icons.video_library_rounded,
+          //         size: 32,
+          //         color: Colors.grey[400],
+          //       ),
+          //       const SizedBox(height: 8),
+          //       Text(
+          //         'Add Product Video',
+          //         style: TextStyle(
+          //           fontSize: 14,
+          //           fontWeight: FontWeight.w600,
+          //           color: Colors.grey[600],
+          //         ),
+          //       ),
+          //       const SizedBox(height: 4),
+          //       Text(
+          //         'MP4, MOV up to 50MB',
+          //         style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          // const SizedBox(height: 24),
           const SizedBox(height: 80),
         ],
       ),
@@ -221,77 +197,6 @@ class MediaTab extends StatelessWidget {
         color: Colors.grey[100],
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey.withOpacity(0.2)),
-      ),
-    );
-  }
-
-  Widget _buildDocumentItem(String fileName, String fileSize) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.picture_as_pdf_rounded, color: Colors.red, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  fileName,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[800],
-                  ),
-                ),
-                Text(
-                  fileSize,
-                  style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.delete_outline_rounded,
-              size: 18,
-              color: Colors.grey[500],
-            ),
-            onPressed: () {},
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAddDocumentButton() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.3),
-          // style: BorderStyle.dashed,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.add_rounded, color: Colors.grey[500], size: 20),
-          const SizedBox(width: 12),
-          Text(
-            'Add Document',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
       ),
     );
   }

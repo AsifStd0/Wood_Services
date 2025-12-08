@@ -482,46 +482,6 @@ class CustomButtonUtils {
       borderWidth: 0,
     );
   }
-  // // Login button (for the Password login)
-  // static CustomButton login({
-  //   Key? key,
-  //   required String title,
-  //   Color? backgroundColor,
-  //   required VoidCallback? onPressed,
-  //   bool isLoading = false,
-  //   bool disabled = false,
-  //   double? width,
-  //   bool hapticFeedback = true,
-  //   EdgeInsetsGeometry? padding,
-  //   double? height,
-  //   Color? color,
-  //   double? borderRadius,
-  // }) {
-  //   return CustomButton(
-  //     key: key,
-  //     onPressed: onPressed,
-  //     child: Text(
-  //       title,
-  //       style: TextStyle(
-  //         fontWeight: FontWeight.w600,
-  //         fontSize: 16,
-  //         color: color ?? AppColors.white,
-  //       ),
-  //     ),
-  //     type: ButtonType.primary,
-  //     size: ButtonSize.large,
-  //     isLoading: isLoading,
-  //     disabled: disabled,
-  //     width: width ?? double.infinity,
-  //     height: height ?? 50,
-  //     backgroundColor: backgroundColor ?? AppColors.buttonColor,
-  //     borderRadius: borderRadius ?? 15.0,
-  //     padding: padding ?? EdgeInsets.symmetric(vertical: 16),
-  //     hapticFeedback: hapticFeedback,
-  //     elevation: 4.0,
-  //     borderWidth: 0,
-  //   );
-  // }
 
   static CustomButton primary({
     Key? key,

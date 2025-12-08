@@ -121,7 +121,13 @@ class _ChatDetailScreenState extends State<SellerChatDetail> {
                 ),
 
               // Messages List with bottom padding for input
-              Expanded(child: _buildMessagesList()),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 80), // Safe padding
+                  child: _buildMessagesList(),
+                ),
+              ),
+              // Expanded(child: _buildMessagesList()),
             ],
           ),
         ],
@@ -150,7 +156,9 @@ class _ChatDetailScreenState extends State<SellerChatDetail> {
     final hasText = _messageController.text.trim().isNotEmpty;
 
     return Container(
-      padding: const EdgeInsets.only(right: 10, left: 6),
+      padding: const EdgeInsets.only(right: 10, left: 6, bottom: 10),
+      color: AppColors.white,
+
       child: Row(
         children: [
           // Custom Chat Input Field (without borders/background)

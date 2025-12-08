@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wood_service/views/Buyer/product_detail/product_detail_widget.dart';
+import 'package:wood_service/widgets/custom_appbar.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final String productId;
@@ -10,13 +11,7 @@ class ProductDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Product Details'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        actions: [IconButton(icon: const Icon(Icons.share), onPressed: () {})],
-      ),
+      appBar: CustomAppBar(title: 'Product Details'),
       body: Stack(
         children: [
           // Main Content (Scrollable)

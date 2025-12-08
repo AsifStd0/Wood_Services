@@ -240,11 +240,4 @@ class BasicTab extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-    );
-  }
 }

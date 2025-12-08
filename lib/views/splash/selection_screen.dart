@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_test_style.dart';
+import 'package:wood_service/views/Admin/admin_login.dart';
 import 'package:wood_service/widgets/custom_text_style.dart';
 
 class SelectionScreen extends StatefulWidget {
@@ -241,6 +242,49 @@ class _SelectionScreenState extends State<SelectionScreen>
                                         const SizedBox(width: 10),
                                         Text(
                                           "I'm Selling",
+                                          style:
+                                              AppCustomTextStyle.buttonText(
+                                                context,
+                                              ).copyWith(
+                                                color: AppColors.bluePrimary,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                    const Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 16,
+                                      color: AppColors.bluePrimary,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              OutlinedButton(
+                                style: _outlinedButtonStyle(context),
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) {
+                                        return AdminLoginScreen();
+                                      },
+                                    ),
+                                  );
+                                  // context.push('/seller_login');
+                                },
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.storefront_outlined,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          "Admin",
                                           style:
                                               AppCustomTextStyle.buttonText(
                                                 context,

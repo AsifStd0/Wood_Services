@@ -1,4 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:wood_service/widgets/custom_appbar.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -8,94 +12,32 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _notificationsEnabled = true;
-
   bool _darkMode = false;
-  bool _biometricAuth = false;
   String _language = 'English';
+
+  // Add variables for user data
+  Map<String, dynamic> _userData = {};
+  String? _profileImageBase64;
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text(
-          'Settings',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
-        centerTitle: true,
-        elevation: 0,
-      ),
+      appBar: CustomAppBar(title: 'Settings'),
+
       body: CustomScrollView(
         slivers: [
-          // Header Section
-          SliverToBoxAdapter(
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Colors.brown.shade100, Colors.orange.shade100],
-                ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.brown,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.settings,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'App Settings',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.brown,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Customize your WoodMart experience',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.brown.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // Add Profile Summary Section (from signup data)
+          _buildProfileSummarySection(),
 
-          // Account Settings
+          // Account Settings - REMOVED "Edit Profile" and "View Profile" - combined into one
           _buildSettingsSection('Account Settings', [
             _buildSettingsTile(
               icon: Icons.person_outline,
-              title: 'Edit Profile',
-              subtitle: 'Update personal information',
-              onTap: _navigateToEditProfile,
+              title: 'My Profile',
+              subtitle: 'View & Edit your profile',
+              onTap: _viewAndEditProfile, // Combined function
               color: Colors.blue,
             ),
             _buildSettingsTile(
@@ -104,19 +46,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: 'Update login credentials',
               onTap: _navigateToChangePassword,
               color: Colors.green,
-            ),
-          ]),
-
-          // Notification Settings
-          _buildSettingsSection('Notifications', [
-            _buildSwitchTile(
-              icon: Icons.notifications_outlined,
-              title: 'Enable Notifications',
-              subtitle: 'Receive app notifications',
-              value: _notificationsEnabled,
-              onChanged: (value) =>
-                  setState(() => _notificationsEnabled = value),
-              color: Colors.purple,
             ),
           ]),
 
@@ -140,27 +69,242 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ]),
 
-          // Security & Privacy
-          _buildSettingsSection('Security & Privacy', [
-            _buildSwitchTile(
-              icon: Icons.fingerprint_outlined,
-              title: 'Biometric Login',
-              subtitle: 'Use fingerprint/Face ID',
-              value: _biometricAuth,
-              onChanged: (value) => setState(() => _biometricAuth = value),
-              color: Colors.blue,
-            ),
-            _buildSettingsTile(
-              icon: Icons.security_outlined,
-              title: 'Privacy Settings',
-              subtitle: 'Manage data and privacy',
-              onTap: _navigateToPrivacySettings,
-              color: Colors.green,
-            ),
-          ]),
-
           const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],
+      ),
+    );
+  }
+
+  // Add Profile Summary Section
+  SliverToBoxAdapter _buildProfileSummarySection() {
+    return SliverToBoxAdapter(
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: _viewAndEditProfile, // Tap profile image to edit
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.brown.shade300,
+                              Colors.orange.shade300,
+                            ],
+                          ),
+                        ),
+                        child: _profileImageBase64 != null
+                            ? ClipOval(
+                                child: Image.memory(
+                                  base64Decode(_profileImageBase64!),
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : CircleAvatar(
+                                backgroundColor: Colors.brown.shade100,
+                                child: _userData['fullName'] != null
+                                    ? Text(
+                                        _userData['fullName']
+                                            .toString()
+                                            .substring(0, 1)
+                                            .toUpperCase(),
+                                        style: const TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.brown,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.person,
+                                        size: 30,
+                                        color: Colors.brown,
+                                      ),
+                              ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Icon(
+                            Icons.edit,
+                            size: 12,
+                            color: Colors.brown,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _userData['fullName'] ?? 'John Cena',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.brown,
+                        ),
+                      ),
+                      if (_userData['email'] != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          _userData['email']!,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                      if (_userData['businessName'] != null) ...[
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.orange.shade200),
+                          ),
+                          child: Text(
+                            _userData['businessName']!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange.shade800,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.edit_note, color: Colors.brown),
+                  onPressed: _viewAndEditProfile,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Quick Info Grid
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              childAspectRatio: 3.5,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              children: [
+                if (_userData['contactName'] != null)
+                  _buildInfoChip(
+                    icon: Icons.contact_page,
+                    label: 'Contact',
+                    value: _userData['contactName']!,
+                  ),
+                if (_userData['address'] != null &&
+                    _userData['address']!.isNotEmpty)
+                  _buildInfoChip(
+                    icon: Icons.location_on,
+                    label: 'Location',
+                    value: _userData['address']!.length > 20
+                        ? '${_userData['address']!.substring(0, 20)}...'
+                        : _userData['address']!,
+                  ),
+                if (_userData['bankName'] != null)
+                  _buildInfoChip(
+                    icon: Icons.account_balance,
+                    label: 'Bank',
+                    value: _userData['bankName']!,
+                  ),
+                if (_userData['iban'] != null)
+                  _buildInfoChip(
+                    icon: Icons.credit_card,
+                    label: 'IBAN',
+                    value:
+                        '****${_userData['iban']!.substring(_userData['iban']!.length - 4)}',
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoChip({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return GestureDetector(
+      onTap: _viewAndEditProfile, // Tap any info chip to edit
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 14, color: Colors.brown),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.brown,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -174,7 +318,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 10),
             child: Text(
               title,
               style: const TextStyle(
@@ -199,6 +343,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required VoidCallback onTap,
     required Color color,
     Color textColor = Colors.black,
+    bool showData = false,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -233,7 +378,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         subtitle: Text(
           subtitle,
-          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          style: TextStyle(
+            color: showData ? Colors.brown : Colors.grey[600],
+            fontSize: showData ? 13 : 12,
+            fontWeight: showData ? FontWeight.w500 : FontWeight.normal,
+          ),
         ),
         trailing: Icon(
           Icons.arrow_forward_ios_rounded,
@@ -372,6 +521,440 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  // COMBINED: View and Edit Profile Function
+  void _viewAndEditProfile() {
+    // Create text editing controllers with current data
+    final TextEditingController fullNameController = TextEditingController(
+      text: _userData['fullName'] ?? '',
+    );
+    final TextEditingController emailController = TextEditingController(
+      text: _userData['email'] ?? '',
+    );
+    final TextEditingController contactNameController = TextEditingController(
+      text: _userData['contactName'] ?? '',
+    );
+    final TextEditingController businessNameController = TextEditingController(
+      text: _userData['businessName'] ?? '',
+    );
+    final TextEditingController addressController = TextEditingController(
+      text: _userData['address'] ?? '',
+    );
+    final TextEditingController descriptionController = TextEditingController(
+      text: _userData['description'] ?? '',
+    );
+    final TextEditingController bankNameController = TextEditingController(
+      text: _userData['bankName'] ?? '',
+    );
+    final TextEditingController ibanController = TextEditingController(
+      text: _userData['iban'] ?? '',
+    );
+
+    bool isEditing = false;
+    File? tempProfileImage;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.9,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 20,
+                        offset: const Offset(0, -5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  isEditing ? Icons.edit : Icons.person,
+                                  color: Colors.brown,
+                                  size: 28,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  isEditing ? 'Edit Profile' : 'My Profile',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.brown,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                isEditing ? Icons.save : Icons.edit,
+                                color: Colors.brown,
+                              ),
+                              onPressed: () {
+                                if (isEditing) {
+                                  // Save data
+                                  _saveProfileData(
+                                    fullName: fullNameController.text,
+                                    email: emailController.text,
+                                    contactName: contactNameController.text,
+                                    businessName: businessNameController.text,
+                                    address: addressController.text,
+                                    description: descriptionController.text,
+                                    bankName: bankNameController.text,
+                                    iban: ibanController.text,
+                                    profileImage: tempProfileImage,
+                                  );
+                                  Navigator.pop(context);
+                                } else {
+                                  setModalState(() {
+                                    isEditing = true;
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          controller: scrollController,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Profile Image with Edit Option
+                              Center(
+                                child: GestureDetector(
+                                  onTap: isEditing
+                                      ? () async {
+                                          final XFile? image =
+                                              await _imagePicker.pickImage(
+                                                source: ImageSource.gallery,
+                                              );
+                                          if (image != null) {
+                                            setModalState(() {
+                                              tempProfileImage = File(
+                                                image.path,
+                                              );
+                                            });
+                                          }
+                                        }
+                                      : null,
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        width: 100,
+                                        height: 100,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.brown.shade300,
+                                              Colors.orange.shade300,
+                                            ],
+                                          ),
+                                        ),
+                                        child: tempProfileImage != null
+                                            ? ClipOval(
+                                                child: Image.file(
+                                                  tempProfileImage!,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              )
+                                            : _profileImageBase64 != null
+                                            ? ClipOval(
+                                                child: Image.memory(
+                                                  base64Decode(
+                                                    _profileImageBase64!,
+                                                  ),
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              )
+                                            : CircleAvatar(
+                                                backgroundColor:
+                                                    Colors.brown.shade100,
+                                                child:
+                                                    _userData['fullName'] !=
+                                                        null
+                                                    ? Text(
+                                                        _userData['fullName']
+                                                            .toString()
+                                                            .substring(0, 1)
+                                                            .toUpperCase(),
+                                                        style: const TextStyle(
+                                                          fontSize: 36,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Colors.brown,
+                                                        ),
+                                                      )
+                                                    : const Icon(
+                                                        Icons.person,
+                                                        size: 40,
+                                                        color: Colors.brown,
+                                                      ),
+                                              ),
+                                      ),
+                                      if (isEditing)
+                                        Positioned(
+                                          bottom: 0,
+                                          right: 0,
+                                          child: Container(
+                                            width: 36,
+                                            height: 36,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: Colors.grey.shade300,
+                                              ),
+                                            ),
+                                            child: const Icon(
+                                              Icons.camera_alt,
+                                              size: 18,
+                                              color: Colors.brown,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              // Personal Information
+                              _buildProfileSection(
+                                'Personal Information',
+                                Icons.person_outline,
+                                isEditing,
+                                [
+                                  _buildProfileField(
+                                    label: 'Full Name',
+                                    value: fullNameController,
+                                    isEditing: isEditing,
+                                  ),
+                                  _buildProfileField(
+                                    label: 'Email',
+                                    value: emailController,
+                                    isEditing: isEditing,
+                                    keyboardType: TextInputType.emailAddress,
+                                  ),
+                                  _buildProfileField(
+                                    label: 'Contact Name',
+                                    value: contactNameController,
+                                    isEditing: isEditing,
+                                  ),
+                                ],
+                              ),
+
+                              // Business Information
+                              _buildProfileSection(
+                                'Business Information',
+                                Icons.business_outlined,
+                                isEditing,
+                                [
+                                  _buildProfileField(
+                                    label: 'Business Name',
+                                    value: businessNameController,
+                                    isEditing: isEditing,
+                                  ),
+                                  _buildProfileField(
+                                    label: 'Address',
+                                    value: addressController,
+                                    isEditing: isEditing,
+                                    maxLines: 2,
+                                  ),
+                                  _buildProfileField(
+                                    label: 'Description',
+                                    value: descriptionController,
+                                    isEditing: isEditing,
+                                    maxLines: 3,
+                                  ),
+                                ],
+                              ),
+
+                              // Bank Details
+                              _buildProfileSection(
+                                'Bank Details',
+                                Icons.account_balance_outlined,
+                                isEditing,
+                                [
+                                  _buildProfileField(
+                                    label: 'Bank Name',
+                                    value: bankNameController,
+                                    isEditing: isEditing,
+                                  ),
+                                  _buildProfileField(
+                                    label: 'IBAN',
+                                    value: ibanController,
+                                    isEditing: isEditing,
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 40),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildProfileSection(
+    String title,
+    IconData icon,
+    bool isEditing,
+    List<Widget> children,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.brown, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.brown,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileField({
+    required String label,
+    required TextEditingController value,
+    required bool isEditing,
+    TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 4),
+          isEditing
+              ? TextFormField(
+                  controller: value,
+                  keyboardType: keyboardType,
+                  maxLines: maxLines,
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                  ),
+                )
+              : Text(
+                  value.text.isEmpty ? 'Not set' : value.text,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveProfileData({
+    required String fullName,
+    required String email,
+    required String contactName,
+    required String businessName,
+    required String address,
+    required String description,
+    required String bankName,
+    required String iban,
+    File? profileImage,
+  }) async {
+    // Update user data
+    final updatedData = {
+      'fullName': fullName,
+      'email': email,
+      'contactName': contactName,
+      'businessName': businessName,
+      'address': address,
+      'description': description,
+      'bankName': bankName,
+      'iban': iban,
+    };
+
+    // Update local state
+    setState(() {
+      _userData = updatedData;
+      if (profileImage != null) {}
+    });
+
+    _showSnackBar('Profile updated successfully');
+  }
+
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -383,223 +966,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Placeholder methods
-  void _navigateToEditProfile() {}
+  // Placeholder method
   void _navigateToChangePassword() {}
-  void _navigateToPrivacySettings() {}
-
-  void _clearCache() {}
-
-  void _showLogoutDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return _buildAdvancedDialog(
-          icon: Icons.logout_rounded,
-          title: 'Sign Out',
-          content: 'Are you sure you want to sign out of your account?',
-          confirmText: 'Sign Out',
-          confirmColor: Colors.red,
-          onConfirm: () {
-            Navigator.pop(context);
-            _showSnackBar('Signed out successfully');
-          },
-        );
-      },
-    );
-  }
-
-  void _showDeleteAccountDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return _buildAdvancedDialog(
-          icon: Icons.delete_forever_rounded,
-          title: 'Delete Account',
-          content:
-              'This will permanently delete your account and all data. This action cannot be undone.',
-          confirmText: 'Delete',
-          confirmColor: Colors.red,
-          onConfirm: () {
-            Navigator.pop(context);
-            _showSnackBar('Account deletion requested');
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildAdvancedDialog({
-    required IconData icon,
-    required String title,
-    required String content,
-    required String confirmText,
-    required Color confirmColor,
-    required VoidCallback onConfirm,
-  }) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: confirmColor.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: confirmColor, size: 36),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              content,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey,
-                      side: const BorderSide(color: Colors.grey),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: const Text('Cancel'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: onConfirm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: confirmColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: Text(confirmText),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showAboutDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.brown.shade400, Colors.orange.shade400],
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.forest,
-                    color: Colors.white,
-                    size: 36,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'WoodMart',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.brown,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Premium Wood Marketplace',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-                const SizedBox(height: 20),
-                const Divider(),
-                const SizedBox(height: 16),
-                _buildAboutInfo('Version', '1.0.0'),
-                _buildAboutInfo('Build', '245'),
-                _buildAboutInfo('Release Date', 'Jan 15, 2024'),
-                const SizedBox(height: 20),
-                const Text(
-                  'Your trusted platform for buying and selling\nquality wood products worldwide.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Close'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAboutInfo(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
-    );
-  }
 }

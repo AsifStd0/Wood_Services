@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favirute_widet.dart';
 import 'package:wood_service/data/models/favirute_model.dart';
-import 'package:wood_service/widgets/advance_appbar.dart';
+import 'package:wood_service/widgets/custom_appbar.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});

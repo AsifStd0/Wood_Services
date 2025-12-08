@@ -21,7 +21,12 @@ class ChatScreen extends StatelessWidget {
       body: Column(
         children: [
           // _buildOrderInfo(),
-          Expanded(child: _buildChatMessages()),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 80), // Safe padding
+              child: _buildChatMessages(),
+            ),
+          ),
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -31,7 +36,8 @@ class ChatScreen extends StatelessWidget {
 
   Widget _buildFloatingMessageInput() {
     return Container(
-      padding: const EdgeInsets.only(right: 10, left: 6, bottom: 20),
+      padding: const EdgeInsets.only(right: 10, left: 6, bottom: 10),
+      color: AppColors.white,
       child: Row(
         children: [
           // Custom Chat Input Field (without borders/background)
@@ -134,28 +140,6 @@ class ChatScreen extends StatelessWidget {
       title: Row(
         children: [
           CircleAvatar(child: Text(sellerInitial)),
-          // Container(
-          //   width: 40,
-          //   height: 40,
-          //   decoration: BoxDecoration(
-          //     gradient: const LinearGradient(
-          //       colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
-          //       begin: Alignment.topLeft,
-          //       end: Alignment.bottomRight,
-          //     ),
-          //     borderRadius: BorderRadius.circular(20),
-          //   ),
-          //   child: Center(
-          //     child: Text(
-          //       sellerInitial,
-          //       style: const TextStyle(
-          //         color: Colors.white,
-          //         fontSize: 16,
-          //         fontWeight: FontWeight.bold,
-          //       ),
-          //     ),
-          //   ),
-          // ),
           const SizedBox(width: 5),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

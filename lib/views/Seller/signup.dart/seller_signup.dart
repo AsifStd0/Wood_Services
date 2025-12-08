@@ -27,11 +27,7 @@ class _SellerSignupContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      // appBar: AppBar(
-      //   automaticallyImplyLeading: false,
-      //   centerTitle: true,
-      //   title: CustomText('Seller Registration', type: CustomTextType.appbar),
-      // ),
+
       body: SafeArea(
         child: Column(
           children: [

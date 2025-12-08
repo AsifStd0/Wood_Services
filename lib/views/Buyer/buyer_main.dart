@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:wood_service/views/Buyer/Cart/cart_screen.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_screen.dart';
 import 'package:wood_service/views/Buyer/Messages/message_screen.dart';
-import 'package:wood_service/views/Buyer/Buyer_home/furniture_product_model.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/home_screen.dart';
 import 'package:wood_service/views/Buyer/profile/profile.dart';
 

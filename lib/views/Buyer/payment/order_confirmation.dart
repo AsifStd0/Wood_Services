@@ -44,7 +44,7 @@ class OrderConfirmationScreen extends StatelessWidget {
           child: Column(
             children: [
               // Header Section
-              _buildHeaderSection(),
+              _buildHeaderSection(context),
               SizedBox(height: 32),
 
               // Success Message
@@ -70,12 +70,13 @@ class OrderConfirmationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderSection() {
+  Widget _buildHeaderSection(context) {
     return Row(
       children: [
         IconButton(
           onPressed: () {
             // Navigate back
+            Navigator.pop(context); // ✅ Go back to previous screen
           },
           icon: Icon(Icons.arrow_back, color: Colors.black),
         ),
