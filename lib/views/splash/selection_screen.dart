@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
+import 'package:wood_service/app/index.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_test_style.dart';
 import 'package:wood_service/views/Admin/admin_login.dart';
@@ -192,7 +193,14 @@ class _SelectionScreenState extends State<SelectionScreen>
                               ElevatedButton(
                                 style: _filledButtonStyle(context),
                                 onPressed: () {
-                                  context.push('/buyer_login');
+                                  // context.push('/buyer_login');
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) {
+                                        return BuyerLoginScreen();
+                                      },
+                                    ),
+                                  );
                                 },
                                 child: Row(
                                   mainAxisAlignment:
@@ -227,7 +235,14 @@ class _SelectionScreenState extends State<SelectionScreen>
                               OutlinedButton(
                                 style: _outlinedButtonStyle(context),
                                 onPressed: () {
-                                  context.push('/seller_login');
+                                  // context.push('/seller_login');
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) {
+                                        return SellerLogin();
+                                      },
+                                    ),
+                                  );
                                 },
                                 child: Row(
                                   mainAxisAlignment:

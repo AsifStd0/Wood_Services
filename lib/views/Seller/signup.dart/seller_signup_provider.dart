@@ -1,13 +1,21 @@
 // view_models/seller_signup_viewmodel.dart
+import 'dart:developer';
 import 'dart:io';
 
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:wood_service/views/Seller/signup.dart/seller_signup_service.dart';
-import 'package:wood_service/views/Seller/signup.dart/seller_signup_model.dart';
+import 'package:wood_service/core/error/failure.dart';
+import 'package:wood_service/views/Seller/data/models/seller_signup_model.dart'; // Your model
+import 'package:wood_service/views/Seller/data/services/seller_auth.dart';
 
 class SellerSignupViewModel extends ChangeNotifier {
-  final SellerSignupService _service;
+  final SellerAuthService _sellerAuthService;
+
+  SellerSignupViewModel({required SellerAuthService sellerAuthService})
+    : _sellerAuthService = sellerAuthService {
+    log('🔄 SellerSignupViewModel initialized with correct dependencies');
+  }
 
   // Form controllers
   final TextEditingController fullNameController = TextEditingController();
@@ -34,10 +42,22 @@ class SellerSignupViewModel extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
-  SellerSignupViewModel({SellerSignupService? service})
-    : _service = service ?? SellerSignupService();
+  // Document files
+  File? _businessLicense;
+  File? _taxCertificate;
+  File? _identityProof;
+
+  // Map storage - KEEP THIS TOO
+  Map<String, File?> _documents = {
+    'businessLicense': null,
+    'taxCertificate': null,
+    'identityProof': null,
+  };
 
   // Getters
+  File? get businessLicense => _businessLicense;
+  File? get taxCertificate => _taxCertificate;
+  File? get identityProof => _identityProof;
   String get countryCode => _countryCode;
   File? get shopLogo => _shopLogo;
   File? get shopBanner => _shopBanner;
@@ -46,6 +66,22 @@ class SellerSignupViewModel extends ChangeNotifier {
   bool get obscureConfirmPassword => _obscureConfirmPassword;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  // ! ********
+
+  set businessLicense(File? value) {
+    _businessLicense = value;
+    notifyListeners();
+  }
+
+  set taxCertificate(File? value) {
+    _taxCertificate = value;
+    notifyListeners();
+  }
+
+  set identityProof(File? value) {
+    _identityProof = value;
+    notifyListeners();
+  }
 
   // Setters with notifyListeners
   set countryCode(String value) {
@@ -112,6 +148,7 @@ class SellerSignupViewModel extends ChangeNotifier {
 
       if (image != null) {
         shopLogo = File(image.path);
+        log('📸 Shop logo selected: ${image.path}');
       }
     } catch (e) {
       setError('Error picking shop logo: $e');
@@ -129,85 +166,129 @@ class SellerSignupViewModel extends ChangeNotifier {
 
       if (image != null) {
         shopBanner = File(image.path);
+        log('📸 Shop banner selected: ${image.path}');
       }
     } catch (e) {
       setError('Error picking shop banner: $e');
     }
   }
 
-  bool validateForm() {
-    if (passwordController.text != confirmPasswordController.text) {
-      setError('Passwords do not match');
-      return false;
+  Future<Either<Failure, SellerAuthResponse>> submitApplication() async {
+    if (!validateForm()) {
+      return Left(ValidationFailure(_errorMessage ?? 'Form validation failed'));
     }
 
-    if (fullNameController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        businessNameController.text.isEmpty ||
-        shopNameController.text.isEmpty ||
-        descriptionController.text.isEmpty ||
-        addressController.text.isEmpty ||
-        bankNameController.text.isEmpty ||
-        accountNumberController.text.isEmpty) {
-      setError('Please fill all required fields');
-      return false;
-    }
+    setLoading(true);
+    log('🚀 Starting registration process...');
 
-    setError(null);
-    return true;
+    try {
+      final sellerData = _collectFormData();
+      log('   👤 Name: ${sellerData.toString()}');
+
+      final result = await _sellerAuthService.registerSeller(
+        seller: sellerData,
+      );
+
+      setLoading(false);
+      return result;
+    } catch (e) {
+      setLoading(false);
+      setError('An error occurred: $e');
+      log('❌ Registration error in ViewModel: $e');
+      return Left(UnknownFailure('Unexpected error: $e'));
+    }
   }
 
+  Map<String, File?> get documents => _documents;
+
+  // Update pickDocument to sync BOTH systems
+  Future<void> pickDocument(String documentType) async {
+    try {
+      final image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        final file = File(image.path);
+
+        // Update Map
+        _documents[documentType] = file;
+
+        // Update individual properties
+        switch (documentType) {
+          case 'businessLicense':
+            _businessLicense = file;
+            break;
+          case 'taxCertificate':
+            _taxCertificate = file;
+            break;
+          case 'identityProof':
+            _identityProof = file;
+            break;
+        }
+
+        notifyListeners();
+        log('📄 $documentType selected: ${image.path}');
+
+        log(
+          '🔄 DEBUG - After picking $documentType:   Map value: ${_documents[documentType]?.path}',
+        );
+        log('  Property value: ${_getPropertyForDocument(documentType)?.path}');
+      }
+    } catch (e) {
+      setError('Error picking $documentType: $e');
+    }
+  }
+
+  // Helper to get property for debug
+  File? _getPropertyForDocument(String documentType) {
+    switch (documentType) {
+      case 'businessLicense':
+        return _businessLicense;
+      case 'taxCertificate':
+        return _taxCertificate;
+      case 'identityProof':
+        return _identityProof;
+      default:
+        return null;
+    }
+  }
+
+  // Update _collectFormData to add debug logs
   SellerModel _collectFormData() {
     final completePhoneNumber = '$_countryCode${phoneController.text}';
-
-    return SellerModel(
+    final seller = SellerModel(
       personalInfo: PersonalInfo(
-        fullName: fullNameController.text,
-        email: emailController.text,
-        phone: completePhoneNumber,
+        fullName: fullNameController.text.trim(),
+        email: emailController.text.trim(),
+        phone: completePhoneNumber.trim(),
         countryCode: _countryCode,
         password: passwordController.text,
       ),
       businessInfo: BusinessInfo(
-        businessName: businessNameController.text,
-        shopName: shopNameController.text,
-        description: descriptionController.text,
-        address: addressController.text,
+        businessName: businessNameController.text.trim(),
+        shopName: shopNameController.text.trim(),
+        description: descriptionController.text.trim(),
+        address: addressController.text.trim(),
         categories: _categories,
       ),
       bankDetails: BankDetails(
-        bankName: bankNameController.text,
-        accountNumber: accountNumberController.text,
-        iban: ibanController.text,
+        bankName: bankNameController.text.trim(),
+        accountNumber: accountNumberController.text.trim(),
+        iban: ibanController.text.trim(),
       ),
-      shopBranding: ShopBranding(shopLogo: _shopLogo, shopBanner: _shopBanner),
+      shopBrandingImages: ShopBrandingImages(
+        shopLogo: _shopLogo,
+        shopBanner: _shopBanner,
+      ),
+      documentsImage: SellerDocuments(
+        businessLicense: _businessLicense ?? _documents['businessLicense'],
+        taxCertificate: _taxCertificate ?? _documents['taxCertificate'],
+        identityProof: _identityProof ?? _documents['identityProof'],
+      ),
     );
-  }
-
-  Future<bool> submitApplication() async {
-    if (!validateForm()) {
-      return false;
-    }
-
-    setLoading(true);
-    try {
-      final sellerData = _collectFormData();
-      final success = await _service.registerSeller(sellerData);
-
-      if (success) {
-        setError(null);
-        return true;
-      } else {
-        setError('Registration failed. Please try again.');
-        return false;
-      }
-    } catch (e) {
-      setError('An error occurred: $e');
-      return false;
-    } finally {
-      setLoading(false);
-    }
+    return seller;
   }
 
   void clearForm() {
@@ -231,8 +312,11 @@ class SellerSignupViewModel extends ChangeNotifier {
     _obscurePassword = true;
     _obscureConfirmPassword = true;
     _errorMessage = null;
-
+    _businessLicense = null;
+    _taxCertificate = null;
+    _identityProof = null;
     notifyListeners();
+    log('🧹 Form cleared');
   }
 
   @override
@@ -250,5 +334,54 @@ class SellerSignupViewModel extends ChangeNotifier {
     ibanController.dispose();
     accountNumberController.dispose();
     super.dispose();
+  }
+
+  // Enhanced validation
+  bool validateForm() {
+    log('🔍 Validating form...');
+
+    // Password validation
+    if (passwordController.text != confirmPasswordController.text) {
+      setError('Passwords do not match');
+      return false;
+    }
+
+    if (passwordController.text.length < 6) {
+      setError('Password must be at least 6 characters');
+      return false;
+    }
+
+    // Email validation
+    if (!emailController.text.contains('@') ||
+        !emailController.text.contains('.')) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
+    // Required fields validation
+    final requiredFields = [
+      fullNameController.text,
+      emailController.text,
+      passwordController.text,
+      confirmPasswordController.text,
+      phoneController.text,
+      businessNameController.text,
+      shopNameController.text,
+      descriptionController.text,
+      addressController.text,
+      bankNameController.text,
+      accountNumberController.text,
+    ];
+
+    for (var field in requiredFields) {
+      if (field.trim().isEmpty) {
+        setError('Please fill all required fields (*)');
+        return false;
+      }
+    }
+
+    setError(null);
+    log('✅ Form validation passed');
+    return true;
   }
 }

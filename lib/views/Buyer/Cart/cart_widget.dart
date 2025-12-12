@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/home_screen.dart';
 
 Widget buildEmptyCart(BuildContext context) {
   return Center(
@@ -37,7 +38,14 @@ Widget buildEmptyCart(BuildContext context) {
         const SizedBox(height: 32),
         ElevatedButton.icon(
           onPressed: () {
-            context.go('/home'); // Navigate to home
+            // context.go('/home'); // Navigate to home
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) {
+                  return BuyerHomeScreen();
+                },
+              ),
+            );
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.brown,

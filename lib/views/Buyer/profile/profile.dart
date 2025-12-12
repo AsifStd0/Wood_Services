@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/profile/profile_widget.dart';
 import 'package:wood_service/views/Buyer/setting/setting_screen.dart';
@@ -210,7 +210,17 @@ class ProfileScreen extends StatelessWidget {
             icon: Icons.shopping_bag_outlined,
             title: 'My Orders',
             subtitle: 'Track purchases and returns',
-            onTap: () => GoRouter.of(context).push('/orders'),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) {
+                    return OrdersScreen();
+                  },
+                ),
+              );
+            },
+
+            //  => GoRouter.of(context).push('/orders'),
             showBadge: true,
             badgeCount: 3,
             // gradient: [Colors.blue.shade400, Colors.blue.shade600],
@@ -241,7 +251,16 @@ class ProfileScreen extends StatelessWidget {
             icon: Icons.notifications_outlined,
             title: 'Notifications',
             subtitle: 'Manage alerts and preferences',
-            onTap: () => GoRouter.of(context).push('/notifications'),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) {
+                    return NotificationsScreen();
+                  },
+                ),
+              );
+            },
+            // => GoRouter.of(context).push('/notifications'),
             // gradient: [Colors.purple.shade400, Colors.purple.shade600],
           ),
           buildMenuTile(

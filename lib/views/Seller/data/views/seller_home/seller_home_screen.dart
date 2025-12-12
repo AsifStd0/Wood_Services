@@ -36,7 +36,14 @@ class _VisitRequestsScreenState extends State<SellerHomeScreen> {
             IconButton(
               icon: const Icon(Icons.notifications),
               onPressed: () {
-                context.push('/seller_notificaion');
+                // context.push('/seller_notificaion');
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) {
+                      return SellerNotificaionScreen();
+                    },
+                  ),
+                );
               },
             ),
           ],

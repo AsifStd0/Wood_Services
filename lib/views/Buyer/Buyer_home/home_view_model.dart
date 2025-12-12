@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:wood_service/views/Buyer/Buyer_home/product_type.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/furniture_product_model.dart';
 
-class HomeViewModel with ChangeNotifier {
+class BuyerHomeViewModel with ChangeNotifier {
   int _currentSliderIndex = 0;
   String? _selectedOption;
 

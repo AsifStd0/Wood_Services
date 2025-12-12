@@ -2,29 +2,16 @@
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
-import 'package:wood_service/core/theme/app_test_style.dart';
 import 'package:wood_service/views/Seller/signup.dart/seller_signup_provider.dart';
 import 'package:wood_service/widgets/auth_button_txt.dart';
-import 'package:wood_service/widgets/seller_signup_widget.dart';
 
-class SellerSignup extends StatelessWidget {
-  const SellerSignup({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => SellerSignupViewModel(),
-      child: const _SellerSignupContent(),
-    );
-  }
-}
-
-class _SellerSignupContent extends StatelessWidget {
-  const _SellerSignupContent();
+class SellerSignupScreen extends StatelessWidget {
+  const SellerSignupScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // final viewModel = context.watch<SellerSignupViewModel>();
+
     return Scaffold(
       backgroundColor: Colors.white,
 
@@ -49,7 +36,7 @@ class _SellerSignupContent extends StatelessWidget {
                     const SizedBox(height: 20),
                     _buildBankDetailsSection(context),
                     const SizedBox(height: 20),
-                    _buildDocumentsSection(),
+                    _buildDocumentsSection(context),
                     const SizedBox(height: 20),
                     _buildSubmitButton(context),
                     _buildSignInLink(context),
@@ -120,6 +107,7 @@ class _SellerSignupContent extends StatelessWidget {
     );
   }
 
+  //  !  Contact Number
   Widget _buildPhoneField(BuildContext context) {
     final viewModel = context.read<SellerSignupViewModel>();
 
@@ -339,6 +327,7 @@ class _SellerSignupContent extends StatelessWidget {
           type: CustomTextType.hint,
         ),
         const SizedBox(height: 12),
+        // ! categories
         _buildCategoriesList(viewModel),
         const SizedBox(height: 12),
         _buildAddCategoryButton(context, viewModel),
@@ -384,6 +373,7 @@ class _SellerSignupContent extends StatelessWidget {
     );
   }
 
+  // !  'Add Category', Btn
   Widget _buildAddCategoryButton(
     BuildContext context,
     SellerSignupViewModel viewModel,
@@ -412,6 +402,7 @@ class _SellerSignupContent extends StatelessWidget {
     );
   }
 
+  // ! Bank Details
   Widget _buildBankDetailsSection(BuildContext context) {
     final viewModel = context.read<SellerSignupViewModel>();
 
@@ -457,13 +448,68 @@ class _SellerSignupContent extends StatelessWidget {
       ],
     );
   }
+  // Add to your _SellerSignupContent widget
 
-  Widget _buildDocumentsSection() {
+  Widget _buildDocumentUploader(
+    BuildContext context,
+    String title,
+    String documentType,
+  ) {
+    final viewModel = context.watch<SellerSignupViewModel>();
+    final file = viewModel.documents[documentType];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CustomText('$title *', type: CustomTextType.subtitleMedium),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => viewModel.pickDocument(documentType),
+          child: Container(
+            width: double.infinity,
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: file != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.file(file, fit: BoxFit.cover),
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.upload_file,
+                        color: Colors.grey[400],
+                        size: 30,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Upload $title',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      Text(
+                        'Image or PDF',
+                        style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Update _buildDocumentsSection
+  Widget _buildDocumentsSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CustomText(
-          'Business Documents',
+          'Business Documents *',
           type: CustomTextType.subtitleLarge,
           color: AppColors.brightOrange,
         ),
@@ -475,23 +521,19 @@ class _SellerSignupContent extends StatelessWidget {
         const SizedBox(height: 15),
         Column(
           children: [
-            UploadBox(
-              title: "Business License",
-              subtitle: "Click to upload",
-              check: false,
+            _buildDocumentUploader(
+              context,
+              'Business License',
+              'businessLicense',
             ),
             const SizedBox(height: 12),
-            UploadBox(
-              title: "Tax Certificate",
-              subtitle: "Click to upload",
-              check: false,
+            _buildDocumentUploader(
+              context,
+              'Tax Certificate',
+              'taxCertificate',
             ),
             const SizedBox(height: 12),
-            UploadBox(
-              title: "Identity Proof",
-              subtitle: "Click to upload",
-              check: false,
-            ),
+            _buildDocumentUploader(context, 'Identity Proof', 'identityProof'),
           ],
         ),
       ],
@@ -516,7 +558,14 @@ class _SellerSignupContent extends StatelessWidget {
         questionText: "Already have an account? ",
         actionText: "Sign In",
         onPressed: () {
-          context.push('/seller_login');
+          // context.push('/seller_login');
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) {
+                return SellerLogin();
+              },
+            ),
+          );
         },
       ),
     );
@@ -582,28 +631,101 @@ class _SellerSignupContent extends StatelessWidget {
 
   Future<void> _handleSubmission(BuildContext context) async {
     final viewModel = context.read<SellerSignupViewModel>();
-    // final success = await viewModel.submitApplication();
 
-    // if (success) {
-    context.push('/main_seller_screen');
-    // } else {
-    //   _showErrorDialog(context, viewModel.errorMessage ?? 'An error occurred');
-    // }
-  }
-
-  void _showErrorDialog(BuildContext context, String message) {
+    // Show loading
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Center(child: CircularProgressIndicator()),
       ),
     );
+
+    try {
+      final result = await viewModel.submitApplication();
+
+      // Close loading
+      if (context.mounted) Navigator.of(context).pop();
+
+      result.fold(
+        // Failure
+        (failure) {
+          if (context.mounted) {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text('Registration Failed'),
+                content: Text(failure.message ?? 'An error occurred'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text('OK'),
+                  ),
+                ],
+              ),
+            );
+          }
+        },
+        // Success
+        (authResponse) async {
+          if (context.mounted) {
+            // Show success snackbar
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.white),
+                    SizedBox(width: 10),
+                    Text('Registration Successful!'),
+                  ],
+                ),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+
+            // Wait a moment for user to see message
+            await Future.delayed(Duration(milliseconds: 1500));
+
+            // Navigate using GoRouter - THIS IS THE KEY FIX
+            if (context.mounted) {
+              // Use context.go() to replace entire stack
+              // context.go('/main_seller_screen');
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) {
+                    return MainSellerScreen();
+                  },
+                ),
+              );
+
+              // OR if you want to pass data:
+              // context.go('/main_seller', extra: authResponse);
+            }
+          }
+        },
+      );
+    } catch (error) {
+      // Close loading if error
+      if (context.mounted) Navigator.of(context).pop();
+
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Error'),
+            content: Text('Network error: $error'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
   }
 }

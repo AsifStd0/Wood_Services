@@ -301,7 +301,14 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              context.push('/order_confirmation');
+              // context.push('/order_confirmation');
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) {
+                    return OrderConfirmationScreen();
+                  },
+                ),
+              );
             },
             child: const Text('Order Review'),
           ),

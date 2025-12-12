@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
+import 'package:wood_service/app/index.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_test_style.dart';
 import 'package:wood_service/widgets/auth_button_txt.dart';
@@ -62,7 +63,13 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
   }
 
   Future<void> _submit() async {
-    context.push('/buyer_signup');
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) {
+          return BuyerSignup();
+        },
+      ),
+    );
   }
 
   @override
@@ -87,7 +94,13 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
               actionText: "Sign Up",
               onPressed: () {
                 WidgetsBinding.instance.addPostFrameCallback(
-                  (_) => context.push('/buyer_signup'),
+                  (_) => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) {
+                        return BuyerSignup();
+                      },
+                    ),
+                  ),
                 );
               },
             ),
@@ -236,7 +249,14 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                     alignment: Alignment.centerRight,
                     child: CustomButtonUtils.textButton(
                       onPressed: () {
-                        context.push('/buyer_forgot');
+                        // context.hash('/buyer_forgot');
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) {
+                              return BuyerForgotPassword();
+                            },
+                          ),
+                        );
                       },
                       child: Text(
                         'Forgot Password?',

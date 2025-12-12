@@ -1,7 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
+import 'package:wood_service/views/Buyer/payment/order_rating_screen.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -427,26 +428,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             onPressed: () {
               Navigator.pop(context); // Close dialog
 
-              // Navigate to order confirmation first
-              context
-                  .push(
-                    // '/order_confirmation'
-                    '/order_rating',
-                  )
-                  .then((_) {
-                    // After order confirmation, show rating screen
-                    context.push(
-                      '/order_rating',
-                      extra: {
-                        'orderNumber': '12345678', // Pass actual order number
-                        'items': [
-                          'Modern Sofa',
-                          'Coffee Table',
-                          'Accent Chair',
-                        ],
-                      },
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) {
+                    return OrderRatingScreen(
+                      orderNumber: '12345678',
+                      items: ['Modern Sofa', 'Coffee Table', 'Accent Chair'],
                     );
-                  });
+                  },
+                ),
+              );
+              // // Navigate to order confirmation first
+              // context
+              //     .push(
+              //       // '/order_confirmation'
+              //       '/order_rating',
+              //     )
+              //     .then((_) {
+              //       // After order confirmation, show rating screen
+              //       context.push(
+              //         '/order_rating',
+              //         extra: {
+              //           'orderNumber': '12345678', // Pass actual order number
+              // 'items': [
+              //   'Modern Sofa',
+              //   'Coffee Table',
+              //   'Accent Chair',
+              // ],
+              //         },
+              //       );
+              //     });
             },
             child: const Text('OK'),
           ),

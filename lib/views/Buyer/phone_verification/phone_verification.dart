@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
+import 'package:wood_service/views/Buyer/buyer_main.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 
 class PhoneVerificationScreen extends StatefulWidget {
@@ -167,7 +168,14 @@ class _VerificationScreenState extends State<PhoneVerificationScreen> {
               title: 'Verify',
               backgroundColor: AppColors.brightOrange,
               onPressed: () {
-                context.push('/main_buyer');
+                // context.push('/main_buyer');
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) {
+                      return MainScreen();
+                    },
+                  ),
+                );
               },
             ),
           ],

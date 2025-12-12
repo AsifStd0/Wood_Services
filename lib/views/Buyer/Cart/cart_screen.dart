@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/data/models/buyer_cart_Item.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/home_screen.dart';
 import 'package:wood_service/views/Buyer/Cart/cart_widget.dart';
+import 'package:wood_service/views/Buyer/payment/checkout.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 
@@ -112,7 +114,14 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
       _showOutOfStockDialog(outOfStock);
       return;
     }
-    context.push('/checkout', extra: buyerCartItems);
+    // context.push('/checkout', extra: buyerCartItems);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) {
+          return CheckoutScreen();
+        },
+      ),
+    );
   }
 
   void _showOutOfStockDialog(List<BuyerCartItem> outOfStockItems) {
@@ -215,7 +224,16 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
             SizedBox(
               width: 220,
               child: ElevatedButton(
-                onPressed: () => context.push('/home'),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) {
+                        return BuyerHomeScreen();
+                      },
+                    ),
+                  );
+                },
+                //  context.push('/home'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.brightOrange,
                   shape: RoundedRectangleBorder(

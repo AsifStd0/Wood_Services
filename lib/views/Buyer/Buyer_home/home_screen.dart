@@ -48,7 +48,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => HomeViewModel(),
+      create: (context) => BuyerHomeViewModel(),
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: const CustomAppBar(
@@ -91,7 +91,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   }
 
   Widget _buildCategoriesSection() {
-    return Consumer<HomeViewModel>(
+    return Consumer<BuyerHomeViewModel>(
       builder: (context, viewModel, child) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,7 +127,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   }
 
   Widget _buildImageSlider() {
-    return Consumer<HomeViewModel>(
+    return Consumer<BuyerHomeViewModel>(
       builder: (context, viewModel, child) {
         return SizedBox(
           height: 140,
@@ -394,7 +394,14 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
                   child: CustomButton(
                     onPressed: () {
                       // Add to cart or order functionality
-                      context.push('/productDetail/${product.id}');
+                      // context.push('/productDetail/${product.id}');
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) {
+                            return ProductDetailScreen(productId: product.id);
+                          },
+                        ),
+                      );
                     },
                     child: const CustomText(
                       'Order',
@@ -416,7 +423,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   }
 
   Widget _buildFilterSection() {
-    return Consumer<HomeViewModel>(
+    return Consumer<BuyerHomeViewModel>(
       builder: (context, viewModel, child) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -447,7 +454,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   }
 
   Widget _buildMoreFilterSection() {
-    return Consumer<HomeViewModel>(
+    return Consumer<BuyerHomeViewModel>(
       builder: (context, viewModel, child) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

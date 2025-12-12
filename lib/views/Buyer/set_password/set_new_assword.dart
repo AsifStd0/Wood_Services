@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
+import 'package:wood_service/views/Buyer/phone_verification/phone_verification.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 
 class SetNewPasswordScreen extends StatefulWidget {
@@ -187,7 +188,14 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
               title: 'Reset Password',
               backgroundColor: AppColors.brightOrange,
               onPressed: () {
-                context.push('/phone_verificaion');
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) {
+                      return PhoneVerificationScreen();
+                    },
+                  ),
+                );
+                // context.push('/phone_verificaion');
               },
             ),
           ],

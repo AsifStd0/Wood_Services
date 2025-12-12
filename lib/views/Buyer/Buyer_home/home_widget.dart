@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/index.dart';
 
-Widget buildPriceFilter(HomeViewModel viewModel) {
+Widget buildPriceFilter(BuyerHomeViewModel viewModel) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -32,7 +32,7 @@ Widget buildPriceFilter(HomeViewModel viewModel) {
   );
 }
 
-Widget buildDeliveryFilter(HomeViewModel viewModel) {
+Widget buildDeliveryFilter(BuyerHomeViewModel viewModel) {
   return Row(
     children: [
       Checkbox(
@@ -45,7 +45,7 @@ Widget buildDeliveryFilter(HomeViewModel viewModel) {
   );
 }
 
-Widget buildSalesFilter(HomeViewModel viewModel) {
+Widget buildSalesFilter(BuyerHomeViewModel viewModel) {
   return Row(
     children: [
       Checkbox(
@@ -58,7 +58,7 @@ Widget buildSalesFilter(HomeViewModel viewModel) {
   );
 }
 
-Widget buildProviderFilter(HomeViewModel viewModel) {
+Widget buildProviderFilter(BuyerHomeViewModel viewModel) {
   final providers = [
     'IKEA',
     'Ashley Furniture',
@@ -93,7 +93,7 @@ Widget buildProviderFilter(HomeViewModel viewModel) {
   );
 }
 
-Widget buildColorFilter(HomeViewModel viewModel) {
+Widget buildColorFilter(BuyerHomeViewModel viewModel) {
   final colors = {
     'Black': Colors.black,
     'White': Colors.white,
@@ -126,7 +126,7 @@ Widget buildColorFilter(HomeViewModel viewModel) {
   );
 }
 
-Widget buildFilterActions(HomeViewModel viewModel) {
+Widget buildFilterActions(BuyerHomeViewModel viewModel) {
   return Row(
     children: [
       Expanded(
@@ -186,7 +186,7 @@ Widget buildCategoryChip(
 }
 
 Widget buildNewSection() {
-  return Consumer<HomeViewModel>(
+  return Consumer<BuyerHomeViewModel>(
     builder: (context, viewModel, child) {
       List<List<String>> chunks = [];
       for (int i = 0; i < viewModel.allOptions.length; i += 2) {
@@ -316,7 +316,7 @@ Widget _buildImagesRow() {
   );
 }
 
-Widget buildCityFilter(HomeViewModel viewModel) {
+Widget buildCityFilter(BuyerHomeViewModel viewModel) {
   final cities = [
     'New York',
     'Los Angeles',

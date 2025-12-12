@@ -15,10 +15,9 @@ export 'package:wood_service/app/locator.dart';
 export 'package:wood_service/widgets/custom_button.dart';
 export 'package:wood_service/widgets/custom_textfield.dart';
 
-export 'app.dart';
 export 'package:wood_service/data/repositories/auth_service.dart';
 
-export 'package:go_router/go_router.dart';
+// export 'package:go_router/go_router.dart';
 export 'package:wood_service/views/Buyer/Cart/cart_screen.dart';
 export 'package:wood_service/views/Buyer/Favorite_Screen/favorite_screen.dart';
 export 'package:wood_service/views/Buyer/Messages/message_screen.dart';
@@ -33,7 +32,7 @@ export 'package:wood_service/views/Buyer/buyer_main.dart';
 export 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_signup.dart';
 export 'package:wood_service/views/Buyer/profile/profile.dart';
 export 'package:wood_service/views/Buyer/set_password/set_new_assword.dart';
-export 'package:wood_service/views/Seller/data/main_seller_screen.dart';
+export 'package:wood_service/views/Seller/main_seller_screen.dart';
 export 'package:wood_service/views/Seller/data/views/noification_model.dart/seller_notificaion_screen.dart';
 export 'package:wood_service/views/Seller/data/views/order_data/order_screen.dart';
 

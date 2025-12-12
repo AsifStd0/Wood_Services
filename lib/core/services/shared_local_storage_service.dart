@@ -1,74 +1,66 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-abstract class LocalStorageService {
-  Future<void> saveString(String key, String value);
-  Future<String?> getString(String key);
-  Future<void> saveBool(String key, bool value);
-  Future<bool?> getBool(String key);
-  Future<void> remove(String key);
-  Future<void> clear();
+class SharedPrefManager {
+  static late SharedPreferences _prefs;
 
-  // Token-specific methods
-  Future<String?> getToken();
-  Future<void> saveToken(String token);
-  Future<void> deleteToken();
-}
+  // Initialize once in main.dart
+  static Future<void> init() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
 
-class LocalStorageServiceImpl implements LocalStorageService {
+  // ========== BASIC CRUD OPERATIONS ==========
+  static Future<bool> saveString(String key, String value) async {
+    return await _prefs.setString(key, value);
+  }
+
+  static String? getString(String key) {
+    return _prefs.getString(key);
+  }
+
+  static Future<bool> saveBool(String key, bool value) async {
+    return await _prefs.setBool(key, value);
+  }
+
+  static bool? getBool(String key) {
+    return _prefs.getBool(key);
+  }
+
+  static Future<bool> saveInt(String key, int value) async {
+    return await _prefs.setInt(key, value);
+  }
+
+  static int? getInt(String key) {
+    return _prefs.getInt(key);
+  }
+
+  static Future<bool> saveStringList(String key, List<String> value) async {
+    return await _prefs.setStringList(key, value);
+  }
+
+  static List<String>? getStringList(String key) {
+    return _prefs.getStringList(key);
+  }
+
+  static Future<bool> delete(String key) async {
+    return await _prefs.remove(key);
+  }
+
+  static Future<bool> clearAll() async {
+    return await _prefs.clear();
+  }
+
+  // ========== TOKEN MANAGEMENT ==========
   static const String _tokenKey = 'auth_token';
 
-  @override
-  Future<void> saveString(String key, String value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(key, value);
+  static Future<bool> saveToken(String token) async {
+    return await saveString(_tokenKey, token);
   }
 
-  @override
-  Future<String?> getString(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(key);
+  static String? getToken() {
+    return getString(_tokenKey);
   }
 
-  @override
-  Future<void> saveBool(String key, bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(key, value);
-  }
-
-  @override
-  Future<bool?> getBool(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(key);
-  }
-
-  @override
-  Future<void> remove(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(key);
-  }
-
-  @override
-  Future<void> clear() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-  }
-
-  // Token methods
-  @override
-  Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
-  }
-
-  @override
-  Future<void> saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-  }
-
-  @override
-  Future<void> deleteToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
+  static Future<bool> deleteToken() async {
+    return await delete(_tokenKey);
   }
 }

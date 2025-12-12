@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_test_style.dart';
+import 'package:wood_service/views/Buyer/set_password/set_new_assword.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 import 'package:wood_service/widgets/custom_text_style.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
 
-class ForgotPassword extends StatefulWidget {
-  const ForgotPassword({super.key});
+class BuyerForgotPassword extends StatefulWidget {
+  const BuyerForgotPassword({super.key});
 
   @override
-  State<ForgotPassword> createState() => _ForgotPasswordState();
+  State<BuyerForgotPassword> createState() => _ForgotPasswordState();
 }
 
-class _ForgotPasswordState extends State<ForgotPassword> {
+class _ForgotPasswordState extends State<BuyerForgotPassword> {
   final TextEditingController _emailController = TextEditingController();
   final FocusNode _emailFocusNode = FocusNode();
 
@@ -67,7 +68,14 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                       title: 'Send Reset Instructions',
                       backgroundColor: AppColors.brightOrange,
                       onPressed: () {
-                        context.push('/new_password');
+                        // context.push('/new_password');
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) {
+                              return SetNewPasswordScreen();
+                            },
+                          ),
+                        );
                       },
                     ),
                   ],

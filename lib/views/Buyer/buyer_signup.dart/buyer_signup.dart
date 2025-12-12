@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_test_style.dart';
+import 'package:wood_service/views/Buyer/buyer_main.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 import 'package:wood_service/widgets/custom_text_style.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
@@ -101,7 +102,14 @@ class _BuyerSignupState extends State<BuyerSignup> {
     // });
 
     // Navigate to next screen
-    context.push('/main_buyer');
+    // context.push('/main_buyer');
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) {
+          return MainScreen();
+        },
+      ),
+    );
   }
 
   void _showErrorDialog(String message) {

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_test_style.dart';
+import 'package:wood_service/views/splash/selection_screen.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -62,7 +63,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     right: 16,
                     child: TextButton(
                       onPressed: () {
-                        context.push('/selction_screen');
+                        // context.push('/selction_screen');
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) {
+                              return SelectionScreen();
+                            },
+                          ),
+                        );
                         // Navigate to next screen
                       },
                       child: Text(
@@ -109,13 +117,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: CustomButtonUtils.login(
                 backgroundColor: AppColors.brightOrange,
                 onPressed: () {
-                  context.push('/selction_screen');
-                  // Navigator.of(context).push(
-                  //   MaterialPageRoute(
-                  //     builder: (context) =>
-                  //         AdminDashboardScreen(),
-                  //   ),
-                  // );
+                  // context.push('/selction_screen');
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) {
+                        return SelectionScreen();
+                      },
+                    ),
+                  );
                 },
                 title: 'Get Started',
               ),
