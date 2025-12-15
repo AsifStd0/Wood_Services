@@ -1,17 +1,10 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/app/locator.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Seller/data/services/seller_auth.dart';
-import 'package:wood_service/views/Seller/data/views/shop_setting/shop_widgets.dart';
 import 'package:wood_service/views/Seller/seller_login.dart/login_view_model.dart';
 import 'package:wood_service/widgets/auth_button_txt.dart';
-import 'package:wood_service/widgets/custom_textfield.dart';
-import 'package:wood_service/widgets/custom_button.dart';
-import 'package:wood_service/widgets/custom_text.dart';
 
 class SellerLogin extends StatefulWidget {
   const SellerLogin({super.key});
@@ -31,12 +24,22 @@ class _SellerLoginState extends State<SellerLogin>
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
+  SellerLoginViewModel? _viewModel;
 
   @override
   void initState() {
     super.initState();
+    _initializeAnimations();
 
-    // Initialize animations
+    // Schedule check for after Provider is available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _viewModel != null) {
+        _checkExistingLogin();
+      }
+    });
+  }
+
+  void _initializeAnimations() {
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 420),
@@ -52,81 +55,65 @@ class _SellerLoginState extends State<SellerLogin>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
 
-    // Start entrance animation
     _animController.forward();
-
-    // Check if already logged in
-    _checkExistingLogin();
   }
 
   Future<void> _checkExistingLogin() async {
-    final viewModel = context.read<SellerLoginViewModel>();
-    final isLoggedIn = await viewModel.checkExistingLogin();
+    if (_viewModel == null) return;
+
+    final isLoggedIn = await _viewModel!.checkExistingLogin();
     if (isLoggedIn && mounted) {
-      // Already logged in, navigate to home
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        // context.go('/main_seller_screen');
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) {
-              return MainSellerScreen();
-            },
-          ),
-        );
-      });
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => MainSellerScreen()));
     }
   }
 
-  @override
-  void dispose() {
-    _animController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _emailFocusNode.dispose();
-    _passwordFocusNode.dispose();
-    super.dispose();
-  }
+  Future<void> _submitLogin() async {
+    log('1️⃣ Submit button pressed');
 
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      log('❌ Form validation failed');
+      return;
+    }
 
-    final viewModel = context.read<SellerLoginViewModel>();
+    // ✅ Use the stored _viewModel instead of context.read
+    if (_viewModel == null) {
+      log('❌ ViewModel not available');
+      return;
+    }
+
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    // Clear previous errors
-    viewModel.clearMessages();
+    log('2️⃣ Attempting login for: $email');
 
-    final result = await viewModel.login(email: email, password: password);
+    // Clear previous errors
+    _viewModel!.clearMessages();
+
+    log('3️⃣ Calling viewModel.login()');
+    final result = await _viewModel!.login(email: email, password: password);
+
+    log('4️⃣ Login result: ${result.isRight() ? "SUCCESS" : "FAILURE"}');
 
     result.fold(
-      // Failure
       (failure) {
-        // Error is already shown by ViewModel
         log('❌ Login failed: ${failure.message}');
       },
-      // Success
       (authResponse) async {
         log(
           '✅ Login successful for: ${authResponse.seller.personalInfo.fullName}',
         );
 
-        // Show success message
-        viewModel.setSuccess('Login successful!');
+        _viewModel!.setSuccess('Login successful!');
 
-        // Wait a moment for user to see success message
         await Future.delayed(const Duration(milliseconds: 500));
 
-        // Navigate to main seller screen
         if (mounted) {
+          log('5️⃣ Navigating to MainSellerScreen');
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) {
-                return MainSellerScreen();
-              },
-            ),
+            MaterialPageRoute(builder: (_) => MainSellerScreen()),
           );
-          // context.go('/main_seller_screen');
         }
       },
     );
@@ -137,66 +124,81 @@ class _SellerLoginState extends State<SellerLogin>
     return ChangeNotifierProvider(
       create: (_) =>
           SellerLoginViewModel(sellerAuthService: locator<SellerAuthService>()),
-      child: Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.brightOrange.withOpacity(0.06), Colors.white],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-          child: SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20.0,
-                  vertical: 28.0,
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 520),
-                  child: Stack(
-                    children: [
-                      // Main content
-                      SlideTransition(
-                        position: _slideAnim,
-                        child: FadeTransition(
-                          opacity: _fadeAnim,
-                          child: _buildCard(context),
-                        ),
-                      ),
+      builder: (context, child) {
+        // ✅ Store ViewModel reference
+        _viewModel ??= context.read<SellerLoginViewModel>();
 
-                      // Bottom signup text
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 14.0),
-                          child: AuthBottomText(
-                            questionText: "Don't have an account? ",
-                            actionText: "Sign Up",
-                            onPressed: () {
-                              // context.go('/seller_signup');
-                              Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(
-                                  builder: (_) {
-                                    return SellerSignupScreen();
-                                  },
-                                ),
-                              );
-                            },
+        // ✅ Schedule login check after ViewModel is available
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _viewModel != null) {
+            _checkExistingLogin();
+          }
+        });
+
+        return Scaffold(
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.brightOrange.withOpacity(0.06),
+                  Colors.white,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+            child: SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0,
+                    vertical: 28.0,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: Stack(
+                      children: [
+                        // Main content
+                        SlideTransition(
+                          position: _slideAnim,
+                          child: FadeTransition(
+                            opacity: _fadeAnim,
+                            child: _buildCard(context),
                           ),
                         ),
-                      ),
-                    ],
+
+                        // Bottom signup text
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 14.0),
+                            child: AuthBottomText(
+                              questionText: "Don't have an account? ",
+                              actionText: "Sign Up",
+                              onPressed: () {
+                                // context.go('/seller_signup');
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (_) {
+                                      return SellerSignupScreen();
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -395,7 +397,7 @@ class _SellerLoginState extends State<SellerLogin>
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: viewModel.isLoading ? null : _submit,
+                          onPressed: viewModel.isLoading ? null : _submitLogin,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.brightOrange,
                             foregroundColor: Colors.white,

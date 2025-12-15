@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/app/all_provider.dart';
 import 'package:wood_service/app/helper.dart';
+import 'package:wood_service/app/index.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/theme/app_theme.dart';
 
@@ -47,12 +48,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
+    return MaterialApp(
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-
-      // routerConfig: AppRouter.createRouter(isSellerLoggedIn: isSellerLoggedIn),
       debugShowCheckedModeBanner: false,
+      home: isSellerLoggedIn
+          ? MainSellerScreen() // ✅ Your actual seller home screen
+          : OnboardingScreen(), // ✅ Your actual onboarding screen
       builder: (context, child) {
         return GestureDetector(
           onTap: () => dismissKeyboard(context),

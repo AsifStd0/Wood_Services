@@ -3,13 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wood_service/core/services/local_storage_service.dart';
+import 'package:wood_service/views/Seller/data/services/profile_service.dart';
 import 'package:wood_service/views/Seller/data/services/seller_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Keep your LocalStorageService abstract class and implementation as is
 
 class ProfileViewModel extends ChangeNotifier {
-  final SellerAuthService _authService;
+  final ProfileService _authService;
   final LocalStorageService localStorageService;
 
   // Profile data
@@ -68,7 +69,7 @@ class ProfileViewModel extends ChangeNotifier {
 
   // Constructor - FIXED
   ProfileViewModel({
-    required SellerAuthService authService,
+    required ProfileService authService,
     required LocalStorageService localStorageService,
   }) : _authService = authService,
        localStorageService = localStorageService;

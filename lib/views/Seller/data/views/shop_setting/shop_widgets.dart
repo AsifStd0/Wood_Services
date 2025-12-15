@@ -160,7 +160,7 @@ Widget buildBankDetailsSection(ProfileViewModel viewModel) {
   );
 }
 
-Widget buildActionButtons(ProfileViewModel viewModel, BuildContext context) {
+Widget saveChangesButton(ProfileViewModel viewModel, BuildContext context) {
   return Column(
     children: [
       if (viewModel.isEditing) ...[

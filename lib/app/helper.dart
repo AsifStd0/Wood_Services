@@ -32,14 +32,16 @@ Future<void> checkAuthStatus() async {
 
 Future<void> testInitialConnection() async {
   log('\n🔍 Initial Connection Test');
-  log('=========================\n');
 
-  // Your possible server URLs
+  // ✅ Only test IPs on the SAME network as your phone
   final testUrls = [
-    'http://192.168.18.107:5001',
-    'http://192.168.18.107:5002',
-    'http://192.168.18.107:5003',
+    // Your laptop IP on the same network as phone
+    'http://192.168.18.107:5001', // ⚠️ Replace xxx with your laptop's IP
+    'http://192.168.2.1:5001', // Keep this as backup
   ];
+
+  log('📱 Phone is on network: 192.168.18.x');
+  log('💻 Testing connection to laptop...');
 
   bool hasConnection = false;
 
@@ -50,17 +52,17 @@ Future<void> testInitialConnection() async {
     try {
       log('Testing: $url');
       final response = await dio.get(
-        '/',
-        options: Options(receiveTimeout: const Duration(seconds: 3)),
+        '/api/health', // ✅ Use /api/health instead of /
+        options: Options(receiveTimeout: const Duration(seconds: 5)),
       );
 
       if (response.statusCode == 200) {
         log('✅ CONNECTED: $url');
-        log('   Server says: ${response.data['message']}');
+        log('   Server says: ${response.data}');
         hasConnection = true;
         workingServerUrl = url;
 
-        // Save working URL for future use
+        // Save working URL
         final storage = locator.get<LocalStorageService>();
         await storage.saveString('working_server_url', url);
 
@@ -72,9 +74,11 @@ Future<void> testInitialConnection() async {
   }
 
   if (!hasConnection) {
-    log('\n⚠️ WARNING: No server connection established');
-    log('   The app will run in offline mode');
-    log('   You can test connection from the debug screen');
+    log('\n⚠️ No server connection');
+    log('💡 Solution:');
+    log('1. Check both devices are on SAME Wi-Fi');
+    log('2. Use correct laptop IP from: ifconfig/ipconfig');
+    log('3. Test in phone browser first');
   }
 }
 

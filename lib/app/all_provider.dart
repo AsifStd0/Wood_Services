@@ -1,21 +1,13 @@
 // lib/app/providers.dart
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/services/local_storage_service.dart';
-import 'package:wood_service/core/services/seller_storage_service.dart';
-import 'package:wood_service/data/repositories/auth_service.dart';
-import 'package:wood_service/views/Buyer/Buyer_home/home_screen.dart';
-
-// ========== IMPORT ALL YOUR PROVIDERS ==========
-// IMPORTANT: Use locator for services that are registered in GetIt
 import 'package:wood_service/views/Buyer/Buyer_home/home_view_model.dart';
-import 'package:wood_service/views/Seller/data/models/seller_shop_model.dart';
 import 'package:wood_service/views/Seller/data/models/shop_model.dart';
 import 'package:wood_service/views/Seller/data/repository/order_repo.dart';
 import 'package:wood_service/views/Seller/data/repository/seller_product_repo.dart';
-import 'package:wood_service/views/Seller/data/services/seller_auth.dart';
+import 'package:wood_service/views/Seller/data/services/profile_service.dart';
 import 'package:wood_service/views/Seller/data/services/shop_service.dart';
 import 'package:wood_service/views/Seller/data/view_models/seller_home_view_model.dart';
 import 'package:wood_service/views/Seller/data/view_models/seller_settings_view_model.dart';
@@ -60,17 +52,11 @@ List<SingleChildWidget> appProviders = [
   // // ========== SHOP SETTINGS VIEWMODEL (Lazy Load) ==========
   ChangeNotifierProvider<ProfileViewModel>(
     create: (_) => ProfileViewModel(
-      authService: locator<SellerAuthService>(),
+      authService: locator<ProfileService>(),
       localStorageService: locator<LocalStorageService>(),
     ),
   ),
 
-  // Profile ViewModel
-  // locator.registerFactory<ProfileViewModel>(
-  //   () => ProfileViewModel(
-  //     authService: locator<SellerAuthService>(),
-  //   ),
-  // );
   ChangeNotifierProvider<SellerChatViewModel>(
     create: (_) => SellerChatViewModel(),
   ),

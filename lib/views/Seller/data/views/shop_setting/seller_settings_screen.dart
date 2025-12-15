@@ -1,14 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/app/locator.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/shop_widgets.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
-import 'package:wood_service/widgets/custom_textfield.dart';
 
 class SellerSettingsScreen extends StatefulWidget {
   const SellerSettingsScreen({super.key});
@@ -135,49 +129,47 @@ class _ShopSettingsContent extends StatelessWidget {
         }
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Shop Header
               buildShopHeader(viewModel),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 14),
 
               // Shop Banner
               buildShopBanner(viewModel),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 14),
 
               // Personal Information
               _buildPersonalInfoSection(viewModel),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 14),
 
               // Business Information
               _buildBusinessInfoSection(viewModel),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 14),
 
               // Shop Branding
               buildShopBrandingSection(viewModel),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 14),
 
               // Categories
               buildCategoriesSection(viewModel, context),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 14),
 
               // Bank Details
               buildBankDetailsSection(viewModel),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 14),
 
               // Action Buttons
-              buildActionButtons(viewModel, context),
-
-              const SizedBox(height: 40),
+              saveChangesButton(viewModel, context),
             ],
           ),
         );
