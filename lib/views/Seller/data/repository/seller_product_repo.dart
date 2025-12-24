@@ -1,5 +1,5 @@
 // lib/repositories/product_repository.dart
-import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product.dart';
+import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_model.dart';
 
 abstract class ProductRepository {
   Future<void> saveProduct(SellerProduct product);

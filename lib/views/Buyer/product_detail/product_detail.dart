@@ -1,100 +1,91 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
+import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
+import 'package:wood_service/views/Buyer/product_detail/product_detail_second_widget.dart';
 import 'package:wood_service/views/Buyer/product_detail/product_detail_widget.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 
-class ProductDetailScreen extends StatelessWidget {
-  final String productId;
+import '../../../app/index.dart';
 
-  const ProductDetailScreen({super.key, required this.productId});
+class ProductDetailScreen extends StatelessWidget {
+  final BuyerProductModel product;
+
+  const ProductDetailScreen({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
+    // Get cartViewModel from Provider
+    final cartViewModel = Provider.of<BuyerCartViewModel>(context);
+
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CustomAppBar(title: 'Product Details'),
+      appBar: const CustomAppBar(title: 'Product Details'),
       body: Stack(
         children: [
-          // Main Content (Scrollable)
+          /// MAIN CONTENT
           SingleChildScrollView(
             padding: const EdgeInsets.all(16),
-
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ProductDetailContent(),
+                /// Images
+                const ProductImageGallery(),
+                const SizedBox(height: 14),
 
-                // Add extra space at bottom for floating buttons
-                const SizedBox(height: 100),
+                /// Basic Info
+                ProductBasicInfo(product: product),
+                const SizedBox(height: 16),
+
+                /// Size - Use Provider to update
+                SizeSelectionWidget(
+                  onSizeSelected: (size) {
+                    cartViewModel.updateSize(size);
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                /// Quantity & Stock - Use Provider to update
+                MinimalQuantityStockWidget(
+                  product: product,
+                  onQuantityChanged: (quantity) {
+                    cartViewModel.updateQuantity(quantity);
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                /// Tabs
+                ProductTabsSection(product: product),
+                const SizedBox(height: 16),
+
+                /// Reviews
+                const ReviewsPreviewSection(),
+
+                /// Space for bottom buttons
+                const SizedBox(height: 50),
               ],
             ),
           ),
 
-          // Floating Action Buttons positioned above content
+          /// BOTTOM ACTION BUTTONS - Get values from Provider
           Positioned(
-            bottom: 20, // Distance from bottom
             left: 16,
             right: 16,
-            child: const ProductActionButtons(),
+            bottom: 20,
+            child: Consumer<BuyerCartViewModel>(
+              builder: (context, cartViewModel, child) {
+                return ProductActionButtons(
+                  product: product,
+                  cartViewModel: cartViewModel,
+                  selectedQuantity: cartViewModel.selectedQuantity,
+                  selectedSize: cartViewModel.selectedSize,
+                  selectedVariant: cartViewModel.selectedVariant,
+                );
+              },
+            ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class ProductDetailContent extends StatelessWidget {
-  const ProductDetailContent({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Product Images with Slider & Thumbnails
-        const ProductImageGallery(),
-
-        const SizedBox(height: 14),
-
-        // Product Basic Info
-        const ProductBasicInfo(),
-
-        const SizedBox(height: 16),
-
-        // Seller Info
-        const SellerInfoCard(),
-
-        const SizedBox(height: 16),
-
-        // Color Selection
-        MinimalColorSelectionWidget(),
-
-        // const ColorSelectionWidget(),
-        const SizedBox(height: 10),
-
-        // Size Selection
-        SizeSelectionWidget(),
-
-        const SizedBox(height: 16),
-
-        // Quantity & Stock
-        const MinimalQuantityStockWidget(),
-
-        const SizedBox(height: 24),
-
-        // Product Tabs
-        const ProductTabsSection(),
-
-        const SizedBox(height: 16),
-
-        // Reviews Section
-        const ReviewsPreviewSection(),
-
-        const SizedBox(height: 24),
-
-        // Related Products
-        const RelatedProductsSection(),
-
-        const SizedBox(height: 80), // Space for bottom buttons
-      ],
     );
   }
 }

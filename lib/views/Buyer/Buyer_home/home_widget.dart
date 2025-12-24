@@ -1,4 +1,9 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/favorite_button.dart';
+import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 
 import '../../../app/index.dart';
 
@@ -346,5 +351,223 @@ Widget buildCityFilter(BuyerHomeViewModel viewModel) {
         }).toList(),
       ),
     ],
+  );
+}
+
+// ! Products Actual Data
+// ! Products Actual Data
+Widget buildProductCard(BuyerProductModel product, BuildContext context) {
+  // final viewModel = Provider.of<BuyerHomeViewModel>(context, listen: false);
+  final bool hasDiscount = product.hasDiscount;
+  final double discount = product.hasDiscount
+      ? ((product.basePrice - product.finalPrice) / product.basePrice * 100)
+            .roundToDouble()
+      : 0;
+  final cartViewModel = locator<BuyerCartViewModel>();
+
+  return Container(
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black12,
+          blurRadius: 6,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Product Image with Badges
+        Stack(
+          children: [
+            // Product Image
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+              child: Container(
+                height: 90,
+                color: Colors.grey[200],
+                child: Center(
+                  child: product.featuredImage != null
+                      ? Image.network(
+                          product.featuredImage!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.image,
+                              size: 40,
+                              color: Colors.grey,
+                            );
+                          },
+                        )
+                      : CircleAvatar(radius: 60),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: FavoriteButton(
+                productId: product.id,
+                initialIsFavorited: product.isFavorited, // Use this instead
+              ),
+            ),
+            // Discount Badge
+            if (hasDiscount && discount > 0)
+              Positioned(
+                top: 12,
+                left: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${discount.toInt()}% OFF',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+
+        // Product Details
+        Padding(
+          padding: const EdgeInsets.only(left: 5, right: 5, top: 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title
+              Text(
+                product.title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+
+              // Description
+              Text(
+                product.shortDescription,
+                style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 3),
+
+              // Price and Stock
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Price
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '\$${product.finalPrice.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.black,
+                        ),
+                      ),
+                      if (product.hasDiscount &&
+                          product.basePrice > product.finalPrice)
+                        Text(
+                          '\$${product.basePrice.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                    ],
+                  ),
+
+                  // Stock Status
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: product.inStock ? Colors.green : Colors.red,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      product.inStock ? 'In Stock' : 'Out of Stock',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Rating
+              if (product.rating != null)
+                Row(
+                  children: [
+                    Icon(Icons.star, size: 14, color: Colors.amber),
+                    const SizedBox(width: 4),
+                    // Text(
+                    //   '${product.rating.toStringAsFixed(1)}',
+                    //   style: const TextStyle(fontSize: 12),
+                    // ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '(${product.reviewCount ?? 0})',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: CustomButton(
+                  backgroundColor: AppColors.yellowButton,
+                  height: 30,
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) {
+                          return ProductDetailScreen(
+                            product: product,
+                            // cartViewModel: cartViewModel, // Pass it here
+                          );
+                        },
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'Order Now',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
   );
 }

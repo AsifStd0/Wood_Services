@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Seller/data/models/visit_request_model.dart';
-import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/view_request_provider.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home/view_request_provider.dart';
 
 Widget buildFilterTabs(VisitRequestsViewModel viewModel) {
   return Container(

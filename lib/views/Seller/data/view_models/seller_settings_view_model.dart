@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../models/shop_model.dart';
+import '../services/shop_model.dart';
 import '../services/shop_service.dart';
 
 class SellerSettingsViewModel with ChangeNotifier {

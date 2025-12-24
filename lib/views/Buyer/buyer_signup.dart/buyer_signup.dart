@@ -1,174 +1,96 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_test_style.dart';
 import 'package:wood_service/views/Buyer/buyer_main.dart';
+import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_signup_provider.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 import 'package:wood_service/widgets/custom_text_style.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:provider/provider.dart';
 
-class BuyerSignup extends StatefulWidget {
+class BuyerSignupScreen extends StatefulWidget {
+  const BuyerSignupScreen({Key? key}) : super(key: key);
+
   @override
-  State<BuyerSignup> createState() => _BuyerSignupState();
+  State<BuyerSignupScreen> createState() => _BuyerSignupScreenState();
 }
 
-class _BuyerSignupState extends State<BuyerSignup> {
-  // Existing controllers
-  final TextEditingController _fullNameController = TextEditingController();
-  final TextEditingController _businessNameController = TextEditingController();
-  final TextEditingController _contactNameController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _bankNameController = TextEditingController();
-  final TextEditingController _ibanController = TextEditingController();
-
-  // New controllers for additional fields
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
-
-  // Focus nodes
-  final FocusNode _fullNameFocusNode = FocusNode();
-  final FocusNode _businessNameFocusNode = FocusNode();
-  final FocusNode _contactNameFocusNode = FocusNode();
-  final FocusNode _addressFocusNode = FocusNode();
-  final FocusNode _descriptionFocusNode = FocusNode();
-  final FocusNode _bankNameFocusNode = FocusNode();
-  final FocusNode _ibanFocusNode = FocusNode();
-  final FocusNode _emailFocusNode = FocusNode();
-  final FocusNode _passwordFocusNode = FocusNode();
-  final FocusNode _confirmPasswordFocusNode = FocusNode();
-
-  // Image picker
-  final ImagePicker _imagePicker = ImagePicker();
-  File? _selectedImage;
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
-
-  Future<void> _pickImage() async {
-    try {
-      final XFile? image = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 800,
-        maxHeight: 800,
-        imageQuality: 80,
-      );
-
-      if (image != null) {
-        setState(() {
-          _selectedImage = File(image.path);
-        });
-      }
-    } catch (e) {
-      print('Error picking image: $e');
-    }
-  }
-
-  void _submitApplication() {
-    // // Validate passwords match
-    // if (_passwordController.text != _confirmPasswordController.text) {
-    //   _showErrorDialog('Passwords do not match');
-    //   return;
-    // }
-
-    // // Validate required fields
-    // if (_emailController.text.isEmpty ||
-    //     _passwordController.text.isEmpty ||
-    //     _fullNameController.text.isEmpty) {
-    //   _showErrorDialog('Please fill all required fields');
-    //   return;
-    // }
-
-    // // Collect all data
-    // final buyerData = {
-    //   'fullName': _fullNameController.text,
-    //   'businessName': _businessNameController.text,
-    //   'contactName': _contactNameController.text,
-    //   'address': _addressController.text,
-    //   'description': _descriptionController.text,
-    //   'bankName': _bankNameController.text,
-    //   'iban': _ibanController.text,
-    //   'email': _emailController.text,
-    //   'password': _passwordController.text,
-    //   'profileImage': _selectedImage?.path,
-    // };
-
-    // // Print all data for verification
-    // buyerData.forEach((key, value) {
-    //   print('$key: $value');
-    // });
-
-    // Navigate to next screen
-    // context.push('/main_buyer');
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) {
-          return MainScreen();
-        },
-      ),
-    );
-  }
-
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Error'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
+class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            /// Scrollable content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header Section
-                    _buildHeaderSection(),
-                    SizedBox(height: 20),
+    return ChangeNotifierProvider(
+      create: (context) => BuyerSignupProvider(),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Consumer<BuyerSignupProvider>(
+            builder: (context, provider, child) {
+              return Stack(
+                children: [
+                  Column(
+                    children: [
+                      /// Scrollable content
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header Section
+                              _buildHeaderSection(),
+                              const SizedBox(height: 20),
 
-                    // Profile Image Section
-                    _buildProfileImageSection(),
-                    SizedBox(height: 20),
+                              // Profile Image Section
+                              _buildProfileImageSection(provider),
+                              const SizedBox(height: 20),
 
-                    // Personal Information Section
-                    _buildPersonalInfoSection(),
-                    SizedBox(height: 20),
+                              // Personal Information Section
+                              _buildPersonalInfoSection(provider),
+                              const SizedBox(height: 20),
 
-                    // Business Information Section
-                    _buildBusinessInfoSection(),
-                    SizedBox(height: 20),
+                              // Business Information Section
+                              _buildBusinessInfoSection(provider),
+                              const SizedBox(height: 20),
 
-                    // Bank Details Section
-                    _buildBankDetailsSection(),
-                    SizedBox(height: 30),
+                              // Bank Details Section
+                              _buildBankDetailsSection(provider),
+                              const SizedBox(height: 30),
 
-                    // Submit Button
-                    _buildSubmitButton(),
-                  ],
-                ),
-              ),
-            ),
-          ],
+                              // Submit Button
+                              _buildSubmitButton(provider),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Loading overlay
+                  if (provider.isLoading)
+                    Container(
+                      color: Colors.black54,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.brightOrange,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Registering...',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -197,15 +119,15 @@ class _BuyerSignupState extends State<BuyerSignup> {
     );
   }
 
-  Widget _buildProfileImageSection() {
+  Widget _buildProfileImageSection(BuyerSignupProvider provider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CustomText('Profile Picture', type: CustomTextType.subtitleMedium),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Center(
           child: GestureDetector(
-            onTap: _pickImage,
+            onTap: () => provider.pickProfileImage(),
             child: Container(
               width: 120,
               height: 120,
@@ -217,10 +139,10 @@ class _BuyerSignupState extends State<BuyerSignup> {
                   width: 2,
                 ),
               ),
-              child: _selectedImage != null
+              child: provider.profileImage != null
                   ? ClipOval(
                       child: Image.file(
-                        _selectedImage!,
+                        provider.profileImage!,
                         fit: BoxFit.cover,
                         width: 120,
                         height: 120,
@@ -234,7 +156,7 @@ class _BuyerSignupState extends State<BuyerSignup> {
             ),
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Center(
           child: CustomText(
             'Tap to upload profile picture',
@@ -246,7 +168,7 @@ class _BuyerSignupState extends State<BuyerSignup> {
     );
   }
 
-  Widget _buildPersonalInfoSection() {
+  Widget _buildPersonalInfoSection(BuyerSignupProvider provider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -256,7 +178,7 @@ class _BuyerSignupState extends State<BuyerSignup> {
           fontWeight: FontWeight.bold,
           color: AppColors.brightOrange,
         ),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
 
         // Full Name Field
         CustomText('Full Name *', type: CustomTextType.subtitleMedium),
@@ -264,13 +186,9 @@ class _BuyerSignupState extends State<BuyerSignup> {
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
             textFieldType: TextFieldType.name,
-            validator: (value) {},
-            controller: _fullNameController,
+            onChanged: provider.setFullName,
+            validator: (value) => value?.isEmpty == true ? 'Required' : null,
             hintText: 'e.g. John Doe',
-            onChanged: (value) {
-              print('Full Name: $value');
-            },
-            focusNode: _fullNameFocusNode,
           ),
         ),
 
@@ -280,13 +198,14 @@ class _BuyerSignupState extends State<BuyerSignup> {
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
             textFieldType: TextFieldType.email,
-            controller: _emailController,
+            onChanged: provider.setEmail,
+            validator: (value) {
+              if (value?.isEmpty == true) return 'Required';
+              if (!value!.contains('@')) return 'Invalid email';
+              return null;
+            },
             hintText: 'e.g. john@example.com',
             textInputType: TextInputType.emailAddress,
-            onChanged: (value) {
-              print('Email: $value');
-            },
-            focusNode: _emailFocusNode,
           ),
         ),
 
@@ -296,24 +215,23 @@ class _BuyerSignupState extends State<BuyerSignup> {
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
             textFieldType: TextFieldType.password,
-            controller: _passwordController,
+            onChanged: provider.setPassword,
+            validator: (value) {
+              if (value?.isEmpty == true) return 'Required';
+              if (value!.length < 6) return 'At least 6 characters';
+              return null;
+            },
             hintText: 'Enter your password',
-            obscureText: _obscurePassword,
+            obscureText: provider.obscurePassword,
             suffixIcon: IconButton(
               icon: Icon(
-                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                provider.obscurePassword
+                    ? Icons.visibility_off
+                    : Icons.visibility,
                 color: AppColors.grayMedium,
               ),
-              onPressed: () {
-                setState(() {
-                  _obscurePassword = !_obscurePassword;
-                });
-              },
+              onPressed: provider.togglePasswordVisibility,
             ),
-            onChanged: (value) {
-              print('Password: $value');
-            },
-            focusNode: _passwordFocusNode,
           ),
         ),
 
@@ -323,33 +241,30 @@ class _BuyerSignupState extends State<BuyerSignup> {
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
             textFieldType: TextFieldType.confrimpassword,
-            controller: _confirmPasswordController,
+            onChanged: provider.setConfirmPassword,
+            validator: (value) {
+              if (value?.isEmpty == true) return 'Required';
+              if (value != provider.password) return 'Passwords do not match';
+              return null;
+            },
             hintText: 'Confirm your password',
-            obscureText: _obscureConfirmPassword,
+            obscureText: provider.obscureConfirmPassword,
             suffixIcon: IconButton(
               icon: Icon(
-                _obscureConfirmPassword
+                provider.obscureConfirmPassword
                     ? Icons.visibility_off
                     : Icons.visibility,
                 color: AppColors.grayMedium,
               ),
-              onPressed: () {
-                setState(() {
-                  _obscureConfirmPassword = !_obscureConfirmPassword;
-                });
-              },
+              onPressed: provider.toggleConfirmPasswordVisibility,
             ),
-            onChanged: (value) {
-              print('Confirm Password: $value');
-            },
-            focusNode: _confirmPasswordFocusNode,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildBusinessInfoSection() {
+  Widget _buildBusinessInfoSection(BuyerSignupProvider provider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -359,7 +274,7 @@ class _BuyerSignupState extends State<BuyerSignup> {
           fontWeight: FontWeight.bold,
           color: AppColors.brightOrange,
         ),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
 
         // Business Name Field
         CustomText('Business Name', type: CustomTextType.subtitleMedium),
@@ -367,13 +282,8 @@ class _BuyerSignupState extends State<BuyerSignup> {
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
             textFieldType: TextFieldType.businessName,
-
-            controller: _businessNameController,
+            onChanged: provider.setBusinessName,
             hintText: 'e.g. Modern Design Co.',
-            onChanged: (value) {
-              print('Business Name: $value');
-            },
-            focusNode: _businessNameFocusNode,
           ),
         ),
 
@@ -383,13 +293,8 @@ class _BuyerSignupState extends State<BuyerSignup> {
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
             textFieldType: TextFieldType.contactName,
-
-            controller: _contactNameController,
+            onChanged: provider.setContactName,
             hintText: 'e.g. James Smith',
-            onChanged: (value) {
-              print('Contact Name: $value');
-            },
-            focusNode: _contactNameFocusNode,
           ),
         ),
 
@@ -399,13 +304,8 @@ class _BuyerSignupState extends State<BuyerSignup> {
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
             textFieldType: TextFieldType.address,
-
-            controller: _addressController,
+            onChanged: provider.setAddress,
             hintText: 'Enter your full address',
-            onChanged: (value) {
-              print('Address: $value');
-            },
-            focusNode: _addressFocusNode,
           ),
         ),
 
@@ -416,19 +316,15 @@ class _BuyerSignupState extends State<BuyerSignup> {
           child: CustomTextFormField(
             minline: 4,
             maxLines: 4,
-            controller: _descriptionController,
+            onChanged: provider.setDescription,
             hintText: 'A little about your business...',
-            onChanged: (value) {
-              print('Description: $value');
-            },
-            focusNode: _descriptionFocusNode,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildBankDetailsSection() {
+  Widget _buildBankDetailsSection(BuyerSignupProvider provider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -452,12 +348,8 @@ class _BuyerSignupState extends State<BuyerSignup> {
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
-            controller: _bankNameController,
+            onChanged: provider.setBankName,
             hintText: 'e.g. Premier National Bank',
-            onChanged: (value) {
-              print('Bank Name: $value');
-            },
-            focusNode: _bankNameFocusNode,
           ),
         ),
 
@@ -466,54 +358,110 @@ class _BuyerSignupState extends State<BuyerSignup> {
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
-            controller: _ibanController,
+            onChanged: provider.setIban,
             hintText: 'SA00 0000 0000 0000 0000 0000',
-            onChanged: (value) {
-              print('IBAN: $value');
-            },
-            focusNode: _ibanFocusNode,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSubmitButton() {
-    return CustomButtonUtils.login(
-      padding: EdgeInsets.all(0),
-      title: 'Complete Registration',
-      backgroundColor: AppColors.brightOrange,
-      // textColor: Colors.white,
-      onPressed: _submitApplication,
+  Widget _buildSubmitButton(BuyerSignupProvider provider) {
+    // Show error message if exists
+    Widget? errorWidget;
+    if (provider.errorMessage != null) {
+      errorWidget = Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.red[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.red),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.red[800]),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  provider.errorMessage!,
+                  style: TextStyle(color: Colors.red[800]),
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.close, size: 16, color: Colors.red[800]),
+                onPressed: provider.clearError,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Show success message if exists
+    Widget? successWidget;
+    if (provider.successMessage != null) {
+      successWidget = Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.green[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.green),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green[800]),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  provider.successMessage!,
+                  style: TextStyle(color: Colors.green[800]),
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.close, size: 16, color: Colors.green[800]),
+                onPressed: provider.clearSuccess,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        if (errorWidget != null) errorWidget,
+        if (successWidget != null) successWidget,
+        CustomButtonUtils.login(
+          padding: EdgeInsets.all(0),
+          title: 'Complete Registration',
+          backgroundColor: AppColors.brightOrange,
+          onPressed: () async {
+            // Hide keyboard
+            FocusScope.of(context).unfocus();
+
+            // Print form data for debugging
+            // provider.printFormData();
+
+            // Submit registration
+            final result = await provider.registerBuyer();
+
+            if (result['success'] == true) {
+              // Navigate to main screen after successful registration
+              await Future.delayed(const Duration(seconds: 1));
+              if (context.mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => BuyerMainScreen()),
+                );
+              }
+            }
+          },
+        ),
+      ],
     );
-  }
-
-  @override
-  void dispose() {
-    // Dispose all controllers
-    _fullNameController.dispose();
-    _businessNameController.dispose();
-    _contactNameController.dispose();
-    _addressController.dispose();
-    _descriptionController.dispose();
-    _bankNameController.dispose();
-    _ibanController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-
-    // Dispose all focus nodes
-    _fullNameFocusNode.dispose();
-    _businessNameFocusNode.dispose();
-    _contactNameFocusNode.dispose();
-    _addressFocusNode.dispose();
-    _descriptionFocusNode.dispose();
-    _bankNameFocusNode.dispose();
-    _ibanFocusNode.dispose();
-    _emailFocusNode.dispose();
-    _passwordFocusNode.dispose();
-    _confirmPasswordFocusNode.dispose();
-
-    super.dispose();
   }
 }

@@ -1,17 +1,23 @@
 // view_models/add_product_view_model.dart
+import 'dart:convert';
+import 'dart:developer';
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:wood_service/views/Seller/data/repository/seller_product_repo.dart';
-import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:wood_service/app/locator.dart';
+import 'package:wood_service/core/services/seller_local_storage_service.dart';
+import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_model.dart';
 
-class AddProductViewModel with ChangeNotifier {
-  final ProductRepository _productRepository;
-
-  AddProductViewModel(this._productRepository);
-
+// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NDM3MTE3MGRjYzgzYTcwNWM0YmZmOCIsImlhdCI6MTc2NjMxMzI0NiwiZXhwIjoxNzY4OTA1MjQ2fQ.jXWiJqFwB6DMTa4CbCEvxcLPdNGqwfA5imge2FtFtCk
+class SellerProductProvider extends ChangeNotifier {
   SellerProduct _product = SellerProduct(
     title: '',
     shortDescription: '',
     longDescription: '',
+    category: '',
     tags: [],
     basePrice: 0.0,
     salePrice: null,
@@ -20,232 +26,144 @@ class AddProductViewModel with ChangeNotifier {
     currency: 'USD',
     sku: '',
     stockQuantity: 0,
-    lowStockAlert: null,
-    trackStock: true,
-    allowBackorders: false,
-    soldIndividually: false,
+    lowStockAlert: 5,
     weight: null,
     length: null,
     width: null,
     height: null,
+    dimensionSpec: '',
+    variants: [],
+    variantTypes: [],
     images: [],
     videos: [],
-    documents: [],
-    variants: [],
+    status: 'draft',
+    isActive: true,
   );
 
-  SellerProduct get product => _product;
-
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
-
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
-
+  // Tab state
   int _currentTabIndex = 0;
-  int get currentTabIndex => _currentTabIndex;
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  // ============ BASIC TAB METHODS ============
-  void setTitle(String title) {
+  // Image handling
+  List<File> _selectedImages = [];
+  File? _featuredImage;
+  bool _isUploadingImages = false;
+
+  // Getters
+  SellerProduct get product => _product;
+  int get currentTabIndex => _currentTabIndex;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  List<File> get selectedImages => _selectedImages;
+  File? get featuredImage => _featuredImage;
+  bool get isUploadingImages => _isUploadingImages;
+
+  // Tab navigation
+  void setCurrentTab(int index) {
+    _currentTabIndex = index;
+    notifyListeners();
+  }
+
+  // Basic Tab
+  void updateTitle(String title) {
     _product = _product.copyWith(title: title);
     notifyListeners();
   }
 
-  void setShortDescription(String description) {
-    _product = _product.copyWith(shortDescription: description);
+  void updateShortDescription(String desc) {
+    _product = _product.copyWith(shortDescription: desc);
     notifyListeners();
   }
 
-  void setLongDescription(String description) {
-    _product = _product.copyWith(longDescription: description);
+  void updateLongDescription(String desc) {
+    _product = _product.copyWith(longDescription: desc);
     notifyListeners();
   }
 
-  void setCategory(String category) {
+  void updateCategory(String category) {
     _product = _product.copyWith(category: category);
     notifyListeners();
   }
 
-  void setTags(List<String> tags) {
+  void updateTags(List<String> tags) {
     _product = _product.copyWith(tags: tags);
     notifyListeners();
   }
 
-  // ============ PRICING TAB METHODS ============
-  void setBasePrice(double price) {
+  // Pricing Tab
+  void updateBasePrice(double price) {
     _product = _product.copyWith(basePrice: price);
     notifyListeners();
   }
 
-  void setSalePrice(double? salePrice) {
-    _product = _product.copyWith(salePrice: salePrice);
+  void updateSalePrice(double? price) {
+    _product = _product.copyWith(salePrice: price);
     notifyListeners();
   }
 
-  void setCostPrice(double? costPrice) {
-    _product = _product.copyWith(costPrice: costPrice);
+  void updateCostPrice(double? price) {
+    _product = _product.copyWith(costPrice: price);
     notifyListeners();
   }
 
-  void setTaxRate(double taxRate) {
-    _product = _product.copyWith(taxRate: taxRate);
+  void updateTaxRate(double rate) {
+    _product = _product.copyWith(taxRate: rate);
     notifyListeners();
   }
 
-  void setCurrency(String currency) {
+  void updateCurrency(String currency) {
     _product = _product.copyWith(currency: currency);
     notifyListeners();
   }
 
-  // Calculate profit margin
-  double get profitMargin {
-    if (_product.costPrice == null || _product.costPrice == 0) return 0.0;
-    final sellingPrice = _product.salePrice ?? _product.basePrice;
-    return ((sellingPrice - _product.costPrice!) / _product.costPrice!) * 100;
-  }
-
-  // Calculate price after tax
-  double get priceAfterTax {
-    final sellingPrice = _product.salePrice ?? _product.basePrice;
-    return sellingPrice * (1 + (_product.taxRate / 100));
-  }
-
-  // ============ INVENTORY TAB METHODS ============
-  void setSku(String sku) {
+  // Inventory Tab
+  void updateSku(String sku) {
     _product = _product.copyWith(sku: sku);
     notifyListeners();
   }
 
-  void setStockQuantity(int quantity) {
+  void updateStockQuantity(int quantity) {
     _product = _product.copyWith(stockQuantity: quantity);
     notifyListeners();
   }
 
-  void setLowStockAlert(int? alertLevel) {
-    _product = _product.copyWith(lowStockAlert: alertLevel);
+  void updateLowStockAlert(int? alert) {
+    _product = _product.copyWith(lowStockAlert: alert);
     notifyListeners();
   }
 
-  void setTrackStock(bool trackStock) {
-    _product = _product.copyWith(trackStock: trackStock);
-    notifyListeners();
-  }
-
-  void setAllowBackorders(bool allowBackorders) {
-    _product = _product.copyWith(allowBackorders: allowBackorders);
-    notifyListeners();
-  }
-
-  void setSoldIndividually(bool soldIndividually) {
-    _product = _product.copyWith(soldIndividually: soldIndividually);
-    notifyListeners();
-  }
-
-  void setWeight(double? weight) {
+  void updateWeight(double? weight) {
     _product = _product.copyWith(weight: weight);
     notifyListeners();
   }
 
-  void setLength(double? length) {
+  void updateLength(double? length) {
     _product = _product.copyWith(length: length);
     notifyListeners();
   }
 
-  void setWidth(double? width) {
+  void updateWidth(double? width) {
     _product = _product.copyWith(width: width);
     notifyListeners();
   }
 
-  void setHeight(double? height) {
+  void updateHeight(double? height) {
     _product = _product.copyWith(height: height);
     notifyListeners();
   }
 
-  // Check if stock is low
-  bool get isLowStock {
-    if (!_product.trackStock || _product.lowStockAlert == null) return false;
-    return _product.stockQuantity <= _product.lowStockAlert!;
-  }
-
-  // Calculate package volume
-  double? get packageVolume {
-    if (_product.length == null ||
-        _product.width == null ||
-        _product.height == null) {
-      return null;
-    }
-    return _product.length! * _product.width! * _product.height!;
-  }
-
-  // ============ MEDIA TAB METHODS ============
-  void addImage(String imageUrl) {
-    final updatedImages = List<String>.from(_product.images)..add(imageUrl);
-    _product = _product.copyWith(images: updatedImages);
+  void updateDimensionSpec(String spec) {
+    _product = _product.copyWith(dimensionSpec: spec);
     notifyListeners();
   }
 
-  void removeImage(String imageUrl) {
-    final updatedImages = List<String>.from(_product.images)..remove(imageUrl);
-    _product = _product.copyWith(images: updatedImages);
-    notifyListeners();
-  }
-
-  void setFeaturedImage(String imageUrl) {
-    // Move the image to the first position
-    final updatedImages = List<String>.from(_product.images);
-    updatedImages.remove(imageUrl);
-    updatedImages.insert(0, imageUrl);
-    _product = _product.copyWith(images: updatedImages);
-    notifyListeners();
-  }
-
-  void addVideo(String videoUrl) {
-    final updatedVideos = List<String>.from(_product.videos)..add(videoUrl);
-    _product = _product.copyWith(videos: updatedVideos);
-    notifyListeners();
-  }
-
-  void removeVideo(String videoUrl) {
-    final updatedVideos = List<String>.from(_product.videos)..remove(videoUrl);
-    _product = _product.copyWith(videos: updatedVideos);
-    notifyListeners();
-  }
-
-  void addDocument(String documentUrl, String documentName) {
-    final document = ProductDocument(
-      url: documentUrl,
-      name: documentName,
-      uploadDate: DateTime.now(),
-    );
-    final updatedDocuments = List<ProductDocument>.from(_product.documents)
-      ..add(document);
-    _product = _product.copyWith(documents: updatedDocuments);
-    notifyListeners();
-  }
-
-  void removeDocument(String documentUrl) {
-    final updatedDocuments = List<ProductDocument>.from(_product.documents)
-      ..removeWhere((doc) => doc.url == documentUrl);
-    _product = _product.copyWith(documents: updatedDocuments);
-    notifyListeners();
-  }
-
-  // ============ VARIANTS TAB METHODS ============
+  // Variants
   void addVariant(ProductVariant variant) {
     final updatedVariants = List<ProductVariant>.from(_product.variants)
       ..add(variant);
     _product = _product.copyWith(variants: updatedVariants);
     notifyListeners();
-  }
-
-  void updateVariant(String variantId, ProductVariant updatedVariant) {
-    final index = _product.variants.indexWhere((v) => v.id == variantId);
-    if (index != -1) {
-      final updatedVariants = List<ProductVariant>.from(_product.variants);
-      updatedVariants[index] = updatedVariant;
-      _product = _product.copyWith(variants: updatedVariants);
-      notifyListeners();
-    }
   }
 
   void removeVariant(String variantId) {
@@ -255,132 +173,314 @@ class AddProductViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  void addVariantOption(
-    String variantType,
-    String optionName, {
-    double? priceAdjustment,
-  }) {
-    final variant = _product.variants.firstWhere(
-      (v) => v.type == variantType,
-      orElse: () => ProductVariant(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        type: variantType,
-        options: [],
-      ),
-    );
-
-    final option = VariantOption(
-      name: optionName,
-      priceAdjustment: priceAdjustment ?? 0.0,
-    );
-
-    final updatedOptions = List<VariantOption>.from(variant.options)
-      ..add(option);
-    final updatedVariant = variant.copyWith(options: updatedOptions);
-
-    if (_product.variants.any((v) => v.type == variantType)) {
-      updateVariant(variant.id, updatedVariant);
-    } else {
-      addVariant(updatedVariant);
-    }
-  }
-
-  // Get variants by type
-  List<VariantOption> getVariantOptions(String variantType) {
-    final variant = _product.variants.firstWhere(
-      (v) => v.type == variantType,
-      orElse: () => ProductVariant(id: '', type: variantType, options: []),
-    );
-    return variant.options;
-  }
-
-  // ============ COMMON METHODS ============
-  void setCurrentTab(int index) {
-    _currentTabIndex = index;
+  void updateVariantTypes(List<String> types) {
+    _product = _product.copyWith(variantTypes: types);
     notifyListeners();
   }
 
-  // Validation
-  bool get isFormValid {
-    return _product.title.isNotEmpty &&
-        _product.shortDescription.isNotEmpty &&
-        _product.longDescription.isNotEmpty &&
-        _product.basePrice > 0;
+  // Image handling methods
+  void addImage(File image) {
+    _selectedImages.add(image);
+    notifyListeners();
   }
 
-  // Check if current tab is valid
-  bool isCurrentTabValid() {
+  void setFeaturedImage(File image) {
+    _featuredImage = image;
+    if (!_selectedImages.any((file) => file.path == image.path)) {
+      _selectedImages.insert(0, image); // Insert at beginning as featured
+    }
+    notifyListeners();
+  }
+
+  void removeImage(int index) {
+    if (index >= 0 && index < _selectedImages.length) {
+      // If removing featured image, clear it
+      if (_featuredImage != null &&
+          _selectedImages[index].path == _featuredImage!.path) {
+        _featuredImage = null;
+      }
+      _selectedImages.removeAt(index);
+      notifyListeners();
+    }
+  }
+
+  void clearImages() {
+    _selectedImages.clear();
+    _featuredImage = null;
+    notifyListeners();
+  }
+
+  Future<void> pickFeaturedImage() async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+
+    if (image != null) {
+      setFeaturedImage(File(image.path));
+    }
+  }
+
+  Future<void> pickMultipleImages() async {
+    final picker = ImagePicker();
+    final List<XFile> images = await picker.pickMultiImage(
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 80,
+    );
+
+    if (images.isNotEmpty) {
+      for (var image in images) {
+        if (_selectedImages.length < 10) {
+          final file = File(image.path);
+          if (!_selectedImages.any((f) => f.path == file.path)) {
+            addImage(file);
+          }
+        }
+      }
+    }
+  }
+
+  // Validation
+  bool validateCurrentTab() {
     switch (_currentTabIndex) {
       case 0: // Basic
         return _product.title.isNotEmpty &&
             _product.shortDescription.isNotEmpty &&
-            _product.longDescription.isNotEmpty;
+            _product.longDescription.isNotEmpty &&
+            _product.category.isNotEmpty;
       case 1: // Pricing
         return _product.basePrice > 0;
       case 2: // Inventory
-        return _product.sku.isNotEmpty;
+        return true; // Optional
       case 3: // Variants
-        return true; // Variants are optional
+        return true; // Optional
       case 4: // Media
-        return _product.images.isNotEmpty; // At least one image required
+        return _selectedImages.isNotEmpty;
       default:
         return false;
     }
   }
 
-  // Actions
-  Future<bool> saveDraft() async {
+  Future<bool> publishProduct() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      await _productRepository.saveProduct(
-        _product.copyWith(
-          isPublished: false,
-          updatedAt: DateTime.now(),
-          status: ProductStatus.draft,
+      // Validate all required fields
+      if (!validateCurrentTab()) {
+        throw Exception('Please complete all required fields');
+      }
+
+      // Validate images
+      if (_selectedImages.isEmpty) {
+        throw Exception('Please upload at least one product image');
+      }
+
+      // Get token
+      final token = await _getToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('Authentication token not found. Please login again.');
+      }
+
+      // Get the Dio instance
+      final dio = locator<Dio>();
+
+      // Prepare FormData for multipart upload
+      final formData = FormData();
+
+      // Add all product data as individual fields
+      formData.fields.add(MapEntry('title', _product.title));
+      formData.fields.add(
+        MapEntry('shortDescription', _product.shortDescription),
+      );
+      formData.fields.add(
+        MapEntry('longDescription', _product.longDescription),
+      );
+      formData.fields.add(MapEntry('category', _product.category));
+      formData.fields.add(MapEntry('basePrice', _product.basePrice.toString()));
+      formData.fields.add(MapEntry('taxRate', _product.taxRate.toString()));
+      formData.fields.add(MapEntry('currency', _product.currency));
+      formData.fields.add(MapEntry('sku', _product.sku));
+      formData.fields.add(
+        MapEntry('stockQuantity', _product.stockQuantity.toString()),
+      );
+      formData.fields.add(
+        MapEntry('lowStockAlert', (_product.lowStockAlert ?? 5).toString()),
+      );
+      formData.fields.add(MapEntry('status', 'draft'));
+
+      // Add optional fields if they exist
+      if (_product.salePrice != null) {
+        formData.fields.add(
+          MapEntry('salePrice', _product.salePrice.toString()),
+        );
+      }
+      if (_product.costPrice != null) {
+        formData.fields.add(
+          MapEntry('costPrice', _product.costPrice.toString()),
+        );
+      }
+      if (_product.weight != null) {
+        formData.fields.add(MapEntry('weight', _product.weight.toString()));
+      }
+      if (_product.length != null) {
+        formData.fields.add(MapEntry('length', _product.length.toString()));
+      }
+      if (_product.width != null) {
+        formData.fields.add(MapEntry('width', _product.width.toString()));
+      }
+      if (_product.height != null) {
+        formData.fields.add(MapEntry('height', _product.height.toString()));
+      }
+      if (_product.dimensionSpec.isNotEmpty) {
+        formData.fields.add(MapEntry('dimensionSpec', _product.dimensionSpec));
+      }
+
+      // Add lists as JSON strings
+      if (_product.tags.isNotEmpty) {
+        formData.fields.add(MapEntry('tags', jsonEncode(_product.tags)));
+      }
+      if (_product.variants.isNotEmpty) {
+        formData.fields.add(
+          MapEntry(
+            'variants',
+            jsonEncode(_product.variants.map((v) => v.toJson()).toList()),
+          ),
+        );
+      }
+      if (_product.variantTypes.isNotEmpty) {
+        formData.fields.add(
+          MapEntry('variantTypes', jsonEncode(_product.variantTypes)),
+        );
+      }
+
+      // ========== ADD IMAGES AS FILES ==========
+      // First image is featured image
+      if (_selectedImages.isNotEmpty && _featuredImage != null) {
+        formData.files.add(
+          MapEntry(
+            'featuredImage',
+            await MultipartFile.fromFile(
+              _featuredImage!.path,
+              filename: 'featured_${DateTime.now().millisecondsSinceEpoch}.jpg',
+            ),
+          ),
+        );
+
+        log('📸 Added featured image: ${_featuredImage!.path}');
+      }
+
+      // Remaining images as gallery images
+      for (int i = 0; i < _selectedImages.length; i++) {
+        final image = _selectedImages[i];
+
+        // Skip if this is the featured image (already added)
+        if (_featuredImage != null && image.path == _featuredImage!.path) {
+          continue;
+        }
+
+        formData.files.add(
+          MapEntry(
+            'galleryImages',
+            await MultipartFile.fromFile(
+              image.path,
+              filename:
+                  'gallery_${DateTime.now().millisecondsSinceEpoch}_$i.jpg',
+            ),
+          ),
+        );
+
+        log('📸 Added gallery image $i: ${image.path}');
+      }
+
+      log('=== UPLOAD DETAILS ===');
+      log('Total images: ${_selectedImages.length}');
+      log('Featured image: ${_featuredImage != null ? "Yes" : "No"}');
+
+      // Debug what we're sending
+      log('=== FORM DATA FIELDS ===');
+      for (var field in formData.fields) {
+        log('${field.key}: ${field.value}');
+      }
+
+      // Call API
+      final response = await dio.post(
+        '/api/seller/products',
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
         ),
       );
-      _isLoading = false;
-      notifyListeners();
-      return true;
+
+      // Debug response
+      log('Response Data is here: ${response.data}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        _isLoading = false;
+        resetForm(); // Clear form after successful publish
+        notifyListeners();
+        return true;
+      } else {
+        throw Exception(
+          response.data['message'] ?? 'Failed to publish product',
+        );
+      }
     } catch (e) {
+      log('=== ERROR ===');
+      log(e.toString());
+      if (e is DioException) {
+        log('Dio Error Type: ${e.type}');
+        log('Dio Error Message: ${e.message}');
+        log('Response Data: ${e.response?.data}');
+        log('Status Code: ${e.response?.statusCode}');
+        log('Request URL: ${e.requestOptions.path}');
+      }
+      log('=============');
+
       _isLoading = false;
-      _errorMessage = 'Failed to save draft: $e';
+      _errorMessage = e.toString();
       notifyListeners();
       return false;
     }
   }
 
-  Future<bool> publishProduct() async {
-    if (!isFormValid) {
-      _errorMessage = 'Please fill all required fields';
-      notifyListeners();
-      return false;
-    }
-
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
+  Future<String?> _getToken() async {
     try {
-      await _productRepository.saveProduct(
-        _product.copyWith(
-          isPublished: true,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          status: ProductStatus.published,
-        ),
-      );
-      _isLoading = false;
-      notifyListeners();
-      return true;
+      final localStorage = locator<SellerLocalStorageService>();
+
+      // First try to get seller token
+      final sellerToken = await localStorage.getSellerToken();
+
+      // Debug token retrieval
+      log('=== TOKEN RETRIEVAL ===');
+      log('Seller Token retrieved: ${sellerToken != null}');
+
+      if (sellerToken != null && sellerToken.isNotEmpty) {
+        return sellerToken;
+      }
+
+      // Fallback to general token
+      final generalToken = await localStorage.getSellerToken();
+      log('General Token retrieved: ${generalToken != null}');
+      if (generalToken != null && generalToken.isNotEmpty) {
+        return generalToken;
+      }
+
+      log('❌ No token found in storage');
+
+      return null;
     } catch (e) {
-      _isLoading = false;
-      _errorMessage = 'Failed to publish product: $e';
-      notifyListeners();
-      return false;
+      log('Error retrieving token: $e');
+      return null;
     }
   }
 
@@ -394,6 +494,7 @@ class AddProductViewModel with ChangeNotifier {
       title: '',
       shortDescription: '',
       longDescription: '',
+      category: '',
       tags: [],
       basePrice: 0.0,
       salePrice: null,
@@ -402,27 +503,23 @@ class AddProductViewModel with ChangeNotifier {
       currency: 'USD',
       sku: '',
       stockQuantity: 0,
-      lowStockAlert: null,
-      trackStock: true,
-      allowBackorders: false,
-      soldIndividually: false,
+      lowStockAlert: 5,
       weight: null,
       length: null,
       width: null,
       height: null,
+      dimensionSpec: '',
+      variants: [],
+      variantTypes: [],
       images: [],
       videos: [],
-      documents: [],
-      variants: [],
+      // documents: [],
+      status: 'draft',
     );
     _currentTabIndex = 0;
+    _selectedImages.clear();
+    _featuredImage = null;
     _errorMessage = null;
-    notifyListeners();
-  }
-
-  // Load product for editing
-  void loadProduct(SellerProduct product) {
-    _product = product;
     notifyListeners();
   }
 }

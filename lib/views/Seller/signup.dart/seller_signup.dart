@@ -3,6 +3,7 @@ import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Seller/signup.dart/seller_signup_provider.dart';
+import 'package:wood_service/views/Seller/signup.dart/signup_widget.dart';
 import 'package:wood_service/widgets/auth_button_txt.dart';
 
 class SellerSignupScreen extends StatelessWidget {
@@ -10,8 +11,6 @@ class SellerSignupScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final viewModel = context.watch<SellerSignupViewModel>();
-
     return Scaffold(
       backgroundColor: Colors.white,
 
@@ -24,19 +23,19 @@ class SellerSignupScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildHeader(),
+                    buildHeader(),
                     const SizedBox(height: 20),
-                    _buildPersonalInfoSection(context),
+                    buildPersonalInfoSection(context),
                     const SizedBox(height: 20),
-                    _buildBusinessInfoSection(context),
+                    buildBusinessInfoSection(context),
                     const SizedBox(height: 20),
-                    _buildShopBrandingSection(context),
+                    buildShopBrandingSection(context),
                     const SizedBox(height: 20),
-                    _buildCategoriesSection(context),
+                    buildCategoriesSection(context),
                     const SizedBox(height: 20),
-                    _buildBankDetailsSection(context),
+                    buildBankDetailsSection(context),
                     const SizedBox(height: 20),
-                    _buildDocumentsSection(context),
+                    buildDocumentsSection(context),
                     const SizedBox(height: 20),
                     _buildSubmitButton(context),
                     _buildSignInLink(context),
@@ -50,501 +49,11 @@ class SellerSignupScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 20, bottom: 5),
-      child: CustomText(
-        'Start Your Furniture Business with Giga Home',
-        type: CustomTextType.headingLittleLarge,
-      ),
-    );
-  }
-
-  Widget _buildPersonalInfoSection(BuildContext context) {
-    final viewModel = context.read<SellerSignupViewModel>();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(
-          'Personal Information',
-          type: CustomTextType.subtitleLarge,
-          color: AppColors.brightOrange,
-        ),
-        const SizedBox(height: 15),
-        _buildFormField(
-          label: 'Full Name *',
-          controller: viewModel.fullNameController,
-          icon: Icons.person,
-          hintText: 'Enter your full name',
-        ),
-        _buildFormField(
-          label: 'Email Address *',
-          controller: viewModel.emailController,
-          icon: Icons.email,
-          hintText: 'Enter your email address',
-          textInputType: TextInputType.emailAddress,
-        ),
-        _buildPhoneField(context),
-        _buildPasswordField(
-          context,
-          label: 'Password *',
-          controller: viewModel.passwordController,
-          isObscure: viewModel.obscurePassword,
-          onToggle: () =>
-              viewModel.setObscurePassword(!viewModel.obscurePassword),
-        ),
-        _buildPasswordField(
-          context,
-          label: 'Confirm Password *',
-          controller: viewModel.confirmPasswordController,
-          isObscure: viewModel.obscureConfirmPassword,
-          onToggle: () => viewModel.setObscureConfirmPassword(
-            !viewModel.obscureConfirmPassword,
-          ),
-        ),
-      ],
-    );
-  }
-
-  //  !  Contact Number
-  Widget _buildPhoneField(BuildContext context) {
-    final viewModel = context.read<SellerSignupViewModel>();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText('Contact Number *', type: CustomTextType.subtitleMedium),
-        Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
-          child: CustomTextFormField(
-            prefixIcon: CountryCodePicker(
-              onChanged: (CountryCode countryCode) {
-                viewModel.countryCode = countryCode.dialCode ?? '+1';
-              },
-              initialSelection: 'US',
-              favorite: const ['+1', 'US'],
-              showCountryOnly: false,
-              showOnlyCountryWhenClosed: false,
-              alignLeft: false,
-              showFlag: true,
-              showFlagDialog: true,
-              padding: EdgeInsets.zero,
-              textStyle: const TextStyle(fontSize: 14),
-            ),
-            controller: viewModel.phoneController,
-            hintText: 'Enter your phone number',
-            textInputType: TextInputType.phone,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPasswordField(
-    BuildContext context, {
-    required String label,
-    required TextEditingController controller,
-    required bool isObscure,
-    required VoidCallback onToggle,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(label, type: CustomTextType.subtitleMedium),
-        Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
-          child: CustomTextFormField(
-            prefixIcon: Icon(Icons.lock, color: AppColors.grey),
-            controller: controller,
-            hintText: label.contains('Confirm')
-                ? 'Confirm your password'
-                : 'Create a password',
-            obscureText: isObscure,
-            suffixIcon: IconButton(
-              icon: Icon(
-                isObscure ? Icons.visibility_off : Icons.visibility,
-                color: AppColors.grey,
-              ),
-              onPressed: onToggle,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBusinessInfoSection(BuildContext context) {
-    final viewModel = context.read<SellerSignupViewModel>();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(
-          'Business Information',
-          type: CustomTextType.subtitleLarge,
-          color: AppColors.brightOrange,
-        ),
-        const SizedBox(height: 15),
-        _buildFormField(
-          label: 'Business Name *',
-          controller: viewModel.businessNameController,
-          icon: Icons.business,
-          hintText: 'Enter your business legal name',
-        ),
-        _buildFormField(
-          label: 'Shop Name *',
-          controller: viewModel.shopNameController,
-          icon: Icons.store,
-          hintText: 'Enter your shop display name',
-        ),
-        _buildDescriptionField(context),
-        _buildFormField(
-          label: 'Business Address *',
-          controller: viewModel.addressController,
-          icon: Icons.location_on,
-          hintText: 'Enter your business address',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDescriptionField(BuildContext context) {
-    final viewModel = context.read<SellerSignupViewModel>();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(
-          'Business Description *',
-          type: CustomTextType.subtitleMedium,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
-          child: CustomTextFormField(
-            prefixIcon: Icon(Icons.description, color: AppColors.grey),
-            controller: viewModel.descriptionController,
-            hintText: 'Describe your business and products',
-            maxLines: 4,
-            minline: 3,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildShopBrandingSection(BuildContext context) {
-    final viewModel = context.watch<SellerSignupViewModel>();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(
-          'Shop Branding',
-          type: CustomTextType.subtitleLarge,
-          color: AppColors.brightOrange,
-        ),
-        const SizedBox(height: 15),
-        _buildImageUploader(
-          label: 'Shop Logo',
-          image: viewModel.shopLogo,
-          onTap: viewModel.pickShopLogo,
-          size: const Size(120, 120),
-          hintText: 'Upload Logo',
-        ),
-        const SizedBox(height: 15),
-        _buildImageUploader(
-          label: 'Shop Banner',
-          image: viewModel.shopBanner,
-          onTap: viewModel.pickShopBanner,
-          size: const Size(double.infinity, 120),
-          hintText: 'Upload Banner (1200x400 recommended)',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildImageUploader({
-    required String label,
-    required File? image,
-    required VoidCallback onTap,
-    required Size size,
-    required String hintText,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(label, type: CustomTextType.subtitleMedium),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            width: size.width,
-            height: size.height,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[300]!),
-            ),
-            child: image != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.file(image, fit: BoxFit.cover),
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        label.contains('Logo')
-                            ? Icons.add_photo_alternate
-                            : Icons.add_to_photos,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(hintText, style: const TextStyle(fontSize: 12)),
-                    ],
-                  ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCategoriesSection(BuildContext context) {
-    final viewModel = context.watch<SellerSignupViewModel>();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(
-          'Business Categories',
-          type: CustomTextType.subtitleLarge,
-          color: AppColors.brightOrange,
-        ),
-        const SizedBox(height: 8),
-        CustomText(
-          'Select the categories that best describe your products',
-          type: CustomTextType.hint,
-        ),
-        const SizedBox(height: 12),
-        // ! categories
-        _buildCategoriesList(viewModel),
-        const SizedBox(height: 12),
-        _buildAddCategoryButton(context, viewModel),
-      ],
-    );
-  }
-
-  Widget _buildCategoriesList(SellerSignupViewModel viewModel) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: viewModel.categories.map((category) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: AppColors.brightOrange.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                category,
-                style: TextStyle(
-                  color: AppColors.brightOrange,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(width: 4),
-              GestureDetector(
-                onTap: () => viewModel.removeCategory(category),
-                child: Icon(
-                  Icons.close,
-                  size: 14,
-                  color: AppColors.brightOrange,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  // !  'Add Category', Btn
-  Widget _buildAddCategoryButton(
-    BuildContext context,
-    SellerSignupViewModel viewModel,
-  ) {
-    return GestureDetector(
-      onTap: () => _showAddCategoryDialog(context, viewModel),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey[300]!),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.add, size: 16, color: Colors.grey[500]),
-            const SizedBox(width: 4),
-            Text(
-              'Add Category',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ! Bank Details
-  Widget _buildBankDetailsSection(BuildContext context) {
-    final viewModel = context.read<SellerSignupViewModel>();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(
-          'Bank Details for Payouts',
-          type: CustomTextType.subtitleLarge,
-          color: AppColors.brightOrange,
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Icon(Icons.security, size: 16, color: AppColors.darkGrey),
-            const SizedBox(width: 8),
-            CustomText(
-              'Your information is encrypted and secure',
-              type: CustomTextType.hint,
-            ),
-          ],
-        ),
-        const SizedBox(height: 15),
-        _buildFormField(
-          label: 'Bank Name *',
-          controller: viewModel.bankNameController,
-          icon: Icons.account_balance,
-          hintText: 'Enter your bank name',
-        ),
-        _buildFormField(
-          label: 'Account Number *',
-          controller: viewModel.accountNumberController,
-          icon: Icons.credit_card,
-          hintText: 'Enter your account number',
-          textInputType: TextInputType.number,
-        ),
-        _buildFormField(
-          label: 'IBAN',
-          controller: viewModel.ibanController,
-          icon: Icons.receipt,
-          hintText: 'Enter IBAN (if applicable)',
-        ),
-      ],
-    );
-  }
-  // Add to your _SellerSignupContent widget
-
-  Widget _buildDocumentUploader(
-    BuildContext context,
-    String title,
-    String documentType,
-  ) {
-    final viewModel = context.watch<SellerSignupViewModel>();
-    final file = viewModel.documents[documentType];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText('$title *', type: CustomTextType.subtitleMedium),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () => viewModel.pickDocument(documentType),
-          child: Container(
-            width: double.infinity,
-            height: 100,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[300]!),
-            ),
-            child: file != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.file(file, fit: BoxFit.cover),
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.upload_file,
-                        color: Colors.grey[400],
-                        size: 30,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Upload $title',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      Text(
-                        'Image or PDF',
-                        style: TextStyle(fontSize: 10, color: Colors.grey[500]),
-                      ),
-                    ],
-                  ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Update _buildDocumentsSection
-  Widget _buildDocumentsSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(
-          'Business Documents *',
-          type: CustomTextType.subtitleLarge,
-          color: AppColors.brightOrange,
-        ),
-        const SizedBox(height: 8),
-        CustomText(
-          'Upload required documents for verification',
-          type: CustomTextType.hint,
-        ),
-        const SizedBox(height: 15),
-        Column(
-          children: [
-            _buildDocumentUploader(
-              context,
-              'Business License',
-              'businessLicense',
-            ),
-            const SizedBox(height: 12),
-            _buildDocumentUploader(
-              context,
-              'Tax Certificate',
-              'taxCertificate',
-            ),
-            const SizedBox(height: 12),
-            _buildDocumentUploader(context, 'Identity Proof', 'identityProof'),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildSubmitButton(BuildContext context) {
     final viewModel = context.watch<SellerSignupViewModel>();
 
     return CustomButtonUtils.login(
-      title: 'Complete Seller Registration',
+      title: 'Register Seller',
       padding: EdgeInsets.all(0),
       backgroundColor: AppColors.brightOrange,
       onPressed: viewModel.isLoading ? null : () => _handleSubmission(context),
@@ -558,7 +67,6 @@ class SellerSignupScreen extends StatelessWidget {
         questionText: "Already have an account? ",
         actionText: "Sign In",
         onPressed: () {
-          // context.push('/seller_login');
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) {
@@ -571,68 +79,9 @@ class SellerSignupScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFormField({
-    required String label,
-    required TextEditingController controller,
-    required IconData icon,
-    required String hintText,
-    TextInputType textInputType = TextInputType.text,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(label, type: CustomTextType.subtitleMedium),
-        Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
-          child: CustomTextFormField(
-            prefixIcon: Icon(icon, color: AppColors.grey),
-            controller: controller,
-            hintText: hintText,
-            textInputType: textInputType,
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showAddCategoryDialog(
-    BuildContext context,
-    SellerSignupViewModel viewModel,
-  ) {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Business Category'),
-
-        content: CustomTextFormField.dialog(
-          // USE THE NEW DIALOG METHOD
-          controller: controller,
-          hintText: 'e.g. Furniture, Home Decor, Office Furniture',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.isNotEmpty) {
-                viewModel.addCategory(controller.text);
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _handleSubmission(BuildContext context) async {
     final viewModel = context.read<SellerSignupViewModel>();
 
-    // Show loading
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -646,11 +95,9 @@ class SellerSignupScreen extends StatelessWidget {
     try {
       final result = await viewModel.submitApplication();
 
-      // Close loading
       if (context.mounted) Navigator.of(context).pop();
 
       result.fold(
-        // Failure
         (failure) {
           if (context.mounted) {
             showDialog(
@@ -668,10 +115,8 @@ class SellerSignupScreen extends StatelessWidget {
             );
           }
         },
-        // Success
         (authResponse) async {
           if (context.mounted) {
-            // Show success snackbar
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Row(
@@ -686,13 +131,9 @@ class SellerSignupScreen extends StatelessWidget {
               ),
             );
 
-            // Wait a moment for user to see message
             await Future.delayed(Duration(milliseconds: 1500));
 
-            // Navigate using GoRouter - THIS IS THE KEY FIX
             if (context.mounted) {
-              // Use context.go() to replace entire stack
-              // context.go('/main_seller_screen');
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (_) {
@@ -700,15 +141,11 @@ class SellerSignupScreen extends StatelessWidget {
                   },
                 ),
               );
-
-              // OR if you want to pass data:
-              // context.go('/main_seller', extra: authResponse);
             }
           }
         },
       );
     } catch (error) {
-      // Close loading if error
       if (context.mounted) Navigator.of(context).pop();
 
       if (context.mounted) {

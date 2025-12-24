@@ -1,15 +1,17 @@
 // services/seller_auth_service.dart
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:wood_service/core/error/failure.dart';
-import '../../../../core/services/local_storage_service.dart';
-import 'package:wood_service/views/Seller/data/models/seller_signup_model.dart'; // Your model
+import 'package:wood_service/core/services/seller_local_storage_service.dart';
+import 'package:wood_service/views/Seller/data/models/seller_signup_model.dart';
 
 class SellerAuthService {
+  // !  i have mistake the mistake is that i have get profile api not calling only shared pref data i use in profile
   final Dio _dio;
-  final LocalStorageService _localStorageService;
+  final SellerLocalStorageService _localStorageService; // ✅ Keep this
 
   // Storage keys
   static const String _sellerTokenKey = 'seller_auth_token';
@@ -18,14 +20,131 @@ class SellerAuthService {
 
   SellerAuthService(this._dio, this._localStorageService);
 
-  //  !  *********     // Register Seller
+  // ! ********
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
+
+  // ========== CHECK LOGIN STATUS ==========
+  // ========== CHECK LOGIN STATUS ==========
+  Future<bool> isSellerLoggedIn() async {
+    try {
+      // First, check if we have both token AND seller data
+      final token = await _localStorageService.getString(_sellerTokenKey);
+      final sellerData = await _localStorageService.getString(_sellerDataKey);
+
+      log('🔐 Checking seller login status...');
+      log('   Token exists: $token ${token != null && token.isNotEmpty}');
+      log(
+        '   Seller data exists: ${sellerData != null && sellerData.isNotEmpty}',
+      );
+
+      // We need BOTH token AND seller data to be logged in
+      if (token == null || token.isEmpty) {
+        log('🔐 No seller token found in storage');
+        return false;
+      }
+
+      if (sellerData == null || sellerData.isEmpty) {
+        log('🔐 No seller data found in storage');
+        return false;
+      }
+
+      // BOTH exist, so user is logged in
+      log('✅ Seller is logged in (token and data both exist)');
+      return true;
+    } catch (e) {
+      log('❌ Error checking login status: $e');
+      return false;
+    }
+  }
+
+  // Alias for isSellerLoggedIn
+  Future<bool> isLoggedIn() async {
+    return await isSellerLoggedIn();
+  }
+
+  // ========== GET CURRENT SELLER ==========
+  Future<SellerModel?> getCurrentSeller() async {
+    try {
+      final sellerData = await _localStorageService.getString(_sellerDataKey);
+      if (sellerData == null) return null;
+
+      final sellerJson = jsonDecode(sellerData);
+      return SellerModel.fromJson(sellerJson);
+    } catch (e) {
+      log('❌ Error getting current seller: $e');
+      return null;
+    }
+  }
+
+  // ========== GET SELLER TOKEN ==========
+  Future<String?> getSellerToken() async {
+    try {
+      return await _localStorageService.getString(_sellerTokenKey);
+    } catch (e) {
+      log('❌ Error getting seller token: $e');
+      return null;
+    }
+  }
+
+  // ========== PRIVATE METHODS ==========
+  Future<void> _saveSellerAuthData(String token, SellerModel seller) async {
+    try {
+      log('💾 Saving auth data to storage...');
+
+      // Save token
+      await _localStorageService.saveString(_sellerTokenKey, token);
+      log('   ✅ Token saved to: $_sellerTokenKey');
+
+      // Save seller data as JSON
+      final sellerJson = seller.toJson();
+      final sellerJsonString = jsonEncode(sellerJson);
+      await _localStorageService.saveString(_sellerDataKey, sellerJsonString);
+      log(
+        '   ✅ Seller data saved to: $_sellerDataKey (${sellerJsonString.length} chars)',
+      );
+
+      // Save login status
+      await _localStorageService.saveBool(_sellerLoginStatusKey, true);
+      log('   ✅ Login status saved to: $_sellerLoginStatusKey');
+
+      // VERIFY: Read back to confirm
+      final savedToken = await _localStorageService.getString(_sellerTokenKey);
+      final savedData = await _localStorageService.getString(_sellerDataKey);
+      final savedStatus = await _localStorageService.getBool(
+        _sellerLoginStatusKey,
+      );
+
+      log('💾 VERIFICATION:');
+      log(
+        '   Token saved correctly: ${savedToken != null && savedToken.isNotEmpty}',
+      );
+      log(
+        '   Data saved correctly: ${savedData != null && savedData.isNotEmpty}',
+      );
+      log('   Status saved correctly: $savedStatus');
+    } catch (e) {
+      log('❌ CRITICAL: Error saving auth data: $e');
+      rethrow;
+    }
+  }
+
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
+  // ========== REGISTER SELLER ==========
   Future<Either<Failure, SellerAuthResponse>> registerSeller({
     required SellerModel seller,
   }) async {
     try {
       log('📤 Preparing seller registration...');
 
-      // Create FormData using YOUR model structure
+      // Create FormData
       final formData = FormData.fromMap({
         'fullName': seller.personalInfo.fullName,
         'email': seller.personalInfo.email,
@@ -63,8 +182,7 @@ class SellerAuthService {
             ),
           ),
         );
-        fileCount++; // INCREMENT HERE
-        log('📸 Added shop logo: ${seller.shopBrandingImages.shopLogo!.path}');
+        fileCount++;
       }
 
       // Add shop banner file
@@ -80,13 +198,10 @@ class SellerAuthService {
             ),
           ),
         );
-        fileCount++; // INCREMENT HERE
-        log(
-          '📸 Added shop banner: ${seller.shopBrandingImages.shopBanner!.path}',
-        );
+        fileCount++;
       }
 
-      // ADD DOCUMENTS - Business License
+      // Add documents
       if (seller.documentsImage.businessLicense != null) {
         formData.files.add(
           MapEntry(
@@ -100,12 +215,8 @@ class SellerAuthService {
           ),
         );
         fileCount++;
-        log(
-          '📄 Added business license: ${seller.documentsImage.businessLicense!.path}',
-        );
       }
 
-      // ADD DOCUMENTS - Tax Certificate
       if (seller.documentsImage.taxCertificate != null) {
         formData.files.add(
           MapEntry(
@@ -119,12 +230,8 @@ class SellerAuthService {
           ),
         );
         fileCount++;
-        log(
-          '📄 Added tax certificate: ${seller.documentsImage.taxCertificate!.path}',
-        );
       }
 
-      // ADD DOCUMENTS - Identity Proof
       if (seller.documentsImage.identityProof != null) {
         formData.files.add(
           MapEntry(
@@ -138,9 +245,6 @@ class SellerAuthService {
           ),
         );
         fileCount++;
-        log(
-          '📄 Added identity proof: ${seller.documentsImage.identityProof!.path}',
-        );
       }
 
       log('🚀 Sending registration request with $fileCount files...');
@@ -153,7 +257,6 @@ class SellerAuthService {
           headers: {'Accept': 'application/json'},
         ),
       );
-      log('message. ----- ${response.statusCode}');
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         final data = response.data;
@@ -166,14 +269,9 @@ class SellerAuthService {
           return Left(ServerFailure('Invalid response from server'));
         }
 
-        // !!! FIX: Save the ORIGINAL seller, not fromJson !!!
-        // The API response doesn't have all fields
-        final registeredSeller = seller; // Use the original seller object
-
-        // ! Save to local storage - THIS IS THE KEY FIX!
+        final registeredSeller = seller;
         await _saveSellerAuthData(token, registeredSeller);
 
-        // Create response using the complete seller
         final authResponse = SellerAuthResponse(
           seller: registeredSeller,
           token: token,
@@ -188,7 +286,6 @@ class SellerAuthService {
       }
     } on DioException catch (e) {
       log('❌ Dio error: ${e.message}');
-      log('❌ Response: ${e.response?.data}');
 
       if (e.response?.statusCode == 400) {
         return Left(
@@ -205,7 +302,7 @@ class SellerAuthService {
     }
   }
 
-  // ********* Login Seller *********
+  // ========== LOGIN SELLER ==========
   Future<Either<Failure, SellerAuthResponse>> loginSeller({
     required String email,
     required String password,
@@ -218,27 +315,24 @@ class SellerAuthService {
         data: {'email': email.trim(), 'password': password},
         options: Options(
           contentType: 'application/json',
-          // Don't throw on 401 - handle it gracefully
           validateStatus: (status) => status! < 500,
         ),
       );
 
-      log('📥 Login response: ${response.statusCode}');
-      log('📥 Response data: ${response.data}');
-
       if (response.statusCode == 200) {
         final data = response.data;
+        log('----   iiii jjjj $data');
         final token = data['token'];
         final sellerJson = data['seller'];
+        log('lllll oooo  $sellerJson');
 
         if (token == null || sellerJson == null) {
           return Left(AuthFailure('Invalid server response'));
         }
 
-        // Parse seller from JSON
         final seller = SellerModel.fromJson(sellerJson);
+        log('lllll 111111 222 333 4444  $seller');
 
-        // Save auth data
         await _saveSellerAuthData(token, seller);
 
         final authResponse = SellerAuthResponse(
@@ -250,9 +344,7 @@ class SellerAuthService {
         log('✅ Login successful for: ${seller.personalInfo.fullName}');
         return Right(authResponse);
       } else if (response.statusCode == 401) {
-        // ✅ Properly handle invalid credentials
         final message = response.data['message'] ?? 'Invalid email or password';
-        log('❌ Login failed: $message');
         return Left(AuthFailure(message));
       } else if (response.statusCode == 404) {
         return Left(AuthFailure('Seller not found'));
@@ -261,12 +353,10 @@ class SellerAuthService {
       }
     } on DioException catch (e) {
       log('❌ Dio error during login: ${e.message}');
-      log('❌ Response: ${e.response?.data}');
 
       if (e.response?.statusCode == 401) {
         return Left(AuthFailure('Invalid email or password'));
       }
-
       return Left(NetworkFailure('Network error: ${e.message}'));
     } catch (e) {
       log('❌ Unexpected login error: $e');
@@ -274,116 +364,139 @@ class SellerAuthService {
     }
   }
 
-  // ********* Check Login Status *********
-  Future<bool> isSellerLoggedIn() async {
+  // ========== UPDATE SELLER PROFILE ==========
+  Future<Map<String, dynamic>> updateProfile({
+    required Map<String, dynamic> updates,
+    File? shopLogo,
+    File? shopBanner,
+    File? businessLicense,
+    File? taxCertificate,
+    File? identityProof,
+  }) async {
     try {
-      // Check if token exists
-      final token = await _localStorageService.getString(_sellerTokenKey);
-
-      if (token == null || token.isEmpty) {
-        log('🔐 No token found in storage');
-        return false;
+      final token = await getSellerToken();
+      if (token == null) {
+        return {'success': false, 'message': 'Not authenticated'};
       }
 
-      // Optional: Validate token with server
-      try {
-        final response = await _dio.get(
-          '/api/seller/auth/verify',
-          options: Options(
-            headers: {'Authorization': 'Bearer $token'},
-            receiveTimeout: const Duration(seconds: 5),
+      // Create FormData for multipart request
+      final formData = FormData.fromMap(updates);
+
+      // Add files if provided
+      if (shopLogo != null) {
+        formData.files.add(
+          MapEntry(
+            'shopLogo',
+            await MultipartFile.fromFile(
+              shopLogo.path,
+              filename: shopLogo.path.split('/').last,
+            ),
           ),
         );
-
-        if (response.statusCode == 200) {
-          log('✅ Token is valid');
-          return true;
-        }
-      } catch (e) {
-        log('⚠️ Token validation failed, checking local data');
       }
 
-      // Fallback: Check local seller data
-      final sellerData = await _localStorageService.getString(_sellerDataKey);
-      return sellerData != null && sellerData.isNotEmpty;
-    } catch (e) {
-      log('❌ Error checking login status: $e');
-      return false;
-    }
-  }
+      if (shopBanner != null) {
+        formData.files.add(
+          MapEntry(
+            'shopBanner',
+            await MultipartFile.fromFile(
+              shopBanner.path,
+              filename: shopBanner.path.split('/').last,
+            ),
+          ),
+        );
+      }
 
-  // ********* Save Auth Data *********
-  Future<void> _saveSellerAuthData(String token, SellerModel seller) async {
-    try {
-      // Save token
-      await _localStorageService.saveString(_sellerTokenKey, token);
+      if (businessLicense != null) {
+        formData.files.add(
+          MapEntry(
+            'businessLicense',
+            await MultipartFile.fromFile(
+              businessLicense.path,
+              filename: businessLicense.path.split('/').last,
+            ),
+          ),
+        );
+      }
 
-      // Save seller data as JSON
-      final sellerJson = seller.toJson();
-      await _localStorageService.saveString(
-        _sellerDataKey,
-        jsonEncode(sellerJson),
+      if (taxCertificate != null) {
+        formData.files.add(
+          MapEntry(
+            'taxCertificate',
+            await MultipartFile.fromFile(
+              taxCertificate.path,
+              filename: taxCertificate.path.split('/').last,
+            ),
+          ),
+        );
+      }
+
+      if (identityProof != null) {
+        formData.files.add(
+          MapEntry(
+            'identityProof',
+            await MultipartFile.fromFile(
+              identityProof.path,
+              filename: identityProof.path.split('/').last,
+            ),
+          ),
+        );
+      }
+
+      log('🔄 Updating seller profile...');
+
+      final response = await _dio.put(
+        '/api/seller/profileUpdate',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+          contentType: 'multipart/form-data',
+        ),
       );
 
-      // Save login status
-      await _localStorageService.saveBool(_sellerLoginStatusKey, true);
+      log('📥 Update response: ${response.statusCode}');
 
-      log('💾 Auth data saved successfully');
-      log('   Token: ${token.substring(0, 20)}...');
-      log('   Seller: ${seller.personalInfo.fullName}');
-    } catch (e) {
-      log('❌ Error saving auth data: $e');
-      rethrow;
-    }
-  }
+      if (response.statusCode == 200) {
+        final data = response.data;
 
-  // ********* Logout *********
-  Future<void> logout() async {
-    try {
-      log('🚪 Logging out seller...');
+        // Update local storage with new seller data
+        if (data['seller'] != null) {
+          final updatedSeller = SellerModel.fromJson(data['seller']);
+          await _saveSellerAuthData(token, updatedSeller);
+        }
 
-      // ✅ Correct: Use delete() not remove()
-      await _localStorageService.delete(_sellerTokenKey);
-      await _localStorageService.delete(_sellerDataKey);
-      await _localStorageService.delete(_sellerLoginStatusKey);
-
-      // Also clear token from Dio headers
-      _dio.options.headers.remove('Authorization');
-
-      log('✅ Seller logged out successfully');
-    } catch (e) {
-      log('❌ Error during logout: $e');
-      throw Exception('Logout failed: $e');
-    }
-  }
-
-  // ********* Get Current Seller *********
-  Future<SellerModel?> getCurrentSeller() async {
-    try {
-      final sellerData = await _localStorageService.getString(_sellerDataKey);
-      if (sellerData == null) return null;
-
-      final sellerJson = jsonDecode(sellerData);
-      return SellerModel.fromJson(sellerJson);
-    } catch (e) {
-      log('❌ Error getting current seller: $e');
-      return null;
-    }
-  }
-
-  // Get stored token
-  Future<String?> getSellerToken() async {
-    try {
-      final token = await _localStorageService.getString(_sellerTokenKey);
-      if (token != null && token.isNotEmpty) {
-        log('🔑 Retrieved token: ${token.substring(0, 20)}...');
+        log('✅ Profile updated successfully');
+        return {
+          'success': true,
+          'message': 'Profile updated successfully',
+          'data': data,
+        };
+      } else {
+        log('❌ Update failed: ${response.data}');
+        return {
+          'success': false,
+          'message': response.data['message'] ?? 'Update failed',
+        };
       }
-      return token;
+    } on DioException catch (e) {
+      log('❌ Dio error updating profile: ${e.message}');
+      log('❌ Response: ${e.response?.data}');
+
+      return {
+        'success': false,
+        'message':
+            e.response?.data?['message'] ?? 'Network error: ${e.message}',
+      };
     } catch (e) {
-      log('❌ Error getting seller token: $e');
-      return null;
+      log('❌ Unexpected error updating profile: $e');
+      return {'success': false, 'message': 'Update failed: $e'};
     }
   }
+
+  // ! ********* Update ???
 }
 
 class SellerAuthResponse {

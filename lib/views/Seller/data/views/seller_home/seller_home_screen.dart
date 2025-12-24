@@ -4,7 +4,7 @@ import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Seller/data/models/visit_request_model.dart';
 import 'package:wood_service/views/Seller/data/repository/home_repo.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/seller_home_screen_widget.dart';
-import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/view_request_provider.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home/view_request_provider.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 
 class SellerHomeScreen extends StatefulWidget {

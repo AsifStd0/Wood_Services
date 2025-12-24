@@ -1,120 +1,99 @@
 import 'package:flutter/material.dart';
-import 'package:wood_service/app/index.dart';
+import 'package:provider/provider.dart';
+import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_model.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
+import 'package:wood_service/widgets/custom_textfield.dart';
 
 class InventoryTab extends StatelessWidget {
-  const InventoryTab({super.key});
+  const InventoryTab({Key? key});
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<AddProductViewModel>();
+    final productProvider = context.watch<SellerProductProvider>();
+    final product = productProvider.product;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-              border: Border.all(color: Colors.grey.withOpacity(0.1)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Inventory Management',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.grey[800],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Manage stock levels, SKU, and inventory tracking',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                ),
-              ],
-            ),
+          _buildSectionHeader(
+            'Inventory Management',
+            'Manage stock levels, SKU, and inventory tracking',
           ),
-          const SizedBox(height: 24),
 
           // SKU
-          _buildSectionHeader(
+          _buildTextFieldWithLabel(
             'SKU (Stock Keeping Unit)',
             'Unique identifier for inventory tracking',
-          ),
-          const SizedBox(height: 12),
-          CustomTextFormField(
-            hintText: 'e.g., PROD-001-2024',
-            prefixIcon: Icon(Icons.qr_code_rounded, color: Colors.grey[400]),
-            onChanged: (value) {
-              viewModel.setSku(value);
-            },
+            'e.g., PROD-001-2024',
+            Icons.qr_code_rounded,
+            product.sku,
+            (value) => productProvider.updateSku(value),
           ),
           const SizedBox(height: 24),
 
           // Stock Quantity
-          _buildSectionHeader(
+          _buildTextFieldWithLabel(
             'Stock Quantity',
             'Current available stock for this product',
-          ),
-          const SizedBox(height: 12),
-          CustomTextFormField(
-            hintText: '0',
-            // keyboardType: TextInputType.number,
-            prefixIcon: Icon(
-              Icons.inventory_2_rounded,
-              color: Colors.grey[400],
-            ),
-            onChanged: (value) {
+            '0',
+            Icons.inventory_2_rounded,
+            product.stockQuantity.toString(),
+            (value) {
               final stock = int.tryParse(value) ?? 0;
-              viewModel.setStockQuantity(stock);
+              productProvider.updateStockQuantity(stock);
+            },
+          ),
+          const SizedBox(height: 24),
+
+          // Low Stock Alert
+          _buildTextFieldWithLabel(
+            'Low Stock Alert',
+            'Get notified when stock reaches this level',
+            '5',
+            Icons.notifications_active_rounded,
+            product.lowStockAlert?.toString() ?? '5',
+            (value) {
+              final alert = value.isEmpty ? null : int.tryParse(value);
+              productProvider.updateLowStockAlert(alert);
             },
           ),
           const SizedBox(height: 24),
 
           // Weight & Dimensions
-          _buildSectionHeader(
+          _buildSectionSubHeader(
             'Weight & Dimensions',
             'Shipping weight and package dimensions',
           ),
           const SizedBox(height: 12),
+
           Row(
             children: [
               Expanded(
-                child: CustomTextFormField(
-                  hintText: 'Weight (kg)',
-                  // keyboardType: TextInputType.number,
-                  prefixIcon: Icon(
-                    Icons.scale_rounded,
-                    color: Colors.grey[400],
-                  ),
-                  onChanged: (value) {
-                    final weight = double.tryParse(value);
-                    viewModel.setWeight(weight);
+                child: _buildDimensionField(
+                  'Weight (kg)',
+                  Icons.scale_rounded,
+                  product.weight?.toString() ?? '',
+                  (value) {
+                    final weight = value.isEmpty
+                        ? null
+                        : double.tryParse(value);
+                    productProvider.updateWeight(weight);
                   },
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: CustomTextFormField(
-                  hintText: 'Length (cm)',
-                  // keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    final length = double.tryParse(value);
-                    viewModel.setLength(length);
+                child: _buildDimensionField(
+                  'Length (cm)',
+                  Icons.straighten_rounded,
+                  product.length?.toString() ?? '',
+                  (value) {
+                    final length = value.isEmpty
+                        ? null
+                        : double.tryParse(value);
+                    productProvider.updateLength(length);
                   },
                 ),
               ),
@@ -124,71 +103,79 @@ class InventoryTab extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: CustomTextFormField(
-                  hintText: 'Width (cm)',
-                  // keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    final width = double.tryParse(value);
-                    viewModel.setWidth(width);
+                child: _buildDimensionField(
+                  'Width (cm)',
+                  Icons.straighten_rounded,
+                  product.width?.toString() ?? '',
+                  (value) {
+                    final width = value.isEmpty ? null : double.tryParse(value);
+                    productProvider.updateWidth(width);
                   },
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: CustomTextFormField(
-                  hintText: 'Height (cm)',
-                  // keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    final height = double.tryParse(value);
-                    viewModel.setHeight(height);
+                child: _buildDimensionField(
+                  'Height (cm)',
+                  Icons.height_rounded,
+                  product.height?.toString() ?? '',
+                  (value) {
+                    final height = value.isEmpty
+                        ? null
+                        : double.tryParse(value);
+                    productProvider.updateHeight(height);
                   },
                 ),
               ),
             ],
           ),
-
           const SizedBox(height: 24),
 
-          // Dimensions Specification
-          _buildSpecificationField(
-            'Dimensions',
-            'e.g., 180cm x 90cm x 75cm',
+          // Dimension Specification
+          _buildTextFieldWithLabel(
+            'Dimension Specification',
+            'Human-readable dimensions (e.g., 180cm x 90cm x 75cm)',
+            'Enter dimensions',
             Icons.aspect_ratio_rounded,
-            (value) {
-              // Add this method to your ViewModel: setDimensions(value)
-              // viewModel.setDimensions(value);
-            },
+            product.dimensionSpec,
+            (value) => productProvider.updateDimensionSpec(value),
           ),
-
-          const SizedBox(height: 80),
+          const SizedBox(height: 70),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, String subtitle) {
+  Widget _buildTextFieldWithLabel(
+    String title,
+    String subtitle,
+    String hintText,
+    IconData icon,
+    String initialValue,
+    Function(String) onChanged,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[800],
-          ),
-        ),
+        Text(title, style: _buildLabelStyle()),
         const SizedBox(height: 4),
-        Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        Text(subtitle, style: _buildSubtitleStyle()),
+        const SizedBox(height: 8),
+        CustomTextFormField(
+          hintText: hintText,
+          prefixIcon: Icon(icon, color: Colors.grey[400]),
+          textInputType: TextInputType.number,
+          initialValue: initialValue,
+          onChanged: onChanged,
+        ),
       ],
     );
   }
 
-  // Add this missing method
-  Widget _buildSpecificationField(
+  Widget _buildDimensionField(
     String label,
-    String hintText,
     IconData icon,
+    String initialValue,
     Function(String) onChanged,
   ) {
     return Column(
@@ -198,17 +185,61 @@ class InventoryTab extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 14,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
             color: Colors.grey[700],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         CustomTextFormField(
-          hintText: hintText,
-          prefixIcon: Icon(icon, color: Colors.grey[400]),
+          hintText: label,
+          prefixIcon: Icon(icon, size: 20, color: Colors.grey[400]),
+          textInputType: TextInputType.numberWithOptions(decimal: true),
+          initialValue: initialValue,
           onChanged: onChanged,
         ),
       ],
     );
+  }
+
+  Widget _buildSectionHeader(String title, String subtitle) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: _buildLabelStyle(fontSize: 18)),
+          const SizedBox(height: 4),
+          Text(subtitle, style: _buildSubtitleStyle()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionSubHeader(String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: _buildLabelStyle()),
+        const SizedBox(height: 4),
+        Text(subtitle, style: _buildSubtitleStyle()),
+      ],
+    );
+  }
+
+  TextStyle _buildLabelStyle({double fontSize = 16, Color? color}) {
+    return TextStyle(
+      fontSize: fontSize,
+      fontWeight: FontWeight.w600,
+      color: color ?? Colors.grey[800],
+    );
+  }
+
+  TextStyle _buildSubtitleStyle() {
+    return TextStyle(fontSize: 14, color: Colors.grey[600]);
   }
 }

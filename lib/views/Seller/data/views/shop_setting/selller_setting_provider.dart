@@ -2,16 +2,15 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:wood_service/core/services/local_storage_service.dart';
-import 'package:wood_service/views/Seller/data/services/profile_service.dart';
-import 'package:wood_service/views/Seller/data/services/seller_auth.dart';
+// import 'package:wood_service/views/Seller/data/services/profile_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wood_service/core/services/seller_local_storage_service.dart';
+import 'package:wood_service/views/Seller/data/services/seller_auth.dart';
+// import 'package:wood_service/views/Buyer/Service/profile_service.dart';
 
-// Keep your LocalStorageService abstract class and implementation as is
-
-class ProfileViewModel extends ChangeNotifier {
-  final ProfileService _authService;
-  final LocalStorageService localStorageService;
+class SelllerSettingProvider extends ChangeNotifier {
+  final SellerAuthService _authService;
+  final SellerLocalStorageService localStorageService;
 
   // Profile data
   String _fullName = '';
@@ -68,20 +67,23 @@ class ProfileViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   // Constructor - FIXED
-  ProfileViewModel({
-    required ProfileService authService,
-    required LocalStorageService localStorageService,
+  SelllerSettingProvider({
+    required SellerAuthService authService,
+    required SellerLocalStorageService localStorageService,
   }) : _authService = authService,
        localStorageService = localStorageService;
 
   // ========== LOAD SELLER DATA FROM SIGNUP ==========
-  Future<void> loadSellerDataFromSignup() async {
+
+  // ========== LOAD SELLER DATA ==========
+  Future<void> loadSellerData() async {
     _isLoading = true;
     _hasData = false;
+    _errorMessage = null;
     notifyListeners();
 
     try {
-      // Check if seller is logged in
+      // ✅ Use correct method names from SellerAuthService
       final isLoggedIn = await _authService.isSellerLoggedIn();
 
       if (!isLoggedIn) {
@@ -90,11 +92,11 @@ class ProfileViewModel extends ChangeNotifier {
         return;
       }
 
-      // Get seller data
-      final seller = await _authService.getStoredSeller();
-
+      // ✅ Use correct method name
+      final seller = await _authService.getCurrentSeller();
+      log('seller. seller seller seller ----- ${seller.toString()}');
       if (seller != null) {
-        // Set data from model
+        // Extract data from seller model
         _fullName = seller.personalInfo.fullName;
         _email = seller.personalInfo.email;
         _phone = seller.personalInfo.phone;
@@ -107,81 +109,14 @@ class ProfileViewModel extends ChangeNotifier {
         _accountNumber = seller.bankDetails.accountNumber;
         _iban = seller.bankDetails.iban;
 
-        // ✅ IMPORTANT: Load images from paths
+        // Note: Images are stored as paths in the model
+        // You might need to load them as Files if needed
         if (seller.shopBrandingImages.shopLogo != null) {
-          try {
-            final logoPath = seller.shopBrandingImages.shopLogo!.path;
-            if (await File(logoPath).exists()) {
-              _shopLogo = File(logoPath);
-              log('✅ Loaded shop logo from: $logoPath');
-            } else {
-              log('⚠️ Shop logo file not found at: $logoPath');
-            }
-          } catch (e) {
-            log('❌ Error loading shop logo: $e');
-          }
-        }
-
-        if (seller.shopBrandingImages.shopBanner != null) {
-          try {
-            final bannerPath = seller.shopBrandingImages.shopBanner!.path;
-            if (await File(bannerPath).exists()) {
-              _shopBanner = File(bannerPath);
-              log('✅ Loaded shop banner from: $bannerPath');
-            } else {
-              log('⚠️ Shop banner file not found at: $bannerPath');
-            }
-          } catch (e) {
-            log('❌ Error loading shop banner: $e');
-          }
-        }
-        // ✅ Load document files from paths
-        if (seller.documentsImage.businessLicense != null) {
-          try {
-            final licensePath = seller.documentsImage.businessLicense!.path;
-            if (await File(licensePath).exists()) {
-              _businessLicense = File(licensePath);
-              log('✅ Loaded business license from: $licensePath');
-            } else {
-              log('⚠️ Business license file not found at: $licensePath');
-            }
-          } catch (e) {
-            log('❌ Error loading business license: $e');
-          }
-        }
-
-        if (seller.documentsImage.taxCertificate != null) {
-          try {
-            final taxPath = seller.documentsImage.taxCertificate!.path;
-            if (await File(taxPath).exists()) {
-              _taxCertificate = File(taxPath);
-              log('✅ Loaded tax certificate from: $taxPath');
-            } else {
-              log('⚠️ Tax certificate file not found at: $taxPath');
-            }
-          } catch (e) {
-            log('❌ Error loading tax certificate: $e');
-          }
-        }
-
-        if (seller.documentsImage.identityProof != null) {
-          try {
-            final idPath = seller.documentsImage.identityProof!.path;
-            if (await File(idPath).exists()) {
-              _identityProof = File(idPath);
-              log('✅ Loaded identity proof from: $idPath');
-            } else {
-              log('⚠️ Identity proof file not found at: $idPath');
-            }
-          } catch (e) {
-            log('❌ Error loading identity proof: $e');
-          }
+          _shopLogo = File(seller.shopBrandingImages.shopLogo.toString());
         }
 
         _hasData = true;
-        log(
-          '✅ Profile data loaded successfully! ===  Name: $_fullName. ---- $_email.   ---- $_shopName',
-        );
+        log('✅ Seller profile data loaded successfully!');
       } else {
         log('❌ No seller data found');
         _hasData = false;
@@ -223,87 +158,49 @@ class ProfileViewModel extends ChangeNotifier {
       // Prepare update data
       final updateData = <String, dynamic>{};
 
-      if (fullName != null) {
-        updateData['fullName'] = fullName;
-        _fullName = fullName;
-      }
-      if (email != null) {
-        updateData['email'] = email;
-        _email = email;
-      }
-      if (phone != null) {
-        updateData['phone'] = phone;
-        _phone = phone;
-      }
-      if (shopName != null) {
-        updateData['shopName'] = shopName;
-        _shopName = shopName;
-      }
-      if (businessName != null) {
-        updateData['businessName'] = businessName;
-        _businessName = businessName;
-      }
-      if (description != null) {
-        updateData['description'] = description;
-        _description = description;
-      }
-      if (address != null) {
-        updateData['address'] = address;
-        _address = address;
-      }
-      if (bankName != null) {
-        updateData['bankName'] = bankName;
-        _bankName = bankName;
-      }
-      if (accountNumber != null) {
-        updateData['accountNumber'] = accountNumber;
-        _accountNumber = accountNumber;
-      }
-      if (iban != null) {
-        updateData['iban'] = iban;
-        _iban = iban;
-      }
-      if (categories != null) {
-        updateData['categories'] = categories;
-        _categories = categories;
-      }
+      if (fullName != null) updateData['fullName'] = fullName;
+      if (email != null) updateData['email'] = email;
+      if (phone != null) updateData['phone'] = phone;
+      if (shopName != null) updateData['shopName'] = shopName;
+      if (businessName != null) updateData['businessName'] = businessName;
+      if (description != null) updateData['description'] = description;
+      if (address != null) updateData['address'] = address;
+      if (bankName != null) updateData['bankName'] = bankName;
+      if (accountNumber != null) updateData['accountNumber'] = accountNumber;
+      if (iban != null) updateData['iban'] = iban;
+      if (categories != null) updateData['categories'] = categories;
 
-      // Call API to update
-      final result = await _authService.updateProfile(
-        fullName: fullName,
-        email: email,
-        phone: phone,
-        businessName: businessName,
-        shopName: shopName,
-        description: description,
-        address: address,
-        categories: categories,
-        bankName: bankName,
-        accountNumber: accountNumber,
-        iban: iban,
-      );
+      // Call updateProfile method (you need to implement this in SellerAuthService)
+      final result = await _authService.updateProfile(updates: updateData);
 
-      return result.fold(
-        (failure) {
-          _errorMessage = failure.message;
-          log('❌ Update failed: ${failure.message}');
-          return false;
-        },
-        (seller) {
-          // Update images locally if provided
-          if (shopLogo != null) _shopLogo = shopLogo;
-          if (shopBanner != null) _shopBanner = shopBanner;
-          // ✅ Update documents locally
-          if (businessLicense != null) _businessLicense = businessLicense;
-          if (taxCertificate != null) _taxCertificate = taxCertificate;
-          if (identityProof != null) _identityProof = identityProof;
+      if (result['success'] == true) {
+        // Update local state
+        if (fullName != null) _fullName = fullName;
+        if (email != null) _email = email;
+        if (phone != null) _phone = phone;
+        if (shopName != null) _shopName = shopName;
+        if (businessName != null) _businessName = businessName;
+        if (description != null) _description = description;
+        if (address != null) _address = address;
+        if (bankName != null) _bankName = bankName;
+        if (accountNumber != null) _accountNumber = accountNumber;
+        if (iban != null) _iban = iban;
+        if (categories != null) _categories = categories;
+        if (shopLogo != null) _shopLogo = shopLogo;
+        if (shopBanner != null) _shopBanner = shopBanner;
+        if (businessLicense != null) _businessLicense = businessLicense;
+        if (taxCertificate != null) _taxCertificate = taxCertificate;
+        if (identityProof != null) _identityProof = identityProof;
 
-          _isEditing = false;
-          log('✅ Profile updated successfully');
-          notifyListeners();
-          return true;
-        },
-      );
+        _isEditing = false;
+        log('✅ Profile updated successfully');
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result['message'] ?? 'Update failed';
+        log('❌ Update failed: ${result['message']}');
+        return false;
+      }
     } catch (e) {
       _errorMessage = 'Update error: $e';
       log('❌ Update error: $e');
@@ -468,24 +365,22 @@ class ProfileViewModel extends ChangeNotifier {
     }
   }
   // ========== LOGOUT ==========
-  // In ProfileViewModel class, update the logout method:
+  // In SelllerSettingProvider class, update the logout method:
 
+  // In SellerSettingProvider class
+  // In SellerAuthService class - Make sure it returns Future<bool>
   Future<bool> logout() async {
+    // Should return Future<bool>
     try {
-      SharedPreferences sharedPreferences =
-          await SharedPreferences.getInstance();
-      sharedPreferences.clear();
+      // Clear all storage
+      await localStorageService.deleteSellerAuth();
+      await localStorageService.clearAll();
 
-      // Clear local state
-      clearLocalState();
-
-      log('✅ Seller logged out successfully - all data cleared');
-      return true; // Return success
+      log('✅ Seller logged out successfully');
+      return true; // Return true on success
     } catch (e) {
-      log('❌ Error during logout: $e');
-      _errorMessage = 'Logout failed: $e';
-      notifyListeners();
-      return false; // Return failure
+      log('❌ Logout error: $e');
+      return false; // Return false on error
     }
   }
 

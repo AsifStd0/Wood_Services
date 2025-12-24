@@ -68,7 +68,7 @@ class SellerModel {
   // 1. LOCAL STORAGE format (from shared preferences)
   // 2. API RESPONSE format (from server)
   factory SellerModel.fromJson(Map<String, dynamic> json) {
-    print('🔍 DEBUG SellerModel.fromJson input keys: ${json.keys.toList()}');
+    print('🔍 DEBUG SellerModel.fromJson input keys: ${json.values.toList()}');
 
     // ========== 1. Handle PHONE ==========
     String phone = '';
@@ -328,9 +328,9 @@ SellerModel{
 // ========== OTHER CLASSES (keep as is) ==========
 
 class SellerDocuments {
-  final File? businessLicense;
-  final File? taxCertificate;
-  final File? identityProof;
+  File? businessLicense;
+  File? taxCertificate;
+  File? identityProof;
 
   SellerDocuments({
     this.businessLicense,

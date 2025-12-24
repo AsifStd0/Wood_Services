@@ -1,267 +1,25 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
+import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/product_detail/car_bottom_sheet.dart';
 
 import '../../../app/index.dart';
 
-class ProductImageGallery extends StatefulWidget {
-  const ProductImageGallery({super.key});
-
-  @override
-  State<ProductImageGallery> createState() => _ProductImageGalleryState();
-}
-
-class _ProductImageGalleryState extends State<ProductImageGallery> {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
-
-  // Sample images - replace with your actual image URLs
-  final List<String> productImages = [
-    'assets/images/sofa.jpg',
-    'assets/images/sofa1.jpg',
-    'assets/images/table.jpg',
-    'assets/images/table2.jpg',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController.addListener(_pageListener);
-  }
-
-  void _pageListener() {
-    setState(() {
-      _currentPage = _pageController.page?.round() ?? 0;
-    });
-  }
-
-  void _onThumbnailTap(int index) {
-    setState(() {
-      _currentPage = index;
-    });
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  @override
-  void dispose() {
-    _pageController.removeListener(_pageListener);
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Top Main Slider
-        _buildMainSlider(),
-
-        const SizedBox(height: 16),
-
-        // Bottom Thumbnail Strip
-        _buildThumbnailStrip(),
-      ],
-    );
-  }
-
-  Widget _buildMainSlider() {
-    return SizedBox(
-      height: 200,
-      child: Stack(
-        children: [
-          // Main PageView Slider
-          PageView.builder(
-            controller: _pageController,
-            itemCount: productImages.length,
-            onPageChanged: (index) {
-              setState(() {
-                _currentPage = index;
-              });
-            },
-            itemBuilder: (context, index) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  color: Colors.grey[100],
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.asset(
-                    productImages[index],
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.chair,
-                          size: 80,
-                          color: Colors.grey,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              );
-            },
-          ),
-
-          // Page Indicator
-          Positioned(
-            bottom: 16,
-            right: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                '${_currentPage + 1}/${productImages.length}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-
-          // Favorite Button
-          Positioned(
-            top: 16,
-            right: 16,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: IconButton(
-                icon: Icon(
-                  Icons.favorite_border,
-                  color: Colors.grey[600],
-                  size: 20,
-                ),
-                onPressed: () {
-                  // Add to favorites
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildThumbnailStrip() {
-    return SizedBox(
-      height: 70,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: productImages.length,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () => _onThumbnailTap(index),
-            child: Container(
-              width: 70,
-              height: 70,
-              margin: EdgeInsets.only(
-                right: 12,
-                left: index == 0 ? 16 : 0, // First item left margin
-              ),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _currentPage == index
-                      ? AppColors.brightOrange
-                      : Colors.transparent,
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Stack(
-                  children: [
-                    // Thumbnail Image
-                    Image.asset(
-                      productImages[index],
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey[200],
-                          child: Icon(
-                            Icons.chair,
-                            size: 30,
-                            color: Colors.grey[400],
-                          ),
-                        );
-                      },
-                    ),
-
-                    // Selection Overlay
-                    if (_currentPage == index)
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
 class ProductBasicInfo extends StatelessWidget {
-  const ProductBasicInfo({super.key});
+  final BuyerProductModel product;
+
+  const ProductBasicInfo({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Title
         CustomText(
-          'Modern Velvet Sofa',
+          product.title, // Use actual title
           type: CustomTextType.headingMedium,
           fontWeight: FontWeight.bold,
           fontSize: 19,
@@ -269,33 +27,46 @@ class ProductBasicInfo extends StatelessWidget {
 
         const SizedBox(height: 3),
 
-        // Price
+        // Price with discount
         Row(
           children: [
             CustomText(
-              '\$899.00',
+              '${product.currency} ${product.finalPrice.toStringAsFixed(2)}', // Dynamic currency
               type: CustomTextType.headingMedium,
               fontWeight: FontWeight.bold,
               fontSize: 18,
             ),
-            const SizedBox(width: 10),
-            CustomText(
-              '\$899.00',
-              type: CustomTextType.headingMedium,
-              fontWeight: FontWeight.bold,
-              color: AppColors.grey,
-              decoration: TextDecoration.lineThrough,
-              fontSize: 16,
-            ),
+            if (product.hasDiscount) ...[
+              const SizedBox(width: 10),
+              CustomText(
+                '${product.currency} ${product.basePrice.toStringAsFixed(2)}',
+                type: CustomTextType.headingMedium,
+                fontWeight: FontWeight.bold,
+                color: AppColors.grey,
+                decoration: TextDecoration.lineThrough,
+                fontSize: 16,
+              ),
+            ],
           ],
         ),
 
-        // Rating
+        // Discount percentage
+        if (product.hasDiscount)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              '${product.discountPercentage.toStringAsFixed(0)}% OFF',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ),
+
+        const SizedBox(height: 8),
+
+        // Rating from seller
         Row(
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-
               child: Row(
                 children: [
                   const Icon(
@@ -304,9 +75,8 @@ class ProductBasicInfo extends StatelessWidget {
                     size: 14,
                   ),
                   const SizedBox(width: 3),
-
                   CustomText(
-                    '4.8',
+                    '4.5',
                     type: CustomTextType.buttonMedium,
                     color: AppColors.brightOrange,
                   ),
@@ -315,7 +85,7 @@ class ProductBasicInfo extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             CustomText(
-              '(120)',
+              '0 reviews', // Real review count
               type: CustomTextType.buttonMedium,
               color: AppColors.grey,
             ),
@@ -326,190 +96,27 @@ class ProductBasicInfo extends StatelessWidget {
   }
 }
 
-class SellerInfoCard extends StatelessWidget {
-  const SellerInfoCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(left: 5, right: 5, top: 12, bottom: 12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          // Seller Avatar
-          CircleAvatar(
-            radius: 25,
-            backgroundColor: Colors.blue[50],
-            backgroundImage: AssetImage('assets/images/sofa.jpg'),
-          ),
-
-          const SizedBox(width: 6),
-
-          // Seller Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CustomText(
-                  'Crafted Interiors',
-                  type: CustomTextType.buttonMedium,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                // Text(
-                //   'Crafted Interiors',
-                //   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                //     fontWeight: FontWeight.bold,
-                //   ),
-                // ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.amber[50],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'Top Rated Seller',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.amber[800],
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // View Shop Button
-          OutlinedButton(
-            onPressed: () {
-              // Navigate to shop page
-            },
-            child: const Text('View Shop'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ! ***
-class MinimalColorSelectionWidget extends StatefulWidget {
-  const MinimalColorSelectionWidget({super.key});
-
-  @override
-  State<MinimalColorSelectionWidget> createState() =>
-      _MinimalColorSelectionWidgetState();
-}
-
-class _MinimalColorSelectionWidgetState
-    extends State<MinimalColorSelectionWidget> {
-  int _selectedColorIndex = 0;
-
-  final List<Color> _colors = [
-    Colors.blueGrey,
-    Colors.brown,
-    Colors.grey,
-    Colors.black,
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(
-          'Color',
-          type: CustomTextType.buttonMedium,
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-
-        const SizedBox(height: 6),
-
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: List.generate(_colors.length, (index) {
-            return _buildMinimalColorOption(_colors[index], index);
-          }),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMinimalColorOption(Color color, int index) {
-    bool isSelected = _selectedColorIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedColorIndex = index;
-        });
-      },
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
-        width: isSelected ? 40 : 40,
-        height: isSelected ? 40 : 40,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: isSelected ? Colors.black : Colors.transparent,
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: isSelected
-            ? Center(
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.check, size: 12, color: Colors.black),
-                ),
-              )
-            : null,
-      ),
-    );
-  }
-}
-
 // ! ****
-class SizeSelectionWidget extends StatefulWidget {
-  SizeSelectionWidget({super.key});
 
-  @override
-  State<SizeSelectionWidget> createState() => _SizeSelectionWidgetState();
-}
+class SizeSelectionWidget extends StatelessWidget {
+  final Function(String?) onSizeSelected;
 
-class _SizeSelectionWidgetState extends State<SizeSelectionWidget> {
-  int _selectedSizeIndex = 1; // Default to Medium (index 1)
-
-  final List<String> _sizes = ['Small', 'Medium', 'Large'];
-  final List<String> _sizeDimensions = ['80x80cm', '120x120cm', '150x150cm'];
+  const SizeSelectionWidget({super.key, required this.onSizeSelected});
 
   @override
   Widget build(BuildContext context) {
+    // Get selected size from Provider
+    final selectedSize = context.select<BuyerCartViewModel, String?>(
+      (viewModel) => viewModel.selectedSize,
+    );
+
+    final List<String> _sizes = ['Small', 'Medium', 'Large'];
+    final List<String> _sizeDimensions = ['80x80cm', '120x120cm', '150x150cm'];
+
+    // Find index of selected size
+    int selectedIndex = _sizes.indexWhere((size) => size == selectedSize);
+    if (selectedIndex == -1) selectedIndex = 1; // Default to Medium
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -523,17 +130,22 @@ class _SizeSelectionWidgetState extends State<SizeSelectionWidget> {
               fontWeight: FontWeight.bold,
             ),
             Text(
-              _sizeDimensions[_selectedSizeIndex],
+              _sizeDimensions[selectedIndex],
               style: TextStyle(color: Colors.grey[600], fontSize: 12),
             ),
           ],
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         Row(
           children: [
             for (int i = 0; i < _sizes.length; i++) ...[
               if (i > 0) const SizedBox(width: 12),
-              _buildSizeOption(_sizes[i], i == _selectedSizeIndex, i),
+              _buildSizeOption(
+                _sizes[i],
+                i == selectedIndex,
+                i,
+                onSizeSelected,
+              ),
             ],
           ],
         ),
@@ -541,13 +153,16 @@ class _SizeSelectionWidgetState extends State<SizeSelectionWidget> {
     );
   }
 
-  Widget _buildSizeOption(String size, bool isSelected, int index) {
+  Widget _buildSizeOption(
+    String size,
+    bool isSelected,
+    int index,
+    Function(String?) onSizeSelected,
+  ) {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          setState(() {
-            _selectedSizeIndex = index;
-          });
+          onSizeSelected(size);
         },
         child: Container(
           height: 40,
@@ -579,8 +194,6 @@ class _SizeSelectionWidgetState extends State<SizeSelectionWidget> {
                   fontSize: 14,
                 ),
               ),
-              // if (isSelected)
-              // const Icon(Icons.check, color: Colors.white, size: 16),
             ],
           ),
         ),
@@ -590,20 +203,26 @@ class _SizeSelectionWidgetState extends State<SizeSelectionWidget> {
 }
 
 // ! *****
-class MinimalQuantityStockWidget extends StatefulWidget {
-  const MinimalQuantityStockWidget({super.key});
 
-  @override
-  State<MinimalQuantityStockWidget> createState() =>
-      _MinimalQuantityStockWidgetState();
-}
+class MinimalQuantityStockWidget extends StatelessWidget {
+  final BuyerProductModel product;
+  final Function(int) onQuantityChanged;
 
-class _MinimalQuantityStockWidgetState
-    extends State<MinimalQuantityStockWidget> {
-  int _quantity = 1;
+  const MinimalQuantityStockWidget({
+    super.key,
+    required this.product,
+    required this.onQuantityChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Get selected quantity from Provider
+    final selectedQuantity = context.select<BuyerCartViewModel, int>(
+      (viewModel) => viewModel.selectedQuantity,
+    );
+
+    final maxQuantity = product.stockQuantity;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -616,27 +235,29 @@ class _MinimalQuantityStockWidgetState
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
+            if (maxQuantity > 0)
+              Text(
+                'Max: $maxQuantity',
+                style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+              ),
           ],
         ),
 
-        // Minimal Quantity Selector
+        // Quantity Selector
         Container(
           decoration: BoxDecoration(
             color: const Color(0xffF6DCC9),
-
             borderRadius: BorderRadius.circular(25),
             border: Border.all(color: Colors.grey[300]!),
           ),
           child: Row(
             children: [
-              // Decrement Button
+              // Decrement
               _buildButton(
                 icon: Icons.remove,
-                isEnabled: _quantity > 1,
+                isEnabled: selectedQuantity > 1,
                 onTap: () {
-                  setState(() {
-                    _quantity--;
-                  });
+                  onQuantityChanged(selectedQuantity - 1);
                 },
                 isLeft: true,
               ),
@@ -647,7 +268,7 @@ class _MinimalQuantityStockWidgetState
                 height: 36,
                 child: Center(
                   child: Text(
-                    '$_quantity',
+                    '$selectedQuantity',
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -656,38 +277,14 @@ class _MinimalQuantityStockWidgetState
                 ),
               ),
 
-              // Increment Button
+              // Increment
               _buildButton(
                 icon: Icons.add,
-                isEnabled: true,
+                isEnabled: selectedQuantity < maxQuantity,
                 onTap: () {
-                  setState(() {
-                    _quantity++;
-                  });
+                  onQuantityChanged(selectedQuantity + 1);
                 },
                 isLeft: false,
-              ),
-            ],
-          ),
-        ),
-
-        // Stock Status
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.green[50],
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.green[600], size: 14),
-              const SizedBox(width: 4),
-              Text(
-                'In Stock',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.green[800],
-                  fontWeight: FontWeight.bold,
-                ),
               ),
             ],
           ),
@@ -730,8 +327,107 @@ class _MinimalQuantityStockWidgetState
   }
 }
 
+// ! *****
+class ProductActionButtons extends StatelessWidget {
+  final BuyerProductModel product;
+  final BuyerCartViewModel cartViewModel;
+  final int selectedQuantity;
+  final String? selectedSize;
+  final String? selectedVariant;
+
+  const ProductActionButtons({
+    super.key,
+    required this.product,
+    required this.cartViewModel,
+    required this.selectedQuantity,
+    required this.selectedSize,
+    required this.selectedVariant,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+      child: Row(
+        children: [
+          // Add to Cart Button
+          Expanded(
+            child: CustomButtonUtils.login(
+              height: 45,
+              padding: EdgeInsets.all(0),
+              title: cartViewModel.isProductInCart(product.id)
+                  ? 'Added to Cart'
+                  : 'Add to Cart',
+              backgroundColor: cartViewModel.isProductInCart(product.id)
+                  ? Colors.green
+                  : AppColors.orangeLight,
+              color: cartViewModel.isProductInCart(product.id)
+                  ? Colors.white
+                  : AppColors.brightOrange,
+              borderRadius: 6,
+              onPressed: () async {
+                try {
+                  log('🛒 Adding to cart with:');
+                  log('   Product ID: ${product.id}');
+                  log('   Quantity: $selectedQuantity');
+                  log('   Size: $selectedSize');
+                  log('   Variant: $selectedVariant');
+
+                  await cartViewModel.addToCart(
+                    productId: product.id,
+                    // Quantity, size, variant will be taken from viewModel's state
+                  );
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Added to cart successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (error) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to add to cart: $error'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: CustomButtonUtils.login(
+              height: 45,
+              padding: EdgeInsets.all(0),
+              title: 'Buy Now',
+              backgroundColor: AppColors.brightOrange,
+              borderRadius: 6,
+              onPressed: () async {
+                try {
+                  await cartViewModel.addToCart(productId: product.id);
+                  showCartBottomSheet(context);
+                } catch (error) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to add to cart: $error'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class ProductTabsSection extends StatefulWidget {
-  const ProductTabsSection({super.key});
+  final BuyerProductModel product;
+
+  const ProductTabsSection({super.key, required this.product});
 
   @override
   State<ProductTabsSection> createState() => _ProductTabsSectionState();
@@ -742,6 +438,16 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
 
   @override
   Widget build(BuildContext context) {
+    // Get selected variant from Provider
+    final selectedVariant = context.select<BuyerCartViewModel, String?>(
+      (viewModel) => viewModel.selectedVariant,
+    );
+
+    final cartViewModel = Provider.of<BuyerCartViewModel>(
+      context,
+      listen: false,
+    );
+
     return Column(
       children: [
         // Tab Headers
@@ -749,14 +455,13 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
           children: [
             _buildTab('Description', 0),
             _buildTab('Specifications', 1),
-            _buildTab('Shipping & Returns', 2),
+            _buildTab('Variants', 2),
           ],
         ),
-
         const SizedBox(height: 16),
 
-        // Tab Content
-        _buildTabContent(),
+        // Tab Content with REAL DATA
+        _buildTabContent(cartViewModel, selectedVariant),
       ],
     );
   }
@@ -787,6 +492,7 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
                   ? FontWeight.bold
                   : FontWeight.normal,
               color: _selectedTab == index ? Colors.blue : Colors.grey,
+              fontSize: 12,
             ),
           ),
         ),
@@ -794,31 +500,79 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
     );
   }
 
-  Widget _buildTabContent() {
+  Widget _buildTabContent(
+    BuyerCartViewModel cartViewModel,
+    String? selectedVariant,
+  ) {
     switch (_selectedTab) {
-      case 0:
-        return const Text(
-          'Experience ultimate comfort with our Modern Velvet Sofa. Crafted with premium materials and elegant design, this sofa adds sophistication to any living space. Perfect for modern homes seeking both style and comfort.',
-          style: TextStyle(height: 1.5),
+      case 2: // Variants
+        if (widget.product.variants.isEmpty) {
+          return const Text('No variants available');
+        }
+
+        return Column(
+          children: widget.product.variants.map((variant) {
+            final isSelected = selectedVariant == variant.value;
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: Checkbox(
+                  value: isSelected,
+                  onChanged: (bool? selected) {
+                    cartViewModel.updateVariant(
+                      selected == true ? variant.value : null,
+                    );
+                  },
+                ),
+                title: Text('${variant.type}: ${variant.name}'),
+                subtitle: Text(
+                  variant.priceAdjustment > 0
+                      ? '+ \$${variant.priceAdjustment.toStringAsFixed(2)}'
+                      : 'No extra charge',
+                ),
+                trailing: Text(
+                  variant.priceAdjustment > 0
+                      ? '+ \$${variant.priceAdjustment.toStringAsFixed(2)}'
+                      : '',
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onTap: () {
+                  cartViewModel.updateVariant(
+                    isSelected ? null : variant.value,
+                  );
+                },
+              ),
+            );
+          }).toList(),
         );
-      case 1:
-        return const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('• Material: Premium Velvet'),
-            Text('• Dimensions: 84" W x 36" D x 32" H'),
-            Text('• Weight: 120 lbs'),
-            Text('• Assembly: Required'),
-          ],
-        );
-      case 2:
-        return const Text(
-          'Free shipping on orders over \$50. Returns accepted within 30 days. Contact customer service for return instructions.',
-          style: TextStyle(height: 1.5),
-        );
+
       default:
         return const SizedBox();
     }
+  }
+
+  Widget _buildSpecItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              '$label:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(value)),
+        ],
+      ),
+    );
   }
 }
 
@@ -917,156 +671,6 @@ class ReviewItem extends StatelessWidget {
           const SizedBox(height: 12),
 
           Text(comment, style: const TextStyle(height: 1.5)),
-        ],
-      ),
-    );
-  }
-}
-
-class RelatedProductsSection extends StatelessWidget {
-  const RelatedProductsSection({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Related Products',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-        ),
-
-        const SizedBox(height: 16),
-
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: const [
-              RelatedProductCard(
-                name: 'Modern Armchair',
-                price: '\$299',
-                imageUrl: 'assets/images/sofa.jpg',
-              ),
-              SizedBox(width: 12),
-              RelatedProductCard(
-                name: 'Coffee Table',
-                price: '\$149',
-                imageUrl: 'assets/images/table.jpg',
-              ),
-              SizedBox(width: 12),
-              RelatedProductCard(
-                name: 'Side Table',
-                price: '\$199',
-                imageUrl: 'assets/images/table2.jpg',
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class RelatedProductCard extends StatelessWidget {
-  final String name;
-  final String price;
-  final String imageUrl;
-
-  const RelatedProductCard({
-    super.key,
-    required this.name,
-    required this.price,
-    required this.imageUrl,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 150,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product Image
-          Container(
-            height: 120,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-              ),
-            ),
-            child: Icon(Icons.chair, size: 60, color: Colors.grey[400]),
-          ),
-
-          // Product Info
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
-                const SizedBox(height: 4),
-                Text(
-                  price,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class ProductActionButtons extends StatelessWidget {
-  const ProductActionButtons({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
-      child: Row(
-        children: [
-          // Add to Cart Button
-          Expanded(
-            child: CustomButtonUtils.login(
-              height: 45,
-              padding: EdgeInsets.all(0),
-              title: 'Add to Cart',
-              backgroundColor: AppColors.orangeLight,
-              color: AppColors.brightOrange,
-              borderRadius: 6,
-
-              onPressed: () {
-                // context.push('/new_password');
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: CustomButtonUtils.login(
-              height: 45,
-              padding: EdgeInsets.all(0),
-              title: 'Buy Now',
-              backgroundColor: AppColors.brightOrange,
-              borderRadius: 6,
-              onPressed: () {
-                showCartBottomSheet(context);
-              },
-            ),
-          ),
         ],
       ),
     );

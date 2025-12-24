@@ -95,6 +95,7 @@ class CustomTextFormField extends StatelessWidget {
     this.validator,
     this.validate = true,
     this.isDialogField = false, // NEW: Add this parameter
+    this.initialValue,
   });
 
   final TextEditingController? controller;
@@ -124,6 +125,7 @@ class CustomTextFormField extends StatelessWidget {
   final TextEditingController? originalPasswordController;
   final FocusNode? focusNode;
   final String? Function(String?)? validator;
+  final String? initialValue;
 
   String? _defaultValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -193,13 +195,13 @@ class CustomTextFormField extends StatelessWidget {
         break;
 
       case TextFieldType.password:
-        if (value.trim().length < 8) {
+        if (value.trim().length < 4) {
           return 'Password must be more than 8 characters';
         }
         break;
 
       case TextFieldType.confrimpassword:
-        if (value.trim().length < 8)
+        if (value.trim().length < 4)
           return 'Password must be more than 8 characters';
         if (originalPasswordController != null &&
             value != originalPasswordController!.text) {
@@ -291,6 +293,8 @@ class CustomTextFormField extends StatelessWidget {
         maxLength: maxLength,
 
         enabled: enabled,
+        initialValue: initialValue,
+
         decoration: InputDecoration(
           isDense: true, // THIS FIXES THE HEIGHT
           filled: fillcolor != null,

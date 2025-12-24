@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:wood_service/app/all_provider.dart';
 import 'package:wood_service/app/helper.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/theme/app_theme.dart';
 
 void main() async {
@@ -15,9 +13,6 @@ void main() async {
 
     // Check auth status BEFORE running app
     await checkAuthStatus();
-
-    // Test connection before proceeding
-    await testInitialConnection();
 
     // Run app with all providers
     runApp(AppWithProviders());
@@ -34,6 +29,7 @@ class AppWithProviders extends StatelessWidget {
       providers: appProviders,
       child: MyApp(
         isSellerLoggedIn: isSellerLoggedInCheck,
+        isBuyerLoggedIn: isBuyerLoggedInCheck, // Add this
         workingServerUrl: workingServerUrl,
       ),
     );
@@ -42,9 +38,15 @@ class AppWithProviders extends StatelessWidget {
 
 class MyApp extends StatelessWidget {
   final bool isSellerLoggedIn;
+  final bool isBuyerLoggedIn; // Add this
   final String? workingServerUrl;
 
-  MyApp({required this.isSellerLoggedIn, this.workingServerUrl});
+  const MyApp({
+    Key? key,
+    required this.isSellerLoggedIn,
+    required this.isBuyerLoggedIn, // Add this
+    this.workingServerUrl,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -52,9 +54,8 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       debugShowCheckedModeBanner: false,
-      home: isSellerLoggedIn
-          ? MainSellerScreen() // ✅ Your actual seller home screen
-          : OnboardingScreen(), // ✅ Your actual onboarding screen
+      home: _getInitialScreen(),
+
       builder: (context, child) {
         return GestureDetector(
           onTap: () => dismissKeyboard(context),
@@ -62,6 +63,21 @@ class MyApp extends StatelessWidget {
         );
       },
     );
+  }
+
+  Widget _getInitialScreen() {
+    // Check if seller is logged in
+    if (isSellerLoggedIn) {
+      return MainSellerScreen();
+    }
+
+    // Check if buyer is logged in
+    if (isBuyerLoggedIn) {
+      return BuyerMainScreen();
+    }
+
+    // If neither is logged in, show onboarding
+    return OnboardingScreen();
   }
 }
 

@@ -172,7 +172,7 @@ class _VerificationScreenState extends State<PhoneVerificationScreen> {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) {
-                      return MainScreen();
+                      return BuyerMainScreen();
                     },
                   ),
                 );

@@ -1,4 +1,4 @@
-import '../models/shop_model.dart';
+import 'shop_model.dart';
 import '../models/visit_request_model.dart';
 import '../models/order_model.dart';
 

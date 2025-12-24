@@ -1,323 +1,413 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
+import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_model.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
 
-class VariantsTab extends StatelessWidget {
+class VariantsTab extends StatefulWidget {
   const VariantsTab({super.key});
 
   @override
+  State<VariantsTab> createState() => _VariantsTabState();
+}
+
+class _VariantsTabState extends State<VariantsTab> {
+  final _variantNameController = TextEditingController();
+  final _variantColorController = TextEditingController();
+  final _variantPriceController = TextEditingController();
+  String _selectedType = 'Size';
+
+  @override
+  void dispose() {
+    _variantNameController.dispose();
+    _variantColorController.dispose();
+    _variantPriceController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<AddProductViewModel>();
-    final product = viewModel.product;
+    final viewModel = context.watch<SellerProductProvider>();
+    // Get the product from viewModel - adjust based on your actual model name
+    final product =
+        viewModel.product; // or viewModel.sellerProduct based on your model
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
+          Text(
+            'Product Variants',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Add different options like sizes, colors, or materials',
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 24),
+
+          // Add Variant Form
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-              border: Border.all(color: Colors.grey.withOpacity(0.1)),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Product Variants',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.grey[800],
+                // Type selection
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey.withOpacity(0.5)),
+                  ),
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedType,
+                    decoration: InputDecoration(
+                      labelText: 'Variant Type',
+                      hintText: 'Select a category',
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Colors.black),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 16,
+                      ),
+                    ),
+                    items: ['Size', 'Color', 'Material'].map((type) {
+                      return DropdownMenuItem(
+                        value: type,
+                        child: Text(
+                          type,
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedType = value!;
+                      });
+                    },
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Add sizes, colors, materials, and other options',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                const SizedBox(height: 16),
+
+                // Variant Name
+                CustomTextFormField(
+                  controller: _variantColorController,
+                  hintText: 'e.g., Small, Red, Wood',
+                ),
+                const SizedBox(height: 16),
+
+                // Price adjustment
+                CustomTextFormField(
+                  controller: _variantPriceController,
+                  hintText: 'e.g., 10.00 or -5.00',
+                  textInputType: TextInputType.number,
+                ),
+                const SizedBox(height: 24),
+
+                // Add button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _addVariant(context, viewModel);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Text('Add Variant'),
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
 
-          // Variant Types
-          _buildSectionHeader(
-            'Variant Types',
-            'Select the types of variants for your product',
-          ),
-          const SizedBox(height: 12),
+          // Quick Add Buttons
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              _buildVariantChip('Size'),
-              _buildVariantChip('Color'),
-              _buildVariantChip('Material'),
+              _buildQuickButton('Add Sizes (S, M, L)', () {
+                _addSizeTemplate(context, viewModel);
+              }),
+              _buildQuickButton('Add Colors', () {
+                _addColorTemplate(context, viewModel);
+              }),
+              _buildQuickButton('Add Materials', () {
+                _addMaterialTemplate(context, viewModel);
+              }),
             ],
           ),
           const SizedBox(height: 24),
 
-          // Size Variants
-          _buildSectionHeader(
-            'Size Options',
-            'Add different sizes for your product',
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          // Current Variants - FIXED: Check if variants exist in your model
+          if (product != null &&
+              product.variants != null &&
+              product.variants.isNotEmpty) ...[
+            Text(
+              'Current Variants (${product.variants.length})',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
             ),
-            child: Column(
-              children: [
-                _buildVariantItem('Small', '+ \$0.00'),
-                const SizedBox(height: 12),
-                _buildVariantItem('Medium', '+ \$10.00'),
-                const SizedBox(height: 12),
-                _buildVariantItem('Large', '+ \$20.00'),
-                const SizedBox(height: 12),
-                _buildAddVariantButton('Add Size'),
-              ],
+            const SizedBox(height: 12),
+            ...product.variants.map((variant) {
+              return _buildVariantItem(variant, viewModel, context);
+            }).toList(),
+          ] else ...[
+            // Empty state
+            Container(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.inventory_outlined,
+                    size: 60,
+                    color: Colors.grey[300],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No variants added yet',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Add variants like sizes, colors, or materials',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-
-          // Color Variants
-          _buildSectionHeader(
-            'Color Options',
-            'Add different colors for your product',
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
-            ),
-            child: Column(
-              children: [
-                _buildColorVariantItem('Natural Wood', Colors.brown),
-                const SizedBox(height: 12),
-                _buildColorVariantItem('Dark Walnut', Color(0xFF5D4037)),
-                const SizedBox(height: 12),
-                _buildColorVariantItem('White', Colors.white),
-                const SizedBox(height: 12),
-                _buildAddVariantButton('Add Color'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Material Variants
-          _buildSectionHeader(
-            'Material Options',
-            'Add different materials for your product',
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
-            ),
-            child: Column(
-              children: [
-                _buildVariantItem('Solid Oak', '+ \$50.00'),
-                const SizedBox(height: 12),
-                _buildVariantItem('Pine Wood', '+ \$0.00'),
-                const SizedBox(height: 12),
-                _buildVariantItem('Teak Wood', '+ \$100.00'),
-                const SizedBox(height: 12),
-                _buildAddVariantButton('Add Material'),
-              ],
-            ),
-          ),
+          ],
           const SizedBox(height: 80),
         ],
       ),
     );
   }
 
-  Widget _buildVariantChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+  Widget _buildQuickButton(String label, VoidCallback onPressed) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue[50],
+        foregroundColor: Colors.blue[700],
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[700],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Icon(Icons.add_rounded, size: 14, color: Colors.grey[500]),
-        ],
-      ),
+      child: Text(label),
     );
   }
 
-  Widget _buildVariantItem(String name, String price) {
+  Widget _buildVariantItem(
+    ProductVariant variant,
+    SellerProductProvider viewModel,
+    BuildContext context,
+  ) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey),
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              name,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[800],
-              ),
-            ),
-          ),
-          Text(
-            price,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.green[700],
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(width: 12),
-          IconButton(
-            icon: Icon(Icons.edit_rounded, size: 16, color: Colors.grey[500]),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.delete_outline_rounded,
-              size: 16,
-              color: Colors.grey[500],
-            ),
-            onPressed: () {},
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildColorVariantItem(String name, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
+          // Type indicator
           Container(
-            width: 20,
-            height: 20,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.grey.withOpacity(0.5),
-                width: color == Colors.white ? 1 : 0,
+              color: _getTypeColor(variant.type),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              variant.type.substring(0, 1).toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
           const SizedBox(width: 12),
+
+          // Variant info
           Expanded(
             child: Text(
-              name,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[800],
-              ),
+              variant.name,
+              style: const TextStyle(fontWeight: FontWeight.w500),
             ),
           ),
-          IconButton(
-            icon: Icon(Icons.edit_rounded, size: 16, color: Colors.grey[500]),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.delete_outline_rounded,
-              size: 16,
-              color: Colors.grey[500],
-            ),
-            onPressed: () {},
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildAddVariantButton(String label) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.3),
-          // style: BorderStyle.dashed,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.add_rounded, color: Colors.grey[500], size: 16),
-          const SizedBox(width: 8),
+          // Price
           Text(
-            label,
+            variant.priceAdjustment != 0
+                ? '${variant.priceAdjustment > 0 ? '+' : ''}\$${variant.priceAdjustment.toStringAsFixed(2)}'
+                : 'Base',
             style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+              color: variant.priceAdjustment > 0
+                  ? Colors.green
+                  : variant.priceAdjustment < 0
+                  ? Colors.red
+                  : Colors.grey,
             ),
+          ),
+
+          // Delete button
+          IconButton(
+            icon: const Icon(Icons.delete, size: 18),
+            color: Colors.grey,
+            onPressed: () {
+              viewModel.removeVariant(variant.id.toString());
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Removed ${variant.name}'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, String subtitle) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[800],
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-      ],
+  Color _getTypeColor(String type) {
+    switch (type.toLowerCase()) {
+      case 'size':
+        return Colors.blue;
+      case 'color':
+        return Colors.purple;
+      case 'material':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  void _addVariant(BuildContext context, SellerProductProvider viewModel) {
+    if (_variantColorController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter variant name')),
+      );
+      return;
+    }
+
+    if (_variantPriceController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter price adjustment')),
+      );
+      return;
+    }
+
+    final price = double.tryParse(_variantPriceController.text) ?? 0.0;
+
+    final variant = ProductVariant(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      type: _selectedType,
+      name: _variantColorController.text,
+      priceAdjustment: price,
+      stock: 10,
+    );
+
+    viewModel.addVariant(variant);
+
+    // Clear form
+    _variantColorController.clear();
+    _variantPriceController.clear();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Added $_selectedType variant'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _addSizeTemplate(BuildContext context, SellerProductProvider viewModel) {
+    const sizes = ['Small', 'Medium', 'Large'];
+    const prices = [0.0, 10.0, 20.0];
+
+    for (int i = 0; i < sizes.length; i++) {
+      final variant = ProductVariant(
+        id: '${DateTime.now().millisecondsSinceEpoch}_$i',
+        type: 'Size',
+        name: sizes[i],
+        priceAdjustment: prices[i],
+        stock: 10,
+      );
+      viewModel.addVariant(variant);
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Added 3 size variants'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _addColorTemplate(
+    BuildContext context,
+    SellerProductProvider viewModel,
+  ) {
+    const colors = ['Red', 'Blue', 'Green'];
+
+    for (var color in colors) {
+      final variant = ProductVariant(
+        id: '${DateTime.now().millisecondsSinceEpoch}_$color',
+        type: 'Color',
+        name: color,
+        priceAdjustment: 0.0,
+        stock: 10,
+      );
+      viewModel.addVariant(variant);
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Added 3 color variants'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _addMaterialTemplate(
+    BuildContext context,
+    SellerProductProvider viewModel,
+  ) {
+    const materials = ['Wood', 'Metal'];
+
+    for (var material in materials) {
+      final variant = ProductVariant(
+        id: '${DateTime.now().millisecondsSinceEpoch}_$material',
+        type: 'Material',
+        name: material,
+        priceAdjustment: material == 'Metal' ? 15.0 : 0.0,
+        stock: 10,
+      );
+      viewModel.addVariant(variant);
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Added 2 material variants'),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 }

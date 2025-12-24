@@ -6,14 +6,14 @@ import 'package:wood_service/views/Buyer/Messages/message_screen.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/home_screen.dart';
 import 'package:wood_service/views/Buyer/profile/profile.dart';
 
-class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+class BuyerMainScreen extends StatefulWidget {
+  const BuyerMainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  State<BuyerMainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<BuyerMainScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [

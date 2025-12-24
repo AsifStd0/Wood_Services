@@ -61,7 +61,10 @@ Widget buildImageUploader({
 }
 
 // Dialog methods
-void showAddCategoryDialog(ProfileViewModel viewModel, BuildContext context) {
+void showAddCategoryDialog(
+  SelllerSettingProvider viewModel,
+  BuildContext context,
+) {
   final controller = TextEditingController();
   showDialog(
     context: context,
@@ -93,7 +96,7 @@ void showAddCategoryDialog(ProfileViewModel viewModel, BuildContext context) {
   );
 }
 
-Widget buildBankDetailsSection(ProfileViewModel viewModel) {
+Widget buildBankDetailsSection(SelllerSettingProvider viewModel) {
   return Container(
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
@@ -160,7 +163,10 @@ Widget buildBankDetailsSection(ProfileViewModel viewModel) {
   );
 }
 
-Widget saveChangesButton(ProfileViewModel viewModel, BuildContext context) {
+Widget saveChangesButton(
+  SelllerSettingProvider viewModel,
+  BuildContext context,
+) {
   return Column(
     children: [
       if (viewModel.isEditing) ...[
@@ -275,7 +281,7 @@ Widget buildInfoTextArea(
   );
 }
 
-Widget buildShopBrandingSection(ProfileViewModel viewModel) {
+Widget buildShopBrandingSection(SelllerSettingProvider viewModel) {
   return Container(
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
@@ -333,7 +339,7 @@ Widget buildShopBrandingSection(ProfileViewModel viewModel) {
 }
 
 Widget buildCategoriesSection(
-  ProfileViewModel viewModel,
+  SelllerSettingProvider viewModel,
   BuildContext context,
 ) {
   return Container(
@@ -429,7 +435,7 @@ Widget buildCategoriesSection(
   );
 }
 
-Widget buildShopHeader(ProfileViewModel viewModel) {
+Widget buildShopHeader(SelllerSettingProvider viewModel) {
   return Container(
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
@@ -551,7 +557,7 @@ Widget buildShopHeader(ProfileViewModel viewModel) {
   );
 }
 
-Widget buildShopBanner(ProfileViewModel viewModel) {
+Widget buildShopBanner(SelllerSettingProvider viewModel) {
   return Container(
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(

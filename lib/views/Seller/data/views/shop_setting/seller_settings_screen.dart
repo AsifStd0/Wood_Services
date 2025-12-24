@@ -12,47 +12,52 @@ class SellerSettingsScreen extends StatefulWidget {
 }
 
 class _SellerSettingsScreenState extends State<SellerSettingsScreen> {
-  final ProfileViewModel _viewModel = locator<ProfileViewModel>();
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _viewModel.loadSellerDataFromSignup();
+      // Access provider from context
+      final viewModel = context.read<SelllerSettingProvider>();
+      viewModel.loadSellerData();
     });
   }
 
-  void _showLogoutDialog(ProfileViewModel viewModel, BuildContext context) {
+  void _showLogoutDialog(BuildContext context) {
+    final viewModel = context.read<SelllerSettingProvider>();
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Logout'),
-        content: Text('Are you sure you want to logout?'),
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
 
-              try {
-                await viewModel.logout();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Logging out...'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
 
-                // Use go_router's go() or push() method
-                // context.go('/seller_login');
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) {
-                      return SellerLogin();
-                    },
-                  ),
+              final success = await viewModel.logout();
+
+              if (success && context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => OnboardingScreen()),
+                  (route) => false,
                 );
-              } catch (e) {
+              } else if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Logout failed: $e'),
+                    content: Text('Logout failed: ${viewModel.errorMessage}'),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -62,7 +67,7 @@ class _SellerSettingsScreenState extends State<SellerSettingsScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text('Logout'),
+            child: const Text('Logout'),
           ),
         ],
       ),
@@ -71,44 +76,41 @@ class _SellerSettingsScreenState extends State<SellerSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _viewModel,
-      child: Scaffold(
-        backgroundColor: Color(0xFFF8FAFC),
-        appBar: CustomAppBar(
-          title: 'Shop Settings',
-          showBackButton: false,
-          backgroundColor: Colors.white,
-          actions: [
-            // Edit/Close button
-            Consumer<ProfileViewModel>(
-              builder: (context, viewModel, child) {
-                return IconButton(
-                  icon: Icon(
-                    viewModel.isEditing
-                        ? Icons.close_rounded
-                        : Icons.edit_rounded,
-                    color: Colors.grey[700],
-                  ),
-                  onPressed: () {
-                    viewModel.setEditing(!viewModel.isEditing);
-                  },
-                );
-              },
-            ),
-            // Logout button in AppBar
-            Consumer<ProfileViewModel>(
-              builder: (context, viewModel, child) {
-                return IconButton(
-                  icon: Icon(Icons.logout_rounded, color: Colors.red),
-                  onPressed: () => _showLogoutDialog(viewModel, context),
-                );
-              },
-            ),
-          ],
-        ),
-        body: const _ShopSettingsContent(),
+    return Scaffold(
+      backgroundColor: Color(0xFFF8FAFC),
+      appBar: CustomAppBar(
+        title: 'Shop Settings',
+        showBackButton: false,
+        backgroundColor: Colors.white,
+        actions: [
+          // Edit/Close button
+          Consumer<SelllerSettingProvider>(
+            builder: (context, viewModel, child) {
+              return IconButton(
+                icon: Icon(
+                  viewModel.isEditing
+                      ? Icons.close_rounded
+                      : Icons.edit_rounded,
+                  color: Colors.grey[700],
+                ),
+                onPressed: () {
+                  viewModel.setEditing(!viewModel.isEditing);
+                },
+              );
+            },
+          ),
+          // Logout button
+          Consumer<SelllerSettingProvider>(
+            builder: (context, viewModel, child) {
+              return IconButton(
+                icon: Icon(Icons.logout_rounded, color: Colors.red),
+                onPressed: () => _showLogoutDialog(context),
+              );
+            },
+          ),
+        ],
       ),
+      body: const _ShopSettingsContent(),
     );
   }
 }
@@ -118,7 +120,7 @@ class _ShopSettingsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ProfileViewModel>(
+    return Consumer<SelllerSettingProvider>(
       builder: (context, viewModel, child) {
         if (viewModel.isLoading && !viewModel.hasData) {
           return _buildLoadingState();
@@ -212,7 +214,7 @@ class _ShopSettingsContent extends StatelessWidget {
     );
   }
 
-  Widget _buildPersonalInfoSection(ProfileViewModel viewModel) {
+  Widget _buildPersonalInfoSection(SelllerSettingProvider viewModel) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -269,7 +271,7 @@ class _ShopSettingsContent extends StatelessWidget {
     );
   }
 
-  Widget _buildBusinessInfoSection(ProfileViewModel viewModel) {
+  Widget _buildBusinessInfoSection(SelllerSettingProvider viewModel) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(

@@ -277,7 +277,7 @@ class _ConnectionStatusScreenState extends State<ConnectionStatusScreen> {
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () =>
-                        _retryWithDifferentPort('http://192.168.18.107'),
+                        _retryWithDifferentPort('http://192.168.137.154'),
                     child: const Text('Try Different Ports (5000-5010)'),
                   ),
                 ],

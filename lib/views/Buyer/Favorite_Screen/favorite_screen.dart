@@ -1,435 +1,560 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:wood_service/views/Buyer/Favorite_Screen/favirute_widet.dart';
-import 'package:wood_service/data/models/favirute_model.dart';
+import 'package:provider/provider.dart';
+import 'package:wood_service/views/Buyer/Favorite_Screen/buyer_favorite_product_model.dart';
+import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_provider.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 
 class FavoritesScreen extends StatefulWidget {
-  const FavoritesScreen({super.key});
+  const FavoritesScreen({Key? key}) : super(key: key);
 
   @override
   State<FavoritesScreen> createState() => _FavoritesScreenState();
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  // bool _gridView = true;
-  String _sortBy = 'Recently Added';
-  final List<String> _sortOptions = [
-    'Recently Added',
-    'Price: Low to High',
-    'Price: High to Low',
-    'Highest Rated',
-    'Name: A to Z',
-  ];
+  int _currentPage = 1;
+  bool _hasMore = true;
+  bool _isLoading = false;
+  List<FavoriteProduct> _favoriteProducts = [];
 
-  List<FavoriteProduct> get _sortedItems {
-    List<FavoriteProduct> items = List.from(favoriteItems);
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorites();
+  }
 
-    switch (_sortBy) {
-      case 'Recently Added':
-        items.sort((a, b) => b.addedDate.compareTo(a.addedDate));
-        break;
-      case 'Price: Low to High':
-        items.sort((a, b) => a.price.compareTo(b.price));
-        break;
-      case 'Price: High to Low':
-        items.sort((a, b) => b.price.compareTo(a.price));
-        break;
-      case 'Highest Rated':
-        items.sort((a, b) => b.rating.compareTo(a.rating));
-        break;
-      case 'Name: A to Z':
-        items.sort((a, b) => a.name.compareTo(b.name));
-        break;
+  Future<void> _loadFavorites({bool refresh = false}) async {
+    if (_isLoading) return;
+
+    setState(() {
+      if (refresh) {
+        _currentPage = 1;
+        _favoriteProducts.clear();
+        _hasMore = true;
+      }
+      _isLoading = true;
+    });
+
+    try {
+      final favoriteProvider = Provider.of<FavoriteProvider>(
+        context,
+        listen: false,
+      );
+
+      final products = await favoriteProvider.getFavoriteProducts(
+        page: _currentPage,
+        limit: 20,
+        refreshCache: refresh,
+      );
+
+      setState(() {
+        if (refresh) {
+          _favoriteProducts = products;
+        } else {
+          _favoriteProducts.addAll(products);
+        }
+
+        _hasMore =
+            products.length == 20; // If we got 20 items, there might be more
+
+        if (products.isNotEmpty) {
+          _currentPage++;
+        }
+      });
+    } catch (error) {
+      log('❌ Load favorites error: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load favorites: $error'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
+  }
 
-    return items;
+  Future<void> _removeFavorite(int index) async {
+    final product = _favoriteProducts[index];
+    final favoriteProvider = Provider.of<FavoriteProvider>(
+      context,
+      listen: false,
+    );
+
+    // Optimistic update - remove from UI immediately
+    setState(() {
+      _favoriteProducts.removeAt(index);
+    });
+
+    try {
+      await favoriteProvider.removeFromFavorites(product.productId);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Removed from favorites'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (error) {
+      // If error, add back to list
+      setState(() {
+        _favoriteProducts.insert(index, product);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $error'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final favoriteProvider = Provider.of<FavoriteProvider>(context);
+    final totalFavorites = favoriteProvider.favoriteCount;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: CustomAppBar(
         title: 'My Favorites',
-        automaticallyImplyLeading: false,
         showBackButton: false,
+        actions: [
+          Row(
+            children: [
+              if (_favoriteProducts.isNotEmpty)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: _showClearAllDialog,
+                  tooltip: 'Clear All',
+                ),
+            ],
+          ),
+        ],
       ),
-      body: favoriteItems.isEmpty
-          ? buildEmptyFavorites(context)
-          : _buildFavoritesContent(),
+      body: _isLoading && _favoriteProducts.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : _favoriteProducts.isEmpty
+          ? _buildEmptyView()
+          : _buildFavoritesGrid(context, totalFavorites),
     );
   }
 
-  Widget _buildFavoritesContent() {
-    return Column(
-      children: [
-        // Sort Info Bar
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          color: Colors.white,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${favoriteItems.length} ${favoriteItems.length == 1 ? 'Item' : 'Items'}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.brown,
-                ),
-              ),
-              Row(
+  Widget _buildEmptyView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.favorite_border_rounded,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'No Favorites Yet',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              'Tap the heart icon on any product to add it to your favorites',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.brown,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            ),
+            child: const Text('Browse Products'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFavoritesGrid(BuildContext context, int totalFavorites) {
+    return RefreshIndicator(
+      onRefresh: () => _loadFavorites(refresh: true),
+      child: CustomScrollView(
+        slivers: [
+          // Header with count
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              color: Colors.white,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Sort
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      setState(() {
-                        _sortBy = value;
-                      });
-                    },
-                    itemBuilder: (BuildContext context) {
-                      return _sortOptions.map((String option) {
-                        return PopupMenuItem<String>(
-                          value: option,
-                          child: Row(
-                            children: [
-                              Icon(
-                                _sortBy == option ? Icons.check : null,
-                                size: 16,
-                                color: Colors.brown,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(option),
-                            ],
-                          ),
-                        );
-                      }).toList();
-                    },
-                    icon: const Icon(Icons.sort_rounded, color: Colors.brown),
+                  Text(
+                    '$totalFavorites ${totalFavorites == 1 ? 'Item' : 'Items'}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: Colors.brown,
+                    ),
                   ),
-                  Text('Order'),
+                  TextButton.icon(
+                    onPressed: _showClearAllDialog,
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: const Text('Clear All'),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  ),
                 ],
               ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 8),
-
-        // Products Grid/List
-        Expanded(child: _buildGridView()),
-      ],
-    );
-  }
-
-  Widget _buildGridView() {
-    return GridView.builder(
-      padding: const EdgeInsets.only(left: 10, right: 10),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 4,
-        mainAxisSpacing: 10,
-        childAspectRatio: 0.58,
-      ),
-      itemCount: _sortedItems.length,
-      itemBuilder: (context, index) {
-        return _buildGridItem(_sortedItems[index]);
-      },
-    );
-  }
-
-  Widget _buildGridItem(FavoriteProduct product) {
-    bool hasDiscount =
-        product.originalPrice != null && product.originalPrice! > product.price;
-    final double? discount = hasDiscount
-        ? ((product.originalPrice! - product.price) /
-                  product.originalPrice! *
-                  100)
-              .roundToDouble()
-        : null;
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product Image with Badges
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
-                child: Container(
-                  height: 120,
-                  color: Colors.grey[200],
-                  child: Center(
-                    child: Image.network(
-                      product.imageUrl,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Discount Badge - Only show if product has discount
-              if (hasDiscount && discount != null && discount > 0)
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${discount.toInt()}% OFF',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-
-              // Favorite Button
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.favorite_rounded,
-                      color: Colors.red,
-                      size: 16,
-                    ),
-                    onPressed: () => _removeFromFavorites(product.id),
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Product Details
-          Padding(
-            padding: const EdgeInsets.only(top: 10, left: 5),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Seller
-                Row(
-                  children: [
-                    Text(
-                      product.seller,
-                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Spacer(),
-                    Row(
-                      children: [
-                        Icon(Icons.star_rounded, size: 12, color: Colors.amber),
-                        const SizedBox(width: 2),
-                        Text(
-                          product.rating.toString(),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '(${product.reviewCount})',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-
-                // Product Name
-                Text(
-                  product.name,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    height: 1.2,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-
-                // Product Name
-                Text(
-                  product.description,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                const SizedBox(height: 3),
-
-                // Rating
-
-                // const SizedBox(height: 8),
-
-                // Price Section
-                Row(
-                  children: [
-                    // Current Price
-                    Text(
-                      '\$${product.price.toInt()}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-
-                    // Original Price (Crossed) - Only show if has discount
-                    if (hasDiscount)
-                      Text(
-                        '\$${product.originalPrice!.toInt()}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey,
-                          decoration: TextDecoration.lineThrough,
-                        ),
-                      ),
-
-                    const Spacer(),
-
-                    // Delivery Info - Only show if free delivery
-                    // if (product.freeDelivery)
-                    Row(
-                      children: [
-                        Text(
-                          'Free Delivery',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.green[700],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 5),
-
-                // Action Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => _addToCart(product),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Add to Cart',
-                          style: TextStyle(fontSize: 11),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
             ),
           ),
+
+          // Grid of favorites
+          SliverPadding(
+            padding: const EdgeInsets.all(12),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.70, // Same as home screen
+              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                return _buildFavoriteCard(_favoriteProducts[index], index);
+              }, childCount: _favoriteProducts.length),
+            ),
+          ),
+
+          // Load more button
+          if (_hasMore)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
+                      : TextButton(
+                          onPressed: () => _loadFavorites(),
+                          child: const Text('Load More'),
+                        ),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  // Favorite Actions
-  void _removeFromFavorites(String productId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text('Remove from Favorites'),
-          content: const Text(
-            'Are you sure you want to remove this item from your favorites?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  favoriteItems.removeWhere((item) => item.id == productId);
-                });
-                Navigator.pop(context);
-                _showSnackBar('Removed from favorites');
-              },
-              child: const Text('Remove', style: TextStyle(color: Colors.red)),
+  Widget _buildFavoriteCard(FavoriteProduct product, int index) {
+    final bool hasDiscount = product.discountPercentage > 0;
+    final double discount = hasDiscount ? product.discountPercentage : 0;
+
+    return GestureDetector(
+      onLongPress: () => _showRemoveDialog(product, index),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
-        );
-      },
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Product Image with Badges
+            Stack(
+              children: [
+                // Product Image
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                  child: Container(
+                    height: 90,
+                    color: Colors.grey[200],
+                    child: Center(
+                      child: product.featuredImage != null
+                          ? Image.network(
+                              product.featuredImage!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(
+                                  Icons.image,
+                                  size: 40,
+                                  color: Colors.grey,
+                                );
+                              },
+                            )
+                          : CircleAvatar(radius: 60),
+                    ),
+                  ),
+                ),
+
+                // Favorite Button (Already favorited - shows red heart)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.favorite,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                      onPressed: () => _showRemoveDialog(product, index),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+
+                // Discount Badge
+                if (hasDiscount && discount > 0)
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${discount.toInt()}% OFF',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+
+            // Product Details
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    Text(
+                      product.title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+
+                    // Description
+                    Text(
+                      product.shortDescription,
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Price and Stock
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Price
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '\$${product.finalPrice.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.black,
+                              ),
+                            ),
+                            if (hasDiscount &&
+                                product.basePrice > product.finalPrice)
+                              Text(
+                                '\$${product.basePrice.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                          ],
+                        ),
+
+                        // Stock Status
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: product.inStock ? Colors.green : Colors.red,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            product.inStock ? 'In Stock' : 'Out of Stock',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Rating (if available)
+                    if (product.rating > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Row(
+                          children: [
+                            Icon(Icons.star, size: 14, color: Colors.amber),
+                            const SizedBox(width: 4),
+                            Text(
+                              product.rating.toStringAsFixed(1),
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '(${product.views})',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  void _addToCart(FavoriteProduct product) {
-    // Add to cart logic here
-    _showSnackBar('Added ${product.name} to cart');
+  void _showRemoveDialog(FavoriteProduct product, int index) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove from Favorites'),
+        content: Text('Remove "${product.title}" from favorites?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _removeFavorite(index);
+            },
+            child: const Text('Remove', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
   }
 
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        backgroundColor: Colors.brown,
+  void _showClearAllDialog() {
+    if (_favoriteProducts.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear All Favorites'),
+        content: Text(
+          'Remove all ${_favoriteProducts.length} items from favorites?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+
+              final favoriteProvider = Provider.of<FavoriteProvider>(
+                context,
+                listen: false,
+              );
+
+              // Optimistic update
+              final tempList = List<FavoriteProduct>.from(_favoriteProducts);
+              setState(() {
+                _favoriteProducts.clear();
+              });
+
+              try {
+                await favoriteProvider.clearAllFavorites();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('All favorites cleared'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (error) {
+                // If error, restore list
+                setState(() {
+                  _favoriteProducts = tempList;
+                });
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error: $error'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text('Clear All', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }
