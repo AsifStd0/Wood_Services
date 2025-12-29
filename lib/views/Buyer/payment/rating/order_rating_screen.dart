@@ -1,17 +1,28 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
-import 'package:wood_service/widgets/custom_button.dart';
-import 'package:wood_service/widgets/custom_textfield.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
+import 'package:wood_service/views/Buyer/payment/rating/review_provider.dart';
 
 class OrderRatingScreen extends StatefulWidget {
-  final String orderNumber;
+  final String orderId;
+  final String orderItemId;
   final List<String> items;
+  final BuyerProductModel buyerProduct;
+  final String? cartItemId;
+  final int quantity;
+  final String? productId;
 
   const OrderRatingScreen({
     super.key,
-    required this.orderNumber,
+    required this.orderId,
+    required this.orderItemId,
     required this.items,
+    required this.buyerProduct,
+    this.cartItemId,
+    this.quantity = 1,
+    this.productId,
   });
 
   @override
@@ -82,6 +93,101 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
     );
   }
 
+  Widget _buildSubmitButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: _isLoading
+          ? CustomButtonUtils.login(
+              backgroundColor: AppColors.brightOrange.withOpacity(0.7),
+              title: 'Submitting...',
+              onPressed: null,
+              child: SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+            )
+          : CustomButtonUtils.login(
+              backgroundColor: _selectedRating > 0
+                  ? AppColors.brightOrange
+                  : Colors.grey.shade400,
+              title: 'Submit Review',
+              onPressed: _selectedRating > 0 ? _submitReview : null,
+            ),
+    );
+  }
+
+  Future<void> _submitReview() async {
+    debugPrint('================ SUBMIT REVIEW START ================');
+
+    if (_selectedRating == 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please select a rating')));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final reviewProvider = Provider.of<ReviewProvider>(
+        context,
+        listen: false,
+      );
+
+      // Now we have the correct IDs from requestBuy response
+      // final orderId = widget.orderItemId; // This is ORDER ID now
+      final orderItemId = widget.orderItemId ?? '${widget.orderId}_ITEM';
+      final productId = widget.productId ?? widget.buyerProduct.id;
+
+      debugPrint('🧾 Using ORDER ID: ${widget.orderId}');
+      debugPrint('🧾 Using ORDER ITEM ID: $orderItemId');
+      debugPrint('🧾 Using PRODUCT ID: $productId');
+
+      final result = await reviewProvider.submitReview(
+        orderId: widget.orderId,
+        orderItemId: orderItemId,
+        productId: productId,
+        rating: _selectedRating,
+        title: _reviewController.text.isNotEmpty
+            ? _reviewController.text.substring(
+                0,
+                min(_reviewController.text.length, 50),
+              )
+            : 'Rating for ${widget.buyerProduct.title}',
+        comment: _reviewController.text,
+      );
+
+      setState(() => _isLoading = false);
+
+      if (result['success'] == true) {
+        _showSuccessDialog();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('🔥 ERROR: $e');
+      setState(() => _isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error submitting review: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+
+    debugPrint('================ SUBMIT REVIEW END =================');
+  }
+
   Widget _buildHeaderSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,7 +221,7 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Order #${widget.orderNumber}',
+            'Order #${widget.orderItemId}',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -231,45 +337,17 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
     );
   }
 
-  Widget _buildSubmitButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: _isLoading
-          ? CustomButtonUtils.login(
-              backgroundColor: AppColors.brightOrange.withOpacity(0.7),
-              title: 'Submitting...',
-              onPressed: null,
-              child: SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              ),
-            )
-          : CustomButtonUtils.login(
-              backgroundColor: _selectedRating > 0
-                  ? AppColors.brightOrange
-                  : Colors.grey.shade400,
-              title: 'Submit Review',
-              onPressed: _selectedRating > 0 ? _submitReview : null,
-            ),
-    );
-  }
-
-  Future<void> _submitReview() async {
-    if (_selectedRating == 0) return;
-
-    setState(() => _isLoading = true);
-
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-
-    setState(() => _isLoading = false);
-
-    // Show success dialog
-    _showSuccessDialog();
+  // Also update the initialization to fetch reviewable orders
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final reviewProvider = Provider.of<ReviewProvider>(
+        context,
+        listen: false,
+      );
+      reviewProvider.fetchReviewableOrders();
+    });
   }
 
   void _showSuccessDialog() {
@@ -305,20 +383,19 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) {
-                    return OrderConfirmationScreen();
+                    return BuyerMainScreen();
                   },
                 ),
               );
+              // Navigator.of(context).push(
+              //   MaterialPageRoute(
+              //     builder: (_) {
+              //       return OrderConfirmationScreen();
+              //     },
+              //   ),
+              // );
             },
             child: const Text('Order Review'),
-          ),
-
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to previous screen
-            },
-            child: const Text('Continue Shopping'),
           ),
         ],
       ),

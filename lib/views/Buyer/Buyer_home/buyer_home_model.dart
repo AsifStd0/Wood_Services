@@ -1,6 +1,7 @@
 class BuyerProductModel {
   final String id;
-  final dynamic seller; // Could be String or Map
+  final dynamic sellerId; // Could be String or Map
+  final Map<String, dynamic>? sellerInfo; // NEW: Full seller info
   final String title;
   final String shortDescription;
   final String longDescription;
@@ -17,9 +18,12 @@ class BuyerProductModel {
   final int? lowStockAlert;
   final double? weight;
   final ProductDimensions? dimensions;
+  final String? dimensionSpec; // NEW: Additional dimension info
   final List<Variant> variants;
+  final List<String> variantTypes; // NEW: Available variant types
   final String? featuredImage;
   final List<String> imageGallery;
+  final Map<String, dynamic>? video; // NEW: Video info
   final String status;
   final bool isActive;
   final int views;
@@ -31,10 +35,25 @@ class BuyerProductModel {
   final int? reviewCount;
   final bool isFavorited;
   final String? favoriteId;
+  final DateTime createdAt; // NEW: Timestamp
+  final DateTime updatedAt; // NEW: Timestamp
+  final String? createdBy; // NEW: Creator reference
+
+  // Computed properties
+  String get sellerName => sellerInfo?['name'] ?? 'Unknown Seller';
+  String? get businessName => sellerInfo?['businessName'];
+  String? get sellerEmail => sellerInfo?['email'];
+  String? get sellerPhone => sellerInfo?['phone'];
+  String? get shopName => sellerInfo?['shopName'];
+  String? get shopLogo => sellerInfo?['shopLogo'];
+  double? get sellerRating => (sellerInfo?['rating'] as num?)?.toDouble();
+  int? get sellerTotalProducts => sellerInfo?['totalProducts'];
+  String? get sellerVerificationStatus => sellerInfo?['verificationStatus'];
 
   BuyerProductModel({
     required this.id,
-    this.seller,
+    this.sellerId,
+    this.sellerInfo,
     required this.title,
     required this.shortDescription,
     required this.longDescription,
@@ -51,9 +70,12 @@ class BuyerProductModel {
     this.lowStockAlert,
     this.weight,
     this.dimensions,
+    this.dimensionSpec,
     required this.variants,
+    this.variantTypes = const [],
     this.featuredImage,
     required this.imageGallery,
+    this.video,
     required this.status,
     required this.isActive,
     required this.views,
@@ -65,12 +87,16 @@ class BuyerProductModel {
     this.reviewCount,
     this.isFavorited = false,
     this.favoriteId,
+    required this.createdAt,
+    required this.updatedAt,
+    this.createdBy,
   });
 
-  // Add this COPY WITH method
+  // COPY WITH method
   BuyerProductModel copyWith({
     String? id,
-    dynamic seller,
+    dynamic sellerId,
+    Map<String, dynamic>? sellerInfo,
     String? title,
     String? shortDescription,
     String? longDescription,
@@ -87,9 +113,12 @@ class BuyerProductModel {
     int? lowStockAlert,
     double? weight,
     ProductDimensions? dimensions,
+    String? dimensionSpec,
     List<Variant>? variants,
+    List<String>? variantTypes,
     String? featuredImage,
     List<String>? imageGallery,
+    Map<String, dynamic>? video,
     String? status,
     bool? isActive,
     int? views,
@@ -101,10 +130,14 @@ class BuyerProductModel {
     int? reviewCount,
     bool? isFavorited,
     String? favoriteId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    String? createdBy,
   }) {
     return BuyerProductModel(
       id: id ?? this.id,
-      seller: seller ?? this.seller,
+      sellerId: sellerId ?? this.sellerId,
+      sellerInfo: sellerInfo ?? this.sellerInfo,
       title: title ?? this.title,
       shortDescription: shortDescription ?? this.shortDescription,
       longDescription: longDescription ?? this.longDescription,
@@ -121,9 +154,12 @@ class BuyerProductModel {
       lowStockAlert: lowStockAlert ?? this.lowStockAlert,
       weight: weight ?? this.weight,
       dimensions: dimensions ?? this.dimensions,
+      dimensionSpec: dimensionSpec ?? this.dimensionSpec,
       variants: variants ?? this.variants,
+      variantTypes: variantTypes ?? this.variantTypes,
       featuredImage: featuredImage ?? this.featuredImage,
       imageGallery: imageGallery ?? this.imageGallery,
+      video: video ?? this.video,
       status: status ?? this.status,
       isActive: isActive ?? this.isActive,
       views: views ?? this.views,
@@ -135,102 +171,107 @@ class BuyerProductModel {
       reviewCount: reviewCount ?? this.reviewCount,
       isFavorited: isFavorited ?? this.isFavorited,
       favoriteId: favoriteId ?? this.favoriteId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      createdBy: createdBy ?? this.createdBy,
     );
   }
 
   factory BuyerProductModel.fromJson(Map<String, dynamic> json) {
     print('🔍 Available fields: ${json.keys.join(', ')}');
 
-    // Check for longDescription
-    if (json.containsKey('longDescription')) {
-      print('🔍 longDescription exists: ${json['longDescription']}');
-    } else {
-      print('🔍 longDescription NOT in API response');
+    // Debug log for important fields
+    final debugFields = [
+      'longDescription',
+      'costPrice',
+      'taxRate',
+      'status',
+      'sellerInfo',
+      'dimensions',
+      'variantTypes',
+      'createdAt',
+      'updatedAt',
+    ];
+
+    for (final field in debugFields) {
+      if (json.containsKey(field)) {
+        print('🔍 $field exists: ${json[field]}');
+      } else {
+        print('🔍 $field NOT in API response');
+      }
     }
 
-    // Check for costPrice
-    if (json.containsKey('costPrice')) {
-      print('🔍 costPrice exists: ${json['costPrice']}');
-    } else {
-      print('🔍 costPrice NOT in API response');
-    }
-
-    // Check for taxRate
-    if (json.containsKey('taxRate')) {
-      print('🔍 taxRate exists: ${json['taxRate']}');
-    } else {
-      print('🔍 taxRate NOT in API response');
-    }
-
-    // Check for status
-    if (json.containsKey('status')) {
-      print('🔍 status exists: ${json['status']}');
-    } else {
-      print('🔍 status NOT in API response');
+    // Parse timestamps
+    DateTime parseTimestamp(dynamic timestamp) {
+      if (timestamp == null) return DateTime.now();
+      if (timestamp is String) return DateTime.parse(timestamp).toLocal();
+      if (timestamp is int)
+        return DateTime.fromMillisecondsSinceEpoch(timestamp).toLocal();
+      return DateTime.now();
     }
 
     return BuyerProductModel(
       // ID
       id: json['id']?.toString() ?? json['_id']?.toString() ?? 'unknown_id',
 
-      // Seller
-      seller: json['seller'],
+      // Seller info
+      sellerId: json['seller'] ?? json['sellerId'],
+      sellerInfo: json['sellerInfo'] is Map
+          ? Map<String, dynamic>.from(json['sellerInfo'])
+          : null,
 
       // Basic info
       title: json['title']?.toString() ?? 'Untitled Product',
       shortDescription:
           json['shortDescription']?.toString() ?? 'No description',
-
-      // 🔥 Check if longDescription exists in API
       longDescription: json['longDescription']?.toString() ?? '',
-
       category: json['category']?.toString() ?? 'Uncategorized',
-
       tags: _parseStringList(json['tags']),
 
-      // Pricing - use API values
+      // Pricing
       basePrice: _parseDouble(json['basePrice']),
       salePrice: _parseDouble(json['salePrice']),
-
-      // These might not be in API response
       costPrice: json.containsKey('costPrice')
           ? _parseDouble(json['costPrice'])
           : null,
       taxRate: json.containsKey('taxRate')
           ? _parseDouble(json['taxRate'])
           : null,
-
       currency: json['currency']?.toString() ?? 'USD',
       hasDiscount: json['hasDiscount'] ?? false,
       sku: json['sku']?.toString(),
       stockQuantity: json['stockQuantity'] ?? 0,
       lowStockAlert: json['lowStockAlert'],
-      weight: _parseDouble(json['weight']),
 
-      // Dimensions
+      // Physical properties
+      weight: _parseDouble(json['weight']),
       dimensions: json['dimensions'] != null && json['dimensions'] is Map
           ? ProductDimensions.fromJson(json['dimensions'])
           : null,
+      dimensionSpec: json['dimensionSpec']?.toString(),
 
       // Variants
       variants: _parseVariants(json['variants']),
+      variantTypes: _parseStringList(json['variantTypes']),
 
-      // Images - handle both String and Map
+      // Media
       featuredImage: _parseImageField(json['featuredImage']),
       imageGallery: _parseImageGallery(json['imageGallery']),
+      video: json['video'] is Map
+          ? Map<String, dynamic>.from(json['video'])
+          : null,
 
-      // Status - check if exists in API
+      // Status
       status: json['status']?.toString() ?? 'draft',
-
-      // isActive might not be in API - check
       isActive: json.containsKey('isActive')
           ? (json['isActive'] ?? true)
           : true,
 
+      // Performance metrics
       views: json['views'] ?? 0,
       salesCount: json['salesCount'] ?? 0,
 
-      // NEW fields from API
+      // Computed fields
       inStock: json['inStock'] ?? false,
       finalPrice: _parseDouble(
         json['finalPrice'] ?? json['salePrice'] ?? json['basePrice'],
@@ -242,24 +283,74 @@ class BuyerProductModel {
       // Favorite fields
       isFavorited: json['isFavorited'] ?? false,
       favoriteId: json['favoriteId']?.toString(),
+
+      // Timestamps
+      createdAt: parseTimestamp(json['createdAt']),
+      updatedAt: parseTimestamp(json['updatedAt']),
+
+      // Creator
+      createdBy: json['createdBy']?.toString(),
     );
   }
 
-  // Helper method for image fields
+  // Convert to JSON for sending to API (if needed)
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'sellerId': sellerId,
+      'sellerInfo': sellerInfo,
+      'title': title,
+      'shortDescription': shortDescription,
+      'longDescription': longDescription,
+      'category': category,
+      'tags': tags,
+      'basePrice': basePrice,
+      'salePrice': salePrice,
+      'costPrice': costPrice,
+      'taxRate': taxRate,
+      'currency': currency,
+      'hasDiscount': hasDiscount,
+      'sku': sku,
+      'stockQuantity': stockQuantity,
+      'lowStockAlert': lowStockAlert,
+      'weight': weight,
+      'dimensions': dimensions?.toJson(),
+      'dimensionSpec': dimensionSpec,
+      'variants': variants.map((v) => v.toJson()).toList(),
+      'variantTypes': variantTypes,
+      'featuredImage': featuredImage,
+      'imageGallery': imageGallery,
+      'video': video,
+      'status': status,
+      'isActive': isActive,
+      'views': views,
+      'salesCount': salesCount,
+      'inStock': inStock,
+      'finalPrice': finalPrice,
+      'discountPercentage': discountPercentage,
+      'rating': rating,
+      'reviewCount': reviewCount,
+      'isFavorited': isFavorited,
+      'favoriteId': favoriteId,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'createdBy': createdBy,
+    };
+  }
+
+  // Helper methods
   static String? _parseImageField(dynamic imageData) {
     if (imageData == null) return null;
 
     if (imageData is String) {
       return imageData;
     } else if (imageData is Map) {
-      // Could be {url: "...", publicId: "..."}
       return imageData['url']?.toString();
     }
 
     return imageData.toString();
   }
 
-  // Helper method for image gallery
   static List<String> _parseImageGallery(dynamic galleryData) {
     if (galleryData == null || galleryData is! List) return <String>[];
 
@@ -273,7 +364,6 @@ class BuyerProductModel {
         .toList();
   }
 
-  // Other helper methods stay the same...
   static List<String> _parseStringList(dynamic data) {
     if (data == null || data is! List) return <String>[];
 
@@ -297,8 +387,21 @@ class BuyerProductModel {
     return data.map((item) => Variant.fromJson(item)).toList();
   }
 
-  // Fix the inStock logic
+  // Computed properties
   bool get isInStock => inStock && stockQuantity > 0;
+  bool get isPublished => status == 'published';
+  bool get isOnSale => hasDiscount && (salePrice ?? 0) > 0;
+  double get savingsAmount => basePrice - finalPrice;
+  String get formattedPrice => '\$${finalPrice.toStringAsFixed(2)}';
+  String get formattedBasePrice => '\$${basePrice.toStringAsFixed(2)}';
+  String get formattedDiscount =>
+      '${discountPercentage.toStringAsFixed(0)}% OFF';
+  String get stockStatus {
+    if (!isActive) return 'Unavailable';
+    if (!inStock) return 'Out of Stock';
+    if (stockQuantity <= (lowStockAlert ?? 5)) return 'Low Stock';
+    return 'In Stock';
+  }
 
   @override
   String toString() {
@@ -306,28 +409,24 @@ class BuyerProductModel {
 BuyerProductModel(
   id: $id,
   title: $title,
-  shortDescription: $shortDescription,
-  longDescription: ${longDescription.isNotEmpty ? longDescription : "NULL"},
-  category: $category,
-  price: $finalPrice (Base: $basePrice, Sale: $salePrice),
-  discount: $discountPercentage%,
-  stock: $stockQuantity (API inStock: $inStock, Calculated: $isInStock),
+  seller: $sellerName,
+  price: $formattedPrice (Base: $formattedBasePrice, Discount: $discountPercentage%),
+  stock: $stockQuantity ($stockStatus),
   status: $status,
   isActive: $isActive,
-  costPrice: ${costPrice ?? "NULL"},
-  taxRate: ${taxRate ?? "NULL"},
   variants: ${variants.length},
   images: ${imageGallery.length},
   views: $views,
   sales: $salesCount,
   isFavorited: $isFavorited,
-  favoriteId: ${favoriteId ?? "NULL"}
+  rating: ${rating ?? 'No ratings'},
+  createdAt: ${createdAt.toString()}
 )
 ''';
   }
 }
 
-// Also add copyWith to Variant class
+// Enhanced Variant class
 class Variant {
   final String id;
   final String type;
@@ -349,7 +448,6 @@ class Variant {
     required this.isActive,
   });
 
-  // Add copyWith to Variant too
   Variant copyWith({
     String? id,
     String? type,
@@ -378,31 +476,51 @@ class Variant {
       type: json['type']?.toString() ?? 'unknown',
       name: json['name']?.toString() ?? 'Unknown',
       value: json['value']?.toString() ?? json['name']?.toString() ?? 'Unknown',
-      priceAdjustment: (json['priceAdjustment'] ?? 0).toDouble(),
+      priceAdjustment: _parseDouble(json['priceAdjustment']),
       sku: json['sku']?.toString(),
       stock: json['stock'] is int ? json['stock'] : null,
       isActive: json['isActive'] ?? true,
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'type': type,
+      'name': name,
+      'value': value,
+      'priceAdjustment': priceAdjustment,
+      'sku': sku,
+      'stock': stock,
+      'isActive': isActive,
+    };
+  }
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
+
   @override
-  String toString() =>
-      '$type: $value (+${priceAdjustment}${priceAdjustment > 0 ? ' extra' : ''})';
+  String toString() {
+    final extra = priceAdjustment > 0
+        ? ' (+${priceAdjustment.toStringAsFixed(2)})'
+        : '';
+    return '$type: $value$extra';
+  }
 }
 
-// Also add copyWith to ProductDimensions
+// Enhanced ProductDimensions class
 class ProductDimensions {
-  final double length;
-  final double width;
-  final double height;
+  final double? length;
+  final double? width;
+  final double? height;
 
-  ProductDimensions({
-    required this.length,
-    required this.width,
-    required this.height,
-  });
+  ProductDimensions({this.length, this.width, this.height});
 
-  // Add copyWith to ProductDimensions
   ProductDimensions copyWith({double? length, double? width, double? height}) {
     return ProductDimensions(
       length: length ?? this.length,
@@ -413,14 +531,35 @@ class ProductDimensions {
 
   factory ProductDimensions.fromJson(Map<String, dynamic> json) {
     return ProductDimensions(
-      length: (json['length'] ?? 0).toDouble(),
-      width: (json['width'] ?? 0).toDouble(),
-      height: (json['height'] ?? 0).toDouble(),
+      length: _parseDouble(json['length']),
+      width: _parseDouble(json['width']),
+      height: _parseDouble(json['height']),
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {'length': length, 'width': width, 'height': height};
+  }
+
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  String? get formatted {
+    if (length == null && width == null && height == null) return null;
+    final parts = <String>[];
+    if (length != null) parts.add('${length!.toStringAsFixed(1)}L');
+    if (width != null) parts.add('${width!.toStringAsFixed(1)}W');
+    if (height != null) parts.add('${height!.toStringAsFixed(1)}H');
+    return parts.isNotEmpty ? parts.join(' × ') : null;
+  }
+
   @override
-  String toString() => '${length}L x ${width}W x ${height}H';
+  String toString() => formatted ?? 'No dimensions';
 }
 // *********
 // *********

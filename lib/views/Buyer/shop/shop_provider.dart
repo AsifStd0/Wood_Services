@@ -50,7 +50,7 @@ class VisitsViewModel with ChangeNotifier {
     ),
     Visit(
       id: "2",
-      address: "456 Oak Ave",
+      address: "33 Oak Ave",
       requestedDate: DateTime(2024, 1, 14),
       status: VisitStatus.accepted,
       type: VisitType.pickup,

@@ -1,4 +1,4 @@
-// services/seller_auth_service.dart
+// ! services/seller_auth_service.dart
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -9,31 +9,16 @@ import 'package:wood_service/core/services/seller_local_storage_service.dart';
 import 'package:wood_service/views/Seller/data/models/seller_signup_model.dart';
 
 class SellerAuthService {
-  // !  i have mistake the mistake is that i have get profile api not calling only shared pref data i use in profile
+  // ! !  i have mistake the mistake is that i have get profile api not calling only shared pref data i use in profile
   final Dio _dio;
-  final SellerLocalStorageService _localStorageService; // ✅ Keep this
-
-  // Storage keys
-  static const String _sellerTokenKey = 'seller_auth_token';
-  static const String _sellerDataKey = 'seller_auth_data';
-  static const String _sellerLoginStatusKey = 'seller_is_logged_in';
-
+  final SellerLocalStorageService _localStorageService; // ! ✅ Keep this
   SellerAuthService(this._dio, this._localStorageService);
 
-  // ! ********
-  // ! *******
-  // ! *******
-  // ! *******
-  // ! *******
-  // ! *******
-
-  // ========== CHECK LOGIN STATUS ==========
-  // ========== CHECK LOGIN STATUS ==========
+  // ! ========== CHECK LOGIN STATUS ==========
   Future<bool> isSellerLoggedIn() async {
     try {
-      // First, check if we have both token AND seller data
-      final token = await _localStorageService.getString(_sellerTokenKey);
-      final sellerData = await _localStorageService.getString(_sellerDataKey);
+      final token = await _localStorageService.getSellerToken();
+      final sellerData = await _localStorageService.getSellerData();
 
       log('🔐 Checking seller login status...');
       log('   Token exists: $token ${token != null && token.isNotEmpty}');
@@ -41,7 +26,7 @@ class SellerAuthService {
         '   Seller data exists: ${sellerData != null && sellerData.isNotEmpty}',
       );
 
-      // We need BOTH token AND seller data to be logged in
+      // ! We need BOTH token AND seller data to be logged in
       if (token == null || token.isEmpty) {
         log('🔐 No seller token found in storage');
         return false;
@@ -52,7 +37,7 @@ class SellerAuthService {
         return false;
       }
 
-      // BOTH exist, so user is logged in
+      // ! BOTH exist, so user is logged in
       log('✅ Seller is logged in (token and data both exist)');
       return true;
     } catch (e) {
@@ -61,90 +46,79 @@ class SellerAuthService {
     }
   }
 
-  // Alias for isSellerLoggedIn
+  // ! Alias for isSellerLoggedIn
   Future<bool> isLoggedIn() async {
     return await isSellerLoggedIn();
   }
 
-  // ========== GET CURRENT SELLER ==========
+  // ! ========== GET CURRENT SELLER ==========
   Future<SellerModel?> getCurrentSeller() async {
     try {
-      final sellerData = await _localStorageService.getString(_sellerDataKey);
+      final sellerData = await _localStorageService.getSellerData();
       if (sellerData == null) return null;
 
-      final sellerJson = jsonDecode(sellerData);
-      return SellerModel.fromJson(sellerJson);
+      // ! ✅ No need for jsonDecode anymore - sellerData is already a Map
+      return SellerModel.fromJson(sellerData); // ! Directly use the Map
     } catch (e) {
       log('❌ Error getting current seller: $e');
       return null;
     }
   }
 
-  // ========== GET SELLER TOKEN ==========
+  // ! ========== GET SELLER TOKEN ==========
   Future<String?> getSellerToken() async {
     try {
-      return await _localStorageService.getString(_sellerTokenKey);
+      return await _localStorageService.getSellerToken();
     } catch (e) {
       log('❌ Error getting seller token: $e');
       return null;
     }
   }
 
-  // ========== PRIVATE METHODS ==========
+  // ! ========== PRIVATE METHODS ==========
   Future<void> _saveSellerAuthData(String token, SellerModel seller) async {
     try {
       log('💾 Saving auth data to storage...');
 
-      // Save token
-      await _localStorageService.saveString(_sellerTokenKey, token);
-      log('   ✅ Token saved to: $_sellerTokenKey');
+      // ! Save token
+      await _localStorageService.saveSellerToken(token);
+      log('   ✅ Token saved');
 
-      // Save seller data as JSON
-      final sellerJson = seller.toJson();
-      final sellerJsonString = jsonEncode(sellerJson);
-      await _localStorageService.saveString(_sellerDataKey, sellerJsonString);
-      log(
-        '   ✅ Seller data saved to: $_sellerDataKey (${sellerJsonString.length} chars)',
-      );
+      // ! ✅ Convert SellerModel to Map and save directly
+      final sellerMap = seller.toJson();
+      await _localStorageService.saveSellerData(sellerMap);
+      log('   ✅ Seller data saved (${sellerMap.length} fields)');
 
-      // Save login status
-      await _localStorageService.saveBool(_sellerLoginStatusKey, true);
-      log('   ✅ Login status saved to: $_sellerLoginStatusKey');
+      // ! Save login status
+      await _localStorageService.saveSellerLoginStatus(true);
+      log('   ✅ Login status saved');
 
-      // VERIFY: Read back to confirm
-      final savedToken = await _localStorageService.getString(_sellerTokenKey);
-      final savedData = await _localStorageService.getString(_sellerDataKey);
-      final savedStatus = await _localStorageService.getBool(
-        _sellerLoginStatusKey,
-      );
+      // ! VERIFY: Read back to confirm
+      final savedToken = await _localStorageService.getSellerToken();
+      final savedData = await _localStorageService.getSellerData();
 
       log('💾 VERIFICATION:');
       log(
         '   Token saved correctly: ${savedToken != null && savedToken.isNotEmpty}',
       );
-      log(
-        '   Data saved correctly: ${savedData != null && savedData.isNotEmpty}',
-      );
-      log('   Status saved correctly: $savedStatus');
+      log('   Data saved correctly: ${savedData != null}');
+      if (savedData != null) {
+        log('   Data contains: ${savedData.keys.length} keys');
+      }
     } catch (e) {
       log('❌ CRITICAL: Error saving auth data: $e');
       rethrow;
     }
   }
 
-  // ! *******
-  // ! *******
-  // ! *******
-  // ! *******
-  // ! *******
-  // ========== REGISTER SELLER ==========
+  // ! ========== REGISTER SELLER ==========
   Future<Either<Failure, SellerAuthResponse>> registerSeller({
     required SellerModel seller,
   }) async {
     try {
       log('📤 Preparing seller registration...');
 
-      // Create FormData
+      // ! Create FormData
       final formData = FormData.fromMap({
         'fullName': seller.personalInfo.fullName,
         'email': seller.personalInfo.email,
@@ -169,7 +143,7 @@ class SellerAuthService {
 
       int fileCount = 0;
 
-      // Add shop logo file
+      // ! Add shop logo file
       if (seller.shopBrandingImages.shopLogo != null) {
         formData.files.add(
           MapEntry(
@@ -185,7 +159,7 @@ class SellerAuthService {
         fileCount++;
       }
 
-      // Add shop banner file
+      // ! Add shop banner file
       if (seller.shopBrandingImages.shopBanner != null) {
         formData.files.add(
           MapEntry(
@@ -201,7 +175,7 @@ class SellerAuthService {
         fileCount++;
       }
 
-      // Add documents
+      // ! Add documents
       if (seller.documentsImage.businessLicense != null) {
         formData.files.add(
           MapEntry(
@@ -302,7 +276,7 @@ class SellerAuthService {
     }
   }
 
-  // ========== LOGIN SELLER ==========
+  // ! ========== LOGIN SELLER ==========
   Future<Either<Failure, SellerAuthResponse>> loginSeller({
     required String email,
     required String password,
@@ -364,7 +338,7 @@ class SellerAuthService {
     }
   }
 
-  // ========== UPDATE SELLER PROFILE ==========
+  // ! ========== UPDATE SELLER PROFILE ==========
   Future<Map<String, dynamic>> updateProfile({
     required Map<String, dynamic> updates,
     File? shopLogo,
@@ -379,10 +353,10 @@ class SellerAuthService {
         return {'success': false, 'message': 'Not authenticated'};
       }
 
-      // Create FormData for multipart request
+      // ! Create FormData for multipart request
       final formData = FormData.fromMap(updates);
 
-      // Add files if provided
+      // ! Add files if provided
       if (shopLogo != null) {
         formData.files.add(
           MapEntry(
@@ -462,7 +436,7 @@ class SellerAuthService {
       if (response.statusCode == 200) {
         final data = response.data;
 
-        // Update local storage with new seller data
+        // ! Update local storage with new seller data
         if (data['seller'] != null) {
           final updatedSeller = SellerModel.fromJson(data['seller']);
           await _saveSellerAuthData(token, updatedSeller);
@@ -496,7 +470,7 @@ class SellerAuthService {
     }
   }
 
-  // ! ********* Update ???
+  // ! ! ********* Update ???
 }
 
 class SellerAuthResponse {

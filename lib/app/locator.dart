@@ -2,6 +2,8 @@
 import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:wood_service/chats/chat_service.dart';
+import 'package:wood_service/chats/socket_service.dart';
 import 'package:wood_service/core/services/buyer_local_storage_service.dart';
 
 // Import SEPARATE implementations
@@ -16,6 +18,7 @@ import 'package:wood_service/views/Buyer/Buyer_home/buyer_product_service.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_services.dart';
 import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_auth_services.dart';
+import 'package:wood_service/views/Buyer/payment/cart_data/cart_services.dart';
 import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
 import 'package:wood_service/views/Buyer/Service/profile_service.dart';
 import 'package:wood_service/views/Seller/data/services/seller_auth.dart';
@@ -27,7 +30,7 @@ import 'package:wood_service/views/Seller/seller_login.dart/login_view_model.dar
 import 'package:wood_service/views/Seller/signup.dart/seller_signup_provider.dart';
 
 final GetIt locator = GetIt.instance;
-
+// final appMainUrl =
 Future<void> setupLocator() async {
   log('🚀 Setting up dependency injection with SEPARATE storage...');
 
@@ -47,7 +50,7 @@ Future<void> setupLocator() async {
   // ========== STEP 2: Register Dio ==========
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'http://192.168.1.8:5001',
+      baseUrl: 'http://192.168.18.107:5001',
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       headers: {
@@ -88,7 +91,7 @@ Future<void> setupLocator() async {
   );
   log('✅ SellerLoginViewModel registered');
 
-  locator.registerSingleton<ShopService>(ShopService());
+  // locator.registerSingleton<ShopService>(ShopService());
   log('✅ ShopService registered');
 
   // ========== STEP 4: Register Seller Repositories ==========
@@ -124,11 +127,10 @@ Future<void> setupLocator() async {
 
   locator.registerLazySingleton(() => BuyerCartService());
   locator.registerLazySingleton(() => BuyerCartViewModel());
-
-  // ========== STEP 7: DO NOT REGISTER ViewModels that need Provider context ==========
-  // ❌ DON'T register these here - they need Provider context
-  // - BuyerHomeViewModel (needs FavoriteProvider from Provider context)
-  // - FavoriteProvider (no external dependencies)
+  // !  ********* Chat
+  locator.registerLazySingleton(() => ChatService());
+  locator.registerLazySingleton(() => SocketService());
+  locator.registerLazySingleton(() => CartServices());
 
   // These should be registered in providers.dart using ChangeNotifierProvider
 
@@ -180,7 +182,7 @@ Future<void> setupLocator() async {
 //   // ========== STEP 2: Register Dio ==========
 //   final dio = Dio(
 //     BaseOptions(
-//       baseUrl: 'http://192.168.1.8:5001',
+//       baseUrl: 'http://192.168.18.107:5001',
 //       connectTimeout: const Duration(seconds: 30),
 //       receiveTimeout: const Duration(seconds: 30),
 //       headers: {

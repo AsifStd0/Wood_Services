@@ -590,7 +590,7 @@ class CustomText extends StatelessWidget {
 
 // // 🎯 BUTTONS
 // CustomText("Add to Cart", type: CustomTextType.buttonLarge),
-// CustomText("Buy Now", type: CustomTextType.buttonMedium),
+// CustomText("By Now", type: CustomTextType.buttonMedium),
 // CustomText("View Details", type: CustomTextType.buttonSmall),
 
 // // 🎯 FORM ELEMENTS

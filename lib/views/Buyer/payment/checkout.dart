@@ -1,20 +1,26 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
-import 'package:wood_service/views/Buyer/payment/order_rating_screen.dart';
+import 'package:wood_service/views/Buyer/payment/cart_data/cart_item_model.dart';
+import 'package:wood_service/views/Buyer/payment/cart_data/cart_services.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
 
 class CheckoutScreen extends StatefulWidget {
-  const CheckoutScreen({super.key});
+  // ✅ Accept cart items from previous screen
+  final List<CartItemModelData> cartItems;
+
+  const CheckoutScreen({super.key, required this.cartItems});
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  int _selectedPaymentIndex = 0; // Track selected payment method
-  bool _agreeToTerms = false; // Track terms agreement
+  int _selectedPaymentIndex = 0;
+  bool _agreeToTerms = false;
+  late List<CartItemModelData> _selectedItems; // Store selected items
+  double _subtotal = 0.0;
+  double _total = 0.0;
 
   final List<PaymentMethod> _paymentMethods = [
     PaymentMethod(
@@ -34,6 +40,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     ),
     PaymentMethod(icon: Icons.money, title: 'Cash on Delivery', type: 'cod'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // ✅ Initialize with passed cart items
+    _selectedItems = widget.cartItems;
+    _calculateTotals();
+  }
+
+  void _calculateTotals() {
+    // Calculate subtotal from selected items
+    _subtotal = _selectedItems.fold(0.0, (sum, item) {
+      return sum + (item.price * item.quantity);
+    });
+
+    // For now, shipping is free
+    _total = _subtotal;
+  }
 
   void _selectPaymentMethod(int index) {
     setState(() {
@@ -87,7 +111,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Place Order Button
+            // ✅ Place Order Button - now has access to cartItems
             _buildPlaceOrderButton(context),
           ],
         ),
@@ -115,16 +139,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('View Cart (2 items)'),
+              Text('View Cart (${_selectedItems.length} items)'),
               IconButton(
                 icon: const Icon(Icons.arrow_forward_ios, size: 16),
                 onPressed: () {
-                  // Navigate back to cart
                   Navigator.pop(context);
                 },
               ),
             ],
           ),
+
+          const SizedBox(height: 12),
+
+          // Display selected items
+          ..._selectedItems.take(2).map((item) => _buildCartItemRow(item)),
+
+          if (_selectedItems.length > 2)
+            Text(
+              '...and ${_selectedItems.length - 2} more items',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
 
           const SizedBox(height: 12),
 
@@ -171,6 +205,55 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCartItemRow(CartItemModelData item) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          // Product image placeholder
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child:
+                // item.imageUrl != null && item.imageUrl!.isNotEmpty
+                //     ? ClipRRect(
+                //         borderRadius: BorderRadius.circular(6),
+                //         child: Image.network(item.imageUrl!, fit: BoxFit.cover),
+                //       )
+                //     :
+                Icon(Icons.shopping_bag, color: Colors.grey[400]),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.productName,
+                  style: const TextStyle(fontSize: 14),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                Text(
+                  'Qty: ${item.quantity} × \$${item.price.toStringAsFixed(2)}',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '\$${(item.price * item.quantity).toStringAsFixed(2)}',
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -269,12 +352,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
           const SizedBox(height: 16),
 
-          _buildTotalRow('Subtotal', '\$249.98'),
+          _buildTotalRow('Subtotal', '\$${_subtotal.toStringAsFixed(2)}'),
           _buildTotalRow('Shipping', 'Free'),
 
           const Divider(height: 24),
 
-          _buildTotalRow('Total', '\$249.98', isTotal: true),
+          _buildTotalRow(
+            'Total',
+            '\$${_total.toStringAsFixed(2)}',
+            isTotal: true,
+          ),
         ],
       ),
     );
@@ -322,16 +409,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         Expanded(
           child: RichText(
             text: TextSpan(
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black, // Default text color
-              ),
+              style: const TextStyle(fontSize: 14, color: Colors.black),
               children: [
                 const TextSpan(text: 'I agree to the '),
                 TextSpan(
                   text: 'digital contract',
                   style: const TextStyle(
-                    color: AppColors.brightOrange, // Different color
+                    color: AppColors.brightOrange,
                     fontWeight: FontWeight.bold,
                     decoration: TextDecoration.underline,
                   ),
@@ -374,6 +458,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  // ✅ Updated: No parameters needed - uses _selectedItems from state
   Widget _buildPlaceOrderButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
@@ -382,9 +467,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         onPressed: _agreeToTerms
             ? () {
                 // Process payment and place order
-                _showOrderConfirmation(context);
+                // _showOrderConfirmation(context, );
               }
-            : null, // Disable button if terms not agreed
+            : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: _agreeToTerms ? AppColors.brightOrange : Colors.grey,
           shape: RoundedRectangleBorder(
@@ -403,102 +488,86 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  void _showOrderConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Order Placed!'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Your order has been placed successfully.'),
-            const SizedBox(height: 8),
-            Text(
-              'Payment Method: ${_paymentMethods[_selectedPaymentIndex].title}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
+  // // ✅ Updated: No parameters needed - uses _selectedItems from state
+  // void _showOrderConfirmation(
+  //   BuildContext context,
+  //   // List<String> cartItemIds,
+  // ) async {
+  //   try {
+  //     // Prepare item IDs for API - only selected items
+  //     // final itemIds = _selectedItems.map((item) => item.id).toList();
 
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) {
-                    return OrderRatingScreen(
-                      orderNumber: '12345678',
-                      items: ['Modern Sofa', 'Coffee Table', 'Accent Chair'],
-                    );
-                  },
-                ),
-              );
-              // // Navigate to order confirmation first
-              // context
-              //     .push(
-              //       // '/order_confirmation'
-              //       '/order_rating',
-              //     )
-              //     .then((_) {
-              //       // After order confirmation, show rating screen
-              //       context.push(
-              //         '/order_rating',
-              //         extra: {
-              //           'orderNumber': '12345678', // Pass actual order number
-              // 'items': [
-              //   'Modern Sofa',
-              //   'Coffee Table',
-              //   'Accent Chair',
-              // ],
-              //         },
-              //       );
-              //     });
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-  // void _showOrderConfirmation(BuildContext context) {
-  //   // Show order confirmation dialog or navigate to success screen
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: const Text('Order Placed!'),
-  //       content: Column(
-  //         mainAxisSize: MainAxisSize.min,
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           const Text('Your order has been placed successfully.'),
-  //           const SizedBox(height: 8),
-  //           Text(
-  //             'Payment Method: ${_paymentMethods[_selectedPaymentIndex].title}',
-  //             style: const TextStyle(
-  //               fontWeight: FontWeight.bold,
-  //               color: Colors.green,
-  //             ),
+  //     // Call API to place order
+  //     final response = await CartServices.requestBuy(
+  //       // itemIds: cartItemIds,
+  //       buyerNotes: 'Please deliver quickly',
+  //       deliveryAddress: 'Peshawar, Pakistan',
+  //       paymentMethod: _paymentMethods[_selectedPaymentIndex].type,
+  //     );
+
+  //     if (response['success'] == true) {
+  //       showDialog(
+  //         context: context,
+  //         builder: (context) => AlertDialog(
+  //           title: const Text('Order Placed!'),
+  //           content: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               const Text('Your order has been placed successfully.'),
+  //               const SizedBox(height: 8),
+  //               Text(
+  //                 'Order ID: ${response['orders']?[0]['orderId'] ?? 'N/A'}',
+  //                 style: const TextStyle(fontWeight: FontWeight.bold),
+  //               ),
+  //               Text(
+  //                 'Payment Method: ${_paymentMethods[_selectedPaymentIndex].title}',
+  //                 style: const TextStyle(
+  //                   fontWeight: FontWeight.bold,
+  //                   color: Colors.green,
+  //                 ),
+  //               ),
+  //             ],
   //           ),
-  //         ],
-  //       ),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () {
-  //             Navigator.pop(context);
-  //             context.push('/order_confirmation');
+  //           actions: [
+  //             TextButton(
+  //               onPressed: () {
+  //                 Navigator.pop(context); // Close dialog
+  //                 Navigator.pop(context); // Go back from checkout
 
-  //             // Navigator.popUntil(context, (route) => route.isFirst);
-  //           },
-  //           child: const Text('OK'),
+  //                 // Navigate to rating screen
+  //                 // Navigator.of(context).push(
+  //                 //   MaterialPageRoute(
+  //                 //     builder: (_) {
+  //                 //       return OrderRatingScreen(
+  //                 //         orderNumber:
+  //                 //             response['orders']?[0]['orderId'] ?? '12345678',
+  //                 //         items: _selectedItems
+  //                 //             .map((item) => item.productName)
+  //                 //             .toList(),
+  //                 //             buyerProduct :
+  //                 //         // Pass actual order ID if needed
+  //                 //         // orderId: response['orders']?[0]['orderId'],
+  //                 //       );
+  //                 // },
+  //                 // ),
+  //                 // );
+  //               },
+  //               child: const Text('OK'),
+  //             ),
+  //           ],
   //         ),
-  //       ],
-  //     ),
-  //   );
+  //       );
+  //     } else {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text(response['message'] ?? 'Order failed')),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(
+  //       context,
+  //     ).showSnackBar(SnackBar(content: Text('Error: $e')));
+  //   }
   // }
 }
 

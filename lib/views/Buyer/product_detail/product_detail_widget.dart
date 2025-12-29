@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
-import 'package:wood_service/views/Buyer/product_detail/car_bottom_sheet.dart';
+import 'package:wood_service/views/Buyer/payment/cart_data/car_bottom_sheet.dart';
 
 import '../../../app/index.dart';
 
@@ -235,11 +235,6 @@ class MinimalQuantityStockWidget extends StatelessWidget {
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
-            if (maxQuantity > 0)
-              Text(
-                'Max: $maxQuantity',
-                style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-              ),
           ],
         ),
 
@@ -405,8 +400,7 @@ class ProductActionButtons extends StatelessWidget {
               borderRadius: 6,
               onPressed: () async {
                 try {
-                  await cartViewModel.addToCart(productId: product.id);
-                  showCartBottomSheet(context);
+                  showCartBottomSheet(context, selectedQuantity, product);
                 } catch (error) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -554,26 +548,6 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
         return const SizedBox();
     }
   }
-
-  Widget _buildSpecItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              '$label:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
-  }
 }
 
 class ReviewsPreviewSection extends StatelessWidget {
@@ -677,7 +651,11 @@ class ReviewItem extends StatelessWidget {
   }
 }
 
-void showCartBottomSheet(BuildContext context) {
+void showCartBottomSheet(
+  BuildContext context,
+  int count,
+  BuyerProductModel buyerProduct,
+) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -685,6 +663,7 @@ void showCartBottomSheet(BuildContext context) {
     constraints: BoxConstraints(
       maxHeight: MediaQuery.of(context).size.height * 0.9,
     ),
-    builder: (context) => const CartBottomSheet(),
+    builder: (context) =>
+        CartBottomSheet(count: count, buyerProduct: buyerProduct),
   );
 }

@@ -5,7 +5,7 @@ import 'package:wood_service/views/Buyer/Favorite_Screen/buyer_favorite_product_
 
 class FavoriteService {
   final String baseUrl =
-      'http://192.168.1.8:5001/api/buyer/favorites'; // CORRECTED
+      'http://192.168.18.107:5001/api/buyer/favorites'; // CORRECTED
   final String? token;
 
   FavoriteService(this.token);

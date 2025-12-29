@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:wood_service/chats/Buyer/buyer_chating.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/favorite_button.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
@@ -410,14 +411,25 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
                 ),
               ),
             ),
+            // 🔥 FAVORITE & CHAT BUTTONS - Stacked Vertically
             Positioned(
               top: 8,
               right: 8,
-              child: FavoriteButton(
-                productId: product.id,
-                initialIsFavorited: product.isFavorited, // Use this instead
+              child: Column(
+                children: [
+                  // Favorite Button
+                  FavoriteButton(
+                    productId: product.id,
+                    initialIsFavorited: product.isFavorited,
+                  ),
+
+                  const SizedBox(height: 8), // Space between buttons
+                  // Chat Button
+                  _buildChatButton(product, context),
+                ],
               ),
             ),
+
             // Discount Badge
             if (hasDiscount && discount > 0)
               Positioned(
@@ -529,10 +541,10 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
                   children: [
                     Icon(Icons.star, size: 14, color: Colors.amber),
                     const SizedBox(width: 4),
-                    // Text(
-                    //   '${product.rating.toStringAsFixed(1)}',
-                    //   style: const TextStyle(fontSize: 12),
-                    // ),
+                    Text(
+                      '${product.rating}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '(${product.reviewCount ?? 0})',
@@ -550,10 +562,7 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) {
-                          return ProductDetailScreen(
-                            product: product,
-                            // cartViewModel: cartViewModel, // Pass it here
-                          );
+                          return ProductDetailScreen(product: product);
                         },
                       ),
                     );
@@ -568,6 +577,84 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
           ),
         ),
       ],
+    ),
+  );
+}
+
+// 🔥 CHAT BUTTON WIDGET
+Widget _buildChatButton(BuyerProductModel product, BuildContext context) {
+  return GestureDetector(
+    onTap: () {
+      _startChatWithSeller(product, context);
+    },
+    child: Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: const Center(
+        child: Icon(Icons.chat_outlined, size: 16, color: Colors.blue),
+      ),
+    ),
+  );
+}
+
+// 🔥 START CHAT FUNCTION
+void _startChatWithSeller(BuyerProductModel product, BuildContext context) {
+  // Check if seller info is available
+  if (product.sellerId == null || product.sellerName == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Seller information not available'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  // In your current onTap function
+  print('🔍 Debug:');
+  print('SellerId: ${product.sellerId}');
+  print('SellerId type: ${product.sellerId.runtimeType}');
+
+  String sellerIdString;
+  String sellerNameString;
+
+  // Handle the Map case
+  if (product.sellerId is Map) {
+    final sellerMap = product.sellerId as Map;
+    sellerIdString = sellerMap['id']?.toString() ?? 'unknown';
+    sellerNameString =
+        sellerMap['businessName']?.toString() ??
+        sellerMap['shopName']?.toString() ??
+        'Unknown Seller';
+  } else {
+    sellerIdString = product.sellerId.toString();
+    sellerNameString = product.sellerName;
+  }
+
+  print('✅ Extracted:');
+  print('   Seller ID: $sellerIdString');
+  print('   Seller Name: $sellerNameString');
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ChatScreen(
+        sellerId: sellerIdString,
+        sellerName: sellerNameString,
+        productId: product.id,
+        orderId: product.sku,
+      ),
     ),
   );
 }

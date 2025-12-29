@@ -160,6 +160,9 @@ class BuyerHomeViewModel with ChangeNotifier {
           reviewCount: fav.views,
           isFavorited: true,
           favoriteId: null,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          // sellerName : '',
         );
       }).toList();
     } catch (error) {

@@ -116,20 +116,24 @@ class AppColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+
+  static const Color primaryColor = Color(0xFF7B61FF);
+  static const Color secondaryColor = Color(0xFFFF6B6B);
+
   static Color getStatusColor(VisitStatus status) {
     switch (status) {
       case VisitStatus.pending:
-        return Color(0xFFFFA726);
+        return const Color(0xFFFFA726);
       case VisitStatus.accepted:
-        return Color(0xFF4D96FF);
-      case VisitStatus.contractSent:
-        return Color(0xFF9C27B0);
-      case VisitStatus.contractActive:
-        return Color(0xFF6BCF7F);
+        return const Color(0xFF66BB6A);
+      case VisitStatus.rejected:
+        return const Color(0xFFEF5350);
       case VisitStatus.completed:
-        return Color(0xFF4CAF50);
+        return const Color(0xFF42A5F5);
       case VisitStatus.cancelled:
-        return Color(0xFFFF6B6B);
+        return const Color(0xFF78909C);
+      case VisitStatus.noshow:
+        return const Color(0xFFAB47BC);
     }
   }
 }

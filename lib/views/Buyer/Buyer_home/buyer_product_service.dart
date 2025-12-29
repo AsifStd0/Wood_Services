@@ -4,12 +4,10 @@ import 'package:http/http.dart' as http;
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 
 class BuyerProductService {
-  final String baseUrl = 'http://192.168.1.8:5001/api/buyer/products';
+  final String baseUrl = 'http://192.168.18.107:5001/api/buyer/products';
 
   Future<List<BuyerProductModel>> getProducts() async {
     try {
-      print('🌐 API Call: $baseUrl');
-
       final response = await http.get(
         Uri.parse(baseUrl),
         headers: {
@@ -17,16 +15,11 @@ class BuyerProductService {
           'Accept': 'application/json',
         },
       );
-
-      print('📊 Status: ${response.statusCode}');
-      print('📊 Response Body: ${response.body}'); // Add this
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('🔍 Parsed JSON Data: $data'); // Add this
+        // print('🔍 Parsed JSON Data: $data'); // Add this
 
         if (data['success'] == true) {
-          print('✅ API returned success: true');
           if (data['products'] is List) {
             print('📦 Products list length: ${data['products'].length}');
 

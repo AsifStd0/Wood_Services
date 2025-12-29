@@ -1,8 +1,8 @@
-// main_screen.dart
+// lib/views/Buyer/Main/main_screen.dart
 import 'package:flutter/material.dart';
+import 'package:wood_service/buyer_seller_chat.dart'; // Import from correct file
 import 'package:wood_service/views/Buyer/Cart/cart_screen.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_screen.dart';
-import 'package:wood_service/views/Buyer/Messages/message_screen.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/home_screen.dart';
 import 'package:wood_service/views/Buyer/profile/profile.dart';
 
@@ -10,17 +10,17 @@ class BuyerMainScreen extends StatefulWidget {
   const BuyerMainScreen({super.key});
 
   @override
-  State<BuyerMainScreen> createState() => _MainScreenState();
+  State<BuyerMainScreen> createState() => _BuyerMainScreenState();
 }
 
-class _MainScreenState extends State<BuyerMainScreen> {
+class _BuyerMainScreenState extends State<BuyerMainScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
     BuyerHomeScreen(), // Index 0 - Home
     const FavoritesScreen(), // Index 1 - Favorites
     const BuyerCartScreen(), // Index 2 - Cart
-    const MessagesScreen(), // Index 3 - Messages
+    const ChatBuyer(), // Use ChatBuyer from buyer_seller_chat.dart
     const ProfileScreen(), // Index 4 - Profile
   ];
 
@@ -31,6 +31,8 @@ class _MainScreenState extends State<BuyerMainScreen> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
         onTap: (index) {
           setState(() {
             _currentIndex = index;

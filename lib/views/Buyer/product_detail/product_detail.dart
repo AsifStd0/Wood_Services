@@ -25,7 +25,7 @@ class ProductDetailScreen extends StatelessWidget {
         children: [
           /// MAIN CONTENT
           SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -35,14 +35,14 @@ class ProductDetailScreen extends StatelessWidget {
 
                 /// Basic Info
                 ProductBasicInfo(product: product),
-                const SizedBox(height: 16),
+                // const SizedBox(height: 16),
 
-                /// Size - Use Provider to update
-                SizeSelectionWidget(
-                  onSizeSelected: (size) {
-                    cartViewModel.updateSize(size);
-                  },
-                ),
+                // /// Size - Use Provider to update
+                // SizeSelectionWidget(
+                //   onSizeSelected: (size) {
+                //     cartViewModel.updateSize(size);
+                //   },
+                // ),
                 const SizedBox(height: 16),
 
                 /// Quantity & Stock - Use Provider to update

@@ -158,7 +158,6 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
             return buildProductCard(
               filteredProducts[index], // Pass BuyerProductModel directly
               context,
-              // viewModel,
             );
           },
         );

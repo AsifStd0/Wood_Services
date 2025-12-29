@@ -16,7 +16,7 @@ class FavoriteProvider extends ChangeNotifier {
 
   // ========== BASE URL ==========
   // Use ONE consistent base URL
-  static const String _baseUrl = 'http://192.168.1.8:5001';
+  static const String _baseUrl = 'http://192.168.18.107:5001';
 
   // ========== CONSTRUCTOR ==========
   FavoriteProvider(this._buyerLocalStorageService);
@@ -417,7 +417,7 @@ class FavoriteProvider extends ChangeNotifier {
 
 //       // Use the same base URL as your other API calls (192.168.1.15)
 //       final url = Uri.parse(
-//         'http://192.168.1.8:5001/api/buyer/favorites/toggle/$productId',
+//         'http://192.168.18.107:5001/api/buyer/favorites/toggle/$productId',
 //       );
 
 //       // Create a client with timeout
@@ -547,7 +547,7 @@ class FavoriteProvider extends ChangeNotifier {
   // String? get token => _token;
 //   bool get isAuthenticated => _token != null && _token!.isNotEmpty;
 
-//   final String baseUrl = 'http://192.168.1.8:5001/api/buyer/favorites';
+//   final String baseUrl = 'http://192.168.18.107:5001/api/buyer/favorites';
 
 //   Map<String, bool> _favoriteStatus = {}; // productId -> isFavorited
 //   Map<String, String> _favoriteIds = {}; // productId -> favoriteId

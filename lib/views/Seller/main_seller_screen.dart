@@ -1,6 +1,7 @@
+// lib/views/Seller/Main/main_seller_screen.dart
 import 'package:flutter/material.dart';
+import 'package:wood_service/buyer_seller_chat.dart'; // Import from correct file
 import 'package:wood_service/views/Seller/data/views/order_data/order_screen.dart';
-import 'package:wood_service/views/Seller/data/views/seller_chating/chat_screen.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/seller_home_screen.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/add_product_screen.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/seller_settings_screen.dart';
@@ -19,7 +20,7 @@ class _MainSellerScreenState extends State<MainSellerScreen> {
     const SellerHomeScreen(),
     const OrdersScreenSeller(),
     const AddProductScreen(),
-    const SellerChatingScreen(),
+    const ChatSeller(), // Use ChatSeller from buyer_seller_chat.dart
     const SellerSettingsScreen(),
   ];
 
@@ -37,6 +38,8 @@ class _MainSellerScreenState extends State<MainSellerScreen> {
         currentIndex: _currentIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(

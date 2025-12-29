@@ -7,7 +7,7 @@ void verifyRegistrations() {
   // List of URLs to try (YOUR SPECIFIC NETWORK)
   final possibleUrls = [
     'http://192.168.137.154:5000', // Your laptop, port 5000
-    'http://192.168.1.8:5001', // Your laptop, port 5001
+    'http://192.168.18.107:5001', // Your laptop, port 5001
     'http://192.168.137.154:5002', // Your laptop, port 5002
     'http://192.168.137.154:5003', // Your laptop, port 5003
     // Add other common ports if needed

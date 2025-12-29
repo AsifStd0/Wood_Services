@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Seller/data/models/visit_request_model.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/view_request_provider.dart';
+import 'package:wood_service/widgets/seller_custom_widget.dart';
 
 Widget buildFilterTabs(VisitRequestsViewModel viewModel) {
   return Container(
@@ -25,196 +25,16 @@ Widget buildFilterTabs(VisitRequestsViewModel viewModel) {
   );
 }
 
-Widget buildFilterTab(
-  String title,
-  VisitFilter filter,
-  VisitRequestsViewModel viewModel,
-) {
-  final isSelected = viewModel.currentFilter == filter;
-
-  return Expanded(
-    child: AnimatedContainer(
-      duration: Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        gradient: isSelected ? AppColors.primaryGradient : null,
-        color: isSelected ? null : Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: GestureDetector(
-        onTap: () => viewModel.setFilter(filter),
-        child: Text(
-          title,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[600],
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-Widget buildErrorState(VisitRequestsViewModel viewModel) {
-  return Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.error_outline_rounded,
-              size: 50,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Something Went Wrong',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey[800],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            viewModel.errorMessage,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey[600],
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: viewModel.loadVisitRequests,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF667EEA),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 2,
-              shadowColor: Color(0xFF667EEA).withOpacity(0.3),
-            ),
-            icon: const Icon(Icons.refresh_rounded, size: 22),
-            label: const Text(
-              'Try Again',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-Widget buildLoadingState() {
-  return Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            gradient: AppColors.primaryGradient,
-            shape: BoxShape.circle,
-          ),
-          child: const CircularProgressIndicator(
-            strokeWidth: 3,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-          ),
-        ),
-        const SizedBox(height: 20),
-        Text(
-          'Loading Visit Requests',
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.grey[700],
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Please wait while we fetch your requests',
-          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget buildEmptyState() {
-  return Center(
-    child: Padding(
-      padding: const EdgeInsets.all(40.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 150,
-            height: 150,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.assignment_outlined,
-              size: 60,
-              color: Colors.grey[400],
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'No Visit Requests',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'When you receive visit requests, they will appear here',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey[500],
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
 class VisitRequestCard extends StatelessWidget {
   final VisitRequest visitRequest;
 
-  const VisitRequestCard({required this.visitRequest});
+  const VisitRequestCard({Key? key, required this.visitRequest})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -228,12 +48,7 @@ class VisitRequestCard extends StatelessWidget {
         border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
       ),
       child: Padding(
-        padding: const EdgeInsets.only(
-          left: 10,
-          right: 10,
-          top: 10,
-          bottom: 10,
-        ),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -255,102 +70,24 @@ class VisitRequestCard extends StatelessWidget {
 
             const SizedBox(height: 15),
 
-            // Address Section
-            Row(
-              children: [
-                Container(
-                  width: 35,
-                  height: 35,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.location_on_rounded,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        visitRequest.address,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black87,
-                          height: 1.3,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'Request #${visitRequest.id}',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+            // Buyer Info
+            _buildBuyerInfo(),
 
-            const SizedBox(height: 5),
+            const SizedBox(height: 15),
 
-            // Status Info Card
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [
-                    AppColors.getStatusColor(
-                      visitRequest.status,
-                    ).withOpacity(0.05),
-                    AppColors.getStatusColor(
-                      visitRequest.status,
-                    ).withOpacity(0.02),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppColors.getStatusColor(
-                    visitRequest.status,
-                  ).withOpacity(0.1),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    _getStatusIcon(visitRequest.status),
-                    color: AppColors.getStatusColor(visitRequest.status),
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Status: ${visitRequest.statusText}',
-                      style: TextStyle(
-                        color: AppColors.getStatusColor(visitRequest.status),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Visit Details
+            _buildVisitDetails(),
+
+            const SizedBox(height: 15),
+
+            // Items
+            if (visitRequest.items.isNotEmpty) ...[
+              _buildItemsList(),
+              const SizedBox(height: 15),
+            ],
 
             // Action Buttons
-            _buildActionButtons(context, visitRequest),
-            SizedBox(height: 15),
+            _buildActionButtons(context),
           ],
         ),
       ),
@@ -378,24 +115,174 @@ class VisitRequestCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            _getStatusText(status),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
+      child: Text(
+        visitRequest.statusText,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBuyerInfo() {
+    return Row(
+      children: [
+        Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            gradient: AppColors.primaryGradient,
+            shape: BoxShape.circle,
           ),
+          child: const Icon(Icons.person, color: Colors.white, size: 24),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                visitRequest.buyerName,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                visitRequest.buyerPhone,
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              ),
+              Text(
+                visitRequest.buyerEmail,
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVisitDetails() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.location_on, color: AppColors.primaryColor, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  visitRequest.address,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                Icons.calendar_today,
+                color: AppColors.primaryColor,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${_formatDate(visitRequest.visitDate)} at ${visitRequest.visitTime}',
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+          if (visitRequest.instructions != null &&
+              visitRequest.instructions!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.note, color: AppColors.primaryColor, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    visitRequest.instructions!,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, VisitRequest visit) {
-    final buttons = _getActionButtons(context, visit);
+  Widget _buildItemsList() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Requested Items:',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+        ...visitRequest.items.map((item) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              children: [
+                if (item.productImage != null) ...[
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      image: DecorationImage(
+                        image: NetworkImage(item.productImage!),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.productName,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      Text(
+                        'Qty: ${item.quantity} × \$${item.price}',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    final buttons = _getActionButtons(context);
 
     if (buttons.isEmpty) return const SizedBox.shrink();
 
@@ -410,42 +297,37 @@ class VisitRequestCard extends StatelessWidget {
     );
   }
 
-  List<Widget> _getActionButtons(BuildContext context, VisitRequest visit) {
-    switch (visit.status) {
+  List<Widget> _getActionButtons(BuildContext context) {
+    switch (visitRequest.status) {
       case VisitStatus.pending:
         return [
           _buildActionButton(
-            'Accept Request',
-            Color(0xFF6BCF7F),
-            Icons.check_circle_rounded,
-            () => _handleStatusUpdate(context, visit.id, VisitStatus.accepted),
+            'Accept',
+            const Color(0xFF6BCF7F),
+            Icons.check,
+            () => _handleStatusUpdate(context, VisitStatus.accepted),
+          ),
+          _buildActionButton(
+            'Reject',
+            const Color(0xFFFF6B6B),
+            Icons.close,
+            () => _handleStatusUpdate(context, VisitStatus.rejected),
           ),
         ];
 
       case VisitStatus.accepted:
-      case VisitStatus.contractSent:
         return [
           _buildActionButton(
-            'Cancel Visit',
-            Color(0xFFFF6B6B),
-            Icons.cancel_rounded,
-            () => _handleStatusUpdate(context, visit.id, VisitStatus.cancelled),
+            'Mark as Completed',
+            const Color(0xFF4D96FF),
+            Icons.done_all,
+            () => _handleStatusUpdate(context, VisitStatus.completed),
           ),
-        ];
-
-      case VisitStatus.contractActive:
-        return [
           _buildActionButton(
             'Cancel',
-            Color(0xFFFF6B6B),
-            Icons.cancel_rounded,
-            () => _handleStatusUpdate(context, visit.id, VisitStatus.cancelled),
-          ),
-          _buildActionButton(
-            'Confirm Visit',
-            Color(0xFF4D96FF),
-            Icons.verified_rounded,
-            () => _handleStatusUpdate(context, visit.id, VisitStatus.completed),
+            const Color(0xFFFF6B6B),
+            Icons.cancel,
+            () => _handleStatusUpdate(context, VisitStatus.cancelled),
           ),
         ];
 
@@ -461,16 +343,20 @@ class VisitRequestCard extends StatelessWidget {
     VoidCallback onPressed,
   ) {
     return CustomButton(
-      onPressed: () {},
+      onPressed: onPressed,
       backgroundColor: color,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 18),
+          Icon(icon, size: 18, color: Colors.white),
           const SizedBox(width: 8),
           Text(
             text,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
           ),
         ],
       ),
@@ -480,51 +366,95 @@ class VisitRequestCard extends StatelessWidget {
   String _getFormattedDate(VisitRequest visit) {
     if (visit.status == VisitStatus.pending) {
       return visit.formattedRequestedDate;
-    } else {
+    } else if (visit.acceptedAt != null) {
       return visit.formattedAcceptedDate;
+    } else {
+      return _formatDate(visit.requestedAt);
     }
   }
 
-  String _getStatusText(VisitStatus status) {
-    switch (status) {
-      case VisitStatus.pending:
-        return 'Pending Review';
-      case VisitStatus.accepted:
-        return 'Accepted';
-      case VisitStatus.contractSent:
-        return 'Contract Sent';
-      case VisitStatus.contractActive:
-        return 'Active Contract';
-      case VisitStatus.completed:
-        return 'Completed';
-      case VisitStatus.cancelled:
-        return 'Cancelled';
-    }
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
   }
 
-  IconData _getStatusIcon(VisitStatus status) {
-    switch (status) {
-      case VisitStatus.pending:
-        return Icons.pending_actions_rounded;
-      case VisitStatus.accepted:
-        return Icons.check_circle_rounded;
-      case VisitStatus.contractSent:
-        return Icons.send_rounded;
-      case VisitStatus.contractActive:
-        return Icons.play_circle_fill_rounded;
-      case VisitStatus.completed:
-        return Icons.verified_rounded;
-      case VisitStatus.cancelled:
-        return Icons.cancel_rounded;
-    }
-  }
-
-  void _handleStatusUpdate(
-    BuildContext context,
-    String visitId,
-    VisitStatus newStatus,
-  ) {
-    final viewModel = context.read<VisitRequestsViewModel>();
-    viewModel.updateVisitStatus(visitId, newStatus);
+  void _handleStatusUpdate(BuildContext context, VisitStatus newStatus) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          newStatus == VisitStatus.accepted
+              ? 'Accept Visit Request?'
+              : newStatus == VisitStatus.rejected
+              ? 'Reject Visit Request?'
+              : newStatus == VisitStatus.completed
+              ? 'Mark as Completed?'
+              : 'Cancel Visit?',
+        ),
+        content: Text(
+          newStatus == VisitStatus.accepted
+              ? 'Are you sure you want to accept this visit request?'
+              : newStatus == VisitStatus.rejected
+              ? 'Are you sure you want to reject this visit request?'
+              : newStatus == VisitStatus.completed
+              ? 'Confirm that this visit has been completed.'
+              : 'Are you sure you want to cancel this visit?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final viewModel = context.read<VisitRequestsViewModel>();
+              try {
+                await viewModel.updateVisitStatus(
+                  visitRequest.orderId,
+                  newStatus,
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      newStatus == VisitStatus.accepted
+                          ? 'Visit request accepted!'
+                          : newStatus == VisitStatus.rejected
+                          ? 'Visit request rejected.'
+                          : newStatus == VisitStatus.completed
+                          ? 'Visit marked as completed.'
+                          : 'Visit cancelled.',
+                    ),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to update status: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: Text(
+              newStatus == VisitStatus.accepted
+                  ? 'Accept'
+                  : newStatus == VisitStatus.rejected
+                  ? 'Reject'
+                  : newStatus == VisitStatus.completed
+                  ? 'Complete'
+                  : 'Cancel',
+              style: TextStyle(
+                color:
+                    newStatus == VisitStatus.rejected ||
+                        newStatus == VisitStatus.cancelled
+                    ? Colors.red
+                    : AppColors.primaryColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

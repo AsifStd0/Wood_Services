@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:wood_service/core/theme/app_test_style.dart';
 import 'package:wood_service/views/Buyer/Service/profile_service.dart';
 import 'package:wood_service/views/Buyer/login.dart/buyer_login_screen.dart';
+import 'package:wood_service/views/splash/splash_screen.dart';
 
 Widget buildStatItem(String value, String label, IconData icon) {
   return Column(
@@ -261,7 +262,7 @@ Future<void> _performLogout(BuildContext context) async {
     // 2. Navigate to login
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => BuyerLoginScreen()),
+      MaterialPageRoute(builder: (context) => OnboardingScreen()),
       (route) => false,
     );
 

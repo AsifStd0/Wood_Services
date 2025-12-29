@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
-import 'package:wood_service/views/Buyer/Buyer_home/home_screen.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_model.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/Cart/cart_widget.dart';
@@ -221,7 +220,7 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
     BuyerCartItem item,
     int index,
   ) {
-    final cartViewModel = Provider.of<BuyerCartViewModel>(context);
+    // final cartViewModel = Provider.of<BuyerCartViewModel>(context);
     final product = item.product;
     final isOutOfStock = !item.isInStock;
 
@@ -459,55 +458,6 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
     );
   }
 
-  // Widget _buildHeaderBar(BuildContext context) {
-  //   final cartViewModel = Provider.of<BuyerCartViewModel>(context);
-
-  //   return Container(
-  //     color: Colors.white,
-  //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-  //     child: Row(
-  //       children: [
-  //         Column(
-  //           crossAxisAlignment: CrossAxisAlignment.start,
-  //           children: [
-  //             Text(
-  //               '${cartViewModel.cartCount} ${cartViewModel.cartCount == 1 ? "Item" : "Items"}',
-  //               style: const TextStyle(
-  //                 fontWeight: FontWeight.w700,
-  //                 fontSize: 14,
-  //               ),
-  //             ),
-  //             if (cartViewModel.outOfStockItems.isNotEmpty)
-  //               Text(
-  //                 '${cartViewModel.outOfStockItems.length} out of stock',
-  //                 style: const TextStyle(fontSize: 11, color: Colors.red),
-  //               ),
-  //           ],
-  //         ),
-  //         const Spacer(),
-  //         TextButton.icon(
-  //           onPressed: cartViewModel.cartItems.isEmpty
-  //               ? null
-  //               : () => clearCartConfirm(context),
-  //           icon: Icon(
-  //             Icons.delete_outline,
-  //             size: 18,
-  //             color: cartViewModel.cartItems.isEmpty ? Colors.grey : Colors.red,
-  //           ),
-  //           label: Text(
-  //             'Clear',
-  //             style: TextStyle(
-  //               color: cartViewModel.cartItems.isEmpty
-  //                   ? Colors.grey
-  //                   : Colors.red,
-  //             ),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   Widget _buildCheckoutSheet() {
     return AnimatedBuilder(
       animation: _sheetAnim,
@@ -624,7 +574,15 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
           value: _cartViewModel,
-          child: CheckoutScreen(),
+          // !!!!
+          // !!!!
+          // !!!!
+          // !!!!
+          // !!!!
+          // !!!!
+          // !!!!
+          // !!!!
+          child: CheckoutScreen(cartItems: []),
         ),
       ),
     );
