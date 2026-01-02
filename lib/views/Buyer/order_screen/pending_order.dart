@@ -1,70 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:wood_service/views/Buyer/order_screen/buyer_order_model.dart';
+import 'package:wood_service/views/Buyer/order_screen/buyer_order_provider.dart';
 
 class PendingOrdersTab extends StatelessWidget {
-  const PendingOrdersTab({super.key});
+  final List<BuyerOrder> orders;
+
+  const PendingOrdersTab({super.key, required this.orders});
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildOrderCard(
-          orderId: '#WOOD123',
-          productName: 'Teak Wood Planks - 10 pieces',
-          sellerName: 'Premium Timber Co.',
-          price: 299.99,
-          orderDate: '2024-01-15',
-          estimatedDelivery: '2024-01-20',
-          status: 'Pending',
-          statusColor: Colors.orange,
-          showActions: true,
-          context: context,
+    if (orders.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox, size: 80, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            const Text(
+              'No pending orders',
+              style: TextStyle(fontSize: 18, color: Colors.grey),
+            ),
+          ],
         ),
-        _buildOrderCard(
-          orderId: '#WOOD124',
-          productName: 'Mahogany Dining Table',
-          sellerName: 'Luxury Furniture',
-          price: 599.99,
-          orderDate: '2024-01-16',
-          estimatedDelivery: '2024-01-25',
-          status: 'Pending',
-          statusColor: Colors.orange,
-          showActions: true,
-          context: context,
-        ),
-        _buildOrderCard(
-          orderId: '#WOOD125',
-          productName: 'Oak Wood Chairs (Set of 4)',
-          sellerName: 'Wood Crafts',
-          price: 199.99,
-          orderDate: '2024-01-14',
-          estimatedDelivery: '2024-01-22',
-          status: 'Pending',
-          statusColor: Colors.orange,
-          showActions: true,
-          context: context,
-        ),
-      ],
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        // Implement refresh logic
+      },
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: orders.length,
+        itemBuilder: (context, index) {
+          return _buildOrderCard(context, orders[index]);
+        },
+      ),
     );
   }
 
-  Widget _buildOrderCard({
-    required String orderId,
-    required String productName,
-    required String sellerName,
-    required double price,
-    required String orderDate,
-    required String estimatedDelivery,
-    required String status,
-    required Color statusColor,
-    bool showActions = false,
-    required BuildContext context,
-  }) {
+  Widget _buildOrderCard(BuildContext context, BuyerOrder order) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -73,7 +54,7 @@ class PendingOrdersTab extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  orderId,
+                  '#${order.orderId}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -82,23 +63,37 @@ class PendingOrdersTab extends StatelessWidget {
                 ),
                 Chip(
                   label: Text(
-                    status,
+                    order.statusText,
                     style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
-                  backgroundColor: statusColor,
+                  backgroundColor: order.statusColor,
                 ),
               ],
             ),
             const SizedBox(height: 12),
 
             // Product Info
-            Text(
-              productName,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
+            if (order.items.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    order.items.first.productName,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (order.items.length > 1)
+                    Text(
+                      '+ ${order.items.length - 1} more item${order.items.length > 2 ? 's' : ''}',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                ],
+              ),
             const SizedBox(height: 4),
             Text(
-              'Seller: $sellerName',
+              'Items: ${order.itemsCount}',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
@@ -109,14 +104,7 @@ class PendingOrdersTab extends StatelessWidget {
                 Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 4),
                 Text(
-                  'Ordered: $orderDate',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-                const SizedBox(width: 16),
-                Icon(Icons.local_shipping, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(
-                  'Est: $estimatedDelivery',
+                  'Ordered: ${order.formattedDate}',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
@@ -128,47 +116,33 @@ class PendingOrdersTab extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '\$$price',
+                  order.formattedTotal,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.green,
                   ),
                 ),
-
-                if (showActions) ...[
-                  Row(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          _showOrderAction(context, orderId, 'accepted');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                        ),
-                        child: const Text(
-                          'Accept',
-                          style: TextStyle(color: Colors.white),
-                        ),
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => _cancelOrder(context, order),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                       ),
-                      const SizedBox(width: 8),
-                      OutlinedButton(
-                        onPressed: () {
-                          _showOrderAction(context, orderId, 'declined');
-                        },
-                        child: const Text('Decline'),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.white),
                       ),
-                    ],
-                  ),
-                ] else ...[
-                  TextButton(
-                    onPressed: () {
-                      // View order details
-                    },
-                    child: const Text('View Details'),
-                  ),
-                ],
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton(
+                      onPressed: () => _viewDetails(context, order),
+                      child: const Text('View Details'),
+                    ),
+                  ],
+                ),
               ],
             ),
           ],
@@ -177,50 +151,264 @@ class PendingOrdersTab extends StatelessWidget {
     );
   }
 
-  void _showOrderAction(BuildContext context, String orderId, String action) {
+  void _cancelOrder(BuildContext context, BuyerOrder order) async {
+    // Check if order can be cancelled
+    final statusLower = order.statusText.toLowerCase();
+    if (!['requested', 'pending'].contains(statusLower)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Cannot cancel order with status: ${order.statusText}'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    String? cancelReason = 'Changed my mind'; // Default reason
+
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('${action.capitalize()} Order'),
-          content: Text('Are you sure you want to $action order $orderId?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                // Handle order action
-                Navigator.of(context).pop();
-                _showActionSuccess(context, orderId, action);
-              },
-              child: Text(
-                action.capitalize(),
-                style: TextStyle(
-                  color: action == 'accepted' ? Colors.green : Colors.red,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Cancel Order'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Why are you cancelling this order?'),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: cancelReason,
+                  hint: const Text('Select reason'),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'Changed my mind',
+                      child: Text('Changed my mind'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Found better price',
+                      child: Text('Found better price'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Order placed by mistake',
+                      child: Text('Order placed by mistake'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Shipping takes too long',
+                      child: Text('Shipping takes too long'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Other',
+                      child: Text('Other reason'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      cancelReason = value;
+                    });
+                  },
                 ),
-              ),
+                if (cancelReason == 'Other') const SizedBox(height: 8),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Please specify',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) {
+                    cancelReason = value;
+                  },
+                ),
+              ],
             ),
-          ],
-        );
-      },
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Keep Order'),
+              ),
+              ElevatedButton(
+                onPressed: cancelReason != null && cancelReason!.isNotEmpty
+                    ? () => _confirmCancelOrder(context, order, cancelReason!)
+                    : null,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Cancel Order'),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
-  void _showActionSuccess(BuildContext context, String orderId, String action) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Order $orderId ${action} successfully!'),
-        backgroundColor: action == 'accepted' ? Colors.green : Colors.orange,
-      ),
+  void _confirmCancelOrder(
+    BuildContext context,
+    BuyerOrder order,
+    String reason,
+  ) async {
+    Navigator.pop(context); // Close dialog
+
+    final provider = context.read<BuyerOrderProvider>();
+
+    try {
+      // Show loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 12),
+              Text('Cancelling order...'),
+            ],
+          ),
+          backgroundColor: Colors.blue,
+          duration: const Duration(seconds: 30),
+        ),
+      );
+
+      // Call API to cancel order
+      final success = await provider.cancelOrder(order.orderId, reason);
+
+      // Remove loading snackbar
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      if (success) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Order cancelled successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Note: The provider already updates the list and summary
+        // No need to reload if you're using real-time updates
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to cancel order'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      // Remove loading snackbar
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${error.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _viewDetails(BuildContext context, BuyerOrder order) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => OrderDetailsScreen(order: order)),
     );
   }
 }
 
-// Extension for string capitalization
-extension StringExtension on String {
-  String capitalize() {
-    return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
+// Create a simple order details screen
+class OrderDetailsScreen extends StatelessWidget {
+  final BuyerOrder order;
+
+  const OrderDetailsScreen({super.key, required this.order});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Order #${order.orderId}')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Order Details',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDetailRow('Order ID', order.orderId),
+                  _buildDetailRow('Status', order.statusText),
+                  _buildDetailRow('Order Date', order.formattedDate),
+                  _buildDetailRow('Total Amount', order.formattedTotal),
+                  _buildDetailRow('Payment Method', order.paymentMethod),
+                  _buildDetailRow('Payment Status', order.paymentStatus),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Order Items',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  ...order.items.map((item) => _buildOrderItem(item)).toList(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderItem(OrderItem item) {
+    return ListTile(
+      leading: item.productImage != null
+          ? CircleAvatar(
+              backgroundImage: NetworkImage(item.productImage!),
+              radius: 24,
+            )
+          : const CircleAvatar(
+              backgroundColor: Colors.grey,
+              radius: 24,
+              child: Icon(Icons.image, color: Colors.white),
+            ),
+      title: Text(item.productName),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Seller: ${item.sellerName}'),
+          Text('Qty: ${item.quantity} × ${item.formattedUnitPrice}'),
+        ],
+      ),
+      trailing: Text(item.formattedSubtotal),
+    );
   }
 }

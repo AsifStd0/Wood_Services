@@ -13,6 +13,7 @@ class OrderRatingScreen extends StatefulWidget {
   final String? cartItemId;
   final int quantity;
   final String? productId;
+  final double? totalPrice;
 
   const OrderRatingScreen({
     super.key,
@@ -23,6 +24,7 @@ class OrderRatingScreen extends StatefulWidget {
     this.cartItemId,
     this.quantity = 1,
     this.productId,
+    this.totalPrice,
   });
 
   @override
@@ -137,20 +139,14 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
         context,
         listen: false,
       );
-
-      // Now we have the correct IDs from requestBuy response
-      // final orderId = widget.orderItemId; // This is ORDER ID now
-      final orderItemId = widget.orderItemId ?? '${widget.orderId}_ITEM';
-      final productId = widget.productId ?? widget.buyerProduct.id;
-
       debugPrint('🧾 Using ORDER ID: ${widget.orderId}');
-      debugPrint('🧾 Using ORDER ITEM ID: $orderItemId');
-      debugPrint('🧾 Using PRODUCT ID: $productId');
+      debugPrint('🧾 Using ORDER ITEM ID: ${widget.orderItemId}');
+      debugPrint('🧾 Using PRODUCT ID: ${widget.buyerProduct.id}');
 
       final result = await reviewProvider.submitReview(
         orderId: widget.orderId,
-        orderItemId: orderItemId,
-        productId: productId,
+        orderItemId: widget.orderItemId,
+        productId: widget.buyerProduct.id,
         rating: _selectedRating,
         title: _reviewController.text.isNotEmpty
             ? _reviewController.text.substring(
@@ -387,13 +383,6 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
                   },
                 ),
               );
-              // Navigator.of(context).push(
-              //   MaterialPageRoute(
-              //     builder: (_) {
-              //       return OrderConfirmationScreen();
-              //     },
-              //   ),
-              // );
             },
             child: const Text('Order Review'),
           ),

@@ -183,6 +183,7 @@ class BuyerSignupProvider extends ChangeNotifier {
 
       // ✅ Create buyer WITHOUT password in constructor
       final buyer = BuyerModel(
+        password: _password,
         fullName: _fullName,
         email: _email,
         businessName: _businessName.isNotEmpty ? _businessName : '',
@@ -195,21 +196,9 @@ class BuyerSignupProvider extends ChangeNotifier {
         profileCompleted: true,
         isActive: true,
       );
-
-      // Print data for debugging
-      print('=== SENDING TO NODE.JS API ===');
-      print('Full Name: $_fullName');
-      print('Email: $_email');
-      print(
-        'Password: $_password',
-      ); // Don't print actual password in production
-      print('Business Name: $_businessName');
-      print('Profile Image: ${_profileImage?.path}');
-
       // ✅ Call service with separate password parameter
-      final result = await _authService.registerBuyer(
+      final result = await _authService.registerBuyerServices(
         buyer: buyer,
-        // password: _password, // ✅ Pass password separately
         profileImage: _profileImage,
       );
 
@@ -266,20 +255,5 @@ class BuyerSignupProvider extends ChangeNotifier {
   void clearSuccess() {
     _successMessage = null;
     notifyListeners();
-  }
-
-  // Debug method
-  void printFormData() {
-    print('=== BUYER REGISTRATION DATA ===');
-    print('Full Name: $_fullName');
-    print('Email: $_email');
-    print('Business Name: $_businessName');
-    print('Contact Name: $_contactName');
-    print('Address: $_address');
-    print('Description: $_description');
-    print('Bank Name: $_bankName');
-    print('IBAN: $_iban');
-    print('Profile Image: ${_profileImage?.path}');
-    print('==============================');
   }
 }

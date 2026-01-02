@@ -295,10 +295,10 @@ class SellerAuthService {
 
       if (response.statusCode == 200) {
         final data = response.data;
-        log('----   iiii jjjj $data');
+        // log('----   iiii jjjj $data');
         final token = data['token'];
         final sellerJson = data['seller'];
-        log('lllll oooo  $sellerJson');
+        // log('lllll oooo  $sellerJson');
 
         if (token == null || sellerJson == null) {
           return Left(AuthFailure('Invalid server response'));
@@ -353,8 +353,10 @@ class SellerAuthService {
         return {'success': false, 'message': 'Not authenticated'};
       }
 
+      log('111');
       // ! Create FormData for multipart request
       final formData = FormData.fromMap(updates);
+      log('2222');
 
       // ! Add files if provided
       if (shopLogo != null) {
@@ -420,7 +422,8 @@ class SellerAuthService {
       log('🔄 Updating seller profile...');
 
       final response = await _dio.put(
-        '/api/seller/profileUpdate',
+        'http://192.168.18.107:5001/api/seller/auth/profileUpdate',
+
         data: formData,
         options: Options(
           headers: {
@@ -430,6 +433,7 @@ class SellerAuthService {
           contentType: 'multipart/form-data',
         ),
       );
+      log('333');
 
       log('📥 Update response: ${response.statusCode}');
 

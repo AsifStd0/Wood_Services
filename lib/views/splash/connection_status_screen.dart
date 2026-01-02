@@ -103,7 +103,7 @@ class _ConnectionStatusScreenState extends State<ConnectionStatusScreen> {
                     const ListTile(
                       leading: Icon(Icons.laptop, color: Colors.blue),
                       title: Text('Laptop IP'),
-                      subtitle: Text('192.168.18.107'),
+                      subtitle: Text('192.168.137.242'),
                     ),
                     const ListTile(
                       leading: Icon(Icons.phone_android, color: Colors.green),

@@ -1,5 +1,90 @@
 import 'package:flutter/material.dart';
 
+// Helper function to build settings tile
+Widget buildSettingsTile({
+  required IconData icon,
+  required String title,
+  required String subtitle,
+  required VoidCallback onTap,
+  required Color color,
+  Color textColor = Colors.black,
+  bool showData = false,
+}) {
+  return Container(
+    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.1),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: ListTile(
+      leading: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: color, size: 20),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: textColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 15,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(
+          color: showData ? Colors.brown : Colors.grey[600],
+          fontSize: showData ? 13 : 12,
+          fontWeight: showData ? FontWeight.w500 : FontWeight.normal,
+        ),
+      ),
+      trailing: Icon(
+        Icons.arrow_forward_ios_rounded,
+        size: 16,
+        color: Colors.grey[400],
+      ),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    ),
+  );
+}
+
+// Helper function to build settings section
+SliverToBoxAdapter buildSettingsSection(String title, List<Widget> children) {
+  return SliverToBoxAdapter(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 10),
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.brown,
+              letterSpacing: -0.3,
+            ),
+          ),
+        ),
+        ...children,
+        const SizedBox(height: 8),
+      ],
+    ),
+  );
+}
+
 Widget buildSwitchTile({
   required IconData icon,
   required String title,

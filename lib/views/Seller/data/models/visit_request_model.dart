@@ -37,25 +37,74 @@ class VisitRequest {
   });
 
   factory VisitRequest.fromJson(Map<String, dynamic> json) {
+    // Debug log to see what data you're getting
+    print('📥 Parsing order data: ${json.keys.toList()}');
+    print('📥 Order ID: ${json['orderId']}');
+    print('📥 Request Type: ${json['requestType']}');
+    print('📥 isVisitRequest: ${json['isVisitRequest']}');
+    print('📥 Visit Status: ${json['visitStatus']}');
+
+    // Handle address - could be String or Map
+    String address;
+    if (json['visitAddress'] is String) {
+      address = json['visitAddress'];
+    } else if (json['visitAddress'] is Map) {
+      final addr = json['visitAddress'] as Map<String, dynamic>;
+      address = '${addr['street'] ?? ''}, ${addr['city'] ?? ''}';
+    } else if (json['deliveryAddress'] is Map) {
+      final addr = json['deliveryAddress'] as Map<String, dynamic>;
+      address = '${addr['street'] ?? ''}, ${addr['city'] ?? ''}';
+    } else {
+      address = 'Address not specified';
+    }
+
+    // Handle date - could be string or already DateTime
+    DateTime visitDate;
+    if (json['visitDate'] is String) {
+      visitDate = DateTime.parse(json['visitDate']);
+    } else if (json['visitDate'] is DateTime) {
+      visitDate = json['visitDate'];
+    } else {
+      visitDate = DateTime.now().add(const Duration(days: 1));
+    }
+
     return VisitRequest(
-      id: json['_id'] ?? json['orderId'],
-      orderId: json['orderId'],
+      id: json['_id'] ?? json['orderId'] ?? 'unknown',
+      orderId: json['orderId'] ?? 'unknown',
       buyerName: json['buyerName'] ?? 'Unknown Buyer',
       buyerPhone: json['buyerPhone'] ?? '',
       buyerEmail: json['buyerEmail'] ?? '',
-      address: json['visitAddress'] is String
-          ? json['visitAddress']
-          : '${json['visitAddress']?['street'] ?? ''}, ${json['visitAddress']?['city'] ?? ''}',
-      visitDate: DateTime.parse(json['visitDate']),
-      visitTime: json['visitTime'] ?? '',
-      status: _parseVisitStatus(json['visitStatus'] ?? json['status']),
-      instructions: json['visitInstructions'],
+      address: address,
+      visitDate: visitDate,
+      visitTime: json['visitTime'] ?? '10:00 AM',
+      status: _parseVisitStatus(
+        json['visitStatus'] ?? json['status'] ?? 'pending',
+      ),
+      instructions: json['visitInstructions'] ?? json['deliveryInstructions'],
       items:
-          (json['items'] as List<dynamic>?)
-              ?.map((item) => OrderItem.fromJson(item))
-              .toList() ??
+          (json['items'] as List<dynamic>?)?.map((item) {
+            // Handle both product object and simple data
+            final productId =
+                item['productId']?['_id'] ?? item['productId'] ?? '';
+            final productName =
+                item['productName'] ??
+                item['productId']?['title'] ??
+                'Unknown Product';
+
+            return OrderItem(
+              productId: productId.toString(),
+              productName: productName.toString(),
+              productImage:
+                  item['productImage'] ??
+                  item['productId']?['featuredImage']?.toString(),
+              quantity: item['quantity'] ?? 1,
+              price: (item['unitPrice'] ?? item['price'] ?? 0).toDouble(),
+            );
+          }).toList() ??
           [],
-      requestedAt: DateTime.parse(json['requestedAt']),
+      requestedAt: DateTime.parse(
+        json['requestedAt'] ?? DateTime.now().toIso8601String(),
+      ),
       acceptedAt: json['acceptedAt'] != null
           ? DateTime.parse(json['acceptedAt'])
           : null,

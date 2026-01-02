@@ -216,70 +216,132 @@ class MinimalQuantityStockWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get selected quantity from Provider
-    final selectedQuantity = context.select<BuyerCartViewModel, int>(
-      (viewModel) => viewModel.selectedQuantity,
-    );
+    final cartViewModel = context.watch<BuyerCartViewModel>();
+    final selectedQuantity = cartViewModel.selectedQuantity;
+    final totalPrice = cartViewModel.getCurrentProductTotal(product);
 
     final maxQuantity = product.stockQuantity;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    // Calculate prices
+    final double unitPrice = product.finalPrice;
+    // final double subtotal = unitPrice * selectedQuantity;
+    // final double taxAmount = (product.taxRate ?? 0) * subtotal / 100;
+    // final double total = subtotal + taxAmount;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        // Quantity Selection Row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            CustomText(
-              'Quantity',
-              type: CustomTextType.buttonMedium,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Quantity',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Available: $maxQuantity',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+
+            // Quantity Selector
+            Spacer(),
+            Text("\$${unitPrice.toStringAsFixed(2)}"),
+            SizedBox(width: 5),
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xffF6DCC9),
+                borderRadius: BorderRadius.circular(25),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Row(
+                children: [
+                  // Decrement
+                  _buildButton(
+                    icon: Icons.remove,
+                    isEnabled: selectedQuantity > 1,
+                    onTap: () {
+                      onQuantityChanged(selectedQuantity - 1);
+                    },
+                    isLeft: true,
+                  ),
+
+                  // Quantity Display
+                  Container(
+                    width: 40,
+                    height: 36,
+                    child: Center(
+                      child: Text(
+                        '$selectedQuantity',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Increment
+                  _buildButton(
+                    icon: Icons.add,
+                    isEnabled: selectedQuantity < maxQuantity,
+                    onTap: () {
+                      onQuantityChanged(selectedQuantity + 1);
+                    },
+                    isLeft: false,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
 
-        // Quantity Selector
+        const SizedBox(height: 10),
+
+        // Price Breakdown
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xffF6DCC9),
-            borderRadius: BorderRadius.circular(25),
-            border: Border.all(color: Colors.grey[300]!),
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[200]!),
           ),
-          child: Row(
+          child: Column(
             children: [
-              // Decrement
-              _buildButton(
-                icon: Icons.remove,
-                isEnabled: selectedQuantity > 1,
-                onTap: () {
-                  onQuantityChanged(selectedQuantity - 1);
-                },
-                isLeft: true,
-              ),
-
-              // Quantity Display
+              // Show total preview
               Container(
-                width: 40,
-                height: 36,
-                child: Center(
-                  child: Text(
-                    '$selectedQuantity',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                margin: const EdgeInsets.only(top: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ),
-
-              // Increment
-              _buildButton(
-                icon: Icons.add,
-                isEnabled: selectedQuantity < maxQuantity,
-                onTap: () {
-                  onQuantityChanged(selectedQuantity + 1);
-                },
-                isLeft: false,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Total for $selectedQuantity item${selectedQuantity > 1 ? 's' : ''}:',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.blue[800],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      '\$${totalPrice.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -294,30 +356,58 @@ class MinimalQuantityStockWidget extends StatelessWidget {
     required VoidCallback onTap,
     required bool isLeft,
   }) {
-    return GestureDetector(
-      onTap: isEnabled ? onTap : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: isEnabled ? null : Colors.transparent,
-          borderRadius: isLeft
-              ? const BorderRadius.only(
-                  topLeft: Radius.circular(25),
-                  bottomLeft: Radius.circular(25),
-                )
-              : const BorderRadius.only(
-                  topRight: Radius.circular(25),
-                  bottomRight: Radius.circular(25),
-                ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: isEnabled ? onTap : null,
+        borderRadius: BorderRadius.horizontal(
+          left: isLeft ? const Radius.circular(25) : Radius.zero,
+          right: !isLeft ? const Radius.circular(25) : Radius.zero,
         ),
-        child: Icon(
-          icon,
-          color: isEnabled ? Colors.black : Colors.grey[400],
-          size: 18,
+        child: Container(
+          width: 40,
+          height: 36,
+          decoration: BoxDecoration(
+            color: isEnabled ? Colors.transparent : Colors.grey[200],
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: isEnabled ? Colors.black : Colors.grey[400],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPriceRow({
+    required String label,
+    required String value,
+    bool isHighlighted = false,
+    bool isTotal = false,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: isTotal ? 15 : 14,
+            fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+            color: isHighlighted ? Colors.black : Colors.grey[700],
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isTotal ? 18 : 14,
+            fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
+            color: isTotal
+                ? Colors.green[700]
+                : (isHighlighted ? Colors.blue : Colors.black),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -329,6 +419,7 @@ class ProductActionButtons extends StatelessWidget {
   final int selectedQuantity;
   final String? selectedSize;
   final String? selectedVariant;
+  final double? totalPrice;
 
   const ProductActionButtons({
     super.key,
@@ -337,10 +428,12 @@ class ProductActionButtons extends StatelessWidget {
     required this.selectedQuantity,
     required this.selectedSize,
     required this.selectedVariant,
+    required this.totalPrice,
   });
 
   @override
   Widget build(BuildContext context) {
+    log('message $totalPrice');
     return Container(
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
       child: Row(
@@ -366,10 +459,16 @@ class ProductActionButtons extends StatelessWidget {
                   log('   Product ID: ${product.id}');
                   log('   Quantity: $selectedQuantity');
                   log('   Size: $selectedSize');
-                  log('   Variant: $selectedVariant');
+                  log('   Variant: $selectedVariant ');
+                  log('totalPrice. ');
+                  log('message $totalPrice');
 
                   await cartViewModel.addToCart(
                     productId: product.id,
+                    quantity: selectedQuantity,
+
+                    selectedSize: '',
+                    selectedVariant: '',
                     // Quantity, size, variant will be taken from viewModel's state
                   );
 
@@ -400,7 +499,12 @@ class ProductActionButtons extends StatelessWidget {
               borderRadius: 6,
               onPressed: () async {
                 try {
-                  showCartBottomSheet(context, selectedQuantity, product);
+                  showCartBottomSheet(
+                    context,
+                    selectedQuantity,
+                    product,
+                    totalPrice!,
+                  );
                 } catch (error) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -655,6 +759,7 @@ void showCartBottomSheet(
   BuildContext context,
   int count,
   BuyerProductModel buyerProduct,
+  double totalPrice,
 ) {
   showModalBottomSheet(
     context: context,
@@ -663,7 +768,10 @@ void showCartBottomSheet(
     constraints: BoxConstraints(
       maxHeight: MediaQuery.of(context).size.height * 0.9,
     ),
-    builder: (context) =>
-        CartBottomSheet(count: count, buyerProduct: buyerProduct),
+    builder: (context) => CartBottomSheet(
+      count: count,
+      buyerProduct: buyerProduct,
+      totalPrice: totalPrice,
+    ),
   );
 }

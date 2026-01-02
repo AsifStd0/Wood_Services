@@ -68,8 +68,6 @@ class SellerModel {
   // 1. LOCAL STORAGE format (from shared preferences)
   // 2. API RESPONSE format (from server)
   factory SellerModel.fromJson(Map<String, dynamic> json) {
-    print('🔍 DEBUG SellerModel.fromJson input keys: ${json.values.toList()}');
-
     // ========== 1. Handle PHONE ==========
     String phone = '';
     String countryCode = '+1';
@@ -81,11 +79,9 @@ class SellerModel {
         countryCode = phoneObj['countryCode']?.toString() ?? '+1';
         final number = phoneObj['number']?.toString() ?? '';
         phone = '$countryCode$number';
-        print('📱 Phone from API object: $phone (countryCode: $countryCode)');
       } else if (json['phone'] is String) {
         // LOCAL STORAGE format: "+11234567890"
         phone = json['phone'] as String;
-        print('📱 Phone from string: $phone');
       }
     } else {
       // Try to get phone from direct fields
@@ -99,7 +95,7 @@ class SellerModel {
       if (json['categories'] is List) {
         // API RESPONSE format: ["category1", "category2"]
         categories = List<String>.from(json['categories']);
-        print('🏷️ Categories from list: $categories');
+        // print('🏷️ Categories from list: $categories');
       } else if (json['categories'] is String) {
         // LOCAL STORAGE format: JSON string or comma-separated
         try {
@@ -111,7 +107,7 @@ class SellerModel {
           // If can't parse, treat as single category
           categories = [json['categories'] as String];
         }
-        print('🏷️ Categories from string: $categories');
+        // print('🏷️ Categories from string: $categories');
       }
     }
 
@@ -127,13 +123,13 @@ class SellerModel {
       bankName = bankDetails['bankName']?.toString() ?? '';
       accountNumber = bankDetails['accountNumber']?.toString() ?? '';
       iban = bankDetails['iban']?.toString() ?? '';
-      print('🏦 Bank details from API object');
+      // print('🏦 Bank details from API object');
     } else {
       // LOCAL STORAGE format: direct fields
       bankName = json['bankName']?.toString() ?? '';
       accountNumber = json['accountNumber']?.toString() ?? '';
       iban = json['iban']?.toString() ?? '';
-      print('🏦 Bank details from direct fields');
+      // print('🏦 Bank details from direct fields');
     }
 
     // ========== 4. Handle SHOP LOGO (File from path or URL) ==========
@@ -146,18 +142,18 @@ class SellerModel {
         if (logoUrl != null && logoUrl.isNotEmpty) {
           // For API response, we might not want to create a File from URL
           // But we can store the URL for display
-          print('🖼️ Shop logo URL from API: $logoUrl');
+          // print('🖼️ Shop logo URL from API: $logoUrl');
           // shopLogo = File(logoUrl); // Only if you want to download it
         }
       } else if (json['shopLogo'] is String) {
         // LOCAL STORAGE format: file path string
         shopLogo = File(json['shopLogo'] as String);
-        print('🖼️ Shop logo from path: ${shopLogo?.path}');
+        // print('🖼️ Shop logo from path: ${shopLogo?.path}');
       }
     } else if (json['shopLogoPath'] != null) {
       // Fallback to local storage path
       shopLogo = File(json['shopLogoPath'] as String);
-      print('🖼️ Shop logo from shopLogoPath: ${shopLogo?.path}');
+      // print('🖼️ Shop logo from shopLogoPath: ${shopLogo?.path}');
     }
 
     // ========== 5. Handle SHOP BANNER ==========
@@ -167,15 +163,15 @@ class SellerModel {
         final bannerObj = json['shopBanner'] as Map<String, dynamic>;
         final bannerUrl = bannerObj['url']?.toString();
         if (bannerUrl != null && bannerUrl.isNotEmpty) {
-          print('🖼️ Shop banner URL from API: $bannerUrl');
+          // print('🖼️ Shop banner URL from API: $bannerUrl');
         }
       } else if (json['shopBanner'] is String) {
         shopBanner = File(json['shopBanner'] as String);
-        print('🖼️ Shop banner from path: ${shopBanner?.path}');
+        // print('🖼️ Shop banner from path: ${shopBanner?.path}');
       }
     } else if (json['shopBannerPath'] != null) {
       shopBanner = File(json['shopBannerPath'] as String);
-      print('🖼️ Shop banner from shopBannerPath: ${shopBanner?.path}');
+      // print('🖼️ Shop banner from shopBannerPath: ${shopBanner?.path}');
     }
 
     // ========== 6. Handle DOCUMENTS ==========

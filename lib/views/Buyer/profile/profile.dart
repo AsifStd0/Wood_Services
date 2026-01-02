@@ -304,19 +304,12 @@ class _ProfileScreenState extends State<ProfileScreen>
               );
             },
 
-            //  => GoRouter.of(context).push('/orders'),
-            showBadge: true,
-            badgeCount: 3,
-            // gradient: [Colors.blue.shade400, Colors.blue.shade600],
+            // //  => GoRouter.of(context).push('/orders'),
+            // showBadge: true,
+            // badgeCount: 3,
+            // // gradient: [Colors.blue.shade400, Colors.blue.shade600],
           ),
-          buildMenuTile(
-            context: context,
-            icon: Icons.receipt_long_outlined,
-            title: 'Order History',
-            subtitle: 'Complete purchase history',
-            onTap: () {},
-            // gradient: [Colors.green.shade400, Colors.green.shade600],
-          ),
+
           buildMenuTile(
             context: context,
             icon: Icons.assignment_return_outlined,

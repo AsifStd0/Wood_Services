@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_model.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_services.dart';
 
@@ -89,14 +90,13 @@ class BuyerCartViewModel with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> addToCart({
+  Future<Map<String, dynamic>?> addToCart({
     required String productId,
-    int? quantity, // Optional - use selectedQuantity if not provided
-    String? selectedVariant, // Optional - use _selectedVariant if not provided
-    String? selectedSize, // Optional - use _selectedSize if not provided
+    int? quantity,
+    String? selectedVariant,
+    String? selectedSize,
   }) async {
     try {
-      // Use provided values or fall back to stored selections
       final finalQuantity = quantity ?? _selectedQuantity;
       final finalVariant = selectedVariant ?? _selectedVariant;
       final finalSize = selectedSize ?? _selectedSize;
@@ -107,20 +107,17 @@ class BuyerCartViewModel with ChangeNotifier {
       log('   Size: $finalSize');
       log('   Variant: $finalVariant');
 
-      final result = await _cartService.addToCart(
+      final result = await _cartService.addToCartService(
         productId: productId,
         quantity: finalQuantity,
         selectedVariant: finalVariant,
         selectedSize: finalSize,
       );
 
-      // Reload cart to get updated data
       await loadCart();
-
-      // Reset selection after adding to cart
       resetSelection();
 
-      return result;
+      return result; // Can return null
     } catch (error) {
       log('❌ Add to cart error in VM: $error');
       rethrow;
@@ -205,4 +202,37 @@ class BuyerCartViewModel with ChangeNotifier {
   void disposeStream() {
     _cartStreamController.close();
   }
+
+  // *****
+  // In BuyerCartViewModel
+  double getCurrentProductTotal(BuyerProductModel product) {
+    final unitPrice = product.finalPrice;
+    final subtotal = unitPrice * _selectedQuantity;
+    final taxAmount = (product.taxRate ?? 0) * subtotal / 100;
+    return subtotal + taxAmount;
+  }
+
+  // ! ******
+  // // In BuyerCartViewModel class, add this method:
+  // Map<String, dynamic> getProductPriceDetails(BuyerProductModel product) {
+  //   final unitPrice = product.finalPrice;
+  //   final subtotal = unitPrice * _selectedQuantity;
+  //   final taxRate = product.taxRate ?? 0;
+  //   final taxAmount = taxRate * subtotal / 100;
+  //   final total = subtotal + taxAmount;
+
+  //   return {
+  //     'unitPrice': unitPrice,
+  //     'quantity': _selectedQuantity,
+  //     'subtotal': subtotal,
+  //     'taxRate': taxRate,
+  //     'taxAmount': taxAmount,
+  //     'total': total,
+  //     'formattedTotal': '\$${total.toStringAsFixed(2)}',
+  //     'breakdownText':
+  //         '${_selectedQuantity} × \$${unitPrice.toStringAsFixed(2)} = \$${subtotal.toStringAsFixed(2)}' +
+  //         (taxRate > 0 ? ' + \$${taxAmount.toStringAsFixed(2)} tax' : '') +
+  //         ' = \$${total.toStringAsFixed(2)} total',
+  //   };
+  // }
 }

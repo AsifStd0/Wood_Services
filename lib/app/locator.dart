@@ -18,19 +18,22 @@ import 'package:wood_service/views/Buyer/Buyer_home/buyer_product_service.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_services.dart';
 import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_auth_services.dart';
+import 'package:wood_service/views/Buyer/order_screen/buyer_order_repository.dart';
 import 'package:wood_service/views/Buyer/payment/cart_data/cart_services.dart';
 import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
 import 'package:wood_service/views/Buyer/Service/profile_service.dart';
 import 'package:wood_service/views/Seller/data/services/seller_auth.dart';
-import 'package:wood_service/views/Seller/data/services/shop_service.dart';
-import 'package:wood_service/views/Seller/data/repository/order_repo.dart';
 import 'package:wood_service/views/Seller/data/repository/seller_product_repo.dart';
+import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
+import 'package:wood_service/views/Seller/data/views/order_data/order_repository_seller.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home/view_request_provider.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home/visit_repository.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 import 'package:wood_service/views/Seller/seller_login.dart/login_view_model.dart';
 import 'package:wood_service/views/Seller/signup.dart/seller_signup_provider.dart';
 
 final GetIt locator = GetIt.instance;
-// final appMainUrl =
+
 Future<void> setupLocator() async {
   log('🚀 Setting up dependency injection with SEPARATE storage...');
 
@@ -51,6 +54,7 @@ Future<void> setupLocator() async {
   final dio = Dio(
     BaseOptions(
       baseUrl: 'http://192.168.18.107:5001',
+
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       headers: {
@@ -77,7 +81,6 @@ Future<void> setupLocator() async {
   locator.registerSingleton<SellerAuthService>(
     SellerAuthService(locator<Dio>(), locator<SellerLocalStorageService>()),
   );
-
   log('✅ SellerAuthService registered');
 
   locator.registerFactory<SellerSignupViewModel>(
@@ -91,14 +94,17 @@ Future<void> setupLocator() async {
   );
   log('✅ SellerLoginViewModel registered');
 
-  // locator.registerSingleton<ShopService>(ShopService());
-  log('✅ ShopService registered');
-
   // ========== STEP 4: Register Seller Repositories ==========
   locator.registerSingleton<ProductRepository>(MockProductRepository());
   log('✅ ProductRepository registered');
 
-  locator.registerSingleton<OrderRepository>(MockOrderRepository());
+  // ✅ ADD THIS: Register OrderRepository FIRST
+  locator.registerSingleton<OrderRepository>(
+    ApiOrderRepository(
+      dio: locator<Dio>(),
+      storageService: locator<SellerLocalStorageService>(),
+    ),
+  );
   log('✅ OrderRepository registered');
 
   // ========== STEP 5: Register Seller Providers ==========
@@ -110,7 +116,35 @@ Future<void> setupLocator() async {
   );
   log('✅ SelllerSettingProvider registered');
 
-  // ========== STEP 6: Register Buyer Services ==========
+  // ========== STEP 6: Register Visit Repository ==========
+  locator.registerSingleton<VisitRepository>(
+    ApiVisitRepository(
+      dio: locator<Dio>(),
+      storageService: locator<SellerLocalStorageService>(),
+    ),
+  );
+  log('✅ VisitRepository registered');
+
+  // ========== STEP 7: Register ViewModels (Lazy Singletons) ==========
+  locator.registerLazySingleton<VisitRequestsViewModel>(
+    () => VisitRequestsViewModel(locator<VisitRepository>()),
+  );
+  log('✅ VisitRequestsViewModel registered');
+
+  // ✅ ADD THIS: Register OrdersViewModel in locator too
+  locator.registerLazySingleton<OrdersViewModel>(
+    () => OrdersViewModel(locator<OrderRepository>()),
+  );
+  log('✅ OrdersViewModel registered');
+  // Register Buyer Order Repository
+  locator.registerLazySingleton(
+    () => ApiBuyerOrderRepository(
+      storageService: locator<BuyerLocalStorageService>(),
+      baseUrl: 'http://192.168.18.107:5001', // or your base URL
+    ),
+  );
+
+  // ========== STEP 8: Register Buyer Services ==========
   locator.registerLazySingleton(
     () => BuyerAuthService(locator<Dio>(), locator<BuyerLocalStorageService>()),
   );
@@ -127,15 +161,15 @@ Future<void> setupLocator() async {
 
   locator.registerLazySingleton(() => BuyerCartService());
   locator.registerLazySingleton(() => BuyerCartViewModel());
-  // !  ********* Chat
+
+  // ========== CHAT & CART SERVICES ==========
   locator.registerLazySingleton(() => ChatService());
   locator.registerLazySingleton(() => SocketService());
   locator.registerLazySingleton(() => CartServices());
 
-  // These should be registered in providers.dart using ChangeNotifierProvider
-
   log('🎉 All dependencies registered!');
 }
+// ! ********
 // import 'dart:developer';
 // import 'package:dio/dio.dart';
 // import 'package:get_it/get_it.dart';

@@ -122,67 +122,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: CustomAppBar(
-        title: 'My Favorites',
-        showBackButton: false,
-        actions: [
-          Row(
-            children: [
-              if (_favoriteProducts.isNotEmpty)
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: _showClearAllDialog,
-                  tooltip: 'Clear All',
-                ),
-            ],
-          ),
-        ],
-      ),
+      appBar: CustomAppBar(title: 'My Favorites', showBackButton: false),
       body: _isLoading && _favoriteProducts.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : _favoriteProducts.isEmpty
-          ? _buildEmptyView()
+          ? buildEmptyView()
           : _buildFavoritesGrid(context, totalFavorites),
-    );
-  }
-
-  Widget _buildEmptyView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.favorite_border_rounded,
-            size: 80,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'No Favorites Yet',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40),
-            child: Text(
-              'Tap the heart icon on any product to add it to your favorites',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.brown,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-            ),
-            child: const Text('Browse Products'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -191,7 +136,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       onRefresh: () => _loadFavorites(refresh: true),
       child: CustomScrollView(
         slivers: [
-          // Header with count
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -366,7 +310,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             // Product Details
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -376,7 +320,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        height: 1.2,
+                        height: 1,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -553,6 +497,26 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               }
             },
             child: const Text('Clear All', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildEmptyView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.favorite_border_rounded,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'No Favorites Yet',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ],
       ),

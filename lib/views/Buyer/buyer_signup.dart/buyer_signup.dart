@@ -442,10 +442,6 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
           onPressed: () async {
             // Hide keyboard
             FocusScope.of(context).unfocus();
-
-            // Print form data for debugging
-            // provider.printFormData();
-
             // Submit registration
             final result = await provider.registerBuyer();
 

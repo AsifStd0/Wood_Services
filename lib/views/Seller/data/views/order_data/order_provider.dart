@@ -1,20 +1,18 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:wood_service/views/Seller/data/models/order.dart';
+import 'package:wood_service/views/Seller/data/views/order_data/order_model.dart';
+import 'package:wood_service/views/Seller/data/views/order_data/order_repository_seller.dart';
 
-import '../../repository/order_repo.dart';
-
-// lib/presentation/view_models/orders_view_model.dart
 class OrdersViewModel with ChangeNotifier {
   final OrderRepository _repository;
-  int amount = 20;
 
   OrdersViewModel(this._repository);
 
-  List<OrderDataModel> _orders = [];
-  List<OrderDataModel> get orders => _orders;
+  List<OrderModelSeller> _orders = [];
+  List<OrderModelSeller> get orders => _orders;
 
-  List<OrderDataModel> _filteredOrders = [];
-  List<OrderDataModel> get filteredOrders => _filteredOrders;
+  List<OrderModelSeller> _filteredOrders = [];
+  List<OrderModelSeller> get filteredOrders => _filteredOrders;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -23,137 +21,148 @@ class OrdersViewModel with ChangeNotifier {
   String get errorMessage => _errorMessage;
   bool get hasError => _errorMessage.isNotEmpty;
 
+  OrderStatus? _selectedStatus;
+  OrderStatus? get selectedStatus => _selectedStatus;
+
   String _searchQuery = '';
   String get searchQuery => _searchQuery;
 
-  OrderStatus? _statusFilter;
-  OrderStatus? get statusFilter => _statusFilter;
+  // Statistics
+  int _totalOrders = 0;
+  int _pendingOrders = 0;
+  int _acceptedOrders = 0;
+  int _completedOrders = 0;
 
-  Future<void> loadOrders() async {
+  int get totalOrders => _totalOrders;
+  int get pendingOrders => _pendingOrders;
+  int get acceptedOrders => _acceptedOrders;
+  int get completedOrders => _completedOrders;
+
+  Future<void> loadOrders({String? status, String? type}) async {
     _isLoading = true;
     _errorMessage = '';
     notifyListeners();
 
     try {
-      _orders = await _repository.getOrders();
+      log('🔄 Loading orders from API...');
+
+      // Convert OrderStatus to string for API
+      String? statusValue;
+      if (_selectedStatus != null) {
+        statusValue = _selectedStatus!.value;
+      }
+
+      _orders = await _repository.getOrders(status: statusValue, type: type);
+
+      // Load statistics
+      await _loadStatistics();
+
       _applyFilters();
+      log('✅ Loaded ${_orders.length} orders');
     } catch (e) {
       _errorMessage = 'Failed to load orders: $e';
+      log('❌ Error loading orders: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  void searchOrders(String query) {
-    _searchQuery = query;
-    _applyFilters();
-  }
-
-  void filterByStatus(OrderStatus? status) {
-    _statusFilter = status;
-    _applyFilters();
-  }
-
-  void _applyFilters() {
-    List<OrderDataModel> result = _orders;
-
-    // Apply search filter
-    if (_searchQuery.isNotEmpty) {
-      result = result.where((order) {
-        return order.orderNumber.toLowerCase().contains(
-              _searchQuery.toLowerCase(),
-            ) ||
-            order.customerName.toLowerCase().contains(
-              _searchQuery.toLowerCase(),
-            );
-      }).toList();
+  Future<void> _loadStatistics() async {
+    try {
+      final stats = await _repository.getOrderStatistics();
+      _totalOrders = stats['totalOrders'] ?? 0;
+      _pendingOrders = stats['pendingOrders'] ?? 0;
+      _acceptedOrders = stats['acceptedOrders'] ?? 0;
+      _completedOrders = stats['completedOrders'] ?? 0;
+    } catch (e) {
+      log('❌ Error loading statistics: $e');
     }
-
-    // Apply status filter
-    if (_statusFilter != null) {
-      result = result.where((order) => order.status == _statusFilter).toList();
-    }
-
-    _filteredOrders = result;
-    notifyListeners();
   }
 
   Future<void> updateOrderStatus(String orderId, OrderStatus newStatus) async {
     try {
-      await _repository.updateOrderStatus(orderId, newStatus);
-      await loadOrders(); // Reload to get updated data
+      log('🔄 Updating order $orderId to ${newStatus.value}');
+
+      // First, find the order to get the custom orderId
+      final order = _orders.firstWhere(
+        (order) => order.id == orderId,
+        orElse: () => throw Exception('Order not found locally'),
+      );
+
+      // Use the custom orderId (ORD-...) not the MongoDB _id
+      final customOrderId = order.orderId;
+      log(
+        '🔍 Using custom orderId: $customOrderId (from MongoDB _id: $orderId)',
+      );
+
+      // Update via API using the CUSTOM orderId
+      await _repository.updateOrderStatus(customOrderId, newStatus.value);
+
+      // Update local order
+      final index = _orders.indexWhere((o) => o.id == orderId);
+      if (index != -1) {
+        _orders[index] = _orders[index].copyWith(status: newStatus);
+        _applyFilters();
+
+        // Refresh statistics
+        await _loadStatistics();
+
+        notifyListeners();
+      }
+
+      log('✅ Order status updated successfully');
     } catch (e) {
       _errorMessage = 'Failed to update order status: $e';
+      log('❌ Error updating order status: $e');
       notifyListeners();
+      rethrow;
     }
   }
+
+  void setStatusFilter(OrderStatus? status) {
+    _selectedStatus = status;
+    _applyFilters();
+    notifyListeners();
+  }
+
+  void searchOrders(String query) {
+    _searchQuery = query.toLowerCase();
+    _applyFilters();
+    notifyListeners();
+  }
+
+  void _applyFilters() {
+    List<OrderModelSeller> filtered = List.from(_orders);
+
+    // Apply status filter
+    if (_selectedStatus != null) {
+      filtered = filtered
+          .where((order) => order.status == _selectedStatus)
+          .toList();
+    }
+
+    // Apply search filter
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((order) {
+        return order.orderId.toLowerCase().contains(_searchQuery) ||
+            order.buyerName.toLowerCase().contains(_searchQuery) ||
+            order.buyerEmail.toLowerCase().contains(_searchQuery);
+      }).toList();
+    }
+
+    _filteredOrders = filtered;
+  }
+
+  void clearFilters() {
+    _selectedStatus = null;
+    _searchQuery = '';
+    _applyFilters();
+    notifyListeners();
+  }
+
+  // Helper to get status counts
+  int getStatusCount(OrderStatus status) {
+    return _orders.where((order) => order.status == status).length;
+  }
 }
-// class OrdersViewModel with ChangeNotifier {
-//   final OrderRepository _orderRepository;
-
-//   OrdersViewModel(this._orderRepository);
-
-//   List<OrderDataModel> _orders = [];
-//   List<OrderDataModel> get orders => _orders;
-
-//   OrderStatus? _selectedFilter;
-//   OrderStatus? get selectedFilter => _selectedFilter;
-
-//   bool _isLoading = false;
-//   bool get isLoading => _isLoading;
-
-//   String _errorMessage = '';
-//   String get errorMessage => _errorMessage;
-
-//   // Load orders
-//   Future<void> loadOrders() async {
-//     _isLoading = true;
-//     _errorMessage = '';
-//     notifyListeners();
-
-//     try {
-//       _orders = await _orderRepository.getOrders();
-//     } catch (e) {
-//       _errorMessage = 'Failed to load orders: $e';
-//     } finally {
-//       _isLoading = false;
-//       notifyListeners();
-//     }
-//   }
-
-//   // Filter orders by status
-//   void filterOrders(OrderStatus? status) {
-//     _selectedFilter = status;
-//     notifyListeners();
-//   }
-
-//   // Update order status
-//   Future<void> updateOrderStatus(String orderId, OrderStatus newStatus) async {
-//     try {
-//       await _orderRepository.updateOrderStatus(orderId, newStatus);
-//       // Refresh orders after update
-//       await loadOrders();
-//     } catch (e) {
-//       _errorMessage = 'Failed to update order status: $e';
-//       notifyListeners();
-//     }
-//   }
-
-//   // Get filtered orders based on selected filter
-//   List<OrderDataModel> get filteredOrders {
-//     if (_selectedFilter == null) {
-//       return _orders;
-//     }
-//     return _orders.where((order) => order.status == _selectedFilter).toList();
-//   }
-
-//   // Get orders count by status
-//   Map<OrderStatus, int> get ordersCountByStatus {
-//     final Map<OrderStatus, int> count = {};
-//     for (final order in _orders) {
-//       count[order.status] = (count[order.status] ?? 0) + 1;
-//     }
-//     return count;
-//   }
-// }

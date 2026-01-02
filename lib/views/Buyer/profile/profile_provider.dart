@@ -44,7 +44,7 @@ class BuyerProfileViewProvider extends ChangeNotifier {
   // Constructor
   BuyerProfileViewProvider({BuyerProfileService? profileService})
     : _profileService = profileService ?? locator<BuyerProfileService>() {
-    log('🔄 BuyerProfileViewModel initialized');
+    // log('🔄 BuyerProfileViewModel initialized');
     loadProfile();
   }
 
@@ -59,7 +59,7 @@ class BuyerProfileViewProvider extends ChangeNotifier {
 
       if (buyer != null) {
         _currentBuyer = buyer;
-        log('✅ Profile loaded: ${buyer.fullName} ${buyer.iban}');
+        // log('✅ Profile loaded: ${buyer.fullName} ${buyer.iban}');
       } else {
         log('⚠️ No profile found');
       }

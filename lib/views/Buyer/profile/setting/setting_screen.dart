@@ -1,10 +1,10 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
+import 'package:wood_service/views/Buyer/profile/setting/setting_widget.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -32,15 +32,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             body: CustomScrollView(
               slivers: [
                 // Account Settings
-                _buildSettingsSection('Account Settings', [
-                  _buildSettingsTile(
+                buildSettingsSection('Account Settings', [
+                  buildSettingsTile(
                     icon: Icons.person_outline,
                     title: 'My Profile',
                     subtitle: 'View & Edit your profile',
                     onTap: () => _viewAndEditProfile(context, provider),
                     color: Colors.blue,
                   ),
-                  _buildSettingsTile(
+                  buildSettingsTile(
                     icon: Icons.lock_outline,
                     title: 'Change Password',
                     subtitle: 'Update login credentials',
@@ -52,8 +52,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ]),
 
                 // App Preferences
-                _buildSettingsSection('App Preferences', [
-                  _buildSettingsTile(
+                buildSettingsSection('App Preferences', [
+                  buildSettingsTile(
                     icon: Icons.language_outlined,
                     title: 'Language',
                     subtitle: _language,
@@ -616,62 +616,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  // Helper function to build settings tile
-  Widget _buildSettingsTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    required Color color,
-    Color textColor = Colors.black,
-    bool showData = false,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: textColor,
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
+  // Language dialog
+  Future<void> _showLanguageDialog(BuildContext context) async {
+    final languages = ['English', 'Spanish', 'French', 'German', 'Chinese'];
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Language'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: languages.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(languages[index]),
+                trailing: _language == languages[index]
+                    ? const Icon(Icons.check, color: Colors.brown)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    _language = languages[index];
+                  });
+                  Navigator.pop(context);
+                },
+              );
+            },
           ),
         ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(
-            color: showData ? Colors.brown : Colors.grey[600],
-            fontSize: showData ? 13 : 12,
-            fontWeight: showData ? FontWeight.w500 : FontWeight.normal,
-          ),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios_rounded,
-          size: 16,
-          color: Colors.grey[400],
-        ),
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
     );
   }
@@ -723,67 +696,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         onTap: () => onChanged(!value),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      ),
-    );
-  }
-
-  // Helper function to build settings section
-  SliverToBoxAdapter _buildSettingsSection(
-    String title,
-    List<Widget> children,
-  ) {
-    return SliverToBoxAdapter(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 10),
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.brown,
-                letterSpacing: -0.3,
-              ),
-            ),
-          ),
-          ...children,
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
-
-  // Language dialog
-  Future<void> _showLanguageDialog(BuildContext context) async {
-    final languages = ['English', 'Spanish', 'French', 'German', 'Chinese'];
-
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Language'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: languages.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(languages[index]),
-                trailing: _language == languages[index]
-                    ? const Icon(Icons.check, color: Colors.brown)
-                    : null,
-                onTap: () {
-                  setState(() {
-                    _language = languages[index];
-                  });
-                  Navigator.pop(context);
-                },
-              );
-            },
-          ),
-        ),
       ),
     );
   }

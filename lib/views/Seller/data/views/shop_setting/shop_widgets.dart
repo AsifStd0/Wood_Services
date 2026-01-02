@@ -135,28 +135,28 @@ Widget buildBankDetailsSection(SelllerSettingProvider viewModel) {
         ),
         const SizedBox(height: 16),
         buildInfoField(
-          'Bank Name',
-          viewModel.bankName,
-          Icons.account_balance_rounded,
-          viewModel.isEditing,
-          (value) => viewModel.setBankName(value),
+          label: 'Bank Name',
+          controller: viewModel.bankNameController,
+          icon: Icons.account_balance_rounded,
+          isEditing: viewModel.isEditing,
+          onChanged: (value) => viewModel.setBankName(value),
         ),
         const SizedBox(height: 16),
         buildInfoField(
-          'Account Number',
-          viewModel.accountNumber,
-          Icons.credit_card_rounded,
-          viewModel.isEditing,
-          (value) => viewModel.setAccountNumber(value),
+          label: 'Account Number',
+          controller: viewModel.accountNumberController,
+          icon: Icons.credit_card_rounded,
+          isEditing: viewModel.isEditing,
+          onChanged: (value) => viewModel.setAccountNumber(value),
           keyboardType: TextInputType.number,
         ),
         const SizedBox(height: 16),
         buildInfoField(
-          'IBAN',
-          viewModel.iban,
-          Icons.receipt_rounded,
-          viewModel.isEditing,
-          (value) => viewModel.setIban(value),
+          label: 'IBAN',
+          controller: viewModel.ibanController,
+          icon: Icons.receipt_rounded,
+          isEditing: viewModel.isEditing,
+          onChanged: (value) => viewModel.setIban(value),
         ),
       ],
     ),
@@ -218,13 +218,13 @@ Widget saveChangesButton(
   );
 }
 
-// Helper Widgets
-Widget buildInfoField(
-  String label,
-  String value,
-  IconData icon,
-  bool isEditing,
-  Function(String) onChanged, {
+// Helper Widgets with controller parameter
+Widget buildInfoField({
+  required String label,
+  required TextEditingController controller,
+  required IconData icon,
+  required bool isEditing,
+  required Function(String) onChanged,
   TextInputType keyboardType = TextInputType.text,
 }) {
   return Column(
@@ -243,20 +243,20 @@ Widget buildInfoField(
         enabled: isEditing,
         prefixIcon: Icon(icon, color: AppColors.grey),
         onChanged: onChanged,
-        controller: TextEditingController(text: value),
+        controller: controller, // Use the provided controller
         textInputType: keyboardType,
       ),
     ],
   );
 }
 
-Widget buildInfoTextArea(
-  String label,
-  String value,
-  IconData icon,
-  bool isEditing,
-  Function(String) onChanged,
-) {
+Widget buildInfoTextArea({
+  required String label,
+  required TextEditingController controller,
+  required IconData icon,
+  required bool isEditing,
+  required Function(String) onChanged,
+}) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -272,10 +272,10 @@ Widget buildInfoTextArea(
       CustomTextFormField(
         enabled: isEditing,
         prefixIcon: Icon(icon, color: AppColors.grey),
-        maxLines: 3,
-        minline: 3,
         onChanged: onChanged,
-        controller: TextEditingController(text: value),
+        controller: controller,
+        textInputType: TextInputType.multiline,
+        maxLines: 4,
       ),
     ],
   );

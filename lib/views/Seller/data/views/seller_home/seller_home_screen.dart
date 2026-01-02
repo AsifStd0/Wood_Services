@@ -16,65 +16,62 @@ class SellerHomeScreen extends StatefulWidget {
 }
 
 class _SellerHomeScreenState extends State<SellerHomeScreen> {
-  late VisitRequestsViewModel _viewModel;
+  // late VisitRequestsViewModel _viewModel;
 
-  @override
-  void initState() {
-    super.initState();
-    // Get auth token from your auth provider
-    final authToken = ''; // Get from your auth system
-    _viewModel = VisitRequestsViewModel(
-      ApiVisitRepository(authToken: authToken),
-    );
-    _viewModel.loadVisitRequests();
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   // Get auth token from your auth provider
+  //   final authToken = ''; // Get from your auth system
+  //   _viewModel = VisitRequestsViewModel(
+  //     ApiVisitRepository(authToken: authToken),
+  //   );
+  //   _viewModel.loadVisitRequests();
+  // }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _viewModel,
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
-        appBar: CustomAppBar(
-          title: 'Visit Requests',
-          showBackButton: false,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.notifications),
-              onPressed: () {
-                // Navigator.of(context).push(
-                //   MaterialPageRoute(
-                //     builder: (_) => SellerNotificationScreen(),
-                //   ),
-                // );
-              },
-            ),
-          ],
-        ),
-        body: Consumer<VisitRequestsViewModel>(
-          builder: (context, viewModel, child) {
-            if (viewModel.isLoading) {
-              return _buildLoadingState();
-            }
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: CustomAppBar(
+        title: 'Visit Requests',
+        showBackButton: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              // Navigator.of(context).push(
+              //   MaterialPageRoute(
+              //     builder: (_) => SellerNotificationScreen(),
+              //   ),
+              // );
+            },
+          ),
+        ],
+      ),
+      body: Consumer<VisitRequestsViewModel>(
+        builder: (context, viewModel, child) {
+          if (viewModel.isLoading) {
+            return _buildLoadingState();
+          }
 
-            if (viewModel.hasError) {
-              return _buildErrorState(viewModel);
-            }
+          if (viewModel.hasError) {
+            return _buildErrorState(viewModel);
+          }
 
-            return Column(
-              children: [
-                // Header with Stats
-                _buildHeaderStats(viewModel),
+          return Column(
+            children: [
+              // Header with Stats
+              _buildHeaderStats(viewModel),
 
-                // Filter Tabs
-                _buildFilterTabs(viewModel),
+              // Filter Tabs
+              _buildFilterTabs(viewModel),
 
-                // Visit Requests List
-                Expanded(child: _buildVisitList(viewModel)),
-              ],
-            );
-          },
-        ),
+              // Visit Requests List
+              Expanded(child: _buildVisitList(viewModel)),
+            ],
+          );
+        },
       ),
     );
   }

@@ -1,5 +1,6 @@
 // lib/services/api_service.dart
 import 'dart:convert';
+import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:wood_service/core/services/buyer_local_storage_service_impl.dart';
 
@@ -128,6 +129,71 @@ class CartServices {
     }
   }
 
+  // In BuyerCartService.dart
+  Future<Map<String, dynamic>> directBuy({
+    required String productId,
+    required int quantity,
+    String? buyerNotes,
+    Map<String, dynamic>? deliveryAddress,
+    String paymentMethod = 'cod',
+  }) async {
+    try {
+      log('🛍️ [DIRECT BUY] Starting direct purchase...');
+      log('   Product ID: $productId');
+      log('   Quantity: $quantity');
+      log('   Payment Method: $paymentMethod');
+
+      final token = await _storage.getBuyerToken();
+      log('🔍 Buyer token: ${token != null ? "EXISTS" : "NULL"}');
+
+      if (token == null) {
+        throw Exception('Please login again');
+      }
+
+      // Prepare request body
+      final body = {
+        'productId': productId,
+        'quantity': quantity,
+        'paymentMethod': paymentMethod,
+        if (buyerNotes != null && buyerNotes.isNotEmpty)
+          'buyerNotes': buyerNotes,
+        if (deliveryAddress != null && deliveryAddress.isNotEmpty)
+          'deliveryAddress': deliveryAddress,
+      };
+
+      log('📦 Request Body: $body');
+      log('📤 Endpoint: $baseUrl/api/buyer/cart/direct-buy');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/buyer/cart/direct-buy'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+
+      log('📥 Response Status: ${response.statusCode}');
+      log('📥 Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          log('✅ Direct purchase successful!');
+          return data;
+        } else {
+          log('❌ API returned success: false');
+          throw Exception(data['message'] ?? 'Failed to process purchase');
+        }
+      } else {
+        log('❌ HTTP Error: ${response.statusCode}');
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      log('❌ Direct buy error in service: $e');
+      rethrow;
+    }
+  }
   // // REQUEST to Buy
   // static Future<Map<String, dynamic>> requestBuy({
   //   required List<String> itemIds,

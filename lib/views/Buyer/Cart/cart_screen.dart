@@ -79,385 +79,6 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
     super.dispose();
   }
 
-  void _updateQuantity(
-    BuildContext context,
-    String itemId,
-    int newQuantity,
-  ) async {
-    final cartViewModel = Provider.of<BuyerCartViewModel>(
-      context,
-      listen: false,
-    );
-
-    try {
-      await cartViewModel.updateCartItem(itemId, newQuantity);
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to update quantity: $error'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  void _removeItemWithUndo(
-    BuildContext context,
-    BuyerCartItem removedItem,
-    int index,
-  ) async {
-    final cartViewModel = Provider.of<BuyerCartViewModel>(
-      context,
-      listen: false,
-    );
-    final itemId = removedItem.id;
-    final productTitle = removedItem.product?.title ?? 'Item';
-
-    try {
-      // Store the item for undo BEFORE removing
-      final itemToRestore = BuyerCartItem(
-        id: removedItem.id,
-        productId: removedItem.productId,
-        quantity: removedItem.quantity,
-        selectedVariant: removedItem.selectedVariant,
-        selectedSize: removedItem.selectedSize,
-        price: removedItem.price,
-        subtotal: removedItem.subtotal,
-        product: removedItem.product,
-        addedAt: removedItem.addedAt,
-      );
-
-      // Remove from ViewModel immediately
-      await cartViewModel.removeFromCart(itemId);
-
-      // Show undo snackbar
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      final snackBar = SnackBar(
-        content: Text('$productTitle removed'),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () async {
-            try {
-              await cartViewModel.addToCart(
-                productId: itemToRestore.productId,
-                quantity: itemToRestore.quantity,
-                selectedVariant: itemToRestore.selectedVariant,
-                selectedSize: itemToRestore.selectedSize,
-              );
-            } catch (error) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Failed to undo: $error'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          },
-          textColor: Colors.white,
-        ),
-        duration: const Duration(seconds: 4),
-        backgroundColor: Colors.brown,
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to remove item: $error'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  void clearCartConfirm(BuildContext context) {
-    final cartViewModel = Provider.of<BuyerCartViewModel>(
-      context,
-      listen: false,
-    );
-
-    if (cartViewModel.cartItems.isEmpty) return;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear Cart'),
-        content: const Text('Remove all items from your cart?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await cartViewModel.clearCart();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Cart cleared successfully'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } catch (error) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Failed to clear cart: $error'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            child: const Text('Clear', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCartItemCard(
-    BuildContext context,
-    BuyerCartItem item,
-    int index,
-  ) {
-    // final cartViewModel = Provider.of<BuyerCartViewModel>(context);
-    final product = item.product;
-    final isOutOfStock = !item.isInStock;
-
-    return Dismissible(
-      key: ValueKey('${item.id}_$index'),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        decoration: BoxDecoration(
-          color: Colors.red.shade600,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Padding(
-          padding: EdgeInsets.only(right: 20),
-          child: Icon(Icons.delete_forever, color: Colors.white),
-        ),
-      ),
-      onDismissed: (_) => _removeItemWithUndo(context, item, index),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-          border: isOutOfStock
-              ? Border.all(color: Colors.red.shade200, width: 1)
-              : null,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Row(
-            children: [
-              // Product Image
-              Stack(
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      // image: DecorationImage(
-                      //   image: NetworkImage(
-                      //     product?.featuredImage
-                      //         ? product!.featuredImage
-                      //         : (product?.featuredImage is Map
-                      //             ? (product?.featuredImage['url']?.toString() ?? '')
-                      //             : 'https://via.placeholder.com/80'),
-                      //   ),
-                      //   fit: BoxFit.cover,
-                      // ),
-                    ),
-                  ),
-                  if (isOutOfStock)
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'OUT OF STOCK',
-                              style: TextStyle(
-                                fontSize: 8,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-
-              const SizedBox(width: 12),
-
-              // Product Details
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title and Price
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                product?.title ?? 'Unknown Product',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              if (product?.shortDescription != null)
-                                Text(
-                                  product!.shortDescription,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () async {
-                            final cartVM = Provider.of<BuyerCartViewModel>(
-                              context,
-                              listen: false,
-                            );
-
-                            await cartVM.removeFromCart(item.id);
-                          },
-                          child: Icon(
-                            Icons.delete_outline,
-                            size: 16,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Price and Quantity
-                    Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '\$${item.price.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 16,
-                                color: Colors.brown,
-                              ),
-                            ),
-                            if (isOutOfStock)
-                              Text(
-                                'Only ${product?.stockQuantity ?? 0} available',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.red,
-                                ),
-                              ),
-                          ],
-                        ),
-                        const Spacer(),
-                        QuantityStepper(
-                          quantity: item.quantity,
-                          maxQuantity: product?.stockQuantity ?? 99,
-                          onChanged: (q) =>
-                              _updateQuantity(context, item.id, q),
-                          disabled: isOutOfStock,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeaderBar(BuyerCartViewModel cartViewModel) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${cartViewModel.cartCount} ${cartViewModel.cartCount == 1 ? "Item" : "Items"}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
-              ),
-              if (cartViewModel.outOfStockItems.isNotEmpty)
-                Text(
-                  '${cartViewModel.outOfStockItems.length} out of stock',
-                  style: const TextStyle(fontSize: 11, color: Colors.red),
-                ),
-            ],
-          ),
-          const Spacer(),
-          TextButton.icon(
-            onPressed: cartViewModel.cartItems.isEmpty
-                ? null
-                : () => _clearCartConfirm(context, cartViewModel),
-            icon: Icon(
-              Icons.delete_outline,
-              size: 18,
-              color: cartViewModel.cartItems.isEmpty ? Colors.grey : Colors.red,
-            ),
-            label: Text(
-              'Clear',
-              style: TextStyle(
-                color: cartViewModel.cartItems.isEmpty
-                    ? Colors.grey
-                    : Colors.red,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildCheckoutSheet() {
     return AnimatedBuilder(
       animation: _sheetAnim,
@@ -492,11 +113,11 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSummaryLine('Subtotal', _cartViewModel.subtotal),
+                        buildSummaryLine('Subtotal', _cartViewModel.subtotal),
                         const SizedBox(height: 4),
-                        _buildSummaryLine('Shipping', _cartViewModel.shipping),
+                        buildSummaryLine('Shipping', _cartViewModel.shipping),
                         const SizedBox(height: 4),
-                        _buildSummaryLine('Tax', _cartViewModel.tax),
+                        buildSummaryLine('Tax', _cartViewModel.tax),
                       ],
                     ),
                   ),
@@ -569,23 +190,6 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
       );
       return;
     }
-
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider.value(
-          value: _cartViewModel,
-          // !!!!
-          // !!!!
-          // !!!!
-          // !!!!
-          // !!!!
-          // !!!!
-          // !!!!
-          // !!!!
-          child: CheckoutScreen(cartItems: []),
-        ),
-      ),
-    );
   }
 
   void _showOutOfStockDialog(List<BuyerCartItem> outOfStockItems) {
@@ -642,12 +246,6 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Continue Shopping'),
-                    ),
-                  ),
                   const SizedBox(width: 7),
                   Expanded(
                     child: ElevatedButton(
@@ -694,26 +292,6 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
     );
   }
 
-  Widget _buildSummaryLine(String label, double amount) {
-    return Row(
-      children: [
-        Text(
-          label,
-          style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-        ),
-        const Spacer(),
-        Text(
-          '\$${amount.toStringAsFixed(2)}',
-          style: TextStyle(
-            color: Colors.grey.shade800,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -742,9 +320,6 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
               : const SizedBox.shrink();
         },
       ),
-      // bottomSheet: cartViewModel.cartItems.isNotEmpty
-      //     ? _buildCheckoutSheet()
-      //     : null,
     );
   }
 
@@ -757,61 +332,20 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
       );
     }
 
-    if (cartViewModel.hasError) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
-            Text(
-              cartViewModel.errorMessage,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.red),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => cartViewModel.loadCart(),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (cartViewModel.cartItems.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.shopping_cart_outlined,
-                size: 86,
-                color: Colors.grey.shade300,
-              ),
-              const SizedBox(height: 18),
-              Text(
-                'Your cart is empty',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-            ],
-          ),
-        ),
-      );
+    if (cartViewModel.cartItems.isEmpty || cartViewModel.hasError) {
+      return emptyCart(context);
     }
 
     return Column(
       children: [
-        _buildHeaderBar(cartViewModel),
+        buildHeaderBar(cartViewModel, context),
         Expanded(
           child: RefreshIndicator(
             onRefresh: () => cartViewModel.refreshCart(),
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: cartViewModel.cartItems.length,
-              itemBuilder: (context, index) => _buildCartItemCard(
+              itemBuilder: (context, index) => buildCartItemCard(
                 context,
                 cartViewModel.cartItems[index],
                 index,
@@ -820,49 +354,6 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
           ),
         ),
       ],
-    );
-  }
-
-  void _clearCartConfirm(
-    BuildContext context,
-    BuyerCartViewModel cartViewModel,
-  ) {
-    if (cartViewModel.cartItems.isEmpty) return;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear Cart'),
-        content: const Text('Remove all items from your cart?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await cartViewModel.clearCart();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Cart cleared successfully'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } catch (error) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Failed to clear cart: $error'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            child: const Text('Clear', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
   }
 }

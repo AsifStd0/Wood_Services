@@ -48,13 +48,13 @@ Future<void> testServerConnection(List<String> urls) async {
     print('\n🔧 TROUBLESHOOTING STEPS:');
     print('   1. Make sure Node.js server is running on your laptop');
     print('   2. Check the port number in Node.js console output');
-    print('   3. Verify laptop IP address (should be 192.168.18.107)');
+    print('   3. Verify laptop IP address (should be 192.168.137.242)');
     print('   4. Ensure both devices are on same WiFi network');
     print('   5. Try different port if current one is busy');
     print('   6. Check firewall settings on your Mac');
     print('');
     print('📱 Your Network Info:');
-    print('   • Laptop IP: 192.168.18.107');
+    print('   • Laptop IP: 192.168.137.242');
     print('   • Mobile IP: 192.168.18.94');
     print('   • Both are on 192.168.18.x network ✅');
     print('');

@@ -231,8 +231,84 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  // ========== REQUEST OPERATIONS ==========
+  //  ! In CartProvider.dart
+  // In CartProvider.dart - directBuy method
+  Future<Map<String, dynamic>> directBuy({
+    required String productId,
+    required int quantity,
+    String? buyerNotes,
+    Map<String, dynamic>? deliveryAddress,
+    String paymentMethod = 'cod',
+  }) async {
+    try {
+      log('🛍️ [PROVIDER] Starting direct purchase...');
+      _isLoading = true;
+      notifyListeners();
 
+      final headers = await _getHeaders();
+
+      // Prepare body
+      final Map<String, dynamic> body = {
+        'productId': productId,
+        'quantity': quantity,
+        'paymentMethod': paymentMethod,
+      };
+
+      // Add optional fields
+      if (buyerNotes != null && buyerNotes.isNotEmpty) {
+        body['buyerNotes'] = buyerNotes;
+      }
+
+      if (deliveryAddress != null && deliveryAddress.isNotEmpty) {
+        body['deliveryAddress'] = deliveryAddress;
+      }
+
+      log('📦 Request Body: $body');
+
+      final String fullUrl = '$baseUrl/buyer/cart/direct-buy';
+      log('📤 Full URL: $fullUrl');
+
+      final response = await http.post(
+        Uri.parse(fullUrl),
+        headers: headers,
+        body: json.encode(body),
+      );
+
+      final data = json.decode(response.body);
+
+      log('📥 Response Status: ${response.statusCode}');
+      log('📥 Response Data: $data');
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        log(
+          '✅ Direct purchase successful! Order ID: ${data['order']?['orderId']}',
+        );
+
+        return {
+          'success': true,
+          'message': data['message'],
+          'order': data['order'],
+        };
+      } else {
+        log('❌ Direct purchase failed');
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to process purchase',
+          'statusCode': response.statusCode,
+        };
+      }
+    } catch (e) {
+      log('❌ Direct buy error in provider: $e');
+      return {'success': false, 'message': 'Error: ${e.toString()}'};
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // ! &&&&
+  // In CartProvider.dart
+  // In CartProvider.dart
   Future<Map<String, dynamic>> requestBuy({
     required List<String> itemIds,
     String? buyerNotes,
@@ -244,25 +320,37 @@ class CartProvider with ChangeNotifier {
       notifyListeners();
 
       final headers = await _getHeaders();
-      final response = await http.post(
-        Uri.parse('$baseUrl/buyer/cart/request/buy'),
-        headers: headers,
-        body: json.encode({
-          'itemIds': itemIds,
+
+      final Map<String, dynamic> body = {
+        'itemIds': itemIds,
+        'paymentMethod': paymentMethod,
+        if (buyerNotes != null && buyerNotes.isNotEmpty)
           'buyerNotes': buyerNotes,
-          'deliveryAddress': deliveryAddress,
-          'paymentMethod': paymentMethod,
-        }),
+        if (deliveryAddress != null)
+          'deliveryAddress': {
+            'address': deliveryAddress, // Wrap in address object
+          },
+      };
+
+      log('📦 Request Buy Body: $body');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/buyer/cart/requests/buy'),
+        headers: headers,
+        body: json.encode(body),
       );
 
       final data = json.decode(response.body);
+
+      log('📥 Request Buy Response Status: ${response.statusCode}');
+      log('📥 Request Buy Response Data: $data');
 
       if (response.statusCode == 200 && data['success'] == true) {
         await fetchCart();
         return {
           'success': true,
           'message': data['message'],
-          'orders': data['orders'],
+          'orders': data['orders'] ?? [],
         };
       } else {
         return {
@@ -272,15 +360,13 @@ class CartProvider with ChangeNotifier {
         };
       }
     } catch (e) {
-      await _handleApiError(e, 'requesting buy');
+      log('❌ Request buy error: $e');
       return {'success': false, 'message': 'Error: ${e.toString()}'};
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
-
-  // ========== HELPER METHODS ==========
   // ========== ORDER DETAILS ==========
 
   Future<Map<String, dynamic>> getRequestDetails(String orderId) async {

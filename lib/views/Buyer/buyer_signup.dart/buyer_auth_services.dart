@@ -14,7 +14,7 @@ class BuyerAuthService {
   BuyerAuthService(this._dio, this._buyerLocalStorageService);
 
   // Register Buyer - Updated for your Node.js API
-  Future<Map<String, dynamic>> registerBuyer({
+  Future<Map<String, dynamic>> registerBuyerServices({
     required BuyerModel buyer,
     File? profileImage,
   }) async {
@@ -25,8 +25,8 @@ class BuyerAuthService {
       final formData = FormData.fromMap({
         'fullName': buyer.fullName,
         'email': buyer.email,
-        // 'password': buyer.password,
-        // 'confirmPassword': buyer.password, // API expects confirmPassword
+        'password': buyer.password,
+        'confirmPassword': buyer.password, // API expects confirmPassword
         'businessName': buyer.businessName ?? '',
         'contactName': buyer.contactName ?? '',
         'address': buyer.address ?? '',

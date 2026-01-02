@@ -3,8 +3,8 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
+import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/payment/cart_data/cart_provider.dart';
 import 'package:wood_service/views/Buyer/payment/rating/order_rating_screen.dart';
 import 'package:wood_service/widgets/custom_widget.dart';
@@ -14,9 +14,14 @@ import 'package:wood_service/widgets/custom_widget.dart';
 class CartBottomSheet extends StatefulWidget {
   final int count;
   final BuyerProductModel buyerProduct;
+  final double totalPrice;
 
-  CartBottomSheet({Key? key, required this.count, required this.buyerProduct})
-    : super(key: key);
+  CartBottomSheet({
+    Key? key,
+    required this.count,
+    required this.buyerProduct,
+    required this.totalPrice,
+  }) : super(key: key);
 
   @override
   State<CartBottomSheet> createState() => _CartBottomSheetState();
@@ -52,7 +57,7 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
                     _buildQuantityControls(),
 
                     // Price Breakdown
-                    _buildPriceBreakdown(),
+                    _buildPriceBreakdown(widget.totalPrice),
                   ],
                 ),
               ),
@@ -171,7 +176,6 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
                 children: [
                   Text(
                     "${widget.count}",
-                    // _currentQuantity.toString(),
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -191,7 +195,7 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
     );
   }
 
-  Widget _buildPriceBreakdown() {
+  Widget _buildPriceBreakdown(totalPrice) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -220,7 +224,8 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
           _buildPriceRow(
             'Total Amount',
             'Including all charges',
-            '\$${widget.buyerProduct.finalPrice}',
+            // '\$${widget.buyerProduct.finalPrice}',
+            "\$$totalPrice",
             isTotal: true,
           ),
         ],
@@ -273,7 +278,6 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
     );
   }
 
-  // Update your CartBottomSheet's _buildFooter method:
   Widget _buildFooter(BuildContext context) {
     return Consumer<CartProvider>(
       builder: (context, cartProvider, child) {
@@ -297,122 +301,17 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  // Replace the onPressed in your ElevatedButton:
                   onPressed:
                       widget.buyerProduct.inStock &&
-                          widget.buyerProduct.stockQuantity > 0
+                          widget.buyerProduct.stockQuantity >= widget.count
                       ? () async {
-                          // 1. Add to cart first
-                          final cartResult = await cartProvider.addToCart(
-                            productId: widget.buyerProduct.id,
-                            quantity: widget.count,
-                            selectedVariant: '',
-                            selectedSize: '',
-                          );
-
-                          if (cartResult['success'] == true) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(cartResult['message']),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-
-                            final cartItemData =
-                                cartResult['data']?['cartItem'];
-                            final cartItemId = cartItemData?['_id'];
-
-                            // 2. IMMEDIATELY request buy to create order
-                            final requestResult = await cartProvider.requestBuy(
-                              itemIds: [cartItemId], // ✅ CORRECT parameter name
-                              buyerNotes: 'Quick purchase for rating',
-                              deliveryAddress: json.encode({
-                                'street': 'Test Street',
-                                'city': 'Test City',
-                                'state': 'Test State',
-                                'country': 'Test Country',
-                                'postalCode': '12345',
-                              }),
-                              paymentMethod: 'cod',
-                            );
-
-                            if (requestResult['success'] == true) {
-                              // Get the orderId from the response
-                              final orders = requestResult['orders'] ?? [];
-                              if (orders.isNotEmpty) {
-                                final orderId = orders[0]['orderId'];
-
-                                // Get order item ID from the order details
-                                String orderItemId = '${orderId}_ITEM';
-
-                                // Optionally fetch order details to get actual orderItemId
-                                try {
-                                  final orderDetails = await cartProvider
-                                      .getRequestDetails(orderId);
-                                  if (orderDetails['success'] == true &&
-                                      orderDetails['request']?['items'] !=
-                                          null &&
-                                      orderDetails['request']['items']
-                                          .isNotEmpty) {
-                                    orderItemId =
-                                        orderDetails['request']['items'][0]['_id'] ??
-                                        orderItemId;
-                                  }
-                                } catch (e) {
-                                  log('⚠️ Could not fetch order details: $e');
-                                }
-
-                                log(
-                                  '📦 Order created: $orderId.  📦 Order item ID: $orderItemId',
-                                );
-
-                                // Navigate to rating screen
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => OrderRatingScreen(
-                                      orderId: orderId, // ORDER ITEM ID
-                                      orderItemId: orderItemId,
-                                      items: [widget.buyerProduct.title],
-                                      buyerProduct: widget.buyerProduct,
-                                      cartItemId: cartItemId,
-                                      productId: widget.buyerProduct.id,
-                                      quantity: widget.count,
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Failed to create order - no order ID returned',
-                                    ),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(requestResult['message']),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(cartResult['message']),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
+                          await _handleDirectBuy(context, cartProvider);
                         }
                       : null,
-
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
                         widget.buyerProduct.inStock &&
-                            widget.buyerProduct.stockQuantity > 0
+                            widget.buyerProduct.stockQuantity >= widget.count
                         ? AppColors.brightOrange
                         : Colors.grey[400],
                     shape: RoundedRectangleBorder(
@@ -433,8 +332,9 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
                         )
                       : Text(
                           widget.buyerProduct.inStock &&
-                                  widget.buyerProduct.stockQuantity > 0
-                              ? 'Add to Cart & Checkout'
+                                  widget.buyerProduct.stockQuantity >=
+                                      widget.count
+                              ? 'Buy Now'
                               : 'Out of Stock',
                           style: const TextStyle(
                             fontSize: 16,
@@ -449,5 +349,128 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
         );
       },
     );
+  }
+
+  // In CartBottomSheet.dart - _handleDirectBuy method
+  Future<void> _handleDirectBuy(
+    BuildContext context,
+    CartProvider cartProvider,
+  ) async {
+    try {
+      // Show loading
+      final scaffoldMessenger = ScaffoldMessenger.of(context);
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(width: 12),
+              Text('Processing direct purchase...'),
+            ],
+          ),
+          backgroundColor: Colors.blue,
+          duration: Duration(seconds: 30),
+        ),
+      );
+
+      log('🛍️ [DIRECT BUY] Starting direct purchase...');
+
+      // Call direct buy API
+      final result = await cartProvider.directBuy(
+        productId: widget.buyerProduct.id,
+        quantity: widget.count,
+        buyerNotes: 'Direct purchase from product page',
+        deliveryAddress: {
+          'street': '123 Main St',
+          'city': 'Your City',
+          'state': 'Your State',
+          'country': 'Your Country',
+          'postalCode': '12345',
+          'phone': '1234567890',
+        },
+        paymentMethod: 'cod',
+      );
+
+      // Hide loading snackbar
+      scaffoldMessenger.hideCurrentSnackBar();
+
+      log('📥 Direct buy result: $result');
+
+      if (result['success'] == true) {
+        final order = result['order'];
+        final orderId = order?['orderId'];
+        final totalAmount = order?['totalAmount'];
+
+        // ✅ Get the actual order item ID from the items array
+        String? orderItemId;
+        if (order?['items'] != null && order['items'].isNotEmpty) {
+          orderItemId = order['items'][0]['itemId']; // This is the correct ID
+          log('✅ Found order item ID: $orderItemId');
+        } else {
+          orderItemId = '${orderId}_ITEM_1'; // Fallback
+        }
+
+        if (orderId != null) {
+          log('✅ Direct purchase successful!');
+          log('   Order ID: $orderId');
+          log('   Order Item ID: $orderItemId');
+          log('   Total Amount: \$$totalAmount');
+
+          // Show success message
+          scaffoldMessenger.showSnackBar(
+            SnackBar(
+              content: Text('Purchase successful! Order #$orderId'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Close bottom sheet
+
+          // Navigate to rating screen
+          await Future.delayed(Duration(milliseconds: 500));
+
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => OrderRatingScreen(
+                orderId: orderId,
+                orderItemId: orderItemId
+                    .toString(), // ✅ Use actual order item ID
+                items: [widget.buyerProduct.title],
+                buyerProduct: widget.buyerProduct,
+                cartItemId:
+                    'DIRECT_BUY_${DateTime.now().millisecondsSinceEpoch}',
+                productId: widget.buyerProduct.id,
+                quantity: widget.count,
+                totalPrice: widget.totalPrice,
+              ),
+            ),
+          );
+        } else {
+          scaffoldMessenger.showSnackBar(
+            SnackBar(
+              content: Text('Purchase completed but no order ID returned'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } else {
+        log('❌ Direct purchase failed: ${result['message']}');
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to complete purchase'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      log('❌ Direct Buy Now error: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${error.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

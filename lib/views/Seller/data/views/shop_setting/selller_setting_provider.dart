@@ -6,8 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wood_service/core/services/seller_local_storage_service.dart';
 import 'package:wood_service/views/Seller/data/services/seller_auth.dart';
-// import 'package:wood_service/views/Buyer/Service/profile_service.dart';
 
+// import 'package:wood_service/views/Buyer/Service/profile_service.dart';
 class SelllerSettingProvider extends ChangeNotifier {
   final SellerAuthService _authService;
   final SellerLocalStorageService localStorageService;
@@ -25,10 +25,21 @@ class SelllerSettingProvider extends ChangeNotifier {
   String _iban = '';
   List<String> _categories = [];
 
+  // Text Editing Controllers for ALL fields
+  late TextEditingController fullNameController;
+  late TextEditingController emailController;
+  late TextEditingController phoneController;
+  late TextEditingController shopNameController;
+  late TextEditingController businessNameController;
+  late TextEditingController descriptionController;
+  late TextEditingController addressController;
+  late TextEditingController bankNameController;
+  late TextEditingController accountNumberController;
+  late TextEditingController ibanController;
+
   // Images
   File? _shopLogo;
   File? _shopBanner;
-  // Document files - ADD THESE
   File? _businessLicense;
   File? _taxCertificate;
   File? _identityProof;
@@ -54,26 +65,51 @@ class SelllerSettingProvider extends ChangeNotifier {
   List<String> get categories => _categories;
   File? get shopLogo => _shopLogo;
   File? get shopBanner => _shopBanner;
-
-  // Add getters
   File? get businessLicense => _businessLicense;
   File? get taxCertificate => _taxCertificate;
   File? get identityProof => _identityProof;
-  // !
   bool get isLoading => _isLoading;
   bool get isEditing => _isEditing;
   bool get isVerified => _isVerified;
   bool get hasData => _hasData;
   String? get errorMessage => _errorMessage;
 
-  // Constructor - FIXED
+  // Constructor
   SelllerSettingProvider({
     required SellerAuthService authService,
     required SellerLocalStorageService localStorageService,
   }) : _authService = authService,
-       localStorageService = localStorageService;
+       localStorageService = localStorageService {
+    // Initialize all controllers
+    _initializeControllers();
+  }
 
-  // ========== LOAD SELLER DATA FROM SIGNUP ==========
+  void _initializeControllers() {
+    fullNameController = TextEditingController();
+    emailController = TextEditingController();
+    phoneController = TextEditingController();
+    shopNameController = TextEditingController();
+    businessNameController = TextEditingController();
+    descriptionController = TextEditingController();
+    addressController = TextEditingController();
+    bankNameController = TextEditingController();
+    accountNumberController = TextEditingController();
+    ibanController = TextEditingController();
+  }
+
+  void _updateControllersFromData() {
+    // Update all controllers with current data
+    fullNameController.text = _fullName;
+    emailController.text = _email;
+    phoneController.text = _phone;
+    shopNameController.text = _shopName;
+    businessNameController.text = _businessName;
+    descriptionController.text = _description;
+    addressController.text = _address;
+    bankNameController.text = _bankName;
+    accountNumberController.text = _accountNumber;
+    ibanController.text = _iban;
+  }
 
   // ========== LOAD SELLER DATA ==========
   Future<void> loadSellerData() async {
@@ -83,7 +119,6 @@ class SelllerSettingProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // ✅ Use correct method names from SellerAuthService
       final isLoggedIn = await _authService.isSellerLoggedIn();
 
       if (!isLoggedIn) {
@@ -92,9 +127,9 @@ class SelllerSettingProvider extends ChangeNotifier {
         return;
       }
 
-      // ✅ Use correct method name
       final seller = await _authService.getCurrentSeller();
       log('seller. seller seller seller ----- ${seller.toString()}');
+
       if (seller != null) {
         // Extract data from seller model
         _fullName = seller.personalInfo.fullName;
@@ -109,10 +144,15 @@ class SelllerSettingProvider extends ChangeNotifier {
         _accountNumber = seller.bankDetails.accountNumber;
         _iban = seller.bankDetails.iban;
 
-        // Note: Images are stored as paths in the model
-        // You might need to load them as Files if needed
+        // Update controllers with loaded data
+        _updateControllersFromData();
+
+        // Load images if paths exist
         if (seller.shopBrandingImages.shopLogo != null) {
-          _shopLogo = File(seller.shopBrandingImages.shopLogo.toString());
+          final logoPath = seller.shopBrandingImages.shopLogo.toString();
+          if (await File(logoPath).exists()) {
+            _shopLogo = File(logoPath);
+          }
         }
 
         _hasData = true;
@@ -129,6 +169,116 @@ class SelllerSettingProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // ========== SETTERS ==========
+  void setFullName(String value) {
+    _fullName = value;
+    fullNameController.text = value;
+    notifyListeners();
+  }
+
+  void setEmail(String value) {
+    _email = value;
+    emailController.text = value;
+    notifyListeners();
+  }
+
+  void setPhone(String value) {
+    _phone = value;
+    phoneController.text = value;
+    notifyListeners();
+  }
+
+  void setShopName(String value) {
+    _shopName = value;
+    shopNameController.text = value;
+    notifyListeners();
+  }
+
+  void setBusinessName(String value) {
+    _businessName = value;
+    businessNameController.text = value;
+    notifyListeners();
+  }
+
+  void setDescription(String value) {
+    _description = value;
+    descriptionController.text = value;
+    notifyListeners();
+  }
+
+  void setAddress(String value) {
+    _address = value;
+    addressController.text = value;
+    notifyListeners();
+  }
+
+  void setBankName(String value) {
+    _bankName = value;
+    bankNameController.text = value;
+    notifyListeners();
+  }
+
+  void setAccountNumber(String value) {
+    _accountNumber = value;
+    accountNumberController.text = value;
+    notifyListeners();
+  }
+
+  void setIban(String value) {
+    _iban = value;
+    ibanController.text = value;
+    notifyListeners();
+  }
+
+  // ========== SAVE CHANGES ==========
+  Future<bool> saveChanges() async {
+    // Get current values from ALL controllers
+    return await updateProfile(
+      fullName: fullNameController.text,
+      email: emailController.text,
+      phone: phoneController.text,
+      shopName: shopNameController.text,
+      businessName: businessNameController.text,
+      description: descriptionController.text,
+      address: addressController.text,
+      bankName: bankNameController.text,
+      accountNumber: accountNumberController.text,
+      iban: ibanController.text,
+      categories: _categories,
+      shopLogo: _shopLogo,
+      shopBanner: _shopBanner,
+      businessLicense: _businessLicense,
+      taxCertificate: _taxCertificate,
+      identityProof: _identityProof,
+    );
+  }
+
+  // ========== EDITING STATE ==========
+  void setEditing(bool value) {
+    _isEditing = value;
+
+    if (!value) {
+      // If turning off editing, revert controllers to saved values
+      _updateControllersFromData();
+    }
+
+    notifyListeners();
+  }
+
+  // ========== DISPOSE ==========
+  void disposeControllers() {
+    fullNameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    shopNameController.dispose();
+    businessNameController.dispose();
+    descriptionController.dispose();
+    addressController.dispose();
+    bankNameController.dispose();
+    accountNumberController.dispose();
+    ibanController.dispose();
   }
 
   // ========== UPDATE PROFILE ==========
@@ -313,29 +463,6 @@ class SelllerSettingProvider extends ChangeNotifier {
     }
   }
 
-  // ========== SAVE CHANGES ==========
-  Future<bool> saveChanges() async {
-    return await updateProfile(
-      fullName: _fullName,
-      email: _email,
-      phone: _phone,
-      shopName: _shopName,
-      businessName: _businessName,
-      description: _description,
-      address: _address,
-      bankName: _bankName,
-      accountNumber: _accountNumber,
-      iban: _iban,
-      categories: _categories,
-      shopLogo: _shopLogo,
-      shopBanner: _shopBanner,
-      // ✅ ADD DOCUMENTS
-      businessLicense: _businessLicense,
-      taxCertificate: _taxCertificate,
-      identityProof: _identityProof,
-    );
-  }
-
   // ========== Enhanced logout with navigation ==========
   Future<bool> logoutAndNavigate(BuildContext context) async {
     _isLoading = true;
@@ -364,75 +491,30 @@ class SelllerSettingProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  // ========== LOGOUT ==========
-  // In SelllerSettingProvider class, update the logout method:
 
-  // In SellerSettingProvider class
-  // In SellerAuthService class - Make sure it returns Future<bool>
   Future<bool> logout() async {
-    // Should return Future<bool>
     try {
       // Clear all storage
       await localStorageService.deleteSellerAuth();
       await localStorageService.clearAll();
 
-      log('✅ Seller logged out successfully');
-      return true; // Return true on success
+      // Double-check everything is cleared
+      final token = await localStorageService.getSellerToken();
+      final loginStatus = await localStorageService.getSellerLoginStatus();
+
+      if (token == null && (loginStatus == null || loginStatus == false)) {
+        log('✅ Seller logged out successfully - Verified');
+        return true;
+      } else {
+        log('⚠️ Logout incomplete - retrying...');
+        // Retry once
+        await localStorageService.clearAll();
+        return true;
+      }
     } catch (e) {
       log('❌ Logout error: $e');
-      return false; // Return false on error
+      return false;
     }
-  }
-
-  // ========== SETTERS ==========
-  void setFullName(String value) {
-    _fullName = value;
-    notifyListeners();
-  }
-
-  void setEmail(String value) {
-    _email = value;
-    notifyListeners();
-  }
-
-  void setPhone(String value) {
-    _phone = value;
-    notifyListeners();
-  }
-
-  void setShopName(String value) {
-    _shopName = value;
-    notifyListeners();
-  }
-
-  void setBusinessName(String value) {
-    _businessName = value;
-    notifyListeners();
-  }
-
-  void setDescription(String value) {
-    _description = value;
-    notifyListeners();
-  }
-
-  void setAddress(String value) {
-    _address = value;
-    notifyListeners();
-  }
-
-  void setBankName(String value) {
-    _bankName = value;
-    notifyListeners();
-  }
-
-  void setAccountNumber(String value) {
-    _accountNumber = value;
-    notifyListeners();
-  }
-
-  void setIban(String value) {
-    _iban = value;
-    notifyListeners();
   }
 
   void setShopLogoFile(File? file) {
@@ -471,11 +553,6 @@ class SelllerSettingProvider extends ChangeNotifier {
 
   void removeCategory(String category) {
     _categories.remove(category);
-    notifyListeners();
-  }
-
-  void setEditing(bool value) {
-    _isEditing = value;
     notifyListeners();
   }
 

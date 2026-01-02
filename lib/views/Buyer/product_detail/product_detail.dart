@@ -16,7 +16,6 @@ class ProductDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Get cartViewModel from Provider
-    final cartViewModel = Provider.of<BuyerCartViewModel>(context);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -45,10 +44,10 @@ class ProductDetailScreen extends StatelessWidget {
                 // ),
                 const SizedBox(height: 16),
 
-                /// Quantity & Stock - Use Provider to update
                 MinimalQuantityStockWidget(
                   product: product,
                   onQuantityChanged: (quantity) {
+                    final cartViewModel = context.read<BuyerCartViewModel>();
                     cartViewModel.updateQuantity(quantity);
                   },
                 ),
@@ -67,19 +66,25 @@ class ProductDetailScreen extends StatelessWidget {
             ),
           ),
 
-          /// BOTTOM ACTION BUTTONS - Get values from Provider
+          /// BOTTOM ACTION BUTTONS
           Positioned(
             left: 16,
             right: 16,
             bottom: 20,
             child: Consumer<BuyerCartViewModel>(
               builder: (context, cartViewModel, child) {
+                // Calculate total price
+                final totalPrice = cartViewModel.getCurrentProductTotal(
+                  product,
+                );
+
                 return ProductActionButtons(
                   product: product,
                   cartViewModel: cartViewModel,
                   selectedQuantity: cartViewModel.selectedQuantity,
                   selectedSize: cartViewModel.selectedSize,
                   selectedVariant: cartViewModel.selectedVariant,
+                  totalPrice: totalPrice, // Pass the calculated total
                 );
               },
             ),
