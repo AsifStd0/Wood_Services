@@ -1,13 +1,26 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
+import 'package:wood_service/app/locator.dart';
+import 'package:wood_service/core/services/buyer_local_storage_service.dart';
+import 'package:wood_service/core/services/buyer_local_storage_service_impl.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 
 class BuyerProductService {
-  final String baseUrl = 'http://192.168.18.107:5001/api/buyer/products';
-
+  final String baseUrl = 'http://192.168.10.20:5001/api/buyer/products';
   Future<List<BuyerProductModel>> getProducts() async {
+    final BuyerLocalStorageService _buyerStorage =
+        locator<BuyerLocalStorageService>();
+
     try {
+      // Get token from storage service
+      final token = await _buyerStorage.getBuyerToken();
+      log('token is here: $token');
+
+      if (token == null || token.isEmpty) {
+        throw Exception('Buyer not authenticated');
+      }
+      log('token is here ???');
       final response = await http.get(
         Uri.parse(baseUrl),
         headers: {
@@ -15,6 +28,8 @@ class BuyerProductService {
           'Accept': 'application/json',
         },
       );
+      log('222 ');
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         // print('🔍 Parsed JSON Data: $data'); // Add this

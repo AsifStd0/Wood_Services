@@ -15,7 +15,7 @@ class ReviewProvider with ChangeNotifier {
   List<dynamic> get reviewableOrders => _reviewableOrders;
   List<dynamic> get myReviews => _myReviews;
 
-  static const String baseUrl = 'http://192.168.18.107:5001/api';
+  static const String baseUrl = 'http://192.168.10.20:5001/api';
 
   String? _cachedToken;
   final BuyerLocalStorageServiceImpl _storage = BuyerLocalStorageServiceImpl();
@@ -189,5 +189,110 @@ class ReviewProvider with ChangeNotifier {
       (order) => order['orderId'] == orderId,
       orElse: () => null,
     );
+  }
+
+  //!  ******
+  // In ReviewProvider class
+  // ========== GET REVIEWS FOR PRODUCT ==========
+  // In ReviewProvider class, replace the old getProductReviews method with:
+
+  // ! ========== GET PRODUCT REVIEWS WITH STATS ==========
+  Future<Map<String, dynamic>> getProductReviewsWithStats({
+    required String productId,
+    int limit = 2,
+  }) async {
+    try {
+      print('📝 Fetching reviews for product: $productId');
+
+      final headers = await _getHeaders();
+
+      // static const String baseUrl = 'http://192.168.10.20:5001/api/buyer/reviews';
+
+      // Call your existing API endpoint
+      final response = await http.get(
+        Uri.parse(
+          'http://192.168.10.20:5001/api/buyer/reviews/product/$productId?limit=$limit',
+        ),
+        headers: headers,
+      );
+
+      print('📡 Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return {
+            'success': true,
+            'reviews': data['reviews'] ?? [],
+            'stats':
+                data['stats'] ??
+                {
+                  'average': 0.0,
+                  'total': 0,
+                  'ratingDistribution': {5: 0, 4: 0, 3: 0, 2: 0, 1: 0},
+                },
+          };
+        }
+      }
+
+      return {
+        'success': false,
+        'reviews': [],
+        'stats': {
+          'average': 0.0,
+          'total': 0,
+          'ratingDistribution': {5: 0, 4: 0, 3: 0, 2: 0, 1: 0},
+        },
+      };
+    } catch (e) {
+      print('❌ Error fetching product reviews: $e');
+      return {
+        'success': false,
+        'reviews': [],
+        'stats': {
+          'average': 0.0,
+          'total': 0,
+          'ratingDistribution': {5: 0, 4: 0, 3: 0, 2: 0, 1: 0},
+        },
+      };
+    }
+  }
+  // ! *******
+
+  // ========== GET REVIEW STATS ==========
+  Future<Map<String, dynamic>> getReviewStats(String productId) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse(
+          'http://192.168.10.20:5001/api/buyer/products/$productId/reviews/stats',
+        ),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return {
+            'averageRating': data['averageRating'] ?? 0.0,
+            'totalReviews': data['totalReviews'] ?? 0,
+            'ratingDistribution': data['ratingDistribution'] ?? {},
+          };
+        }
+      }
+
+      return {
+        'averageRating': 0.0,
+        'totalReviews': 0,
+        'ratingDistribution': {},
+      };
+    } catch (e) {
+      print('❌ Error fetching review stats: $e');
+      return {
+        'averageRating': 0.0,
+        'totalReviews': 0,
+        'ratingDistribution': {},
+      };
+    }
   }
 }

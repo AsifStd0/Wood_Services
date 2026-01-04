@@ -24,7 +24,7 @@ class CartProvider with ChangeNotifier {
   String get errorMessage => _errorMessage;
 
   final BuyerLocalStorageServiceImpl _storage = BuyerLocalStorageServiceImpl();
-  static const String baseUrl = 'http://192.168.18.107:5001/api';
+  static const String baseUrl = 'http://192.168.10.20:5001/api';
 
   String? _cachedToken;
 

@@ -165,7 +165,7 @@ class BuyerCartService {
     }
   }
 
-  final String baseUrl = "http://192.168.18.107:5001";
+  final String baseUrl = "http://192.168.10.20:5001";
   // Request buy - use correct endpoint
   Future<Map<String, dynamic>> requestBuy({
     required List<String> itemIds,

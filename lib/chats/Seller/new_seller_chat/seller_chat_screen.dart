@@ -3,47 +3,48 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/chats/Buyer/buyer_chat_model.dart';
-import 'package:wood_service/chats/Buyer/buyer_chat_provider.dart';
+import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_provider.dart';
 import 'package:wood_service/chats/message_bubble.dart' show MessageBubble;
 import 'package:wood_service/core/theme/app_colors.dart';
 
-class BuyerChatScreen extends StatefulWidget {
-  final String sellerId;
-  final String sellerName;
-  // final String? sellerImage;
+class SellerChatScreen extends StatefulWidget {
+  final String buyerId;
+  final String buyerName;
+  final String? chatId;
   final String? productId;
   final String? productName;
-  // final String? orderId;
+  final String? buyerImage;
 
-  const BuyerChatScreen({
+  const SellerChatScreen({
     super.key,
-    required this.sellerId,
-    required this.sellerName,
-    // this.sellerImage,
+    required this.buyerId,
+    required this.buyerName,
+    this.chatId,
     this.productId,
     this.productName,
-    // this.orderId,
+    this.buyerImage,
   });
 
   @override
-  State<BuyerChatScreen> createState() => _BuyerChatScreenState();
+  State<SellerChatScreen> createState() => _SellerChatScreenState();
 }
 
-class _BuyerChatScreenState extends State<BuyerChatScreen> {
+class _SellerChatScreenState extends State<SellerChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final FocusNode _messageFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
-  late BuyerChatProvider _chatProvider;
+  late SellerChatProvider _chatProvider;
   Timer? _typingTimer;
+  bool _isTyping = false;
 
   @override
   void initState() {
     super.initState();
     log(
-      'data is here ${widget.sellerId} ${widget.sellerName} ${widget.productId} ',
+      'Seller Chat - Buyer: ${widget.buyerId}, Chat: ${widget.chatId}, Product: ${widget.productId}',
     );
-    _chatProvider = Provider.of<BuyerChatProvider>(context, listen: false);
+
+    _chatProvider = Provider.of<SellerChatProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeChat();
     });
@@ -51,28 +52,43 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
 
   Future<void> _initializeChat() async {
     try {
-      // Get current user info
+      // Get current seller info
       final userInfo = await _chatProvider.getCurrentUserInfo();
-      final buyerId = userInfo['userId'] as String?;
+      final sellerId = userInfo['userId'] as String?;
 
-      if (buyerId == null) {
-        throw Exception('Buyer ID not found');
+      if (sellerId == null) {
+        throw Exception('Seller ID not found');
       }
 
-      // Open chat with seller
-      await _chatProvider.openChat(
-        sellerId: widget.sellerId,
-        buyerId: buyerId,
-        productId: widget.productId,
-        // orderId: widget.orderId,
-      );
+      // Open or load existing chat
+      if (widget.chatId != null) {
+        // Load existing chat
+        await _chatProvider.openExistingChat(widget.chatId!);
+      } else {
+        // Start new chat
+        await _chatProvider.startChat(
+          buyerId: widget.buyerId,
+          sellerId: sellerId,
+          productId: widget.productId,
+        );
+      }
 
-      // Scroll to bottom after messages load
+      // Scroll to bottom
       _scrollToBottom();
+
+      // Setup typing listener
+      _setupTypingListener();
     } catch (e) {
-      print('Error initializing chat: $e');
-      // Handle error - show snackbar or dialog
+      print('Error initializing seller chat: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load chat: $e')));
     }
+  }
+
+  void _setupTypingListener() {
+    // Listen for buyer typing
+    // You would implement this based on your socket setup
   }
 
   void _scrollToBottom() {
@@ -92,9 +108,11 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
 
     // Send typing indicator
     _chatProvider.sendTypingIndicator(true);
+    setState(() => _isTyping = true);
 
     _typingTimer = Timer(const Duration(seconds: 2), () {
       _chatProvider.sendTypingIndicator(false);
+      setState(() => _isTyping = false);
     });
   }
 
@@ -109,11 +127,12 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
     // Stop typing indicator
     _typingTimer?.cancel();
     await _chatProvider.sendTypingIndicator(false);
+    setState(() => _isTyping = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<BuyerChatProvider>(
+    return Consumer<SellerChatProvider>(
       builder: (context, chatProvider, child) {
         final currentChat = chatProvider.currentChat;
 
@@ -122,8 +141,11 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
           appBar: _buildAppBar(context, chatProvider),
           body: Column(
             children: [
-              // Order info banner if exists
-              if (currentChat?.orderId != null) _buildOrderInfo(currentChat!),
+              // Product info banner if exists
+              if (widget.productId != null) _buildProductInfo(),
+
+              // Typing indicator
+              if (_isTyping) _buildTypingIndicator(),
 
               Expanded(
                 child: chatProvider.isLoading
@@ -140,7 +162,7 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
     );
   }
 
-  Widget _buildOrderInfo(ChatRoom chat) {
+  Widget _buildProductInfo() {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -152,30 +174,92 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
           Icon(Icons.shopping_bag_rounded, color: AppColors.primary, size: 20),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              'Order ${chat.orderId}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[700],
-                fontWeight: FontWeight.w500,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Product Inquiry',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                if (widget.productName != null)
+                  Text(
+                    widget.productName!,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+              ],
             ),
           ),
-          TextButton(
+          IconButton(
             onPressed: () {
-              // Navigate to order details
+              // Navigate to product details
             },
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: Size.zero,
-            ),
+            icon: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypingIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.transparent,
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 12,
+            backgroundColor: Colors.grey[300],
             child: Text(
-              'View Order',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
+              widget.buyerName.isNotEmpty
+                  ? widget.buyerName[0].toUpperCase()
+                  : '?',
+              style: TextStyle(fontSize: 10, color: Colors.grey[700]),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 4,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(horizontal: 1),
+                  decoration: const BoxDecoration(
+                    color: Colors.grey,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Container(
+                  width: 4,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(horizontal: 1),
+                  decoration: const BoxDecoration(
+                    color: Colors.grey,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Container(
+                  width: 4,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(horizontal: 1),
+                  decoration: const BoxDecoration(
+                    color: Colors.grey,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -183,7 +267,7 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
     );
   }
 
-  Widget _buildChatMessages(BuyerChatProvider chatProvider) {
+  Widget _buildChatMessages(SellerChatProvider chatProvider) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -219,7 +303,7 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
 
             return MessageBubble(
               message: message,
-              isMe: message.senderType == 'Buyer', // Adjust based on user role
+              isMe: message.senderType == 'Seller', // Seller's messages
             );
           },
         ),
@@ -247,7 +331,7 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
               },
               onSubmitted: (value) => _sendMessage(),
               decoration: InputDecoration(
-                hintText: 'Type a message...',
+                hintText: 'Type your reply...',
                 hintStyle: const TextStyle(color: Colors.grey, fontSize: 16),
                 filled: true,
                 fillColor: Colors.white,
@@ -297,7 +381,10 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
               shape: BoxShape.circle,
               gradient: hasText
                   ? const LinearGradient(
-                      colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                      colors: [
+                        Color(0xFF4CAF50),
+                        Color(0xFF2E7D32),
+                      ], // Green for seller
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     )
@@ -307,7 +394,7 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
               boxShadow: hasText
                   ? [
                       BoxShadow(
-                        color: const Color(0xFF667EEA).withOpacity(0.4),
+                        color: const Color(0xFF4CAF50).withOpacity(0.4),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
@@ -328,10 +415,7 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
     );
   }
 
-  AppBar _buildAppBar(BuildContext context, BuyerChatProvider chatProvider) {
-    final currentChat = chatProvider.currentChat;
-    final otherUserOnline = currentChat?.otherUserIsOnline ?? false;
-
+  AppBar _buildAppBar(BuildContext context, SellerChatProvider chatProvider) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 1,
@@ -345,25 +429,25 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
       title: Row(
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.primary,
-            // foregroundImage: currentChat?.otherUserImage != null
-            //     ? NetworkImage(currentChat!.otherUserImage!)
-            //     : null,
-            // child: currentChat?.otherUserImage == null
-            //     ? Text(
-            //         widget.sellerName.isNotEmpty
-            //             ? widget.sellerName[0].toUpperCase()
-            //             : 'S',
-            //         style: const TextStyle(color: Colors.white),
-            //       )
-            //     : null,
+            backgroundColor: Colors.green,
+            foregroundImage: widget.buyerImage != null
+                ? NetworkImage(widget.buyerImage!)
+                : null,
+            child: widget.buyerImage == null
+                ? Text(
+                    widget.buyerName.isNotEmpty
+                        ? widget.buyerName[0].toUpperCase()
+                        : 'C',
+                    style: const TextStyle(color: Colors.white),
+                  )
+                : null,
           ),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                currentChat?.otherUserName ?? widget.sellerName,
+                widget.buyerName,
                 style: const TextStyle(
                   color: Colors.black,
                   fontSize: 16,
@@ -371,23 +455,26 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
                 ),
               ),
               Text(
-                otherUserOnline ? 'Online' : 'Offline',
-                style: TextStyle(
-                  color: otherUserOnline ? Colors.green : Colors.grey,
-                  fontSize: 12,
-                ),
+                'Customer',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
             ],
           ),
         ],
       ),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.more_vert, color: Colors.grey[700]),
+          onPressed: _showChatOptions,
+        ),
+      ],
     );
   }
 
   void _showAttachmentOptions() {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) => Container(
@@ -395,11 +482,11 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            const Text(
               'Send File',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -409,18 +496,18 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
                   onTap: () => _pickImageFromGallery(),
                 ),
                 _buildAttachmentOption(
-                  icon: Icons.description_rounded,
+                  icon: Icons.attach_file_rounded,
                   label: 'Document',
                   onTap: () => _pickDocument(),
                 ),
                 _buildAttachmentOption(
-                  icon: Icons.folder_rounded,
-                  label: 'File',
-                  onTap: () => _pickFile(),
+                  icon: Icons.photo_library_rounded,
+                  label: 'Product Photo',
+                  onTap: () => _pickProductPhoto(),
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -435,30 +522,98 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
     return Column(
       children: [
         IconButton(
-          icon: Icon(icon, size: 30, color: Color(0xFF667EEA)),
+          icon: Icon(icon, size: 30, color: const Color(0xFF4CAF50)),
           onPressed: onTap,
         ),
-        Text(label, style: TextStyle(fontSize: 12)),
+        Text(label, style: const TextStyle(fontSize: 12)),
       ],
+    );
+  }
+
+  void _showChatOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.archive),
+              title: const Text('Archive Chat'),
+              onTap: () {
+                Navigator.pop(context);
+                _chatProvider.toggleArchiveChat(
+                  _chatProvider.currentChat?.id ?? '',
+                  true,
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.notifications_off),
+              title: const Text('Mute Notifications'),
+              onTap: () {
+                Navigator.pop(context);
+                // Implement mute functionality
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete),
+              title: const Text('Delete Chat'),
+              onTap: () {
+                Navigator.pop(context);
+                _showDeleteConfirmation();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Chat'),
+        content: const Text('Are you sure you want to delete this chat?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context); // Go back to chat list
+              // Implement delete functionality
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 
   void _pickImageFromGallery() {
     Navigator.pop(context);
+    print('Seller: Pick image from gallery');
     // Implement image picker
-    print('Pick image from gallery');
   }
 
   void _pickDocument() {
     Navigator.pop(context);
+    print('Seller: Pick document');
     // Implement document picker
-    print('Pick document');
   }
 
-  void _pickFile() {
+  void _pickProductPhoto() {
     Navigator.pop(context);
-    // Implement file picker
-    print('Pick file');
+    print('Seller: Pick product photo');
+    // Implement product photo picker
   }
 
   @override

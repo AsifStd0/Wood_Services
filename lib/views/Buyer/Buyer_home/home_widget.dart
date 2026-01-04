@@ -475,7 +475,6 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
                 overflow: TextOverflow.ellipsis,
               ),
 
-              // Description
               Text(
                 product.shortDescription,
                 style: TextStyle(fontSize: 11, color: Colors.grey[600]),
@@ -649,11 +648,13 @@ void _startChatWithSeller(BuyerProductModel product, BuildContext context) {
   Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (context) => ChatScreen(
+      builder: (context) => BuyerChatScreen(
         sellerId: sellerIdString,
         sellerName: sellerNameString,
         productId: product.id,
-        orderId: product.sku,
+        productName: product.title,
+        // ✅ Remove orderId or set it to null
+        // orderId: null, // Or don't pass this parameter at all
       ),
     ),
   );

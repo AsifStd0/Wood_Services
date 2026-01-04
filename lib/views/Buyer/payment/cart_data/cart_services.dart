@@ -337,26 +337,4 @@ class CartServices {
       rethrow;
     }
   }
-
-  // Get product reviews (public)
-  static Future<Map<String, dynamic>> getProductReviews({
-    required String productId,
-    int page = 1,
-    int limit = 10,
-    int? rating,
-    String sort = 'newest',
-  }) async {
-    try {
-      String url =
-          '$baseUrl/buyer/reviews/product/$productId?'
-          'page=$page&limit=$limit&sort=$sort';
-      if (rating != null) url += '&rating=$rating';
-
-      final response = await http.get(Uri.parse(url));
-      return _handleResponse(response);
-    } catch (e) {
-      print('❌ Error getting product reviews: $e');
-      rethrow;
-    }
-  }
 }

@@ -1,9 +1,11 @@
 // lib/buyer_seller_chat.dart (Clean version)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/chats/chat_provider.dart';
-import 'package:wood_service/chats/Buyer/messages_screen.dart';
-import 'package:wood_service/chats/Seller/seller_messages_screen.dart';
+import 'package:wood_service/chats/Buyer/buyer_chat_provider.dart';
+import 'package:wood_service/chats/Buyer/buyer_outer_messages_screen.dart';
+import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_outer.dart';
+import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_provider.dart';
+import 'package:wood_service/chats/Seller/new_seller_chat/seller_messages_screen.dart';
 
 class ChatBuyer extends StatefulWidget {
   const ChatBuyer({super.key});
@@ -13,12 +15,12 @@ class ChatBuyer extends StatefulWidget {
 }
 
 class _ChatBuyerState extends State<ChatBuyer> {
-  late ChatProvider _chatProvider;
+  late BuyerChatProvider _chatProvider;
 
   @override
   void initState() {
     super.initState();
-    _chatProvider = Provider.of<ChatProvider>(context, listen: false);
+    _chatProvider = Provider.of<BuyerChatProvider>(context, listen: false);
     _initializeChat();
   }
 
@@ -32,24 +34,24 @@ class _ChatBuyerState extends State<ChatBuyer> {
 
   @override
   Widget build(BuildContext context) {
-    return MessagesScreen();
+    return BuyerOuterMessagesScreen();
   }
 }
 
-class ChatSeller extends StatefulWidget {
-  const ChatSeller({super.key});
+class SellerChat extends StatefulWidget {
+  const SellerChat({super.key});
 
   @override
-  State<ChatSeller> createState() => _ChatSellerState();
+  State<SellerChat> createState() => _SellerChatState();
 }
 
-class _ChatSellerState extends State<ChatSeller> {
-  late ChatProvider _chatProvider;
+class _SellerChatState extends State<SellerChat> {
+  late SellerChatProvider _chatProvider;
 
   @override
   void initState() {
     super.initState();
-    _chatProvider = Provider.of<ChatProvider>(context, listen: false);
+    _chatProvider = Provider.of<SellerChatProvider>(context, listen: false);
     _initializeChat();
   }
 
@@ -57,15 +59,12 @@ class _ChatSellerState extends State<ChatSeller> {
     try {
       await _chatProvider.initialize();
     } catch (e) {
-      print('Error initializing chat: $e');
+      print('Error initializing seller chat: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _chatProvider,
-      child: const SellerMessagesScreen(),
-    );
+    return SellerOuterMessagesScreen();
   }
 }

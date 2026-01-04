@@ -35,7 +35,7 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
     try {
       final token = await storageService.getBuyerToken();
       if (token == null) throw Exception('Please login again');
-      final uri = Uri.parse('http://192.168.18.107:5001/api/buyer/orders')
+      final uri = Uri.parse('http://192.168.10.20:5001/api/buyer/orders')
           .replace(
             queryParameters: {
               if (status != null) 'status': status,
@@ -82,7 +82,7 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
       final response = await http
           .get(
             Uri.parse(
-              'http://192.168.18.107:5001/api/buyer/orders/stats/summary',
+              'http://192.168.10.20:5001/api/buyer/orders/stats/summary',
             ),
             headers: {'Authorization': 'Bearer $token'},
           )
@@ -128,7 +128,7 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
 
       final response = await http
           .get(
-            Uri.parse('http://192.168.18.107:5001/api/buyer/orders/$orderId'),
+            Uri.parse('http://192.168.10.20:5001/api/buyer/orders/$orderId'),
             headers: {'Authorization': 'Bearer $token'},
           )
           .timeout(const Duration(seconds: 30));
@@ -158,7 +158,7 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
       final response = await http
           .post(
             Uri.parse(
-              'http://192.168.18.107:5001/api/buyer/orders/$orderId/cancel',
+              'http://192.168.10.20:5001/api/buyer/orders/$orderId/cancel',
             ),
             headers: {
               'Authorization': 'Bearer $token',
@@ -194,7 +194,7 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
       final response = await http
           .post(
             Uri.parse(
-              'http://192.168.18.107:5001/api/buyer/orders/$orderId/received',
+              'http://192.168.10.20:5001/api/buyer/orders/$orderId/received',
             ),
             headers: {'Authorization': 'Bearer $token'},
           )
@@ -237,7 +237,7 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
       final response = await http
           .post(
             Uri.parse(
-              'http://192.168.18.107:5001/api/buyer/orders/$orderId/review',
+              'http://192.168.10.20:5001/api/buyer/orders/$orderId/review',
             ),
             headers: {
               'Authorization': 'Bearer $token',

@@ -16,7 +16,7 @@ class FavoriteProvider extends ChangeNotifier {
 
   // ========== BASE URL ==========
   // Use ONE consistent base URL
-  static const String _baseUrl = 'http://192.168.18.107:5001';
+  static const String _baseUrl = 'http://192.168.10.20:5001';
 
   // ========== CONSTRUCTOR ==========
   FavoriteProvider(this._buyerLocalStorageService);

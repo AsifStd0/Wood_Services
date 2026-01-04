@@ -1,4 +1,4 @@
-class ChatMessage {
+class BuyerChatModel {
   String id;
   String chatId;
   String senderId;
@@ -16,7 +16,7 @@ class ChatMessage {
   String? orderId;
   List<ChatAttachment> attachments;
 
-  ChatMessage({
+  BuyerChatModel({
     required this.id,
     required this.chatId,
     required this.senderId,
@@ -35,8 +35,8 @@ class ChatMessage {
     this.attachments = const [],
   });
 
-  factory ChatMessage.fromJson(Map<String, dynamic> json) {
-    return ChatMessage(
+  factory BuyerChatModel.fromJson(Map<String, dynamic> json) {
+    return BuyerChatModel(
       id: json['_id'] ?? json['id'] ?? '',
       chatId: json['chatId'] ?? '',
       senderId: json['senderId'] ?? '',
@@ -62,19 +62,6 @@ class ChatMessage {
     );
   }
 
-  // Map<String, dynamic> toJson() {
-  //   return {
-  //     'chatId': chatId,
-  //     'receiverId': receiverId,
-  //     'receiverType': receiverType,
-  //     'message': message,
-  //     'messageType': messageType,
-  //     if (productId != null) 'productId': productId,
-  //     if (orderId != null) 'orderId': orderId,
-  //     if (attachments.isNotEmpty)
-  //       'attachments': attachments.map((x) => x.toJson()).toList(),
-  //   };
-  // }
   Map<String, dynamic> toJsonForSend() {
     return {
       'chatId': chatId,
@@ -90,6 +77,45 @@ class ChatMessage {
   }
 
   bool get isSentByMe => senderType == 'Buyer'; // Adjust based on user role
+
+  // ✅ ADDED: copyWith method
+  BuyerChatModel copyWith({
+    String? id,
+    String? chatId,
+    String? senderId,
+    String? senderName,
+    String? senderType,
+    String? receiverId,
+    String? receiverName,
+    String? receiverType,
+    String? message,
+    String? messageType,
+    bool? isRead,
+    DateTime? createdAt,
+    DateTime? readAt,
+    String? productId,
+    String? orderId,
+    List<ChatAttachment>? attachments,
+  }) {
+    return BuyerChatModel(
+      id: id ?? this.id,
+      chatId: chatId ?? this.chatId,
+      senderId: senderId ?? this.senderId,
+      senderName: senderName ?? this.senderName,
+      senderType: senderType ?? this.senderType,
+      receiverId: receiverId ?? this.receiverId,
+      receiverName: receiverName ?? this.receiverName,
+      receiverType: receiverType ?? this.receiverType,
+      message: message ?? this.message,
+      messageType: messageType ?? this.messageType,
+      isRead: isRead ?? this.isRead,
+      createdAt: createdAt ?? this.createdAt,
+      readAt: readAt ?? this.readAt,
+      productId: productId ?? this.productId,
+      orderId: orderId ?? this.orderId,
+      attachments: attachments ?? this.attachments,
+    );
+  }
 }
 
 class ChatAttachment {
@@ -117,6 +143,21 @@ class ChatAttachment {
   Map<String, dynamic> toJson() {
     return {'url': url, 'type': type, 'name': name, 'size': size};
   }
+
+  // ✅ ADDED: copyWith method
+  ChatAttachment copyWith({
+    String? url,
+    String? type,
+    String? name,
+    int? size,
+  }) {
+    return ChatAttachment(
+      url: url ?? this.url,
+      type: type ?? this.type,
+      name: name ?? this.name,
+      size: size ?? this.size,
+    );
+  }
 }
 
 class ChatRoom {
@@ -142,7 +183,31 @@ class ChatRoom {
     this.otherParticipant,
   });
 
+  // In chat_messages.dart - Update the ChatRoom.fromJson factory
   factory ChatRoom.fromJson(Map<String, dynamic> json) {
+    // Handle productId - it could be String or Map
+    String? productIdString;
+    if (json['productId'] != null) {
+      if (json['productId'] is String) {
+        productIdString = json['productId'];
+      } else if (json['productId'] is Map) {
+        // Extract the ID from the product object
+        productIdString =
+            json['productId']['_id']?.toString() ??
+            json['productId']['id']?.toString();
+      }
+    }
+
+    // Handle lastMessage similarly
+    String? lastMessageString;
+    if (json['lastMessage'] != null) {
+      if (json['lastMessage'] is String) {
+        lastMessageString = json['lastMessage'];
+      } else if (json['lastMessage'] is Map) {
+        lastMessageString = json['lastMessage']['_id']?.toString();
+      }
+    }
+
     return ChatRoom(
       id: json['_id'] ?? json['id'] ?? '',
       participants: json['participants'] != null
@@ -150,13 +215,13 @@ class ChatRoom {
               json['participants'].map((x) => ChatParticipant.fromJson(x)),
             )
           : [],
-      lastMessage: json['lastMessage'],
+      lastMessage: lastMessageString, // Use the extracted string
       lastMessageText: json['lastMessageText'] ?? '',
       unreadCount: json['myUnreadCount'] ?? json['unreadCount'] ?? 0,
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'])
           : DateTime.now(),
-      productId: json['productId'],
+      productId: productIdString, // Use the extracted string
       orderId: json['orderId'],
       otherParticipant: json['otherParticipant'],
     );
@@ -187,6 +252,31 @@ class ChatRoom {
       return otherParticipant!['isOnline'] ?? false;
     }
     return false;
+  }
+
+  // ✅ ADDED: copyWith method
+  ChatRoom copyWith({
+    String? id,
+    List<ChatParticipant>? participants,
+    String? lastMessage,
+    String? lastMessageText,
+    int? unreadCount,
+    DateTime? updatedAt,
+    String? productId,
+    String? orderId,
+    Map<String, dynamic>? otherParticipant,
+  }) {
+    return ChatRoom(
+      id: id ?? this.id,
+      participants: participants ?? this.participants,
+      lastMessage: lastMessage ?? this.lastMessage,
+      lastMessageText: lastMessageText ?? this.lastMessageText,
+      unreadCount: unreadCount ?? this.unreadCount,
+      updatedAt: updatedAt ?? this.updatedAt,
+      productId: productId ?? this.productId,
+      orderId: orderId ?? this.orderId,
+      otherParticipant: otherParticipant ?? this.otherParticipant,
+    );
   }
 }
 
@@ -222,6 +312,27 @@ class ChatParticipant {
       isMuted: json['isMuted'] ?? false,
     );
   }
+
+  // ✅ ADDED: copyWith method
+  ChatParticipant copyWith({
+    String? userId,
+    String? userType,
+    String? name,
+    String? profileImage,
+    DateTime? lastSeen,
+    bool? isArchived,
+    bool? isMuted,
+  }) {
+    return ChatParticipant(
+      userId: userId ?? this.userId,
+      userType: userType ?? this.userType,
+      name: name ?? this.name,
+      profileImage: profileImage ?? this.profileImage,
+      lastSeen: lastSeen ?? this.lastSeen,
+      isArchived: isArchived ?? this.isArchived,
+      isMuted: isMuted ?? this.isMuted,
+    );
+  }
 }
 
 class ChatStartRequest {
@@ -245,20 +356,19 @@ class ChatStartRequest {
       if (orderId != null) 'orderId': orderId,
     };
   }
-}
 
-class ChatApiResponse {
-  bool success;
-  String message;
-  dynamic data;
-
-  ChatApiResponse({required this.success, required this.message, this.data});
-
-  factory ChatApiResponse.fromJson(Map<String, dynamic> json) {
-    return ChatApiResponse(
-      success: json['success'] ?? false,
-      message: json['message'] ?? '',
-      data: json['data'],
+  // ✅ ADDED: copyWith method
+  ChatStartRequest copyWith({
+    String? sellerId,
+    String? buyerId,
+    String? productId,
+    String? orderId,
+  }) {
+    return ChatStartRequest(
+      sellerId: sellerId ?? this.sellerId,
+      buyerId: buyerId ?? this.buyerId,
+      productId: productId ?? this.productId,
+      orderId: orderId ?? this.orderId,
     );
   }
 }

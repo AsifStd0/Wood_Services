@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:wood_service/chats/chat_messages.dart';
+import 'package:wood_service/chats/Buyer/buyer_chat_model.dart';
 import 'package:intl/intl.dart';
 
 class MessageBubble extends StatelessWidget {
-  final ChatMessage message;
+  final BuyerChatModel message;
   final bool isMe;
 
   const MessageBubble({super.key, required this.message, required this.isMe});

@@ -1,23 +1,23 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:wood_service/app/locator.dart';
-import 'package:wood_service/chats/chat_messages.dart';
-import 'package:wood_service/chats/chat_service.dart';
-import 'package:wood_service/chats/socket_service.dart';
+import 'package:wood_service/chats/Buyer/buyer_chat_model.dart';
+import 'package:wood_service/chats/Buyer/buyer_chat_service.dart';
+import 'package:wood_service/chats/Buyer/buyer_socket_service.dart';
 import 'package:wood_service/core/services/buyer_local_storage_service.dart';
 import 'package:wood_service/core/services/seller_local_storage_service.dart';
 
-class ChatProvider extends ChangeNotifier {
+class BuyerChatProvider extends ChangeNotifier {
   final SellerLocalStorageService _sellerStorage =
       locator<SellerLocalStorageService>();
   final BuyerLocalStorageService _buyerStorage =
       locator<BuyerLocalStorageService>();
-  final ChatService _chatService = locator<ChatService>();
-  final SocketService _socketService = locator<SocketService>();
+  final BuyerChatService _chatService = locator<BuyerChatService>();
+  final BuyerSocketService _socketService = locator<BuyerSocketService>();
 
   // State variables
   List<ChatRoom> _chats = [];
-  List<ChatMessage> _currentMessages = [];
+  List<BuyerChatModel> _currentMessages = [];
   ChatRoom? _currentChat;
   bool _isLoading = false;
   bool _isSending = false;
@@ -77,7 +77,7 @@ class ChatProvider extends ChangeNotifier {
 
   // Getters
   List<ChatRoom> get chats => _chats;
-  List<ChatMessage> get currentMessages => _currentMessages;
+  List<BuyerChatModel> get currentMessages => _currentMessages;
   ChatRoom? get currentChat => _currentChat;
   bool get isLoading => _isLoading;
   bool get isSending => _isSending;
@@ -134,7 +134,7 @@ class ChatProvider extends ChangeNotifier {
     });
   }
 
-  Future<void> _handleNewMessage(ChatMessage message) async {
+  Future<void> _handleNewMessage(BuyerChatModel message) async {
     // If message belongs to current chat
     if (_currentChat?.id == message.chatId) {
       _currentMessages.add(message);
@@ -206,43 +206,62 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  // Start or open a chat
   Future<void> openChat({
     required String sellerId,
     required String buyerId,
     String? productId,
-    String? orderId,
   }) async {
+    debugPrint('🟢 openChat() called');
+    debugPrint('   SellerId: $sellerId');
+    debugPrint('   BuyerId: $buyerId');
+    debugPrint('   ProductId: $productId');
+
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
+      debugPrint('📤 Calling _chatService.startChat...');
+
       final result = await _chatService.startChat(
         ChatStartRequest(
           sellerId: sellerId,
           buyerId: buyerId,
           productId: productId,
-          orderId: orderId,
         ),
       );
 
+      debugPrint('✅ Chat service response received');
+
       _currentChat = result['chat'] as ChatRoom;
-      _currentMessages = result['messages'] as List<ChatMessage>;
+      _currentMessages = result['messages'] as List<BuyerChatModel>;
+
+      debugPrint('🎯 CurrentChat set: ${_currentChat?.id}');
+      debugPrint('📩 Messages loaded: ${_currentMessages.length}');
 
       // Join socket room
-      _socketService.joinChat(_currentChat!.id);
+      if (_currentChat != null) {
+        _socketService.joinChat(_currentChat!.id);
+        debugPrint('🔌 Joined socket room: ${_currentChat!.id}');
+      }
 
       // Mark all messages as read
-      await _chatService.markAsRead(_currentChat!.id);
+      if (_currentChat != null) {
+        await _chatService.markAsRead(_currentChat!.id);
+        debugPrint('👁 Marked messages as read');
+      }
 
       // Update unread count
       await getUnreadCount();
-    } catch (e) {
+      debugPrint('✅ Chat opened successfully');
+    } catch (e, stackTrace) {
       _error = 'Failed to open chat: $e';
+      debugPrint('❌ openChat error: $e');
+      debugPrint('📛 StackTrace: $stackTrace');
     } finally {
       _isLoading = false;
       notifyListeners();
+      debugPrint('🔵 openChat() finished');
     }
   }
 
@@ -285,47 +304,64 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  // Send a message - FIXED VERSION
   Future<void> sendMessage(String text) async {
-    if (text.trim().isEmpty || _currentChat == null) return;
+    debugPrint('🟢 sendMessage() called');
+
+    if (text.trim().isEmpty) {
+      debugPrint('⚠️ Message text is empty');
+      return;
+    }
+
+    if (_currentChat == null) {
+      debugPrint('❌ Current chat is NULL');
+      return;
+    }
 
     _isSending = true;
     notifyListeners();
 
     try {
+      debugPrint('🔍 Fetching current user info...');
+
       final currentUserId = await _getCurrentUserId();
-      final currentUserName = await _getCurrentUserName();
       final currentUserType = await _getCurrentUserType();
+
+      debugPrint('👤 CurrentUserId: $currentUserId');
+      debugPrint('👤 CurrentUserType: $currentUserType');
 
       if (currentUserId == null) {
         throw Exception('User ID not found');
       }
 
-      // Find the other participant
+      debugPrint('👥 Chat Participants: ${_currentChat!.participants.length}');
+
       final otherParticipant = _currentChat!.participants.firstWhere(
         (p) => p.userId != currentUserId,
-        orElse: () => _currentChat!.participants.first,
+        orElse: () {
+          throw Exception('Other participant not found');
+        },
       );
 
-      // Create message object
-      final newMessage = ChatMessage(
-        id: '', // Will be set by server
+      debugPrint('➡️ ReceiverId: ${otherParticipant.userId}');
+      debugPrint('➡️ ReceiverType: ${otherParticipant.userType}');
+
+      debugPrint('📤 Sending message via API...');
+
+      final sentMessage = await _chatService.sendMessage(
         chatId: _currentChat!.id,
-        senderId: currentUserId,
-        senderName: currentUserName ?? 'User',
-        senderType: currentUserType == 'seller' ? 'Seller' : 'Buyer',
         receiverId: otherParticipant.userId,
-        receiverName: otherParticipant.name,
         receiverType: otherParticipant.userType,
         message: text.trim(),
         messageType: 'text',
-        isRead: false,
-        createdAt: DateTime.now(),
-        productId: _currentChat!.productId,
-        orderId: _currentChat!.orderId,
       );
 
-      // Send via socket for real-time
+      debugPrint('✅ Message sent successfully');
+      debugPrint('🆔 MessageId: ${sentMessage.id}');
+
+      _currentMessages.add(sentMessage);
+
+      debugPrint('📡 Sending message via Socket...');
+
       _socketService.sendMessage(
         chatId: _currentChat!.id,
         message: text.trim(),
@@ -333,37 +369,33 @@ class ChatProvider extends ChangeNotifier {
         messageType: 'text',
       );
 
-      // Send via API for persistence - FIXED CALL
-      final sentMessage = await _chatService.sendMessage(
-        chatId: _currentChat!.id,
-        receiverId: otherParticipant.userId,
-        receiverType: otherParticipant.userType,
-        message: text.trim(),
-      );
+      debugPrint('🗂 Updating chat list...');
 
-      // Add to current messages
-      _currentMessages.add(sentMessage);
-
-      // Update chat list
       final chatIndex = _chats.indexWhere((c) => c.id == _currentChat!.id);
+
       if (chatIndex != -1) {
-        _chats[chatIndex] = ChatRoom(
-          id: _currentChat!.id,
-          participants: _currentChat!.participants,
-          lastMessage: sentMessage.id,
+        _chats[chatIndex] = _chats[chatIndex].copyWith(
           lastMessageText: text.trim(),
-          unreadCount: 0,
           updatedAt: DateTime.now(),
-          productId: _currentChat!.productId,
-          orderId: _currentChat!.orderId,
+          lastMessage: sentMessage.id,
         );
+
         _chats.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+        debugPrint('✅ Chat list updated');
+      } else {
+        debugPrint('⚠️ Chat not found in chat list');
       }
-    } catch (e) {
-      _error = 'Failed to send message: $e';
+
+      notifyListeners();
+    } catch (e, stackTrace) {
+      _error = 'Failed to send message';
+      debugPrint('❌ Send message error: $e');
+      debugPrint('📛 StackTrace: $stackTrace');
+      notifyListeners();
     } finally {
       _isSending = false;
-      notifyListeners();
+      debugPrint('🔵 sendMessage() finished');
     }
   }
 

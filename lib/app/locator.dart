@@ -2,8 +2,11 @@
 import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
-import 'package:wood_service/chats/chat_service.dart';
-import 'package:wood_service/chats/socket_service.dart';
+import 'package:wood_service/chats/Buyer/buyer_chat_service.dart';
+import 'package:wood_service/chats/Buyer/buyer_socket_service.dart';
+import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_provider.dart';
+import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_service.dart';
+import 'package:wood_service/chats/Seller/new_seller_chat/seller_socket_service.dart';
 import 'package:wood_service/core/services/buyer_local_storage_service.dart';
 
 // Import SEPARATE implementations
@@ -53,7 +56,7 @@ Future<void> setupLocator() async {
   // ========== STEP 2: Register Dio ==========
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'http://192.168.18.107:5001',
+      baseUrl: 'http://192.168.10.20:5001',
 
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
@@ -140,7 +143,7 @@ Future<void> setupLocator() async {
   locator.registerLazySingleton(
     () => ApiBuyerOrderRepository(
       storageService: locator<BuyerLocalStorageService>(),
-      baseUrl: 'http://192.168.18.107:5001', // or your base URL
+      baseUrl: 'http://192.168.10.20:5001', // or your base URL
     ),
   );
 
@@ -163,11 +166,14 @@ Future<void> setupLocator() async {
   locator.registerLazySingleton(() => BuyerCartViewModel());
 
   // ========== CHAT & CART SERVICES ==========
-  locator.registerLazySingleton(() => ChatService());
-  locator.registerLazySingleton(() => SocketService());
+  locator.registerLazySingleton(() => BuyerChatService());
+  locator.registerLazySingleton(() => BuyerSocketService());
   locator.registerLazySingleton(() => CartServices());
 
   log('🎉 All dependencies registered!');
+  locator.registerLazySingleton(() => SellerChatService());
+  locator.registerLazySingleton(() => SellerSocketService());
+  locator.registerFactory(() => SellerChatProvider());
 }
 // ! ********
 // import 'dart:developer';
@@ -216,7 +222,7 @@ Future<void> setupLocator() async {
 //   // ========== STEP 2: Register Dio ==========
 //   final dio = Dio(
 //     BaseOptions(
-//       baseUrl: 'http://192.168.18.107:5001',
+//       baseUrl: 'http://192.168.10.20:5001',
 //       connectTimeout: const Duration(seconds: 30),
 //       receiveTimeout: const Duration(seconds: 30),
 //       headers: {

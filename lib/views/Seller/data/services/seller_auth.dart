@@ -422,7 +422,7 @@ class SellerAuthService {
       log('🔄 Updating seller profile...');
 
       final response = await _dio.put(
-        'http://192.168.18.107:5001/api/seller/auth/profileUpdate',
+        'http://192.168.10.20:5001/api/seller/auth/profileUpdate',
 
         data: formData,
         options: Options(

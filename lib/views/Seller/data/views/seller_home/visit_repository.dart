@@ -19,7 +19,7 @@ class ApiVisitRepository implements VisitRepository {
   ApiVisitRepository({required this.dio, required this.storageService});
 
   // REMOVE THESE - They're redundant with Dio
-  // final String baseUrl = 'http://192.168.18.107:5001/api';
+  // final String baseUrl = 'http://192.168.10.20:5001/api';
   // final String? authToken;
   // Map<String, String> _getHeaders() { ... }
 
