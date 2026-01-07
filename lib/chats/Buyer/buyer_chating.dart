@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wood_service/app/index.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_model.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_provider.dart';
 import 'package:wood_service/chats/message_bubble.dart' show MessageBubble;
@@ -11,16 +12,12 @@ import 'package:wood_service/core/theme/app_colors.dart';
 class BuyerChatScreen extends StatefulWidget {
   final String sellerId;
   final String sellerName;
-  // final String? sellerImage;
   final String? productId;
   final String? productName;
-  // final String? orderId;
-
   const BuyerChatScreen({
     super.key,
     required this.sellerId,
     required this.sellerName,
-    // this.sellerImage,
     this.productId,
     this.productName,
     // this.orderId,
@@ -185,6 +182,7 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
 
   Widget _buildChatMessages(BuyerChatProvider chatProvider) {
     return Container(
+      padding: EdgeInsets.only(bottom: 60),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.only(
@@ -236,37 +234,25 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
       child: Row(
         children: [
           Expanded(
-            child: TextField(
+            child: CustomTextFormField(
               controller: _messageController,
               focusNode: _messageFocusNode,
-              maxLines: null,
-              textInputAction: TextInputAction.send,
+              textFieldType: TextFieldType.text,
+              hintText: 'Type a message...',
+              minline: 1,
+              maxLines: 3,
+              isDialogField: true,
+              validate: false, // Disable validation for chat
+              fillcolor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
               onChanged: (value) {
                 _onTyping();
                 setState(() {});
               },
-              onSubmitted: (value) => _sendMessage(),
-              decoration: InputDecoration(
-                hintText: 'Type a message...',
-                hintStyle: const TextStyle(color: Colors.grey, fontSize: 16),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: const BorderSide(
-                    color: AppColors.primary,
-                    width: 1.5,
-                  ),
-                ),
-              ),
+              onSubmitted: (_) => _sendMessage(),
             ),
           ),
           const SizedBox(width: 6),

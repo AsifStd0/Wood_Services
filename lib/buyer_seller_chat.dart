@@ -5,7 +5,6 @@ import 'package:wood_service/chats/Buyer/buyer_chat_provider.dart';
 import 'package:wood_service/chats/Buyer/buyer_outer_messages_screen.dart';
 import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_outer.dart';
 import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_provider.dart';
-import 'package:wood_service/chats/Seller/new_seller_chat/seller_messages_screen.dart';
 
 class ChatBuyer extends StatefulWidget {
   const ChatBuyer({super.key});

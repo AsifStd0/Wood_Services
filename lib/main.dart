@@ -23,6 +23,8 @@ void main() async {
 }
 
 class AppWithProviders extends StatelessWidget {
+  const AppWithProviders({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -42,11 +44,11 @@ class MyApp extends StatelessWidget {
   final String? workingServerUrl;
 
   const MyApp({
-    Key? key,
+    super.key,
     required this.isSellerLoggedIn,
     required this.isBuyerLoggedIn, // Add this
     this.workingServerUrl,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +86,7 @@ class MyApp extends StatelessWidget {
 class ErrorApp extends StatelessWidget {
   final String error;
 
-  ErrorApp({required this.error});
+  const ErrorApp({super.key, required this.error});
 
   @override
   Widget build(BuildContext context) {

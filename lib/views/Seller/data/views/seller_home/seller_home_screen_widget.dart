@@ -28,8 +28,7 @@ Widget buildFilterTabs(VisitRequestsViewModel viewModel) {
 class VisitRequestCard extends StatelessWidget {
   final VisitRequest visitRequest;
 
-  const VisitRequestCard({Key? key, required this.visitRequest})
-    : super(key: key);
+  const VisitRequestCard({super.key, required this.visitRequest});
 
   @override
   Widget build(BuildContext context) {

@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
-import 'package:wood_service/views/Buyer/buyer_main.dart';
+import 'package:wood_service/app/buyer_main.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 
 class PhoneVerificationScreen extends StatefulWidget {

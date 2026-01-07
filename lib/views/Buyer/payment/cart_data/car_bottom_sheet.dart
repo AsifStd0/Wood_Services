@@ -1,27 +1,22 @@
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
-import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/payment/cart_data/cart_provider.dart';
 import 'package:wood_service/views/Buyer/payment/rating/order_rating_screen.dart';
-import 'package:wood_service/widgets/custom_widget.dart';
 
-// CartServices
-// CartProvider
 class CartBottomSheet extends StatefulWidget {
   final int count;
   final BuyerProductModel buyerProduct;
   final double totalPrice;
 
-  CartBottomSheet({
-    Key? key,
+  const CartBottomSheet({
+    super.key,
     required this.count,
     required this.buyerProduct,
     required this.totalPrice,
-  }) : super(key: key);
+  });
 
   @override
   State<CartBottomSheet> createState() => _CartBottomSheetState();
@@ -123,24 +118,6 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 8),
-
-          // Seller Info
-          Row(
-            children: [
-              Icon(
-                Icons.storefront_outlined,
-                size: 16,
-                color: Colors.grey[600],
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'Seller: ${widget.buyerProduct.sellerName}',
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
         ],
       ),
     );
@@ -359,19 +336,6 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
     try {
       // Show loading
       final scaffoldMessenger = ScaffoldMessenger.of(context);
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              CircularProgressIndicator(color: Colors.white),
-              SizedBox(width: 12),
-              Text('Processing direct purchase...'),
-            ],
-          ),
-          backgroundColor: Colors.blue,
-          duration: Duration(seconds: 30),
-        ),
-      );
 
       log('🛍️ [DIRECT BUY] Starting direct purchase...');
 
@@ -411,10 +375,9 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
         }
 
         if (orderId != null) {
-          log('✅ Direct purchase successful!');
-          log('   Order ID: $orderId');
-          log('   Order Item ID: $orderItemId');
-          log('   Total Amount: \$$totalAmount');
+          log(
+            ' Total Amount: \$$totalAmount ----   Order Item ID: $orderItemId ---  Order ID: $orderId ',
+          );
 
           // Show success message
           scaffoldMessenger.showSnackBar(
@@ -423,8 +386,6 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
               backgroundColor: Colors.green,
             ),
           );
-
-          // Close bottom sheet
 
           // Navigate to rating screen
           await Future.delayed(Duration(milliseconds: 500));
@@ -472,5 +433,28 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
         ),
       );
     }
+  }
+
+  Widget buildCartHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Cart',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 24),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
   }
 }

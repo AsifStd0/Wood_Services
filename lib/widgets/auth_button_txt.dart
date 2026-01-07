@@ -9,13 +9,13 @@ class AuthBottomText extends StatelessWidget {
   // final Color actionColor;
 
   const AuthBottomText({
-    Key? key,
+    super.key,
     required this.questionText,
     required this.actionText,
     required this.onPressed,
     // this.questionColor = Colors.grey,
     // this.actionColor = Colors.blue,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

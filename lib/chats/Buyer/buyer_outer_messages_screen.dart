@@ -83,9 +83,8 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
             Text('Error: ${chatProvider.error}'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {
-                chatProvider.loadChats();
-              },
+              onPressed: () => chatProvider.loadChats(),
+
               child: const Text('Retry'),
             ),
           ],
@@ -183,6 +182,7 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
                         .userId,
                     sellerName: chat.otherUserName,
                     productId: chat.productId,
+
                     // orderId: chat.orderId,
                   ),
                 ),

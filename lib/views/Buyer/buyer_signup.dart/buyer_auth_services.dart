@@ -53,9 +53,9 @@ class BuyerAuthService {
       // Log the data being sent
       log('🚀 Sending to /api/buyer/auth/register');
       log('Form fields:');
-      formData.fields.forEach((field) {
+      for (var field in formData.fields) {
         log('  ${field.key}: ${field.value}');
-      });
+      }
       log('Files: ${formData.files.length}');
 
       final response = await _dio.post(
@@ -231,9 +231,7 @@ class BuyerAuthService {
           } else {
             // Fallback - use login data
             log('⚠️ Complete profile is not BuyerModel, using login data');
-            final buyer = BuyerModel.fromJson(
-              buyerJson as Map<String, dynamic>,
-            );
+            final buyer = BuyerModel.fromJson(buyerJson);
 
             return {
               'success': true,
@@ -245,7 +243,7 @@ class BuyerAuthService {
         } else {
           // Fallback to partial data if complete fetch fails
           log('⚠️ Could not fetch complete profile, using login data');
-          final buyer = BuyerModel.fromJson(buyerJson as Map<String, dynamic>);
+          final buyer = BuyerModel.fromJson(buyerJson);
 
           return {
             'success': true,
@@ -471,19 +469,6 @@ class BuyerAuthService {
       return false;
     }
   }
-
-  // // Update getCurrentBuyer method:
-  // Future<BuyerModel?> getCurrentBuyerData() async {
-  //   try {
-  //     final buyerData = await _buyerLocalStorageService.getBuyerData();
-  //     if (buyerData == null) return null;
-
-  //     return BuyerModel.fromJson(buyerData);
-  //   } catch (e) {
-  //     log('❌ Error getting current buyer: $e');
-  //     return null;
-  //   }
-  // }
 
   // Make sure this method accepts Map<String, dynamic>
   Future<void> _saveBuyerAuthData(

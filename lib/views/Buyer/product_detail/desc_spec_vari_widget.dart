@@ -730,7 +730,7 @@ Widget _buildVariantsTab(
             },
           ),
         );
-      }).toList(),
+      }),
 
       // Selected variant info
       if (selectedVariant != null) ...[

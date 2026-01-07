@@ -1,5 +1,4 @@
 // lib/data/repositories/shop_repository.dart
-import 'package:wood_service/data/models/shop.dart';
 import 'package:wood_service/views/Seller/data/models/seller_shop_model.dart';
 
 abstract class ShopRepository {

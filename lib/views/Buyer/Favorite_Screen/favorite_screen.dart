@@ -6,7 +6,7 @@ import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_provider.dart'
 import 'package:wood_service/widgets/custom_appbar.dart';
 
 class FavoritesScreen extends StatefulWidget {
-  const FavoritesScreen({Key? key}) : super(key: key);
+  const FavoritesScreen({super.key});
 
   @override
   State<FavoritesScreen> createState() => _FavoritesScreenState();

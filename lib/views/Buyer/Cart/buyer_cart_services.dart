@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
+import 'package:wood_service/app/config.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/services/buyer_local_storage_service.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_model.dart';
@@ -127,10 +128,12 @@ class BuyerCartService {
       };
 
       log('📦 Request Body: $body');
-      log('📤 Endpoint: $baseUrl/api/buyer/cart/add'); // CORRECT ENDPOINT
+      log(
+        '📤 Endpoint: ${Config.apiBaseUrl}/api/buyer/cart/add',
+      ); // CORRECT ENDPOINT
 
       final response = await http.post(
-        Uri.parse('$baseUrl/api/buyer/cart/add'), // CORRECT: /add
+        Uri.parse('${Config.apiBaseUrl}/api/buyer/cart/add'), // CORRECT: /add
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -165,7 +168,8 @@ class BuyerCartService {
     }
   }
 
-  final String baseUrl = "http://192.168.10.20:5001";
+  String get base => Config.apiBaseUrl;
+
   // Request buy - use correct endpoint
   Future<Map<String, dynamic>> requestBuy({
     required List<String> itemIds,
@@ -188,12 +192,12 @@ class BuyerCartService {
 
       log('📦 Request Body: $body');
       log(
-        '📤 Endpoint: $baseUrl/api/buyer/cart/request/buy',
+        '📤 Endpoint: ${Config.apiBaseUrl}/api/buyer/cart/request/buy',
       ); // CORRECT: /request/buy
 
       final response = await http.post(
         Uri.parse(
-          '$baseUrl/api/buyer/cart/request/buy',
+          '${Config.apiBaseUrl}/api/buyer/cart/request/buy',
         ), // CORRECT: /request/buy
         headers: {
           'Authorization': 'Bearer $token',

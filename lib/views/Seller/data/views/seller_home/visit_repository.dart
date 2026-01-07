@@ -1,9 +1,6 @@
 // repositories/visit_repository.dart
-import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:http/http.dart' as http;
-import 'package:wood_service/core/services/buyer_local_storage_service.dart';
 import 'package:wood_service/core/services/seller_local_storage_service.dart';
 import 'package:wood_service/views/Seller/data/models/visit_request_model.dart';
 
@@ -19,7 +16,6 @@ class ApiVisitRepository implements VisitRepository {
   ApiVisitRepository({required this.dio, required this.storageService});
 
   // REMOVE THESE - They're redundant with Dio
-  // final String baseUrl = 'http://192.168.10.20:5001/api';
   // final String? authToken;
   // Map<String, String> _getHeaders() { ... }
 

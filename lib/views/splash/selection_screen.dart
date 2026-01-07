@@ -1,10 +1,5 @@
-import 'dart:async';
-
-import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
-import 'package:wood_service/core/theme/app_test_style.dart';
 import 'package:wood_service/widgets/custom_text_style.dart';
 
 class SelectionScreen extends StatefulWidget {

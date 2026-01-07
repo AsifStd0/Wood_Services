@@ -40,15 +40,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onTap: () => _viewAndEditProfile(context, provider),
                     color: Colors.blue,
                   ),
-                  buildSettingsTile(
-                    icon: Icons.lock_outline,
-                    title: 'Change Password',
-                    subtitle: 'Update login credentials',
-                    onTap: () {
-                      // TODO: Implement change password
-                    },
-                    color: Colors.green,
-                  ),
                 ]),
 
                 // App Preferences

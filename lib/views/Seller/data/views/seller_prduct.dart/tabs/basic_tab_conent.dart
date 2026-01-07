@@ -5,8 +5,6 @@ import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_p
 import 'package:wood_service/widgets/custom_textfield.dart';
 
 class BasicTab extends StatelessWidget {
-  const BasicTab({Key? key});
-
   @override
   Widget build(BuildContext context) {
     final productProvider = context.watch<SellerProductProvider>();
@@ -128,13 +126,13 @@ class BasicTab extends StatelessWidget {
   }
 
   Widget _buildTagInput(SellerProductProvider provider, SellerProduct product) {
-    final TextEditingController _tagController = TextEditingController();
+    final TextEditingController tagController = TextEditingController();
 
     return Row(
       children: [
         Expanded(
           child: CustomTextFormField(
-            controller: _tagController,
+            controller: tagController,
             hintText: 'e.g., handmade, organic, premium',
             onChanged: (value) {},
           ),
@@ -142,11 +140,11 @@ class BasicTab extends StatelessWidget {
         const SizedBox(width: 12),
         ElevatedButton(
           onPressed: () {
-            final tag = _tagController.text.trim();
+            final tag = tagController.text.trim();
             if (tag.isNotEmpty) {
               final newTags = List<String>.from(product.tags)..add(tag);
               provider.updateTags(newTags);
-              _tagController.clear();
+              tagController.clear();
             }
           },
           style: ElevatedButton.styleFrom(

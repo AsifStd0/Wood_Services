@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_test_style.dart';
-import 'package:wood_service/views/Buyer/buyer_main.dart';
+import 'package:wood_service/app/buyer_main.dart';
 import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_signup_provider.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 import 'package:wood_service/widgets/custom_text_style.dart';
@@ -9,7 +9,7 @@ import 'package:wood_service/widgets/custom_textfield.dart';
 import 'package:provider/provider.dart';
 
 class BuyerSignupScreen extends StatefulWidget {
-  const BuyerSignupScreen({Key? key}) : super(key: key);
+  const BuyerSignupScreen({super.key});
 
   @override
   State<BuyerSignupScreen> createState() => _BuyerSignupScreenState();
@@ -104,7 +104,7 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
           padding: const EdgeInsets.only(top: 20, bottom: 5),
           child: Text(
             'Buyer Registration',
-            style: AppCustomTextStyle.headlineMedium(context)?.copyWith(
+            style: AppCustomTextStyle.headlineMedium(context).copyWith(
               color: AppColors.brightOrange,
               fontWeight: FontWeight.bold,
             ),

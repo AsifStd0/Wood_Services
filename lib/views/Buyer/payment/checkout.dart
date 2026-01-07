@@ -2,7 +2,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Buyer/payment/cart_data/cart_item_model.dart';
-import 'package:wood_service/views/Buyer/payment/cart_data/cart_services.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
 
 class CheckoutScreen extends StatefulWidget {

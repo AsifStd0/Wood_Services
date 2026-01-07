@@ -207,14 +207,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                       buyer.email,
                       style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                     ),
-                    if (buyer.businessName != null &&
-                        buyer.businessName!.isNotEmpty)
+                    if (buyer.businessName.isNotEmpty)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 5),
                           Text(
-                            buyer.businessName!,
+                            buyer.businessName,
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[700],
@@ -371,6 +370,26 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
 
           const Divider(height: 20),
+          // App Preferences
+          // buildSettingsSection('App Preferences', [
+          //   buildSettingsTile(
+          //     icon: Icons.language_outlined,
+          //     title: 'Language',
+          //     subtitle: _language,
+          //     onTap: () => _showLanguageDialog(context),
+          //     color: Colors.blue,
+          //   ),
+          //   _buildSwitchTile(
+          //     icon: Icons.dark_mode_outlined,
+          //     title: 'Dark Mode',
+          //     subtitle: 'Switch to dark theme',
+          //     value: _darkMode,
+          //     onChanged: (value) {
+          //       setState(() => _darkMode = value);
+          //     },
+          //     color: Colors.purple,
+          //   ),
+          // ]),
 
           // Account Actions
           buildMenuHeader('Account Actions'),

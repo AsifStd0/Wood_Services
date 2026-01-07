@@ -1,10 +1,7 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:wood_service/chats/Buyer/buyer_chating.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/favorite_button.dart';
-import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 
 import '../../../app/index.dart';
 
@@ -364,7 +361,6 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
       ? ((product.basePrice - product.finalPrice) / product.basePrice * 100)
             .roundToDouble()
       : 0;
-  final cartViewModel = locator<BuyerCartViewModel>();
 
   return Container(
     decoration: BoxDecoration(
@@ -610,7 +606,7 @@ Widget _buildChatButton(BuyerProductModel product, BuildContext context) {
 // 🔥 START CHAT FUNCTION
 void _startChatWithSeller(BuyerProductModel product, BuildContext context) {
   // Check if seller info is available
-  if (product.sellerId == null || product.sellerName == null) {
+  if (product.sellerId == null) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Seller information not available'),

@@ -6,7 +6,6 @@ import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_model.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/Cart/cart_widget.dart';
-import 'package:wood_service/views/Buyer/payment/checkout.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 
 class BuyerCartScreen extends StatefulWidget {

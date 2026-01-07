@@ -1,49 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
-// import 'package:wood_service/core/theme/app_colors.dart';
-// import 'package:wood_service/core/utils/debouncer.dart';
-
-// With default validation (existing behavior)
-// CustomTextFormField.email(
-//   controller: emailController,
-// );
-
-// // Without any validation
-// CustomTextFormField.email(
-//   controller: emailController,
-//   validate: false,
-// );
-
-// With custom validator
-// CustomTextFormField.email(
-//   controller: emailController,
-//   validator: (value) {
-//     if (value?.contains('test') ?? false) {
-//       return 'Test emails are not allowed';
-//     }
-//     return null;
-//   },
-// );
-
-// Search field without validation (default)
-// CustomTextFormField.compactSearch(
-//   controller: searchController,
-//   hintText: 'Search...',
-// );
-
-// Search field with validation
-// CustomTextFormField.compactSearch(
-//   controller: searchController,
-//   hintText: 'Search...',
-//   validate: true,
-//   validator: (value) {
-//     if (value?.length ?? 0 < 3) {
-//       return 'Enter at least 3 characters';
-//     }
-//     return null;
-//   },
-// );
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
@@ -159,8 +113,9 @@ class CustomTextFormField extends StatelessWidget {
       case TextFieldType.name:
         final regex = RegExp(r'^[A-Za-z ]+$');
         if (!regex.hasMatch(value)) return 'Name can only contain letters';
-        if (value.trim().length < 3)
+        if (value.trim().length < 3) {
           return 'Name must be at least 3 characters';
+        }
         break;
 
       case TextFieldType.businessName:
@@ -171,8 +126,9 @@ class CustomTextFormField extends StatelessWidget {
 
       case TextFieldType.contactName:
         final regex = RegExp(r'^[A-Za-z ]+$');
-        if (!regex.hasMatch(value))
+        if (!regex.hasMatch(value)) {
           return 'Contact name can only contain letters';
+        }
         if (value.trim().length < 3) {
           return 'Contact name must be at least 3 characters';
         }
@@ -201,8 +157,9 @@ class CustomTextFormField extends StatelessWidget {
         break;
 
       case TextFieldType.confrimpassword:
-        if (value.trim().length < 4)
+        if (value.trim().length < 4) {
           return 'Password must be more than 8 characters';
+        }
         if (originalPasswordController != null &&
             value != originalPasswordController!.text) {
           return 'Passwords do not match';
@@ -544,164 +501,6 @@ class CustomTextFormField extends StatelessWidget {
       enabled: enabled,
       isDialogField: true, // Use the new dialog mode
       validate: false, // Usually no validation needed in dialogs
-    );
-  }
-
-  // ... rest of your static methods (phone, name, compactSearch, search, text) remain the same ...
-  static CustomTextFormField phone({
-    Key? key,
-    TextEditingController? controller,
-    String? hintText = 'Phone Number',
-    ValueChanged<String>? onChanged,
-    FocusNode? focusNode,
-    ValueChanged<String>? onSubmitted,
-    bool enabled = true,
-    bool validate = true,
-    String? Function(String?)? validator,
-  }) {
-    return CustomTextFormField(
-      key: key,
-      controller: controller,
-      textFieldType: TextFieldType.phoneNumber,
-      hintText: hintText,
-      onChanged: onChanged,
-      focusNode: focusNode,
-      onSubmitted: onSubmitted,
-      enabled: enabled,
-      validate: validate,
-      validator: validator,
-      prefixIcon: Icon(
-        Icons.phone_outlined,
-        color: AppColors.color7a808a,
-        size: 20,
-      ),
-    );
-  }
-
-  static CustomTextFormField name({
-    Key? key,
-    TextEditingController? controller,
-    String? hintText = 'Full Name',
-    ValueChanged<String>? onChanged,
-    FocusNode? focusNode,
-    ValueChanged<String>? onSubmitted,
-    bool enabled = true,
-    bool validate = true,
-    String? Function(String?)? validator,
-  }) {
-    return CustomTextFormField(
-      key: key,
-      controller: controller,
-      textFieldType: TextFieldType.name,
-      hintText: hintText,
-      onChanged: onChanged,
-      focusNode: focusNode,
-      onSubmitted: onSubmitted,
-      enabled: enabled,
-      validate: validate,
-      validator: validator,
-      prefixIcon: Icon(
-        Icons.person_outline,
-        color: AppColors.color7a808a,
-        size: 20,
-      ),
-    );
-  }
-
-  static CustomTextFormField compactSearch({
-    Key? key,
-    TextEditingController? controller,
-    String? hintText = 'Type a message...',
-    ValueChanged<String>? onChanged,
-    FocusNode? focusNode,
-    ValueChanged<String>? onSubmitted,
-    bool enabled = true,
-    Widget? suffixIcon,
-    bool validate = false,
-    String? Function(String?)? validator,
-    bool forChat = false, // ADD THIS NEW PARAMETER
-  }) {
-    return CustomTextFormField(
-      key: key,
-      controller: controller,
-      textFieldType: TextFieldType.text,
-      hintText: hintText,
-      onChanged: onChanged,
-      focusNode: focusNode,
-      onSubmitted: onSubmitted,
-      enabled: enabled,
-      isCompact: true,
-      validate: validate,
-      validator: validator,
-      suffixIcon: suffixIcon,
-      contentPadding: forChat
-          ? EdgeInsets.zero
-          : const EdgeInsets.symmetric(
-              vertical: 12,
-              horizontal: 16,
-            ), // CONDITIONAL PADDING
-      fillcolor: forChat
-          ? Colors.transparent
-          : AppColors.white, // CONDITIONAL BACKGROUND
-    );
-  }
-
-  static CustomTextFormField search({
-    Key? key,
-    TextEditingController? controller,
-    String? hintText = 'Search...',
-    ValueChanged<String>? onChanged,
-    FocusNode? focusNode,
-    ValueChanged<String>? onSubmitted,
-    bool enabled = true,
-    bool validate = false,
-    String? Function(String?)? validator,
-  }) {
-    return CustomTextFormField(
-      key: key,
-      controller: controller,
-      textFieldType: TextFieldType.text,
-      hintText: hintText,
-      onChanged: onChanged,
-      focusNode: focusNode,
-      onSubmitted: onSubmitted,
-      enabled: enabled,
-      validate: validate,
-      validator: validator,
-      prefixIcon: Icon(Icons.search, color: AppColors.color7a808a, size: 20),
-    );
-  }
-
-  static CustomTextFormField text({
-    Key? key,
-    TextEditingController? controller,
-    String? hintText,
-    ValueChanged<String>? onChanged,
-    FocusNode? focusNode,
-    ValueChanged<String>? onSubmitted,
-    bool enabled = true,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    int maxLines = 1,
-    bool isCompact = false,
-    bool validate = true,
-    String? Function(String?)? validator,
-  }) {
-    return CustomTextFormField(
-      key: key,
-      controller: controller,
-      textFieldType: TextFieldType.text,
-      hintText: hintText,
-      onChanged: onChanged,
-      focusNode: focusNode,
-      onSubmitted: onSubmitted,
-      enabled: enabled,
-      prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon,
-      maxLines: maxLines,
-      isCompact: isCompact,
-      validate: validate,
-      validator: validator,
     );
   }
 }

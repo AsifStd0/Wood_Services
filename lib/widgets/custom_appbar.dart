@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:wood_service/app/index.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -132,74 +131,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ],
     );
   }
-  // Widget _buildSearchBar(BuildContext context) {
-  //   return Container(
-  //     margin: const EdgeInsets.only(right: 10),
-  //     decoration: BoxDecoration(
-  //       color: Colors.white,
-  //       borderRadius: BorderRadius.circular(25), // More rounded
-  //       border: Border.all(color: Colors.grey.shade400, width: 1.5),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: Colors.black.withOpacity(0.1),
-  //           blurRadius: 8,
-  //           offset: const Offset(0, 3),
-  //         ),
-  //       ],
-  //     ),
-  //     child: Row(
-  //       children: [
-  //         // Dropdown area ("All ▼")
-  //         Container(
-  //           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-  //           decoration: BoxDecoration(
-  //             borderRadius: const BorderRadius.only(
-  //               topLeft: Radius.circular(25),
-  //               bottomLeft: Radius.circular(25),
-  //             ),
-  //             color: Colors.grey.shade50,
-  //           ),
-  //           child: Row(
-  //             children: const [
-  //               Text(
-  //                 "All",
-  //                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-  //               ),
-  //               SizedBox(width: 4),
-  //               Icon(Icons.arrow_drop_down, size: 20),
-  //             ],
-  //           ),
-  //         ),
-
-  //         // Search field
-  // Expanded(
-  //   child: Padding(
-  //     padding: const EdgeInsets.symmetric(horizontal: 12),
-  //     child: TextField(
-  //       onChanged: onSearchChanged,
-  //       decoration: const InputDecoration(
-  //         hintText: "Search products...",
-  //         hintStyle: TextStyle(fontSize: 16, color: Colors.grey),
-  //         border: InputBorder.none,
-  //         enabledBorder: InputBorder.none,
-  //         focusedBorder: InputBorder.none,
-  //         contentPadding: EdgeInsets.zero,
-  //       ),
-  //     ),
-  //   ),
-  // ),
-
-  //         // Search icon button
-  //         Container(
-  //           margin: const EdgeInsets.only(right: 8),
-  //           padding: const EdgeInsets.all(8),
-  //           decoration: BoxDecoration(shape: BoxShape.circle),
-  //           child: const Icon(Icons.search, color: Colors.grey, size: 20),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   Widget _buildBackButton(BuildContext context) {
     // Circular back button with subtle shadow and ripple effect

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
+import 'package:wood_service/app/config.dart';
 import 'package:wood_service/core/services/seller_local_storage_service.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_model.dart';
 
@@ -19,7 +20,6 @@ class ApiOrderRepository implements OrderRepository {
 
   ApiOrderRepository({required this.dio, required this.storageService});
 
-  final baseUrl = 'http://192.168.10.20:5001';
   @override
   Future<List<OrderModelSeller>> getOrders({
     String? status,
@@ -41,7 +41,7 @@ class ApiOrderRepository implements OrderRepository {
 
       // 2. Build URL
       log('🔗 Step 2: Building URL...');
-      final uri = Uri.parse('$baseUrl/api/seller/orders').replace(
+      final uri = Uri.parse('${Config.apiBaseUrl}/api/seller/orders').replace(
         queryParameters: {
           if (status != null) 'status': status,
           if (type != null) 'type': type,
@@ -162,7 +162,9 @@ class ApiOrderRepository implements OrderRepository {
         log('💡 Suggestion: Use the custom orderId (ORD-...)');
       }
 
-      final uri = Uri.parse('$baseUrl/api/seller/orders/$orderId/status');
+      final uri = Uri.parse(
+        '${Config.apiBaseUrl}/api/seller/orders/$orderId/status',
+      );
       log('🌐 URL: $uri');
 
       final response = await http
@@ -218,7 +220,7 @@ class ApiOrderRepository implements OrderRepository {
         throw Exception('Please login again');
       }
 
-      final uri = Uri.parse('$baseUrl/api/seller/orders/$orderId');
+      final uri = Uri.parse('${Config.apiBaseUrl}/api/seller/orders/$orderId');
       log('🌐 URL: $uri');
 
       final response = await http
@@ -257,7 +259,7 @@ class ApiOrderRepository implements OrderRepository {
 
       final response = await http
           .get(
-            Uri.parse('$baseUrl/api/seller/orders'),
+            Uri.parse('${Config.apiBaseUrl}/api/seller/orders'),
             headers: {'Authorization': 'Bearer $token'},
           )
           .timeout(const Duration(seconds: 30));

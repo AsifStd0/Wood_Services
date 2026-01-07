@@ -338,7 +338,6 @@ class CustomButtonUtils {
     return CustomButton(
       key: key,
       onPressed: onPressed,
-      child: child,
       type: ButtonType.outline,
       size: ButtonSize.large,
       isLoading: isLoading,
@@ -351,6 +350,7 @@ class CustomButtonUtils {
       // elevation: 2.0,
       borderWidth: 2.0, // Thicker border
       backgroundColor: color,
+      child: child,
     );
   }
 
@@ -366,17 +366,6 @@ class CustomButtonUtils {
     return CustomButton(
       key: key,
       onPressed: onPressed,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.g_mobiledata, size: 24), // Placeholder icon
-          const SizedBox(width: 12),
-          Text(
-            'Google',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-          ),
-        ],
-      ),
       type: ButtonType.outline,
       size: ButtonSize.large,
       isLoading: isLoading,
@@ -391,6 +380,17 @@ class CustomButtonUtils {
       backgroundColor: AppColors.white,
 
       foregroundColor: Colors.black87,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.g_mobiledata, size: 24), // Placeholder icon
+          const SizedBox(width: 12),
+          Text(
+            'Google',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          ),
+        ],
+      ),
     );
   }
 
@@ -406,21 +406,6 @@ class CustomButtonUtils {
     return CustomButton(
       key: key,
       onPressed: onPressed,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.apple, size: 24), // Apple icon
-          const SizedBox(width: 12),
-          Text(
-            'Apple',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-              color: Colors.black,
-            ),
-          ),
-        ],
-      ),
       type: ButtonType.primary,
       // size: ButtonSize.large,
       isLoading: isLoading,
@@ -436,6 +421,21 @@ class CustomButtonUtils {
       backgroundColor: AppColors.white,
 
       foregroundColor: AppColors.black,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.apple, size: 24), // Apple icon
+          const SizedBox(width: 12),
+          Text(
+            'Apple',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              color: Colors.black,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -457,17 +457,6 @@ class CustomButtonUtils {
     return CustomButton(
       key: key,
       onPressed: onPressed,
-      child:
-          child ??
-          Text(
-            // USE CHILD IF PROVIDED, ELSE USE TITLE
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-              color: color ?? AppColors.white,
-            ),
-          ),
       type: ButtonType.primary,
       // size: ButtonSize.large,
       isLoading: isLoading,
@@ -480,6 +469,17 @@ class CustomButtonUtils {
       hapticFeedback: hapticFeedback,
       elevation: 4.0,
       borderWidth: 0,
+      child:
+          child ??
+          Text(
+            // USE CHILD IF PROVIDED, ELSE USE TITLE
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              color: color ?? AppColors.white,
+            ),
+          ),
     );
   }
 
@@ -508,7 +508,6 @@ class CustomButtonUtils {
 
       onPressed: onPressed,
       onLongPress: onLongPress,
-      child: child,
       type: ButtonType.primary,
       size: size,
       isLoading: isLoading,
@@ -524,6 +523,7 @@ class CustomButtonUtils {
       elevation: elevation,
       shadowColor: shadowColor,
       borderWidth: borderWidth,
+      child: child,
     );
   }
 
@@ -547,7 +547,6 @@ class CustomButtonUtils {
       key: key,
       onPressed: onPressed,
       onLongPress: onLongPress,
-      child: child,
       type: ButtonType.textButton,
       size: size,
       isLoading: isLoading,
@@ -561,6 +560,7 @@ class CustomButtonUtils {
       hapticFeedback: hapticFeedback,
       elevation: 0,
       borderWidth: 0,
+      child: child,
     );
   }
 
@@ -584,7 +584,6 @@ class CustomButtonUtils {
       key: key,
       onPressed: onPressed,
       onLongPress: onLongPress,
-      child: child,
       type: ButtonType.textButton,
       size: size,
       isLoading: isLoading,
@@ -598,6 +597,7 @@ class CustomButtonUtils {
       hapticFeedback: hapticFeedback,
       elevation: 0,
       borderWidth: 0,
+      child: child,
     );
   }
 }

@@ -205,8 +205,9 @@ class BuyerProductModel {
     DateTime parseTimestamp(dynamic timestamp) {
       if (timestamp == null) return DateTime.now();
       if (timestamp is String) return DateTime.parse(timestamp).toLocal();
-      if (timestamp is int)
+      if (timestamp is int) {
         return DateTime.fromMillisecondsSinceEpoch(timestamp).toLocal();
+      }
       return DateTime.now();
     }
 

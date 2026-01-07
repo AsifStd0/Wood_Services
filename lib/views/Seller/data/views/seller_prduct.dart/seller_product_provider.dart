@@ -46,9 +46,9 @@ class SellerProductProvider extends ChangeNotifier {
   String? _errorMessage;
 
   // Image handling
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
   File? _featuredImage;
-  bool _isUploadingImages = false;
+  final bool _isUploadingImages = false;
 
   // Getters
   SellerProduct get product => _product;

@@ -1,152 +1,54 @@
-// // auth_service.dart
-// import 'package:dio/dio.dart';
-// import 'package:dartz/dartz.dart';
-// import 'package:wood_service/core/error/failure.dart';
-// import 'package:wood_service/core/services/oldddddd_local_storage_service.dart';
-// import 'package:wood_service/data/models/user_model.dart';
+import 'package:wood_service/app/locator.dart';
+import 'package:wood_service/core/services/buyer_local_storage_service.dart';
+import 'package:wood_service/core/services/seller_local_storage_service.dart';
 
-// abstract class AuthService {
-//   Future<Either<Failure, UserModel>> login({
-//     required String email,
-//     required String password,
-//   });
+class AuthService {
+  final BuyerLocalStorageService _buyerStorage =
+      locator<BuyerLocalStorageService>();
+  final SellerLocalStorageService _sellerStorage =
+      locator<SellerLocalStorageService>();
 
-//   Future<Either<Failure, UserModel>> register({
-//     required String email,
-//     required String password,
-//     required String name,
-//     // String? phone,
-//     // String? address,
-//     String? image,
-//   });
+  Future<Map<String, dynamic>> getCurrentUser() async {
+    try {
+      print('🔍 Getting current user for chat...');
 
-//   Future<Either<Failure, void>> logout();
-//   Future<Either<Failure, bool>> isLoggedIn();
-//   Future<Either<Failure, UserModel?>> getCurrentUser();
-// }
+      // Check buyer first since logs show buyer is logged in
+      final isBuyerLoggedIn = await _buyerStorage.isBuyerLoggedIn();
+      if (isBuyerLoggedIn) {
+        final token = await _buyerStorage.getBuyerToken();
+        final data = await _buyerStorage.getBuyerData();
 
-// class AuthServiceImplementation implements AuthService {
-//   final Dio _dio;
-//   final LocalStorageServiceSeller _localStorageService;
+        print('✅ Buyer logged in: ${data?['_id']}');
 
-//   AuthServiceImplementation(this._dio, this._localStorageService);
+        return {
+          'userId': data?['_id']?.toString(),
+          'userType': 'buyer',
+          'token': token ?? '',
+          'userName': data?['fullName'] ?? data?['businessName'] ?? 'Buyer',
+        };
+      }
 
-//   @override
-//   Future<Either<Failure, UserModel>> login({
-//     required String email,
-//     required String password,
-//   }) async {
-//     try {
-//       final response = await _dio.post(
-//         '/auth/login',
-//         data: {'email': email, 'password': password},
-//       );
+      // Check seller
+      final isSellerLoggedIn = await _sellerStorage.isSellerLoggedIn();
+      if (isSellerLoggedIn) {
+        final token = await _sellerStorage.getSellerToken();
+        final data = await _sellerStorage.getSellerData();
 
-//       if (response.statusCode == 200) {
-//         final user = UserModel.fromJson(response.data['user']);
-//         final token = response.data['token']; // Get token from response
+        print('✅ Seller logged in: ${data?['_id']}');
 
-//         // Save token to local storage
-//         if (token != null) {
-//           await _localStorageService.saveToken(token);
-//         }
+        return {
+          'userId': data?['_id']?.toString(),
+          'userType': 'seller',
+          'token': token ?? '',
+          'userName': data?['fullName'] ?? data?['shopName'] ?? 'Seller',
+        };
+      }
 
-//         return Right(user);
-//       } else {
-//         return Left(ServerFailure('Login failed'));
-//       }
-//     } on DioException catch (e) {
-//       if (e.response?.statusCode == 401) {
-//         return Left(AuthFailure('Invalid credentials'));
-//       }
-//       return Left(ServerFailure('Network error: ${e.message}'));
-//     } catch (e) {
-//       return Left(UnknownFailure('Unexpected error: $e'));
-//     }
-//   }
-
-//   @override
-//   Future<Either<Failure, UserModel>> register({
-//     required String email,
-//     required String password,
-//     required String name,
-//     String? phone,
-//     String? address,
-//     String? image,
-//   }) async {
-//     try {
-//       final response = await _dio.post(
-//         '/auth/register',
-//         data: {
-//           'email': email,
-//           'password': password,
-//           'name': name,
-//           // if (phone != null) 'phone': phone,
-//           // if (address != null) 'address': address,
-//           if (image != null) 'profileImage': image,
-//         },
-//       );
-
-//       if (response.statusCode == 201) {
-//         final user = UserModel.fromJson(response.data['user']);
-//         final token = response.data['token']; // Get token from response
-
-//         // Save token to local storage
-//         if (token != null) {
-//           await _localStorageService.saveToken(token);
-//         }
-
-//         return Right(user);
-//       } else {
-//         return Left(ServerFailure('Registration failed'));
-//       }
-//     } on DioException catch (e) {
-//       if (e.response?.statusCode == 400) {
-//         return Left(ValidationFailure('Invalid data provided'));
-//       }
-//       if (e.response?.statusCode == 409) {
-//         return Left(AuthFailure('User already exists'));
-//       }
-//       return Left(ServerFailure('Network error: ${e.message}'));
-//     } catch (e) {
-//       return Left(UnknownFailure('Unexpected error: $e'));
-//     }
-//   }
-
-//   @override
-//   Future<Either<Failure, void>> logout() async {
-//     try {
-//       await _dio.post('/auth/logout');
-//       await _localStorageService.deleteToken(); // Clear token on logout
-//       return const Right(null);
-//     } catch (e) {
-//       return Left(UnknownFailure('Logout failed'));
-//     }
-//   }
-
-//   @override
-//   Future<Either<Failure, bool>> isLoggedIn() async {
-//     try {
-//       final token = await _localStorageService.getToken();
-//       if (token == null) return const Right(false);
-
-//       final response = await _dio.get('/auth/check');
-//       return Right(response.statusCode == 200);
-//     } catch (e) {
-//       return Left(UnknownFailure('Check login failed'));
-//     }
-//   }
-
-//   @override
-//   Future<Either<Failure, UserModel?>> getCurrentUser() async {
-//     try {
-//       final response = await _dio.get('/auth/user');
-//       if (response.statusCode == 200) {
-//         return Right(UserModel.fromJson(response.data['user']));
-//       }
-//       return const Right(null);
-//     } catch (e) {
-//       return Left(UnknownFailure('Failed to get user'));
-//     }
-//   }
-// }
+      print('❌ No user logged in');
+      throw Exception('No user logged in');
+    } catch (e) {
+      print('❌ Error in getCurrentUser: $e');
+      throw Exception('Failed to get current user: $e');
+    }
+  }
+}

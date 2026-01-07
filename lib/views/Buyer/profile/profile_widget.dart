@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:wood_service/core/theme/app_test_style.dart';
 import 'package:wood_service/views/Buyer/Service/profile_service.dart';
-import 'package:wood_service/views/Buyer/login.dart/buyer_login_screen.dart';
 import 'package:wood_service/views/splash/splash_screen.dart';
 
 Widget buildStatItem(String value, String label, IconData icon) {
@@ -51,9 +49,12 @@ Widget buildMenuTile({
   Color iconColor = Colors.white,
   Color textColor = Colors.black,
   List<Color>? gradient,
+  ValueChanged<bool>? onChanged, // Added for Dark Mode toggle
 }) {
+  // Check if it's a toggle tile (like Dark Mode)
+  bool isToggleTile = onChanged != null;
+
   return Container(
-    // margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(16),
       gradient: gradient != null
@@ -113,25 +114,32 @@ Widget buildMenuTile({
           fontSize: 12,
         ),
       ),
-      trailing: showBadge
-          ? Badge(
-              label: Text(
-                badgeCount.toString(),
-                style: const TextStyle(color: Colors.white, fontSize: 10),
-              ),
-              backgroundColor: Colors.red,
-              child: Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: gradient != null ? Colors.white : Colors.grey,
-              ),
+      trailing: isToggleTile
+          ? Switch(
+              value: subtitle == 'Enabled', // Assuming subtitle indicates state
+              onChanged: onChanged,
+              activeColor: Colors.brown,
+              activeTrackColor: Colors.brown.withOpacity(0.3),
             )
-          : Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 16,
-              color: gradient != null ? Colors.white : Colors.grey,
-            ),
-      onTap: onTap,
+          : (showBadge
+                ? Badge(
+                    label: Text(
+                      badgeCount.toString(),
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
+                    ),
+                    backgroundColor: Colors.red,
+                    child: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: gradient != null ? Colors.white : Colors.grey,
+                    ),
+                  )
+                : Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: gradient != null ? Colors.white : Colors.grey,
+                  )),
+      onTap: isToggleTile ? null : onTap, // Disable onTap for toggle tiles
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     ),
   );
@@ -153,6 +161,39 @@ Widget buildMenuHeader(String title) {
       ),
     ),
   );
+}
+
+Future<void> _performLogout(BuildContext context) async {
+  try {
+    // Show loading
+    showDialog(
+      context: context,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    // Create service instance
+    final profileService = BuyerProfileService();
+
+    // 1. Logout via service (clears local storage)
+    await profileService.logout();
+
+    // 2. Navigate to login
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => OnboardingScreen()),
+      (route) => false,
+    );
+
+    print('✅ Logout successful via ProfileService');
+  } catch (e) {
+    // Close loading
+    Navigator.of(context).pop();
+
+    // Show error
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Logout failed: $e'), backgroundColor: Colors.red),
+    );
+  }
 }
 
 void showLogoutDialog(BuildContext context) {
@@ -216,7 +257,6 @@ void showLogoutDialog(BuildContext context) {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // In showLogoutDialog function, update the Sign Out button:
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
@@ -242,38 +282,4 @@ void showLogoutDialog(BuildContext context) {
       );
     },
   );
-}
-
-Future<void> _performLogout(BuildContext context) async {
-  try {
-    // Show loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-    // Create service instance
-    final profileService = BuyerProfileService();
-
-    // 1. Logout via service (clears local storage)
-    await profileService.logout();
-
-    // 2. Navigate to login
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => OnboardingScreen()),
-      (route) => false,
-    );
-
-    print('✅ Logout successful via ProfileService');
-  } catch (e) {
-    // Close loading
-    Navigator.of(context).pop();
-
-    // Show error
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Logout failed: $e'), backgroundColor: Colors.red),
-    );
-  }
 }

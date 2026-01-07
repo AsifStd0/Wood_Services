@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:wood_service/app/config.dart';
 import 'package:wood_service/core/services/buyer_local_storage_service_impl.dart';
 
 class ReviewProvider with ChangeNotifier {
@@ -15,8 +16,6 @@ class ReviewProvider with ChangeNotifier {
   List<dynamic> get reviewableOrders => _reviewableOrders;
   List<dynamic> get myReviews => _myReviews;
 
-  static const String baseUrl = 'http://192.168.10.20:5001/api';
-
   String? _cachedToken;
   final BuyerLocalStorageServiceImpl _storage = BuyerLocalStorageServiceImpl();
 
@@ -26,9 +25,7 @@ class ReviewProvider with ChangeNotifier {
   }
 
   Future<String?> _getToken() async {
-    if (_cachedToken == null) {
-      _cachedToken = await _storage.getBuyerToken();
-    }
+    _cachedToken ??= await _storage.getBuyerToken();
     return _cachedToken;
   }
 
@@ -49,7 +46,7 @@ class ReviewProvider with ChangeNotifier {
 
       final headers = await _getHeaders();
       final response = await http.get(
-        Uri.parse('$baseUrl/buyer/reviews/orders'),
+        Uri.parse('${Config.apiBaseUrl}/api/buyer/reviews/orders'),
         headers: headers,
       );
 
@@ -95,7 +92,7 @@ class ReviewProvider with ChangeNotifier {
 
       final headers = await _getHeaders();
       final response = await http.post(
-        Uri.parse('$baseUrl/buyer/reviews'),
+        Uri.parse('${Config.apiBaseUrl}/api/buyer/reviews'),
 
         headers: headers,
         body: json.encode({
@@ -150,7 +147,8 @@ class ReviewProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      String url = '$baseUrl/buyer/reviews/my?page=$page&limit=$limit';
+      String url =
+          '${Config.apiBaseUrl}/api/buyer/reviews/my?page=$page&limit=$limit';
       if (rating != null) url += '&rating=$rating';
 
       final headers = await _getHeaders();
@@ -206,12 +204,10 @@ class ReviewProvider with ChangeNotifier {
 
       final headers = await _getHeaders();
 
-      // static const String baseUrl = 'http://192.168.10.20:5001/api/buyer/reviews';
-
       // Call your existing API endpoint
       final response = await http.get(
         Uri.parse(
-          'http://192.168.10.20:5001/api/buyer/reviews/product/$productId?limit=$limit',
+          '${Config.apiBaseUrl}/api/buyer/reviews/product/$productId?limit=$limit',
         ),
         headers: headers,
       );
@@ -265,7 +261,7 @@ class ReviewProvider with ChangeNotifier {
       final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse(
-          'http://192.168.10.20:5001/api/buyer/products/$productId/reviews/stats',
+          '${Config.apiBaseUrl}/api/buyer/products/$productId/reviews/stats',
         ),
         headers: headers,
       );

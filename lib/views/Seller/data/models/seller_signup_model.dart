@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 class SellerModel {
+  final String? id; // ✅ ADD THIS FIELD
   final PersonalInfo personalInfo;
   final BusinessInfo businessInfo;
   final BankDetails bankDetails;
@@ -9,6 +10,7 @@ class SellerModel {
   final SellerDocuments documentsImage;
 
   SellerModel({
+    required this.id, // ✅ ADD THIS
     required this.personalInfo,
     required this.businessInfo,
     required this.bankDetails,
@@ -17,7 +19,9 @@ class SellerModel {
   });
 
   // ========== copyWith METHOD ==========
+  // In SellerModel class
   SellerModel copyWith({
+    String? id,
     PersonalInfo? personalInfo,
     BusinessInfo? businessInfo,
     BankDetails? bankDetails,
@@ -25,7 +29,12 @@ class SellerModel {
     SellerDocuments? documentsImage,
   }) {
     return SellerModel(
-      personalInfo: personalInfo ?? this.personalInfo,
+      id: id ?? this.id,
+      personalInfo:
+          personalInfo ??
+          this.personalInfo.copyWith(
+            id: id ?? this.id,
+          ), // Update personalInfo ID too
       businessInfo: businessInfo ?? this.businessInfo,
       bankDetails: bankDetails ?? this.bankDetails,
       shopBrandingImages: shopBrandingImages ?? this.shopBrandingImages,
@@ -36,6 +45,10 @@ class SellerModel {
   // For LOCAL STORAGE (saving to shared preferences)
   Map<String, dynamic> toJson() {
     return {
+      // ✅ ADD ID
+      '_id': id,
+      'id': id,
+
       // Personal Info
       'fullName': personalInfo.fullName,
       'email': personalInfo.email,
@@ -68,6 +81,10 @@ class SellerModel {
   // 1. LOCAL STORAGE format (from shared preferences)
   // 2. API RESPONSE format (from server)
   factory SellerModel.fromJson(Map<String, dynamic> json) {
+    // ✅ EXTRACT ID FIRST
+    final sellerId = json['_id']?.toString() ?? json['id']?.toString();
+    print('🆔 Seller ID from JSON: $sellerId');
+
     // ========== 1. Handle PHONE ==========
     String phone = '';
     String countryCode = '+1';
@@ -95,7 +112,6 @@ class SellerModel {
       if (json['categories'] is List) {
         // API RESPONSE format: ["category1", "category2"]
         categories = List<String>.from(json['categories']);
-        // print('🏷️ Categories from list: $categories');
       } else if (json['categories'] is String) {
         // LOCAL STORAGE format: JSON string or comma-separated
         try {
@@ -107,7 +123,6 @@ class SellerModel {
           // If can't parse, treat as single category
           categories = [json['categories'] as String];
         }
-        // print('🏷️ Categories from string: $categories');
       }
     }
 
@@ -123,13 +138,11 @@ class SellerModel {
       bankName = bankDetails['bankName']?.toString() ?? '';
       accountNumber = bankDetails['accountNumber']?.toString() ?? '';
       iban = bankDetails['iban']?.toString() ?? '';
-      // print('🏦 Bank details from API object');
     } else {
       // LOCAL STORAGE format: direct fields
       bankName = json['bankName']?.toString() ?? '';
       accountNumber = json['accountNumber']?.toString() ?? '';
       iban = json['iban']?.toString() ?? '';
-      // print('🏦 Bank details from direct fields');
     }
 
     // ========== 4. Handle SHOP LOGO (File from path or URL) ==========
@@ -140,20 +153,16 @@ class SellerModel {
         final logoObj = json['shopLogo'] as Map<String, dynamic>;
         final logoUrl = logoObj['url']?.toString();
         if (logoUrl != null && logoUrl.isNotEmpty) {
-          // For API response, we might not want to create a File from URL
-          // But we can store the URL for display
-          // print('🖼️ Shop logo URL from API: $logoUrl');
-          // shopLogo = File(logoUrl); // Only if you want to download it
+          // For API response, store the URL
+          print('🖼️ Shop logo URL from API: $logoUrl');
         }
       } else if (json['shopLogo'] is String) {
         // LOCAL STORAGE format: file path string
         shopLogo = File(json['shopLogo'] as String);
-        // print('🖼️ Shop logo from path: ${shopLogo?.path}');
       }
     } else if (json['shopLogoPath'] != null) {
       // Fallback to local storage path
       shopLogo = File(json['shopLogoPath'] as String);
-      // print('🖼️ Shop logo from shopLogoPath: ${shopLogo?.path}');
     }
 
     // ========== 5. Handle SHOP BANNER ==========
@@ -163,15 +172,13 @@ class SellerModel {
         final bannerObj = json['shopBanner'] as Map<String, dynamic>;
         final bannerUrl = bannerObj['url']?.toString();
         if (bannerUrl != null && bannerUrl.isNotEmpty) {
-          // print('🖼️ Shop banner URL from API: $bannerUrl');
+          print('🖼️ Shop banner URL from API: $bannerUrl');
         }
       } else if (json['shopBanner'] is String) {
         shopBanner = File(json['shopBanner'] as String);
-        // print('🖼️ Shop banner from path: ${shopBanner?.path}');
       }
     } else if (json['shopBannerPath'] != null) {
       shopBanner = File(json['shopBannerPath'] as String);
-      // print('🖼️ Shop banner from shopBannerPath: ${shopBanner?.path}');
     }
 
     // ========== 6. Handle DOCUMENTS ==========
@@ -181,7 +188,6 @@ class SellerModel {
     if (json['documents'] != null &&
         json['documents'] is Map<String, dynamic>) {
       final docs = json['documents'] as Map<String, dynamic>;
-      print('📄 Documents from API: ${docs.keys.toList()}');
 
       File? businessLicense;
       File? taxCertificate;
@@ -193,7 +199,6 @@ class SellerModel {
         final licenseUrl = license['url']?.toString();
         if (licenseUrl != null && licenseUrl.isNotEmpty) {
           print('📄 Business license URL: $licenseUrl');
-          // businessLicense = File(licenseUrl);
         }
       }
 
@@ -203,7 +208,6 @@ class SellerModel {
         final taxUrl = tax['url']?.toString();
         if (taxUrl != null && taxUrl.isNotEmpty) {
           print('📄 Tax certificate URL: $taxUrl');
-          // taxCertificate = File(taxUrl);
         }
       }
 
@@ -213,7 +217,6 @@ class SellerModel {
         final identityUrl = identity['url']?.toString();
         if (identityUrl != null && identityUrl.isNotEmpty) {
           print('📄 Identity proof URL: $identityUrl');
-          // identityProof = File(identityUrl);
         }
       }
 
@@ -235,12 +238,13 @@ class SellerModel {
             ? File(json['identityProofPath'] as String)
             : null,
       );
-      print('📄 Documents from local storage paths');
     }
 
     // ========== 7. Create SellerModel ==========
     return SellerModel(
+      id: sellerId, // ✅ PASS THE ID HERE
       personalInfo: PersonalInfo(
+        id: sellerId ?? '', // ✅ PASS ID TO PERSONAL INFO TOO
         fullName: json['fullName']?.toString() ?? '',
         email: json['email']?.toString() ?? '',
         phone: phone,
@@ -273,22 +277,11 @@ class SellerModel {
     );
   }
 
-  // ========== Helper method for API responses ==========
-  // Use this when you get response from API update
-  factory SellerModel.fromApiResponse(Map<String, dynamic> json) {
-    return SellerModel.fromJson(json);
-  }
-
-  // ========== Helper method for local storage ==========
-  // Use this when loading from shared preferences
-  factory SellerModel.fromLocalStorage(Map<String, dynamic> json) {
-    return SellerModel.fromJson(json);
-  }
-
   @override
   String toString() {
     return '''
 SellerModel{
+  id: $id,
   personalInfo: {
     fullName: ${personalInfo.fullName},
     email: ${personalInfo.email},
@@ -321,21 +314,9 @@ SellerModel{
   }
 }
 
-// ========== OTHER CLASSES (keep as is) ==========
-
-class SellerDocuments {
-  File? businessLicense;
-  File? taxCertificate;
-  File? identityProof;
-
-  SellerDocuments({
-    this.businessLicense,
-    this.taxCertificate,
-    this.identityProof,
-  });
-}
-
+// ========== Update PersonalInfo Class ==========
 class PersonalInfo {
+  final String? id; // Make this non-nullable if you always have ID
   final String fullName;
   final String email;
   final String phone;
@@ -343,6 +324,7 @@ class PersonalInfo {
   final String countryCode;
 
   PersonalInfo({
+    this.id, // ✅ ID is required
     required this.fullName,
     required this.email,
     required this.phone,
@@ -351,6 +333,7 @@ class PersonalInfo {
   });
 
   PersonalInfo copyWith({
+    String? id,
     String? fullName,
     String? email,
     String? phone,
@@ -358,6 +341,7 @@ class PersonalInfo {
     String? countryCode,
   }) {
     return PersonalInfo(
+      id: id ?? this.id,
       fullName: fullName ?? this.fullName,
       email: email ?? this.email,
       phone: phone ?? this.phone,
@@ -365,6 +349,18 @@ class PersonalInfo {
       countryCode: countryCode ?? this.countryCode,
     );
   }
+}
+
+// Add getter methods if needed
+extension SellerModelGetters on SellerModel {
+  // Getter for ID (optional, but useful)
+  String? get getId => id;
+
+  // Getter for name
+  String get name => personalInfo.fullName;
+
+  // Getter for email
+  String get email => personalInfo.email;
 }
 
 class BusinessInfo {
@@ -435,4 +431,16 @@ class ShopBrandingImages {
       shopBanner: shopBanner ?? this.shopBanner,
     );
   }
+}
+
+class SellerDocuments {
+  File? businessLicense;
+  File? taxCertificate;
+  File? identityProof;
+
+  SellerDocuments({
+    this.businessLicense,
+    this.taxCertificate,
+    this.identityProof,
+  });
 }

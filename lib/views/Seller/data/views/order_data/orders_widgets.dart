@@ -24,7 +24,7 @@ import 'package:wood_service/views/Seller/data/views/order_data/order_provider.d
 // }
 
 class StatusFilterBar extends StatelessWidget {
-  const StatusFilterBar();
+  const StatusFilterBar({super.key});
 
   @override
   Widget build(BuildContext context) {

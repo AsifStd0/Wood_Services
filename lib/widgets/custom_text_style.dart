@@ -1,15 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 
-// Text('$99.99', style: AppCustomTextStyle.priceText(context))
-
-// // With customizations:
-// Text('Custom Text',
-//   style: AppCustomTextStyle.bodyLarge(context).copyWith(
-//     color: Colors.red,
-//     fontWeight: FontWeight.bold,
-//   )
-// )
 class AppCustomTextStyle {
   // Headline Text Styles
   static TextStyle headlineLarge(BuildContext context) {

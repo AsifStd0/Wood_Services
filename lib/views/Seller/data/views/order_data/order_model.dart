@@ -147,7 +147,7 @@ class OrderModelSeller {
       List<OrderItem> items = [];
       if (json['items'] is List) {
         items = (json['items'] as List)
-            .where((item) => item is Map<String, dynamic>)
+            .whereType<Map<String, dynamic>>()
             .map<OrderItem>((item) {
               try {
                 return OrderItem.fromJson(Map<String, dynamic>.from(item));

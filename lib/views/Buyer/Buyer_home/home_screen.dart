@@ -5,6 +5,7 @@ import 'package:wood_service/views/Buyer/Buyer_home/home_widget.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 
 class BuyerHomeScreen extends StatefulWidget {
+  const BuyerHomeScreen({super.key});
   @override
   State<BuyerHomeScreen> createState() => _SellerHomeScreenState();
 }
@@ -92,19 +93,19 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
     return Consumer<BuyerHomeViewModel>(
       builder: (context, viewModel, child) {
         // Load products on first build
-        if (viewModel.apiProducts.isEmpty &&
+        if (viewModel.products.isEmpty &&
             !viewModel.isLoading &&
             !viewModel.hasError) {
           Future.microtask(() => viewModel.loadProducts());
         }
 
         // Show loading state
-        if (viewModel.isLoading && viewModel.apiProducts.isEmpty) {
+        if (viewModel.isLoading && viewModel.products.isEmpty) {
           return Center(child: CircularProgressIndicator());
         }
 
         // Show error state
-        if (viewModel.hasError && viewModel.apiProducts.isEmpty) {
+        if (viewModel.hasError && viewModel.products.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -123,7 +124,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
         }
 
         // Use BuyerProductModel DIRECTLY - NO CONVERSION
-        List<BuyerProductModel> filteredProducts = viewModel.apiProducts.where((
+        List<BuyerProductModel> filteredProducts = viewModel.products.where((
           product,
         ) {
           final matchesCategory = selectedCategory == 'All';
@@ -169,10 +170,6 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   // ! *******
   // ! *******
   // ! *******
-  // ! *******
-  // ! *******
-  // ! *******
-  // ! *******
   Widget _buildFilterSection() {
     return Consumer<BuyerHomeViewModel>(
       builder: (context, viewModel, child) {
@@ -183,7 +180,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: List.generate(
-                  viewModel.filter.length,
+                  viewModel.filteredProducts.length,
                   (index) => Padding(
                     padding: EdgeInsets.only(
                       right: index == viewModel.filter.length - 1 ? 0 : 12,

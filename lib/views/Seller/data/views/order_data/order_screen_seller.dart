@@ -645,7 +645,7 @@ class _OrderDetailsSheet extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${order.orderId}',
+                    order.orderId,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -723,9 +723,7 @@ class _OrderDetailsSheet extends StatelessWidget {
 
                       // Order Items
                       _buildSectionTitle('Order Items (${order.items.length})'),
-                      ...order.items
-                          .map((item) => _buildOrderItem(item))
-                          .toList(),
+                      ...order.items.map((item) => _buildOrderItem(item)),
 
                       const SizedBox(height: 30),
                     ],

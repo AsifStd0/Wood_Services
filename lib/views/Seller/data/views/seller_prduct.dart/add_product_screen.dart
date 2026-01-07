@@ -183,12 +183,12 @@ class _AddProductContent extends StatelessWidget {
   }
 
   Widget _buildTabContent(SellerProductProvider viewModel) {
-    const tabWidgets = [
+    final tabWidgets = [
       BasicTab(),
       PricingTab(),
       InventoryTab(),
-      VariantsTab(),
-      MediaTab(),
+      const VariantsTab(),
+      const MediaTab(),
     ];
 
     final index = viewModel.currentTabIndex.clamp(0, tabWidgets.length - 1);

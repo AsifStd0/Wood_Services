@@ -1,4 +1,3 @@
-import 'package:wood_service/chats/Buyer/buyer_chat_model.dart' as buyer_models;
 import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_model.dart';
 
 // Re-export original models for compatibility
@@ -10,12 +9,13 @@ class SellerChatRoom {
   List<ChatParticipant> participants;
   String? lastMessage;
   String? lastMessageText;
-  int sellerUnreadCount; // Specific for seller
+  int sellerUnreadCount;
   DateTime updatedAt;
   String? productId;
-  String? productName; // Added
+  String? productName;
   String? orderId;
-  SellerBuyerInfo? buyer; // Added for seller view
+  SellerBuyerInfo? buyer;
+  String? productImage; // Added for product image
 
   SellerChatRoom({
     required this.id,
@@ -28,79 +28,130 @@ class SellerChatRoom {
     this.productName,
     this.orderId,
     this.buyer,
+    this.productImage,
   });
+
   factory SellerChatRoom.fromJson(Map<String, dynamic> json) {
-    // Handle productId - it could be String or Map
+    print('🔄 Parsing SellerChatRoom JSON: ${json.keys.toList()}');
+
+    // Extract product information
     String? productIdString;
     String? productNameString;
+    String? productImageString;
 
     if (json['productId'] != null) {
+      print('📦 ProductId data type: ${json['productId'].runtimeType}');
+
       if (json['productId'] is String) {
         productIdString = json['productId'];
       } else if (json['productId'] is Map<String, dynamic>) {
-        productIdString = json['productId']['_id']?.toString();
-        productNameString = json['productId']['name'];
+        final productMap = json['productId'] as Map<String, dynamic>;
+        productIdString = productMap['_id']?.toString();
+        productNameString = productMap['name']?.toString();
+        productImageString = _getProductImage(productMap);
       } else if (json['productId'] is Map<dynamic, dynamic>) {
-        // Cast dynamic map to string map
         final productMap = Map<String, dynamic>.from(
           json['productId'] as Map<dynamic, dynamic>,
         );
         productIdString = productMap['_id']?.toString();
-        productNameString = productMap['name'];
+        productNameString = productMap['name']?.toString();
+        productImageString = _getProductImage(productMap);
       }
     }
 
-    // Handle lastMessage
-    String? lastMessageString;
-    if (json['lastMessage'] != null) {
-      if (json['lastMessage'] is String) {
-        lastMessageString = json['lastMessage'];
-      } else if (json['lastMessage'] is Map<String, dynamic>) {
-        lastMessageString = json['lastMessage']['_id']?.toString();
-      } else if (json['lastMessage'] is Map<dynamic, dynamic>) {
-        final messageMap = Map<String, dynamic>.from(
-          json['lastMessage'] as Map<dynamic, dynamic>,
+    print('📦 ProductId: $productIdString');
+    print('📦 ProductName: $productNameString');
+
+    // Handle unread count safely
+    int sellerUnreadCount = 0;
+    final currentUserId = ''; // This should come from your auth context
+
+    if (json['sellerUnreadCount'] != null) {
+      sellerUnreadCount = json['sellerUnreadCount'] is int
+          ? json['sellerUnreadCount']
+          : 0;
+    } else if (json['unreadCount'] != null) {
+      print('📊 UnreadCount type: ${json['unreadCount'].runtimeType}');
+
+      if (json['unreadCount'] is Map<String, dynamic>) {
+        final unreadMap = json['unreadCount'] as Map<String, dynamic>;
+        // Try to find seller's unread count
+        for (final key in unreadMap.keys) {
+          if (key.contains('6956adddff9f52790cf674f2')) {
+            // Your seller ID from logs
+            sellerUnreadCount = (unreadMap[key] is int) ? unreadMap[key] : 0;
+            break;
+          }
+        }
+      } else if (json['unreadCount'] is Map<dynamic, dynamic>) {
+        final unreadMap = Map<String, dynamic>.from(
+          json['unreadCount'] as Map<dynamic, dynamic>,
         );
-        lastMessageString = messageMap['_id']?.toString();
+        for (final key in unreadMap.keys) {
+          if (key.contains('6956adddff9f52790cf674f2')) {
+            sellerUnreadCount = (unreadMap[key] is int) ? unreadMap[key] : 0;
+            break;
+          }
+        }
       }
     }
 
-    // Extract buyer information - FIXED TYPE CASTING
+    print('📊 SellerUnreadCount: $sellerUnreadCount');
+
+    // Extract buyer information from participants
     SellerBuyerInfo? buyerInfo;
-    if (json['buyer'] != null || json['otherParticipant'] != null) {
-      final buyerData = json['buyer'] ?? json['otherParticipant'];
+    List<dynamic> participantsList = json['participants'] ?? [];
 
-      if (buyerData is Map<String, dynamic>) {
-        buyerInfo = SellerBuyerInfo.fromJson(buyerData);
-      } else if (buyerData is Map<dynamic, dynamic>) {
-        // Cast dynamic map to string map
-        final buyerMap = Map<String, dynamic>.from(buyerData);
-        buyerInfo = SellerBuyerInfo.fromJson(buyerMap);
+    for (var participant in participantsList) {
+      if (participant is Map && participant['userType'] == 'Buyer') {
+        buyerInfo = SellerBuyerInfo.fromJson(participant);
+        break;
       }
     }
+
+    // Also check if there's a separate buyer field
+    if (json['buyer'] != null && buyerInfo == null) {
+      buyerInfo = SellerBuyerInfo.fromJson(json['buyer']);
+    }
+
+    print('👤 Buyer info: ${buyerInfo?.name ?? "Not found"}');
 
     return SellerChatRoom(
-      id: json['_id'] ?? json['id'] ?? '',
-      participants: json['participants'] != null
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      participants: participantsList.isNotEmpty
           ? List<ChatParticipant>.from(
-              json['participants'].map((x) => ChatParticipant.fromJson(x)),
+              participantsList.map((x) => ChatParticipant.fromJson(x)),
             )
           : [],
-      lastMessage: lastMessageString,
-      lastMessageText: json['lastMessageText'] ?? '',
-      sellerUnreadCount:
-          json['sellerUnreadCount'] ??
-          json['myUnreadCount'] ??
-          json['unreadCount'] ??
-          0,
+      lastMessage:
+          json['lastMessage']?['_id']?.toString() ?? json['lastMessage'],
+      lastMessageText:
+          json['lastMessageText']?.toString() ??
+          json['lastMessage']?['message']?.toString() ??
+          '',
+      sellerUnreadCount: sellerUnreadCount,
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
+          ? DateTime.parse(json['updatedAt'].toString())
+          : json['lastMessage']?['createdAt'] != null
+          ? DateTime.parse(json['lastMessage']['createdAt'].toString())
           : DateTime.now(),
       productId: productIdString,
-      productName: productNameString ?? json['productName'],
-      orderId: json['orderId'],
+      productName: productNameString,
+      orderId: json['orderId']?.toString(),
       buyer: buyerInfo,
+      productImage: productImageString,
     );
+  }
+
+  static String? _getProductImage(Map<String, dynamic> productMap) {
+    if (productMap['images'] != null) {
+      if (productMap['images'] is List && productMap['images'].isNotEmpty) {
+        final firstImage = productMap['images'][0];
+        if (firstImage is String) return firstImage;
+        if (firstImage is Map) return firstImage['url']?.toString();
+      }
+    }
+    return null;
   }
 
   // Helper getters
@@ -110,19 +161,13 @@ class SellerChatRoom {
     }
 
     // Fallback to participants
-    final buyerParticipant = participants.firstWhere(
-      (p) => p.userType == 'Buyer',
-      orElse: () => participants.isNotEmpty
-          ? participants[0]
-          : ChatParticipant(
-              userId: '',
-              userType: '',
-              name: 'Customer',
-              lastSeen: DateTime.now(),
-            ),
-    );
+    for (final participant in participants) {
+      if (participant.userType == 'Buyer') {
+        return participant.name;
+      }
+    }
 
-    return buyerParticipant.name;
+    return 'Customer';
   }
 
   String? get buyerId {
@@ -130,31 +175,19 @@ class SellerChatRoom {
       return buyer!.userId;
     }
 
-    final buyerParticipant = participants.firstWhere(
-      (p) => p.userType == 'Buyer',
-      orElse: () => ChatParticipant(
-        userId: '',
-        userType: '',
-        name: '',
-        lastSeen: DateTime.now(),
-      ),
-    );
+    for (final participant in participants) {
+      if (participant.userType == 'Buyer') {
+        return participant.userId;
+      }
+    }
 
-    return buyerParticipant.userId.isNotEmpty ? buyerParticipant.userId : null;
+    return null;
   }
 
-  // Convert to regular ChatRoom for compatibility
-  buyer_models.ChatRoom toChatRoom() {
-    return buyer_models.ChatRoom(
-      id: id,
-      participants: participants,
-      lastMessage: lastMessage,
-      lastMessageText: lastMessageText,
-      unreadCount: sellerUnreadCount,
-      updatedAt: updatedAt,
-      productId: productId,
-      orderId: orderId,
-    );
+  // For debugging
+  @override
+  String toString() {
+    return 'SellerChatRoom{id: $id, buyerName: $buyerName, unreadCount: $sellerUnreadCount, product: $productName}';
   }
 }
 
@@ -179,63 +212,29 @@ class SellerBuyerInfo {
     this.isActive = true,
   });
 
-  factory SellerBuyerInfo.fromJson(Map<String, dynamic> json) {
-    // Handle nested details with proper type casting
-    Map<String, dynamic> details = {};
+  factory SellerBuyerInfo.fromJson(dynamic json) {
+    print('👤 Parsing SellerBuyerInfo: ${json.runtimeType}');
 
-    if (json['details'] != null) {
-      if (json['details'] is Map<String, dynamic>) {
-        details = json['details'];
-      } else if (json['details'] is Map<dynamic, dynamic>) {
-        details = Map<String, dynamic>.from(
-          json['details'] as Map<dynamic, dynamic>,
-        );
-      }
+    if (json is Map<String, dynamic>) {
+      return _fromMap(json);
+    } else if (json is Map<dynamic, dynamic>) {
+      return _fromMap(Map<String, dynamic>.from(json));
+    } else {
+      print('❌ Unexpected type for SellerBuyerInfo: ${json.runtimeType}');
+      return SellerBuyerInfo(userId: '', userType: 'Buyer', name: 'Customer');
     }
+  }
 
-    // Handle profileImage which might be a map
-    String? profileImageUrl;
-    if (json['profileImage'] != null) {
-      if (json['profileImage'] is String) {
-        profileImageUrl = json['profileImage'];
-      } else if (json['profileImage'] is Map<String, dynamic>) {
-        profileImageUrl = json['profileImage']['url'];
-      } else if (json['profileImage'] is Map<dynamic, dynamic>) {
-        final profileMap = Map<String, dynamic>.from(
-          json['profileImage'] as Map<dynamic, dynamic>,
-        );
-        profileImageUrl = profileMap['url'];
-      }
-    }
-
-    // Handle details profileImage similarly
-    if (profileImageUrl == null && details['profileImage'] != null) {
-      if (details['profileImage'] is String) {
-        profileImageUrl = details['profileImage'];
-      } else if (details['profileImage'] is Map<String, dynamic>) {
-        profileImageUrl = details['profileImage']['url'];
-      } else if (details['profileImage'] is Map<dynamic, dynamic>) {
-        final detailsProfileMap = Map<String, dynamic>.from(
-          details['profileImage'] as Map<dynamic, dynamic>,
-        );
-        profileImageUrl = detailsProfileMap['url'];
-      }
-    }
-
+  static SellerBuyerInfo _fromMap(Map<String, dynamic> map) {
     return SellerBuyerInfo(
-      userId: json['userId']?.toString() ?? details['_id']?.toString() ?? '',
-      userType: json['userType'] ?? 'Buyer',
-      name:
-          json['name'] ??
-          details['fullName'] ??
-          details['businessName'] ??
-          details['contactName'] ??
-          'Customer',
-      profileImage: profileImageUrl,
-      email: json['email'] ?? details['email'],
-      phone: json['phone'] ?? details['phone'],
-      businessName: json['businessName'] ?? details['businessName'],
-      isActive: json['isActive'] ?? details['isActive'] ?? true,
+      userId: map['userId']?.toString() ?? '',
+      userType: map['userType']?.toString() ?? 'Buyer',
+      name: map['name']?.toString() ?? 'Customer',
+      profileImage: map['profileImage']?.toString(),
+      email: map['email']?.toString(),
+      phone: map['phone']?.toString(),
+      businessName: map['businessName']?.toString(),
+      isActive: map['isActive'] ?? true,
     );
   }
 }

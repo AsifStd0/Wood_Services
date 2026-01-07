@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
 
 class MediaTab extends StatefulWidget {
-  const MediaTab({Key? key}) : super(key: key);
+  const MediaTab({super.key});
 
   @override
   State<MediaTab> createState() => _MediaTabState();

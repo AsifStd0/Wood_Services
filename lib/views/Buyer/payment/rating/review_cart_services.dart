@@ -1,12 +1,12 @@
 // lib/views/Buyer/data/services/review_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:wood_service/app/config.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/services/buyer_local_storage_service.dart';
 
 class ReviewService {
   final BuyerLocalStorageService _storage = locator<BuyerLocalStorageService>();
-  static const String baseUrl = 'http://192.168.10.20:5001/api';
 
   Future<String?> _getToken() async {
     return await _storage.getBuyerToken();
@@ -35,7 +35,7 @@ class ReviewService {
   }) async {
     try {
       String url =
-          '$baseUrl/reviews/product/$productId?page=$page&limit=$limit';
+          '${Config.apiBaseUrl}/api/reviews/product/$productId?page=$page&limit=$limit';
       if (sort != null) url += '&sort=$sort';
 
       final response = await http.get(
@@ -76,7 +76,9 @@ class ReviewService {
   Future<Map<String, dynamic>> getReviewStats(String productId) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/reviews/product/$productId?limit=1'),
+        Uri.parse(
+          '${Config.apiBaseUrl}/api/reviews/product/$productId?limit=1',
+        ),
         headers: await _getHeaders(),
       );
 

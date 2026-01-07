@@ -17,7 +17,7 @@ Future<Map<String, dynamic>> checkAuthStatus() async {
 
     // Check seller
     final sellerAuth = locator<SellerAuthService>();
-    isSellerLoggedInCheck = await sellerAuth.isSellerLoggedIn();
+    isSellerLoggedInCheck = await sellerAuth.isLoggedIn();
 
     // Check buyer
     final buyerAuth = locator<BuyerAuthService>();
@@ -25,13 +25,10 @@ Future<Map<String, dynamic>> checkAuthStatus() async {
 
     // ✅ If buyer is logged in, check if data is complete
     if (isBuyerLoggedInCheck) {
-      log('🔄 Buyer is logged in, checking data completeness...');
-
       final buyerStorage = locator<BuyerLocalStorageService>();
       final buyerData = await buyerStorage.getBuyerData();
 
       if (buyerData != null) {
-        log('🔍 Current buyer data has ${buyerData.length} fields');
         log('🔍 Fields: -------- 22222 ${buyerData.values.toList()}');
 
         // Check for missing fields
@@ -45,9 +42,6 @@ Future<Map<String, dynamic>> checkAuthStatus() async {
         }
 
         if (missingFields.isNotEmpty) {
-          log('⚠️ Missing fields in local storage: $missingFields');
-          log('🔄 Refreshing buyer data...');
-
           // Try to refresh data
           final refreshed = await buyerAuth.refreshBuyerData();
           if (refreshed) {

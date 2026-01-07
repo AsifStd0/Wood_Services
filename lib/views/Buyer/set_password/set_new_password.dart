@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Buyer/phone_verification/phone_verification.dart';
 import 'package:wood_service/widgets/custom_button.dart';

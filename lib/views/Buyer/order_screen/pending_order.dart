@@ -365,7 +365,7 @@ class OrderDetailsScreen extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 16),
-                  ...order.items.map((item) => _buildOrderItem(item)).toList(),
+                  ...order.items.map((item) => _buildOrderItem(item)),
                 ],
               ),
             ),

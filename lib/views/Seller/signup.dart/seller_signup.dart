@@ -1,5 +1,4 @@
 // views/seller_signup_view.dart
-import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Seller/signup.dart/seller_signup_provider.dart';

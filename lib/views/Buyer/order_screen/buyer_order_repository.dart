@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
+import 'package:wood_service/app/config.dart';
 import 'package:wood_service/core/services/buyer_local_storage_service.dart';
 import 'package:wood_service/views/Buyer/order_screen/buyer_order_model.dart';
 
@@ -20,12 +21,10 @@ abstract class BuyerOrderRepository {
 
 class ApiBuyerOrderRepository implements BuyerOrderRepository {
   final BuyerLocalStorageService storageService;
-  final String baseUrl;
 
-  ApiBuyerOrderRepository({
-    required this.storageService,
-    required this.baseUrl,
-  });
+  ApiBuyerOrderRepository({required this.storageService});
+
+  String get baseUrl => Config.apiBaseUrl;
 
   @override
   Future<List<BuyerOrder>> getOrders({String? status}) async {
@@ -35,14 +34,13 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
     try {
       final token = await storageService.getBuyerToken();
       if (token == null) throw Exception('Please login again');
-      final uri = Uri.parse('http://192.168.10.20:5001/api/buyer/orders')
-          .replace(
-            queryParameters: {
-              if (status != null) 'status': status,
-              'page': '1',
-              'limit': '50',
-            },
-          );
+      final uri = Uri.parse('$baseUrl/api/buyer/orders').replace(
+        queryParameters: {
+          if (status != null) 'status': status,
+          'page': '1',
+          'limit': '50',
+        },
+      );
 
       final response = await http
           .get(
@@ -81,9 +79,7 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
 
       final response = await http
           .get(
-            Uri.parse(
-              'http://192.168.10.20:5001/api/buyer/orders/stats/summary',
-            ),
+            Uri.parse('$baseUrl/api/buyer/orders/stats/summary'),
             headers: {'Authorization': 'Bearer $token'},
           )
           .timeout(const Duration(seconds: 30));
@@ -128,7 +124,7 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
 
       final response = await http
           .get(
-            Uri.parse('http://192.168.10.20:5001/api/buyer/orders/$orderId'),
+            Uri.parse('$baseUrl/api/buyer/orders/$orderId'),
             headers: {'Authorization': 'Bearer $token'},
           )
           .timeout(const Duration(seconds: 30));
@@ -157,9 +153,7 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
 
       final response = await http
           .post(
-            Uri.parse(
-              'http://192.168.10.20:5001/api/buyer/orders/$orderId/cancel',
-            ),
+            Uri.parse('$baseUrl/api/buyer/orders/$orderId/cancel'),
             headers: {
               'Authorization': 'Bearer $token',
               'Content-Type': 'application/json',
@@ -193,9 +187,7 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
 
       final response = await http
           .post(
-            Uri.parse(
-              'http://192.168.10.20:5001/api/buyer/orders/$orderId/received',
-            ),
+            Uri.parse('$baseUrl/api/buyer/orders/$orderId/received'),
             headers: {'Authorization': 'Bearer $token'},
           )
           .timeout(const Duration(seconds: 30));
@@ -236,9 +228,7 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
 
       final response = await http
           .post(
-            Uri.parse(
-              'http://192.168.10.20:5001/api/buyer/orders/$orderId/review',
-            ),
+            Uri.parse('$baseUrl/api/buyer/orders/$orderId/review'),
             headers: {
               'Authorization': 'Bearer $token',
               'Content-Type': 'application/json',

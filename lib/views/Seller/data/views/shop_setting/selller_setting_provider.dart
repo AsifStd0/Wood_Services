@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 // import 'package:wood_service/views/Seller/data/services/profile_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wood_service/core/services/seller_local_storage_service.dart';
 import 'package:wood_service/views/Seller/data/services/seller_auth.dart';
 
@@ -119,7 +118,7 @@ class SelllerSettingProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final isLoggedIn = await _authService.isSellerLoggedIn();
+      final isLoggedIn = await _authService.isLoggedIn();
 
       if (!isLoggedIn) {
         log('⚠️ Seller not logged in');

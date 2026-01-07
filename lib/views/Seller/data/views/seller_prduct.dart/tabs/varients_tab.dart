@@ -155,9 +155,7 @@ class _VariantsTabState extends State<VariantsTab> {
           const SizedBox(height: 24),
 
           // Current Variants - FIXED: Check if variants exist in your model
-          if (product != null &&
-              product.variants != null &&
-              product.variants.isNotEmpty) ...[
+          if (product.variants != null && product.variants.isNotEmpty) ...[
             Text(
               'Current Variants (${product.variants.length})',
               style: TextStyle(
@@ -169,7 +167,7 @@ class _VariantsTabState extends State<VariantsTab> {
             const SizedBox(height: 12),
             ...product.variants.map((variant) {
               return _buildVariantItem(variant, viewModel, context);
-            }).toList(),
+            }),
           ] else ...[
             // Empty state
             Container(

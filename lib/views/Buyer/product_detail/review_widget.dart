@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 // lib/views/Buyer/widgets/reviews_preview_section.dart
 import 'package:provider/provider.dart';
+import 'package:wood_service/app/config.dart';
 import 'package:wood_service/views/Buyer/payment/rating/review_provider.dart';
 
 class ReviewsPreviewSection extends StatefulWidget {
@@ -221,7 +222,7 @@ class _ReviewsPreviewSectionState extends State<ReviewsPreviewSection> {
                       const SizedBox(height: 16),
                   ],
                 );
-              }).toList(),
+              }),
             ],
           ),
       ],
@@ -298,7 +299,7 @@ class ProductReviewWidget extends StatelessWidget {
       if (buyerImage.startsWith('http')) {
         fullImageUrl = buyerImage;
       } else if (buyerImage.startsWith('/uploads/')) {
-        fullImageUrl = 'http://192.168.10.20:5001$buyerImage';
+        fullImageUrl = '${Config.apiBaseUrl}$buyerImage';
       }
     }
 

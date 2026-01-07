@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:wood_service/app/config.dart';
 import 'package:wood_service/core/services/buyer_local_storage_service.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/buyer_favorite_product_model.dart';
 
@@ -15,8 +16,8 @@ class FavoriteProvider extends ChangeNotifier {
   int _totalFavorites = 0;
 
   // ========== BASE URL ==========
-  // Use ONE consistent base URL
-  static const String _baseUrl = 'http://192.168.10.20:5001';
+  // Use centralized config
+  static String get _baseUrl => Config.baseUrl;
 
   // ========== CONSTRUCTOR ==========
   FavoriteProvider(this._buyerLocalStorageService);

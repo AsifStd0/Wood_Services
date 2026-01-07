@@ -53,106 +53,73 @@ class _SellerOuterMessagesScreenState extends State<SellerOuterMessagesScreen> {
           appBar: AppBar(
             title: const Text('Seller Messages'),
             centerTitle: true,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () => _showSearchDialog(context, chatProvider),
-              ),
-              IconButton(
-                icon: const Icon(Icons.filter_list),
-                onPressed: () => _showFilterOptions(context, chatProvider),
-              ),
-            ],
           ),
           body: RefreshIndicator(
             onRefresh: () async {
               await chatProvider.loadSellerChats();
               await chatProvider.loadSellerDashboard();
             },
-            child: Column(
-              children: [
-                // Seller Dashboard Stats
-                _buildSellerDashboard(chatProvider),
-
-                // Chat List
-                Expanded(child: _buildChatList(chatProvider)),
-              ],
-            ),
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => _showNewChatDialog(context),
-            child: const Icon(Icons.chat_bubble_outline),
+            child: _buildBody(chatProvider), // This might be the issue
           ),
         );
       },
     );
   }
 
-  Widget _buildSellerDashboard(SellerChatProvider chatProvider) {
-    if (chatProvider.dashboard == null) return const SizedBox();
+  Widget _buildBody(SellerChatProvider chatProvider) {
+    if (chatProvider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-    final dashboard = chatProvider.dashboard!;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.blue[50],
-        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Chat Overview',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildStatCard(
-                icon: Icons.chat,
-                value: '${dashboard.totalChats}',
-                label: 'Total Chats',
-              ),
-              _buildStatCard(
-                icon: Icons.mark_chat_unread,
-                value: '${dashboard.unreadMessages}',
-                label: 'Unread',
-              ),
-              _buildStatCard(
-                icon: Icons.today,
-                value: '${dashboard.todaysChats}',
-                label: 'Today',
-              ),
-              _buildStatCard(
-                icon: Icons.group,
-                value: '${dashboard.activeBuyers}',
-                label: 'Active Buyers',
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard({
-    required IconData icon,
-    required String value,
-    required String label,
-  }) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.blue, size: 24),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    if (chatProvider.error != null) {
+      print('❌ Showing error widget: ${chatProvider.error}');
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error, color: Colors.red, size: 50),
+            const SizedBox(height: 16),
+            Text('Error: ${chatProvider.error}'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                chatProvider.loadSellerChats();
+              },
+              child: const Text('Retry'),
+            ),
+          ],
         ),
-        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-      ],
-    );
+      );
+    }
+
+    if (chatProvider.chats.isEmpty) {
+      print('📱 Showing empty state widget');
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.chat, size: 100, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            const Text(
+              'No customer conversations yet',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 40),
+              child: Text(
+                'When customers message you, their conversations will appear here',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    print('✅ Building chat list with ${chatProvider.chats.length} chats');
+    return _buildChatList(chatProvider);
   }
 
   Widget _buildChatList(SellerChatProvider chatProvider) {
@@ -231,21 +198,6 @@ class _SellerOuterMessagesScreenState extends State<SellerOuterMessagesScreen> {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
-                if (chat.productId != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      'Product',
-                      style: TextStyle(fontSize: 10, color: Colors.blue[700]),
-                    ),
-                  ),
               ],
             ),
             subtitle: Column(
@@ -320,93 +272,5 @@ class _SellerOuterMessagesScreenState extends State<SellerOuterMessagesScreen> {
     if (difference.inHours < 24) return '${difference.inHours}h ago';
     if (difference.inDays < 7) return '${difference.inDays}d ago';
     return '${(difference.inDays / 7).floor()}w ago';
-  }
-
-  void _showSearchDialog(BuildContext context, SellerChatProvider provider) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Search Chats'),
-        content: TextField(
-          onChanged: (value) {
-            provider.searchChats(value);
-          },
-          decoration: const InputDecoration(
-            hintText: 'Search by customer name or product...',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              provider.searchChats('');
-              Navigator.pop(context);
-            },
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showFilterOptions(BuildContext context, SellerChatProvider provider) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.mark_chat_unread),
-              title: const Text('Unread Only'),
-              trailing: Switch(
-                value: provider.filterStatus == 'unread',
-                onChanged: (value) {
-                  provider.filterChats(value ? 'unread' : 'all');
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.archive),
-              title: const Text('Archived'),
-              trailing: Switch(
-                value: provider.filterStatus == 'archived',
-                onChanged: (value) {
-                  provider.filterChats(value ? 'archived' : 'all');
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.today),
-              title: const Text('Today\'s Chats'),
-              onTap: () {
-                provider.filterChats('today');
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showNewChatDialog(BuildContext context) {
-    // Implement dialog to start new chat with existing customer
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Start New Chat'),
-        content: const Text('Select an existing customer to chat with'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          // You would typically show a list of customers here
-        ],
-      ),
-    );
   }
 }

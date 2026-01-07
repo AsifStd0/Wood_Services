@@ -115,16 +115,32 @@ class SellerChatService {
     }
   }
 
-  // Get chat details - Now returns SellerChatRoom
+  // Change to use the list endpoint and filter:
   Future<SellerChatRoom> getChatDetails(String chatId) async {
     try {
       final token = await _getAuthToken();
       _dio.options.headers['Authorization'] = 'Bearer $token';
 
-      final response = await _dio.get('$_baseUrl/$chatId');
+      // Get all chats and filter by ID
+      final response = await _dio.get(
+        '$_baseUrl/list',
+        queryParameters: {'page': 1, 'limit': 50},
+      );
 
       if (response.data['success'] == true) {
-        return SellerChatRoom.fromJson(response.data['chat']);
+        final List<dynamic> chatsData = response.data['chats'] ?? [];
+
+        // Find the specific chat by ID
+        final chatData = chatsData.firstWhere(
+          (chat) => chat['_id'] == chatId,
+          orElse: () => null,
+        );
+
+        if (chatData == null) {
+          throw Exception('Chat not found');
+        }
+
+        return SellerChatRoom.fromJson(chatData);
       } else {
         throw Exception(
           response.data['message'] ?? 'Failed to get chat details',

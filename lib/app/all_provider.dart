@@ -1,12 +1,11 @@
 // lib/app/providers.dart
-import 'package:dio/dio.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
+import 'package:wood_service/app/config.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_provider.dart';
 import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_provider.dart';
 import 'package:wood_service/core/services/buyer_local_storage_service.dart';
-import 'package:wood_service/core/services/seller_local_storage_service.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_provider.dart';
@@ -79,7 +78,6 @@ List<SingleChildWidget> appProviders = [
     create: (_) => BuyerOrderProvider(
       ApiBuyerOrderRepository(
         storageService: locator<BuyerLocalStorageService>(),
-        baseUrl: 'http://192.168.1.16:5001',
       ),
     ),
   ),
@@ -101,7 +99,7 @@ List<SingleChildWidget> appProviders = [
 
   // ========== OTHER PROVIDERS ==========
   ChangeNotifierProvider(create: (_) => BuyerChatProvider()),
-  ChangeNotifierProvider(create: (_) => CartProvider()),
+  ChangeNotifierProvider(create: (_) => locator<CartProvider>()),
   ChangeNotifierProvider(create: (_) => ReviewProvider()),
 
   // ! ****

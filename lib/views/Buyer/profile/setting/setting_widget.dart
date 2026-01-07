@@ -185,23 +185,28 @@ showLanguageDialog(context) {
                 ],
               ),
             ),
-            ...['English', 'Spanish', 'French', 'German', 'Chinese', 'Arabic']
-                .map(
-                  (language) => ListTile(
-                    title: Text(language),
-                    trailing:
-                        //  _language == language
-                        // ?
-                        const Icon(Icons.check, color: Colors.green),
-                    // : null,
-                    onTap: () {
-                      // setState(() => _language = language);
-                      // Navigator.pop(context);
-                      // _showSnackBar('Language changed to $language');
-                    },
-                  ),
-                )
-                .toList(),
+            ...[
+              'English',
+              'Spanish',
+              'French',
+              'German',
+              'Chinese',
+              'Arabic',
+            ].map(
+              (language) => ListTile(
+                title: Text(language),
+                trailing:
+                    //  _language == language
+                    // ?
+                    const Icon(Icons.check, color: Colors.green),
+                // : null,
+                onTap: () {
+                  // setState(() => _language = language);
+                  // Navigator.pop(context);
+                  // _showSnackBar('Language changed to $language');
+                },
+              ),
+            ),
             const SizedBox(height: 20),
           ],
         ),

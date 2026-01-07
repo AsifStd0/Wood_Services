@@ -5,8 +5,6 @@ import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_p
 import 'package:wood_service/widgets/custom_textfield.dart';
 
 class PricingTab extends StatelessWidget {
-  const PricingTab({Key? key});
-
   @override
   Widget build(BuildContext context) {
     final productProvider = context.watch<SellerProductProvider>();

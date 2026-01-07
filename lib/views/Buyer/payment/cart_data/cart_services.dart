@@ -1,135 +1,192 @@
-// lib/services/api_service.dart
+// lib/services/cart_services.dart
 import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
+import 'package:wood_service/app/config.dart';
 import 'package:wood_service/core/services/buyer_local_storage_service_impl.dart';
 
 class CartServices {
-  static const String baseUrl = 'http://localhost:5001/api';
-  static String? _token;
-  static BuyerLocalStorageServiceImpl _storage = BuyerLocalStorageServiceImpl();
+  // Instance members
+  final BuyerLocalStorageServiceImpl _storage;
+  String? _cachedToken;
 
-  static Future<void> initialize() async {
+  CartServices(this._storage); // Constructor
+
+  // Instance getter
+  String get baseUrl => Config.apiBaseUrl;
+
+  Future<void> initialize() async {
     await _storage.initialize();
-    _token = await _storage.getBuyerToken();
-    print(
-      '🛒 CartServices initialized with token: ${_token != null ? "EXISTS" : "NULL"}',
-    );
+    _cachedToken = await _storage.getBuyerToken();
+    print('🛒 CartServices initialized');
   }
 
-  static Future<void> saveToken(String token) async {
-    _token = token;
-    await _storage.saveBuyerToken(token);
+  Future<String?> _getToken() async {
+    _cachedToken ??= await _storage.getBuyerToken();
+    return _cachedToken;
   }
 
-  static Future<void> clearToken() async {
-    _token = null;
-    await _storage.buyerLogout();
-  }
-
-  static Map<String, String> get _headers {
+  Future<Map<String, String>> _getHeaders() async {
+    final token = await _getToken();
     return {
       'Content-Type': 'application/json',
-      if (_token != null && _token!.isNotEmpty)
-        'Authorization': 'Bearer $_token',
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
   }
 
-  // ========== HELPER METHOD ==========
-  static Map<String, dynamic> _handleResponse(http.Response response) {
-    print('📡 Response Status: ${response.statusCode}');
-    print('📡 Response Body: ${response.body}');
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return json.decode(response.body);
-    } else {
-      throw Exception(
-        'API Error ${response.statusCode}: ${response.reasonPhrase}',
-      );
-    }
+  // Clear token cache
+  Future<void> _clearTokenCache() async {
+    _cachedToken = null;
+    await _storage.buyerLogout();
   }
 
-  // ========== CART APIS ==========
+  // ========== API METHODS ==========
 
-  // GET Cart
-  static Future<Map<String, dynamic>> getCart() async {
+  // Fetch cart items
+  Future<Map<String, dynamic>> fetchCart() async {
     try {
+      final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse('$baseUrl/buyer/cart'),
-        headers: _headers,
+        headers: headers,
       );
-      return _handleResponse(response);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {'success': true, 'data': data};
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to fetch cart: ${response.statusCode}',
+          'statusCode': response.statusCode,
+        };
+      }
     } catch (e) {
-      print('❌ Error getting cart: $e');
-      rethrow;
+      log('❌ Error fetching cart: $e');
+      return {'success': false, 'message': 'Error: ${e.toString()}'};
     }
   }
 
-  // // ADD to Cart
-  // static Future<Map<String, dynamic>> addToCart(
-  //   String productId,
-  //   int quantity,
-  // ) async {
-  //   try {
-  //     final response = await http.post(
-  //       Uri.parse('$baseUrl/buyer/cart/add'),
-  //       headers: _headers,
-  //       body: json.encode({'productId': productId, 'quantity': quantity}),
-  //     );
-  //     return _handleResponse(response);
-  //   } catch (e) {
-  //     print('❌ Error adding to cart: $e');
-  //     rethrow;
-  //   }
-  // }
+  // Add item to cart
+  Future<Map<String, dynamic>> addToCart({
+    required String productId,
+    int quantity = 1,
+    String? selectedVariant,
+    String? selectedSize,
+  }) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/buyer/cart/add'),
+        headers: headers,
+        body: json.encode({
+          'productId': productId,
+          'quantity': quantity,
+          'selectedVariant': selectedVariant,
+          'selectedSize': selectedSize,
+        }),
+      );
 
-  // UPDATE Cart Item
-  static Future<Map<String, dynamic>> updateCartItem(
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {'success': true, 'message': data['message'], 'data': data};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to add to cart',
+          'statusCode': response.statusCode,
+        };
+      }
+    } catch (e) {
+      log('❌ Error adding to cart: $e');
+      return {'success': false, 'message': 'Error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> updateQuantity(
     String itemId,
-    int quantity,
+    int newQuantity,
   ) async {
     try {
+      final headers = await _getHeaders();
       final response = await http.put(
         Uri.parse('$baseUrl/buyer/cart/update/$itemId'),
-        headers: _headers,
-        body: json.encode({'quantity': quantity}),
+        headers: headers,
+        body: json.encode({'quantity': newQuantity}),
       );
-      return _handleResponse(response);
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {'success': true, 'message': data['message']};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to update quantity',
+          'statusCode': response.statusCode,
+        };
+      }
     } catch (e) {
-      print('❌ Error updating cart item: $e');
-      rethrow;
+      log('❌ Error updating quantity: $e');
+      return {'success': false, 'message': 'Error: ${e.toString()}'};
     }
   }
 
-  // REMOVE Cart Item
-  static Future<Map<String, dynamic>> removeCartItem(String itemId) async {
+  Future<Map<String, dynamic>> removeItem(String itemId) async {
     try {
+      final headers = await _getHeaders(); // Now works - instance method
       final response = await http.delete(
-        Uri.parse('$baseUrl/buyer/cart/remove/$itemId'),
-        headers: _headers,
+        Uri.parse(
+          '$baseUrl/buyer/cart/remove/$itemId',
+        ), // baseUrl is instance getter
+        headers: headers,
       );
-      return _handleResponse(response);
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {'success': true, 'message': data['message']};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to remove item',
+          'statusCode': response.statusCode,
+        };
+      }
     } catch (e) {
-      print('❌ Error removing cart item: $e');
-      rethrow;
+      log('❌ Error removing item: $e');
+      return {'success': false, 'message': 'Error: ${e.toString()}'};
     }
   }
 
-  // CLEAR Cart
-  static Future<Map<String, dynamic>> clearCart() async {
+  // Clear entire cart
+  Future<Map<String, dynamic>> clearCart() async {
     try {
+      final headers = await _getHeaders();
       final response = await http.delete(
         Uri.parse('$baseUrl/buyer/cart/clear'),
-        headers: _headers,
+        headers: headers,
       );
-      return _handleResponse(response);
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {'success': true, 'message': data['message']};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to clear cart',
+          'statusCode': response.statusCode,
+        };
+      }
     } catch (e) {
-      print('❌ Error clearing cart: $e');
-      rethrow;
+      log('❌ Error clearing cart: $e');
+      return {'success': false, 'message': 'Error: ${e.toString()}'};
     }
   }
 
-  // In BuyerCartService.dart
+  // Direct buy
   Future<Map<String, dynamic>> directBuy({
     required String productId,
     required int quantity,
@@ -138,203 +195,144 @@ class CartServices {
     String paymentMethod = 'cod',
   }) async {
     try {
-      log('🛍️ [DIRECT BUY] Starting direct purchase...');
-      log('   Product ID: $productId');
-      log('   Quantity: $quantity');
-      log('   Payment Method: $paymentMethod');
+      final headers = await _getHeaders();
 
-      final token = await _storage.getBuyerToken();
-      log('🔍 Buyer token: ${token != null ? "EXISTS" : "NULL"}');
-
-      if (token == null) {
-        throw Exception('Please login again');
-      }
-
-      // Prepare request body
-      final body = {
+      final Map<String, dynamic> body = {
         'productId': productId,
         'quantity': quantity,
         'paymentMethod': paymentMethod,
-        if (buyerNotes != null && buyerNotes.isNotEmpty)
-          'buyerNotes': buyerNotes,
-        if (deliveryAddress != null && deliveryAddress.isNotEmpty)
-          'deliveryAddress': deliveryAddress,
       };
 
-      log('📦 Request Body: $body');
-      log('📤 Endpoint: $baseUrl/api/buyer/cart/direct-buy');
+      if (buyerNotes != null && buyerNotes.isNotEmpty) {
+        body['buyerNotes'] = buyerNotes;
+      }
+
+      if (deliveryAddress != null && deliveryAddress.isNotEmpty) {
+        body['deliveryAddress'] = deliveryAddress;
+      }
+
+      log('📦 Direct Buy Request: $body');
 
       final response = await http.post(
-        Uri.parse('$baseUrl/api/buyer/cart/direct-buy'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(body),
+        Uri.parse('$baseUrl/buyer/cart/direct-buy'),
+        headers: headers,
+        body: json.encode(body),
       );
 
-      log('📥 Response Status: ${response.statusCode}');
-      log('📥 Response Body: ${response.body}');
+      final data = json.decode(response.body);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          log('✅ Direct purchase successful!');
-          return data;
-        } else {
-          log('❌ API returned success: false');
-          throw Exception(data['message'] ?? 'Failed to process purchase');
-        }
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {
+          'success': true,
+          'message': data['message'],
+          'order': data['order'],
+        };
       } else {
-        log('❌ HTTP Error: ${response.statusCode}');
-        throw Exception('Server error: ${response.statusCode}');
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to process purchase',
+          'statusCode': response.statusCode,
+        };
       }
     } catch (e) {
-      log('❌ Direct buy error in service: $e');
-      rethrow;
-    }
-  }
-  // // REQUEST to Buy
-  // static Future<Map<String, dynamic>> requestBuy({
-  //   required List<String> itemIds,
-  //   String? buyerNotes,
-  //   String? deliveryAddress,
-  //   String paymentMethod = 'cod',
-  // }) async {
-  //   try {
-  //     final response = await http.post(
-  //       Uri.parse('$baseUrl/buyer/cart/request/buy'),
-  //       headers: _headers,
-  //       body: json.encode({
-  //         'itemIds': itemIds,
-  //         'buyerNotes': buyerNotes,
-  //         'deliveryAddress': deliveryAddress,
-  //         'paymentMethod': paymentMethod,
-  //       }),
-  //     );
-  //     return _handleResponse(response);
-  //   } catch (e) {
-  //     print('❌ Error requesting buy: $e');
-  //     rethrow;
-  //   }
-  // }
-
-  // ========== REVIEW APIS ==========
-
-  // Get orders eligible for review
-  static Future<Map<String, dynamic>> getReviewableOrders() async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/buyer/reviews/orders'),
-        headers: _headers,
-      );
-      return _handleResponse(response);
-    } catch (e) {
-      print('❌ Error getting reviewable orders: $e');
-      rethrow;
+      log('❌ Error in direct buy: $e');
+      return {'success': false, 'message': 'Error: ${e.toString()}'};
     }
   }
 
-  // // Submit review
-  // static Future<Map<String, dynamic>> submitReview({
-  //   required String orderId,
-  //   required String orderItemId,
-  //   required String productId,
-  //   required int rating,
-  //   String? title,
-  //   String? comment,
-  //   List<Map<String, String>> images = const [],
-  // }) async {
-  //   try {
-  //     final response = await http.post(
-  //       Uri.parse('$baseUrl/buyer/reviews'),
-  //       headers: _headers,
-  //       body: json.encode({
-  //         'orderId': orderId,
-  //         'orderItemId': orderItemId,
-  //         'productId': productId,
-  //         'rating': rating,
-  //         'title': title,
-  //         'comment': comment,
-  //         'images': images,
-  //       }),
-  //     );
-  //     return _handleResponse(response);
-  //   } catch (e) {
-  //     print('❌ Error submitting review: $e');
-  //     rethrow;
-  //   }
-  // }
-
-  // // Get my reviews
-  static Future<Map<String, dynamic>> getMyReviews({
-    int page = 1,
-    int limit = 10,
-    int? rating,
+  // Request buy (multiple items)
+  Future<Map<String, dynamic>> requestBuy({
+    required List<String> itemIds,
+    String? buyerNotes,
+    String? deliveryAddress,
+    String paymentMethod = 'cod',
   }) async {
     try {
-      String url = '$baseUrl/buyer/reviews/my?page=$page&limit=$limit';
-      if (rating != null) url += '&rating=$rating';
+      final headers = await _getHeaders();
 
-      final response = await http.get(Uri.parse(url), headers: _headers);
-      return _handleResponse(response);
-    } catch (e) {
-      print('❌ Error getting my reviews: $e');
-      rethrow;
-    }
-  }
+      final Map<String, dynamic> body = {
+        'itemIds': itemIds,
+        'paymentMethod': paymentMethod,
+        if (buyerNotes != null && buyerNotes.isNotEmpty)
+          'buyerNotes': buyerNotes,
+        if (deliveryAddress != null)
+          'deliveryAddress': {'address': deliveryAddress},
+      };
 
-  // Update review
-  static Future<Map<String, dynamic>> updateReview({
-    required String reviewId,
-    int? rating,
-    String? title,
-    String? comment,
-    List<Map<String, String>>? images,
-  }) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/buyer/reviews/$reviewId'),
-        headers: _headers,
-        body: json.encode({
-          'rating': rating,
-          'title': title,
-          'comment': comment,
-          'images': images,
-        }),
-      );
-      return _handleResponse(response);
-    } catch (e) {
-      print('❌ Error updating review: $e');
-      rethrow;
-    }
-  }
+      log('📦 Request Buy Body: $body');
 
-  // Delete review
-  static Future<Map<String, dynamic>> deleteReview(String reviewId) async {
-    try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/buyer/reviews/$reviewId'),
-        headers: _headers,
-      );
-      return _handleResponse(response);
-    } catch (e) {
-      print('❌ Error deleting review: $e');
-      rethrow;
-    }
-  }
-
-  // Mark review as helpful
-  static Future<Map<String, dynamic>> markHelpful(String reviewId) async {
-    try {
       final response = await http.post(
-        Uri.parse('$baseUrl/buyer/reviews/$reviewId/helpful'),
-        headers: _headers,
+        Uri.parse('$baseUrl/api/buyer/cart/requests/buy'),
+        headers: headers,
+        body: json.encode(body),
       );
-      return _handleResponse(response);
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {
+          'success': true,
+          'message': data['message'],
+          'orders': data['orders'] ?? [],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to process request',
+          'statusCode': response.statusCode,
+        };
+      }
     } catch (e) {
-      print('❌ Error marking helpful: $e');
-      rethrow;
+      log('❌ Error in request buy: $e');
+      return {'success': false, 'message': 'Error: ${e.toString()}'};
     }
+  }
+
+  // Get request/order details
+  Future<Map<String, dynamic>> getRequestDetails(String orderId) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/buyer/cart/requests/$orderId'),
+        headers: headers,
+      );
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {
+          'success': true,
+          'message': data['message'],
+          'request': data['request'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch order details',
+          'statusCode': response.statusCode,
+        };
+      }
+    } catch (e) {
+      log('❌ Error fetching order details: $e');
+      return {'success': false, 'message': 'Error: ${e.toString()}'};
+    }
+  }
+
+  // Check if user is logged in
+  Future<bool> isLoggedIn() async {
+    final token = await _getToken();
+    return token != null && token.isNotEmpty;
+  }
+
+  // Refresh token
+  Future<void> refreshToken(String newToken) async {
+    _cachedToken = newToken;
+    await _storage.saveBuyerToken(newToken);
+  }
+
+  Future<void> logout() async {
+    _cachedToken = null;
+    await _storage.buyerLogout();
+    print('✅ CartServices: User logged out');
   }
 }

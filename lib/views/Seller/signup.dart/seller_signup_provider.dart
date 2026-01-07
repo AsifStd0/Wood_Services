@@ -36,7 +36,7 @@ class SellerSignupViewModel extends ChangeNotifier {
   String _countryCode = '+1';
   File? _shopLogo;
   File? _shopBanner;
-  List<String> _categories = [];
+  final List<String> _categories = [];
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -48,7 +48,7 @@ class SellerSignupViewModel extends ChangeNotifier {
   File? _identityProof;
 
   // Map storage - KEEP THIS TOO
-  Map<String, File?> _documents = {
+  final Map<String, File?> _documents = {
     'businessLicense': null,
     'taxCertificate': null,
     'identityProof': null,
@@ -173,7 +173,7 @@ class SellerSignupViewModel extends ChangeNotifier {
     }
   }
 
-  Future<Either<Failure, SellerAuthResponse>> submitApplication() async {
+  submitApplication() async {
     if (!validateForm()) {
       return Left(ValidationFailure(_errorMessage ?? 'Form validation failed'));
     }
@@ -185,9 +185,7 @@ class SellerSignupViewModel extends ChangeNotifier {
       final sellerData = _collectFormData();
       log('   👤 Name: ${sellerData.toString()}');
 
-      final result = await _sellerAuthService.registerSeller(
-        seller: sellerData,
-      );
+      final result = await _sellerAuthService.register(seller: sellerData);
 
       setLoading(false);
       return result;
@@ -259,6 +257,7 @@ class SellerSignupViewModel extends ChangeNotifier {
   SellerModel _collectFormData() {
     final completePhoneNumber = '$_countryCode${phoneController.text}';
     final seller = SellerModel(
+      id: '',
       personalInfo: PersonalInfo(
         fullName: fullNameController.text.trim(),
         email: emailController.text.trim(),

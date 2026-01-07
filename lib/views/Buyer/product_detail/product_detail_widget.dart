@@ -110,11 +110,11 @@ class SizeSelectionWidget extends StatelessWidget {
       (viewModel) => viewModel.selectedSize,
     );
 
-    final List<String> _sizes = ['Small', 'Medium', 'Large'];
-    final List<String> _sizeDimensions = ['80x80cm', '120x120cm', '150x150cm'];
+    final List<String> sizes = ['Small', 'Medium', 'Large'];
+    final List<String> sizeDimensions = ['80x80cm', '120x120cm', '150x150cm'];
 
     // Find index of selected size
-    int selectedIndex = _sizes.indexWhere((size) => size == selectedSize);
+    int selectedIndex = sizes.indexWhere((size) => size == selectedSize);
     if (selectedIndex == -1) selectedIndex = 1; // Default to Medium
 
     return Column(
@@ -130,7 +130,7 @@ class SizeSelectionWidget extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
             Text(
-              _sizeDimensions[selectedIndex],
+              sizeDimensions[selectedIndex],
               style: TextStyle(color: Colors.grey[600], fontSize: 12),
             ),
           ],
@@ -138,14 +138,9 @@ class SizeSelectionWidget extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           children: [
-            for (int i = 0; i < _sizes.length; i++) ...[
+            for (int i = 0; i < sizes.length; i++) ...[
               if (i > 0) const SizedBox(width: 12),
-              _buildSizeOption(
-                _sizes[i],
-                i == selectedIndex,
-                i,
-                onSizeSelected,
-              ),
+              _buildSizeOption(sizes[i], i == selectedIndex, i, onSizeSelected),
             ],
           ],
         ),
@@ -273,7 +268,7 @@ class MinimalQuantityStockWidget extends StatelessWidget {
                   ),
 
                   // Quantity Display
-                  Container(
+                  SizedBox(
                     width: 40,
                     height: 36,
                     child: Center(

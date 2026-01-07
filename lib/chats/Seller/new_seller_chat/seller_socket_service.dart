@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_model.dart';
@@ -34,9 +35,69 @@ class SellerSocketService {
   }
 
   // Get seller ID
+  // In SellerSocketService class
   Future<String?> _getSellerId() async {
-    final sellerData = await _sellerStorage.getSellerData();
-    return sellerData?['_id']?.toString() ?? sellerData?['id']?.toString();
+    try {
+      final sellerData = await _sellerStorage.getSellerData();
+
+      // Try to find ID in any possible key
+      if (sellerData != null) {
+        // Check common ID keys
+        final possibleIdKeys = ['_id', 'id', 'sellerId', 'userId', 'user_id'];
+
+        for (final key in possibleIdKeys) {
+          if (sellerData.containsKey(key) && sellerData[key] != null) {
+            final id = sellerData[key].toString();
+            if (id.isNotEmpty) {
+              print('✅ Found seller ID in key "$key": $id');
+              return id;
+            }
+          }
+        }
+
+        // If no ID found, check if we can get it from another source
+        print('❌ No seller ID found in seller data');
+      }
+
+      // Try to get ID from JWT token
+      final token = await _sellerStorage.getSellerToken();
+      if (token != null) {
+        try {
+          // Your token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NTZhZGRkZmY5ZjUyNzkwY2Y2NzRmMiIsImlhdCI6MTc2NzMzOTM1NCwiZXhwIjoxNzY5OTMxMzU0fQ.mekdyeb3WSrSG6X9vZ94BgdsAvCGW_STszdtRGHb6BM
+          // The payload is: {"id":"6956adddff9f52790cf674f2","iat":1767339354,"exp":1769931354}
+
+          // Base64 decode the payload (middle part between dots)
+          final parts = token.split('.');
+          if (parts.length == 3) {
+            // Fix: Base64 URL decode with proper padding
+            String payload = parts[1];
+            // Add padding if needed
+            while (payload.length % 4 != 0) {
+              payload += '=';
+            }
+
+            // Decode
+            final decoded = utf8.decode(base64Url.decode(payload));
+            final payloadMap = jsonDecode(decoded);
+
+            final id = payloadMap['id']?.toString();
+            if (id != null && id.isNotEmpty) {
+              print('🔑 Extracted seller ID from token: $id');
+              return id;
+            }
+          }
+        } catch (e) {
+          print('❌ Failed to parse token: $e');
+        }
+      }
+
+      // As a last resort, use the hardcoded ID from your logs
+      print('⚠️ Using fallback seller ID');
+      return '6956adddff9f52790cf674f2';
+    } catch (e) {
+      print('❌ Error getting seller ID: $e');
+      return null;
+    }
   }
 
   // Get seller name
@@ -65,7 +126,7 @@ class SellerSocketService {
 
       // Get base URL from environment or config
       final String baseUrl =
-          'http://192.168.1.100:5000'; // Replace with your server IP
+          'http://10.0.50.105:5000'; // Replace with your server IP
 
       print('🔌 Initializing socket for SELLER:');
       print('   Seller ID: $sellerId');

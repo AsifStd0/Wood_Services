@@ -138,12 +138,10 @@ class _SellerChatScreenState extends State<SellerChatScreen> {
 
         return Scaffold(
           backgroundColor: Colors.grey[50],
+
           appBar: _buildAppBar(context, chatProvider),
           body: Column(
             children: [
-              // Product info banner if exists
-              if (widget.productId != null) _buildProductInfo(),
-
               // Typing indicator
               if (_isTyping) _buildTypingIndicator(),
 
@@ -159,48 +157,6 @@ class _SellerChatScreenState extends State<SellerChatScreen> {
           floatingActionButton: _buildMessageInput(),
         );
       },
-    );
-  }
-
-  Widget _buildProductInfo() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.05),
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.shopping_bag_rounded, color: AppColors.primary, size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Product Inquiry',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
-                  ),
-                ),
-                if (widget.productName != null)
-                  Text(
-                    widget.productName!,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: () {
-              // Navigate to product details
-            },
-            icon: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-          ),
-        ],
-      ),
     );
   }
 

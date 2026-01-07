@@ -1,5 +1,4 @@
 // models/seller_notification_model.dart
-import 'package:wood_service/views/Seller/data/view_models/seller_notificaion_model.dart';
 import 'package:wood_service/views/Seller/data/views/noification_model.dart/notification_provider.dart';
 
 class SellerNotificaionModel {

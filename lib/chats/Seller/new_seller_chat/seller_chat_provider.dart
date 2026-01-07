@@ -36,22 +36,34 @@ class SellerChatProvider extends ChangeNotifier {
   int get unreadCount => _unreadCount;
   SellerDashboard? get dashboard => _dashboard;
   String get filterStatus => _filterStatus;
-
-  // Initialize seller chat system
+  // In initialize() method
   Future<void> initialize() async {
     try {
-      // Initialize socket connection
-      await _socketService.initializeSocket();
-
-      // Setup socket listeners
-      _setupSocketListeners();
+      // Initialize socket connection (optional)
+      try {
+        await _socketService.initializeSocket();
+        _setupSocketListeners();
+        print('✅ Socket initialized successfully');
+      } catch (e) {
+        print(
+          '⚠️ Socket initialization failed (will continue without socket): $e',
+        );
+        // Don't set error - socket is optional
+      }
 
       // Load initial data
       await loadSellerChats();
       await loadSellerDashboard();
       await getUnreadCount();
+
+      print('✅ Chat system initialized successfully');
     } catch (e) {
-      _error = 'Failed to initialize seller chat: $e';
+      // Only set error for critical failures
+      if (e.toString().contains('Failed to load') ||
+          e.toString().contains('authentication')) {
+        _error = 'Failed to load chat data: $e';
+      }
+      print('❌ Chat initialization error: $e');
       notifyListeners();
     }
   }
@@ -132,27 +144,6 @@ class SellerChatProvider extends ChangeNotifier {
         sellerData?['businessName'] ??
         sellerData?['fullName'] ??
         'Seller';
-  }
-
-  // Load seller chats with filters
-  Future<void> loadSellerChats() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      _chats = await _chatService.getSellerChats(
-        status: _filterStatus,
-        page: 1,
-        limit: 50,
-      );
-      _chats.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-    } catch (e) {
-      _error = 'Failed to load seller chats: $e';
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
   }
 
   // Load seller dashboard
@@ -399,6 +390,42 @@ class SellerChatProvider extends ChangeNotifier {
   void disposeProvider() {
     _socketService.dispose();
     super.dispose();
+  }
+
+  // Add this method to SellerChatProvider
+  void clearError() {
+    if (_error != null) {
+      print('🗑️ Clearing error: $_error');
+      _error = null;
+      notifyListeners();
+    }
+  }
+
+  // Update loadSellerChats to clear error:
+  Future<void> loadSellerChats() async {
+    clearError(); // Clear any existing errors
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      print('🔄 Loading seller chats...');
+      final chats = await _chatService.getSellerChats(
+        status: _filterStatus,
+        page: 1,
+        limit: 50,
+      );
+
+      print('✅ Loaded ${chats.length} chats');
+      _chats = chats;
+      _chats.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    } catch (e, stackTrace) {
+      _error = 'Failed to load chats: $e';
+      print('❌ Error loading chats: $e');
+      print('📛 StackTrace: $stackTrace');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }
 
