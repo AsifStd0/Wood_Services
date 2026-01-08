@@ -109,7 +109,6 @@ class BuyerLocalStorageServiceImpl implements BuyerLocalStorageService {
     }
     try {
       final decodedData = jsonDecode(data) as Map<String, dynamic>;
-      log('🔍 Buyer data: EXISTS (${decodedData.length} fields)');
       return decodedData;
     } catch (e) {
       log('❌ Error decoding buyer data: $e');
@@ -143,12 +142,11 @@ class BuyerLocalStorageServiceImpl implements BuyerLocalStorageService {
     try {
       final token = await getBuyerToken();
       final data = await getBuyerData();
-      final status = await getBuyerLoginStatus();
+      // final status = await getBuyerLoginStatus();
 
       log('🔍 Checking buyer login:');
-      log('   Token: ${token != null ? "EXISTS" : "NULL"}');
+      log('$token   Token: ${token != null ? "EXISTS" : "NULL"}');
       log('   Data: ${data != null ? "EXISTS" : "NULL"}');
-      log('   Status: $status');
 
       // Consider logged in if we have token AND data
       final isLoggedIn = token != null && token.isNotEmpty && data != null;

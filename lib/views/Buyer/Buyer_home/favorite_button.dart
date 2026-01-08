@@ -42,8 +42,8 @@ class _FavoriteButtonState extends State<FavoriteButton> {
               ? null
               : () => _toggleFavorite(context, favoriteProvider, isFavorited),
           child: Container(
-            width: 36,
-            height: 36,
+            width: 22,
+            height: 22,
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
@@ -65,7 +65,7 @@ class _FavoriteButtonState extends State<FavoriteButton> {
                   : Icon(
                       isFavorited ? Icons.favorite : Icons.favorite_border,
                       color: isFavorited ? Colors.red : Colors.grey,
-                      size: 20,
+                      size: 16,
                     ),
             ),
           ),

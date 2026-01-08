@@ -148,11 +148,14 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
         return GridView.builder(
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
+          padding: EdgeInsets.only(top: 5),
+
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            crossAxisSpacing: 5,
-            mainAxisSpacing: 12,
-            childAspectRatio: 0.70,
+            crossAxisSpacing: 5, // ✅ Increased spacing
+            mainAxisSpacing: 5, // ✅ Increased spacing
+            childAspectRatio: 0.74, // ✅ Adjusted for better proportions
+            // mainAxisExtent: 320, // ✅ Fixed height for all cards
           ),
           itemCount: filteredProducts.length,
           itemBuilder: (context, index) {
@@ -168,8 +171,6 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
 
   // ! *******
   // ! *******
-  // ! *******
-  // ! *******
   Widget _buildFilterSection() {
     return Consumer<BuyerHomeViewModel>(
       builder: (context, viewModel, child) {
@@ -180,7 +181,9 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: List.generate(
-                  viewModel.filteredProducts.length,
+                  viewModel
+                      .filter
+                      .length, // ✅ FIX: Changed from filteredProducts to filter
                   (index) => Padding(
                     padding: EdgeInsets.only(
                       right: index == viewModel.filter.length - 1 ? 0 : 12,
@@ -194,59 +197,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
                 ),
               ),
             ),
-            _buildMoreFilterSection(),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildMoreFilterSection() {
-    return Consumer<BuyerHomeViewModel>(
-      builder: (context, viewModel, child) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // More Filter Header
-            GestureDetector(
-              onTap: () => viewModel.toggleMoreFilters(),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    CustomText(
-                      "More Filter",
-                      type: CustomTextType.bodyMediumBold,
-                    ),
-                    Icon(
-                      viewModel.showMoreFilters
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      color: Colors.black,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Expanded Filter Options
-            if (viewModel.showMoreFilters) ...[
-              buildCityFilter(viewModel),
-              const SizedBox(height: 16),
-              buildPriceFilter(viewModel),
-              const SizedBox(height: 16),
-              buildDeliveryFilter(viewModel),
-              const SizedBox(height: 16),
-              buildSalesFilter(viewModel),
-              const SizedBox(height: 16),
-              buildProviderFilter(viewModel),
-              const SizedBox(height: 16),
-              buildColorFilter(viewModel),
-              const SizedBox(height: 20),
-              // Filter Actions
-              buildFilterActions(viewModel),
-            ],
+            // CustomText("Products"),
           ],
         );
       },

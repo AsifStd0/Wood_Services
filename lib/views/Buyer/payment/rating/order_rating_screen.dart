@@ -139,10 +139,6 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
         context,
         listen: false,
       );
-      debugPrint('🧾 Using ORDER ID: ${widget.orderId}');
-      debugPrint('🧾 Using ORDER ITEM ID: ${widget.orderItemId}');
-      debugPrint('🧾 Using PRODUCT ID: ${widget.buyerProduct.id}');
-
       final result = await reviewProvider.submitReview(
         orderId: widget.orderId,
         orderItemId: widget.orderItemId,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/payment/cart_data/car_bottom_sheet.dart';
+import 'package:wood_service/views/Buyer/product_detail/seller_shop_info.dart';
 
 import '../../../app/index.dart';
 
@@ -62,35 +63,7 @@ class ProductBasicInfo extends StatelessWidget {
 
         const SizedBox(height: 8),
 
-        // Rating from seller
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.star,
-                    color: AppColors.brightOrange,
-                    size: 14,
-                  ),
-                  const SizedBox(width: 3),
-                  CustomText(
-                    '4.5',
-                    type: CustomTextType.buttonMedium,
-                    color: AppColors.brightOrange,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 4),
-            CustomText(
-              '0 reviews', // Real review count
-              type: CustomTextType.buttonMedium,
-              color: AppColors.grey,
-            ),
-          ],
-        ),
+        ShopPreviewCard(product: product),
       ],
     );
   }
@@ -372,37 +345,6 @@ class MinimalQuantityStockWidget extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildPriceRow({
-    required String label,
-    required String value,
-    bool isHighlighted = false,
-    bool isTotal = false,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: isTotal ? 15 : 14,
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-            color: isHighlighted ? Colors.black : Colors.grey[700],
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: isTotal ? 18 : 14,
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
-            color: isTotal
-                ? Colors.green[700]
-                : (isHighlighted ? Colors.blue : Colors.black),
-          ),
-        ),
-      ],
     );
   }
 }

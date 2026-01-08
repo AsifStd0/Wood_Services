@@ -26,10 +26,17 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
   Animation<double>? _fadeAnim;
   Animation<Offset>? _slideAnim;
 
+  // ! **********
+  // ! **********
+  // ! **********
+  // ! **********
+  // ! **********
+
   @override
   void initState() {
     super.initState();
 
+    // Initialize animations
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 420),
@@ -45,7 +52,12 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animController!, curve: Curves.easeOut));
 
-    _animController!.forward();
+    // Use WidgetsBinding to ensure safe animation start
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _animController!.forward();
+      }
+    });
   }
 
   @override
@@ -55,14 +67,27 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
     _passwordController.dispose();
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
+
+    // Clear any pending operations
+    _animController?.stop();
+
     super.dispose();
   }
 
+  // ! **********
+  // ! **********
+  // ! **********
+  // ! **********
+  // ! **********
   Future<void> _submit(
     BuildContext context,
     BuyerAuthProvider authProvider,
   ) async {
     log('done111');
+
+    // Check if widget is still mounted before proceeding
+    if (!mounted) return;
+
     if (_formKey.currentState!.validate()) {
       authProvider.setEmail(_emailController.text.trim());
       authProvider.setPassword(_passwordController.text);
@@ -70,6 +95,9 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
       try {
         // Call login
         final result = await authProvider.login();
+
+        // Check if widget is still mounted before updating UI
+        if (!mounted) return;
 
         if (result['success'] == true) {
           // Login successful
@@ -79,26 +107,32 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) {
-                return BuyerMainScreen();
-              },
-            ),
-          );
+
+          // Navigate after a small delay to ensure state is stable
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => BuyerMainScreen()),
+              );
+            }
+          });
         } else {
           // Login failed
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message'] ?? 'Login failed'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result['message'] ?? 'Login failed'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          );
+        }
       }
     }
   }

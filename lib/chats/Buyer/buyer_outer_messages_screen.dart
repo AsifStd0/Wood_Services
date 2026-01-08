@@ -1,4 +1,6 @@
 // lib/chats/Buyer/messages_screen.dart (FIXED)
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/chats/Buyer/buyer_chating.dart';
@@ -19,7 +21,7 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
   @override
   void initState() {
     super.initState();
-    print('🎯 MessagesScreen initState - Buyer Chat List');
+    log('🎯 MessagesScreen initState - Buyer Chat List');
 
     _chatProvider = Provider.of<BuyerChatProvider>(context, listen: false);
     _initializeChat();
@@ -29,13 +31,13 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
     if (_isInitializing) return;
 
     _isInitializing = true;
-    print('🔄 Initializing chat for buyer...');
+    log('🔄 Initializing chat for buyer...');
 
     try {
       await _chatProvider.initialize();
-      print('✅ Chat initialized successfully for buyer');
+      log('✅ Chat initialized successfully for buyer');
     } catch (e) {
-      print('❌ Error initializing chat for buyer: $e');
+      log('❌ Error initializing chat for buyer: $e');
     } finally {
       _isInitializing = false;
     }
@@ -43,11 +45,11 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('🎯 Building MessagesScreen (Buyer)');
+    log('🎯 Building MessagesScreen (Buyer)');
 
     return Consumer<BuyerChatProvider>(
       builder: (context, chatProvider, child) {
-        print('🎯 Consumer rebuilding with ${chatProvider.chats.length} chats');
+        log('🎯 Consumer rebuilding with ${chatProvider.chats.length} chats');
 
         return Scaffold(
           appBar: AppBar(
@@ -171,7 +173,7 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
               ],
             ),
             onTap: () {
-              print('📱 Opening chat with ${chat.otherUserName}');
+              log('📱 Opening chat with ${chat.otherUserName}');
               // Navigate to ChatScreen
               Navigator.push(
                 context,

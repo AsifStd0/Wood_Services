@@ -17,10 +17,12 @@ import 'package:wood_service/views/Buyer/payment/cart_data/cart_provider.dart';
 import 'package:wood_service/views/Buyer/payment/rating/review_provider.dart';
 import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
 import 'package:wood_service/views/Seller/data/repository/seller_product_repo.dart';
+import 'package:wood_service/views/Seller/data/services/seller_auth.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_repository_seller.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/view_request_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
+import 'package:wood_service/views/Seller/seller_login.dart/seller_login_provider.dart';
 import 'package:wood_service/views/Seller/signup.dart/seller_signup_provider.dart';
 
 List<SingleChildWidget> appProviders = [
@@ -83,6 +85,10 @@ List<SingleChildWidget> appProviders = [
   ),
   //!  ========== SELLER VIEWMODELS ==========
   // ✅ FIXED: Use locator.get() or locator() instead of context.read()
+  ChangeNotifierProvider(
+    create: (_) => SellerAuthProvider(locator<SellerAuthService>()),
+  ),
+
   ChangeNotifierProvider<OrdersViewModel>(
     create: (_) => OrdersViewModel(locator<OrderRepository>()),
   ),

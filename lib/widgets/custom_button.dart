@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
-import 'package:wood_service/core/theme/app_fonts.dart';
 
 enum ButtonType { primary, secondary, outline, textButton, buyButton }
 
@@ -184,28 +183,28 @@ class CustomButton extends StatelessWidget {
     switch (size) {
       case ButtonSize.small:
         return Theme.of(context).textTheme.bodySmall!.copyWith(
-          fontWeight: AppFonts.medium,
+          fontWeight: FontWeight.w500,
           color: _isEnabled
               ? _getForegroundColor(context)
               : _getDisabledForegroundColor(context),
         );
       case ButtonSize.medium:
         return Theme.of(context).textTheme.bodyMedium!.copyWith(
-          fontWeight: AppFonts.medium,
+          fontWeight: FontWeight.w500,
           color: _isEnabled
               ? _getForegroundColor(context)
               : _getDisabledForegroundColor(context),
         );
       case ButtonSize.large:
         return Theme.of(context).textTheme.bodyLarge!.copyWith(
-          fontWeight: AppFonts.medium,
+          fontWeight: FontWeight.w500,
           color: _isEnabled
               ? _getForegroundColor(context)
               : _getDisabledForegroundColor(context),
         );
       case ButtonSize.extraLarge:
         return Theme.of(context).textTheme.titleSmall!.copyWith(
-          fontWeight: AppFonts.semiBold,
+          fontWeight: FontWeight.w600,
           color: _isEnabled
               ? _getForegroundColor(context)
               : _getDisabledForegroundColor(context),

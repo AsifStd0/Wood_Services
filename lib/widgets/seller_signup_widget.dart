@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
-import 'package:wood_service/core/theme/app_test_style.dart';
+import 'package:wood_service/core/theme/app_text_style.dart';
 
 class UploadBox extends StatelessWidget {
   final String title;

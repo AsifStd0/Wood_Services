@@ -135,37 +135,6 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
               ),
             ),
           ),
-
-          // Favorite Button
-          Positioned(
-            top: 16,
-            right: 16,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: IconButton(
-                icon: Icon(
-                  Icons.favorite_border,
-                  color: Colors.grey[600],
-                  size: 20,
-                ),
-                onPressed: () {
-                  // Add to favorites
-                },
-              ),
-            ),
-          ),
         ],
       ),
     );

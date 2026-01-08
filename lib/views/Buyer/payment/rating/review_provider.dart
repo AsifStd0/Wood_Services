@@ -46,7 +46,7 @@ class ReviewProvider with ChangeNotifier {
 
       final headers = await _getHeaders();
       final response = await http.get(
-        Uri.parse('${Config.apiBaseUrl}/api/buyer/reviews/orders'),
+        Uri.parse('${Config.apiBaseUrl}/buyer/reviews/orders'),
         headers: headers,
       );
 
@@ -92,7 +92,7 @@ class ReviewProvider with ChangeNotifier {
 
       final headers = await _getHeaders();
       final response = await http.post(
-        Uri.parse('${Config.apiBaseUrl}/api/buyer/reviews'),
+        Uri.parse('${Config.apiBaseUrl}/buyer/reviews'),
 
         headers: headers,
         body: json.encode({
@@ -148,7 +148,7 @@ class ReviewProvider with ChangeNotifier {
       notifyListeners();
 
       String url =
-          '${Config.apiBaseUrl}/api/buyer/reviews/my?page=$page&limit=$limit';
+          '${Config.apiBaseUrl}/buyer/reviews/my?page=$page&limit=$limit';
       if (rating != null) url += '&rating=$rating';
 
       final headers = await _getHeaders();
@@ -207,7 +207,7 @@ class ReviewProvider with ChangeNotifier {
       // Call your existing API endpoint
       final response = await http.get(
         Uri.parse(
-          '${Config.apiBaseUrl}/api/buyer/reviews/product/$productId?limit=$limit',
+          '${Config.apiBaseUrl}/buyer/reviews/product/$productId?limit=$limit',
         ),
         headers: headers,
       );
@@ -261,7 +261,7 @@ class ReviewProvider with ChangeNotifier {
       final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse(
-          '${Config.apiBaseUrl}/api/buyer/products/$productId/reviews/stats',
+          '${Config.apiBaseUrl}/buyer/products/$productId/reviews/stats',
         ),
         headers: headers,
       );

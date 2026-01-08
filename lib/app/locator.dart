@@ -22,6 +22,7 @@ import 'package:wood_service/data/repositories/auth_service.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_product_service.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_services.dart';
+import 'package:wood_service/views/Buyer/buyer_main/buyer_main_provider.dart';
 import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_auth_services.dart';
 import 'package:wood_service/views/Buyer/order_screen/buyer_order_repository.dart';
 import 'package:wood_service/views/Buyer/payment/cart_data/cart_provider.dart';
@@ -41,13 +42,13 @@ import 'package:wood_service/views/Seller/signup.dart/seller_signup_provider.dar
 final GetIt locator = GetIt.instance;
 
 Future<void> setupLocator() async {
-  // ========== STEP 1: Initialize SEPARATE Storage Services ==========
-  // ✅ SELLER Storage
+  //!  ========== STEP 1: Initialize SEPARATE Storage Services ==========
+  // ! ✅ SELLER Storage
   final sellerStorage = SellerLocalStorageServiceImpl();
   await sellerStorage.initialize();
   locator.registerSingleton<SellerLocalStorageService>(sellerStorage);
 
-  // ✅ BUYER Storage
+  // ! ✅ BUYER Storage
   final buyerStorage = BuyerLocalStorageServiceImpl();
   await buyerStorage.initialize();
   locator.registerSingleton<BuyerLocalStorageService>(buyerStorage);
@@ -73,6 +74,8 @@ Future<void> setupLocator() async {
   );
 
   locator.registerSingleton<Dio>(dio);
+
+  // ! *********
 
   // ========== STEP 3: Register Seller Services ==========
   locator.registerSingleton<SellerAuthService>(
@@ -151,15 +154,20 @@ Future<void> setupLocator() async {
   // ========== CHAT & CART SERVICES ==========
   locator.registerLazySingleton(() => BuyerChatService());
   locator.registerLazySingleton(() => BuyerSocketService());
-  // In setupLocator()
-  locator.registerLazySingleton(
-    () => CartServices(locator<BuyerLocalStorageServiceImpl>()),
-  );
-  locator.registerLazySingleton(() => CartProvider(locator<CartServices>()));
 
+  // In setupLocator()
+  locator.registerLazySingleton<CartServices>(
+    () => CartServices(locator<BuyerLocalStorageService>()), // Use interface
+  );
+
+  // ✅ 5. Register CartProvider
+  locator.registerLazySingleton<CartProvider>(
+    () => CartProvider(locator<CartServices>()),
+  );
   locator.registerLazySingleton(() => SellerChatService());
   locator.registerLazySingleton(() => SellerSocketService());
   locator.registerFactory(() => SellerChatProvider());
   locator.registerFactory(() => AuthService());
+  locator.registerLazySingleton(() => MainScreenProvider());
 }
 // ! ********

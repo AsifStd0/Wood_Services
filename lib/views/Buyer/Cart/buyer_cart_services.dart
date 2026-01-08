@@ -11,7 +11,6 @@ class BuyerCartService {
   final Dio _dio = locator<Dio>();
   final BuyerLocalStorageService _storageService =
       locator<BuyerLocalStorageService>();
-
   Future<BuyerCartModel?> getCart() async {
     try {
       final token = await _storageService.getBuyerToken();
@@ -22,25 +21,22 @@ class BuyerCartService {
       }
 
       log('📡 Making GET request to /api/buyer/cart');
-      final response = await _dio.get(
-        '/api/buyer/cart',
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
+
+      // Use http package instead of Dio
+      final response = await http.get(
+        Uri.parse('${Config.apiBaseUrl}/buyer/cart'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
       );
 
-      // log('   Response Data: ${response.data}');
+      log('📥 Response Status: ${response.statusCode}');
+      log('📥 Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        // Check if response.data is a Map
-        if (response.data is! Map<String, dynamic>) {
-          log(
-            '❌ Response data is not a Map, it\'s: ${response.data.runtimeType}',
-          );
-          throw Exception('Invalid response format');
-        }
+        final Map<String, dynamic> responseData = json.decode(response.body);
 
-        final responseData = response.data as Map<String, dynamic>;
-
-        // Check if success field exists
         if (responseData.containsKey('success')) {
           log('✅ Success field exists: ${responseData['success']}');
 
@@ -95,8 +91,8 @@ class BuyerCartService {
         }
       } else {
         log('❌ HTTP Error: ${response.statusCode}');
-        log('   Response: ${response.data}');
-        throw Exception('HTTP ${response.statusCode}: ${response.data}');
+        log('   Response: ${response.body}');
+        throw Exception('HTTP ${response.statusCode}: ${response.body}');
       }
     } catch (error) {
       log('❌ Get cart error: $error');
@@ -104,7 +100,6 @@ class BuyerCartService {
       rethrow;
     }
   }
-  // In BuyerCartService.dart
 
   // Add to cart - use correct endpoint
   Future<Map<String, dynamic>> addToCartService({
@@ -129,11 +124,11 @@ class BuyerCartService {
 
       log('📦 Request Body: $body');
       log(
-        '📤 Endpoint: ${Config.apiBaseUrl}/api/buyer/cart/add',
+        '📤 Endpoint: ${Config.apiBaseUrl}/buyer/cart/add',
       ); // CORRECT ENDPOINT
 
       final response = await http.post(
-        Uri.parse('${Config.apiBaseUrl}/api/buyer/cart/add'), // CORRECT: /add
+        Uri.parse('${Config.apiBaseUrl}/buyer/cart/add'), // CORRECT: /add
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -191,14 +186,10 @@ class BuyerCartService {
       };
 
       log('📦 Request Body: $body');
-      log(
-        '📤 Endpoint: ${Config.apiBaseUrl}/api/buyer/cart/request/buy',
-      ); // CORRECT: /request/buy
+      log('📤 Endpoint: ${Config.apiBaseUrl}/buyer/cart/request/buy');
 
       final response = await http.post(
-        Uri.parse(
-          '${Config.apiBaseUrl}/api/buyer/cart/request/buy',
-        ), // CORRECT: /request/buy
+        Uri.parse('${Config.apiBaseUrl}/buyer/cart/request/buy'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

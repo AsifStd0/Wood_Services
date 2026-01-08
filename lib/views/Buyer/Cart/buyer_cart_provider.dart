@@ -77,6 +77,7 @@ class BuyerCartViewModel with ChangeNotifier {
     notifyListeners();
 
     try {
+      log('Calling Cart getCart');
       _cart = await _cartService.getCart();
       _cartStreamController.add(_cart);
       _hasError = false;
@@ -211,28 +212,4 @@ class BuyerCartViewModel with ChangeNotifier {
     final taxAmount = (product.taxRate ?? 0) * subtotal / 100;
     return subtotal + taxAmount;
   }
-
-  // ! ******
-  // // In BuyerCartViewModel class, add this method:
-  // Map<String, dynamic> getProductPriceDetails(BuyerProductModel product) {
-  //   final unitPrice = product.finalPrice;
-  //   final subtotal = unitPrice * _selectedQuantity;
-  //   final taxRate = product.taxRate ?? 0;
-  //   final taxAmount = taxRate * subtotal / 100;
-  //   final total = subtotal + taxAmount;
-
-  //   return {
-  //     'unitPrice': unitPrice,
-  //     'quantity': _selectedQuantity,
-  //     'subtotal': subtotal,
-  //     'taxRate': taxRate,
-  //     'taxAmount': taxAmount,
-  //     'total': total,
-  //     'formattedTotal': '\$${total.toStringAsFixed(2)}',
-  //     'breakdownText':
-  //         '${_selectedQuantity} × \$${unitPrice.toStringAsFixed(2)} = \$${subtotal.toStringAsFixed(2)}' +
-  //         (taxRate > 0 ? ' + \$${taxAmount.toStringAsFixed(2)} tax' : '') +
-  //         ' = \$${total.toStringAsFixed(2)} total',
-  //   };
-  // }
 }

@@ -1,13 +1,10 @@
-import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_model.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_provider.dart';
 import 'package:wood_service/chats/message_bubble.dart' show MessageBubble;
-import 'package:wood_service/core/theme/app_colors.dart';
 
 class BuyerChatScreen extends StatefulWidget {
   final String sellerId;
@@ -20,7 +17,6 @@ class BuyerChatScreen extends StatefulWidget {
     required this.sellerName,
     this.productId,
     this.productName,
-    // this.orderId,
   });
 
   @override

@@ -3,11 +3,12 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:wood_service/app/config.dart';
-import 'package:wood_service/core/services/buyer_local_storage_service_impl.dart';
+import 'package:wood_service/core/services/buyer_local_storage_service.dart';
 
 class CartServices {
   // Instance members
-  final BuyerLocalStorageServiceImpl _storage;
+  final BuyerLocalStorageService _storage;
+
   String? _cachedToken;
 
   CartServices(this._storage); // Constructor
@@ -32,12 +33,6 @@ class CartServices {
       'Content-Type': 'application/json',
       if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
-  }
-
-  // Clear token cache
-  Future<void> _clearTokenCache() async {
-    _cachedToken = null;
-    await _storage.buyerLogout();
   }
 
   // ========== API METHODS ==========

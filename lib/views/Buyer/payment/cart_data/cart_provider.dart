@@ -1,6 +1,6 @@
 // lib/providers/cart_provider.dart
 import 'package:flutter/material.dart';
-import 'package:wood_service/views/Buyer/payment/cart_data/cart_item_model.dart';
+import 'package:wood_service/views/Buyer/Model/cart_item_model.dart';
 import 'package:wood_service/views/Buyer/payment/cart_data/cart_services.dart';
 
 class CartProvider with ChangeNotifier {

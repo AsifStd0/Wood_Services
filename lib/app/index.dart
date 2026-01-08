@@ -27,7 +27,7 @@ export 'package:wood_service/views/Buyer/payment/checkout.dart';
 export 'package:wood_service/views/Buyer/payment/order_confirmation.dart';
 export 'package:wood_service/views/Buyer/phone_verification/phone_verification.dart';
 export 'package:wood_service/views/Buyer/product_detail/product_detail.dart';
-export 'package:wood_service/app/buyer_main.dart';
+export 'package:wood_service/views/Buyer/buyer_main/buyer_main.dart';
 export 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_signup.dart';
 export 'package:wood_service/views/Buyer/profile/profile.dart';
 export 'package:wood_service/views/Buyer/set_password/set_new_password.dart';
@@ -47,5 +47,5 @@ export 'package:wood_service/views/splash/splash_screen.dart';
 export 'dart:async';
 
 export 'package:wood_service/core/theme/app_colors.dart';
-export 'package:wood_service/core/theme/app_test_style.dart';
+export 'package:wood_service/core/theme/app_text_style.dart';
 export 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';

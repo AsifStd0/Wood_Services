@@ -23,6 +23,29 @@ class CartBottomSheet extends StatefulWidget {
 }
 
 class _CartBottomSheetState extends State<CartBottomSheet> {
+  // Calculate price breakdown
+  Map<String, double> get priceBreakdown {
+    final unitPrice = widget.buyerProduct.finalPrice;
+    final subtotal = unitPrice * widget.count;
+    final shippingFee = subtotal > 500 ? 0.0 : 49.99;
+    final tax = subtotal * 0.08; // 8% GST
+    final total = subtotal + shippingFee + tax;
+
+    return {
+      'unitPrice': unitPrice,
+      'subtotal': subtotal,
+      'shippingFee': shippingFee,
+      'tax': tax,
+      'total': total,
+    };
+  }
+
+  double get unitPrice => priceBreakdown['unitPrice']!;
+  double get subtotal => priceBreakdown['subtotal']!;
+  double get shippingFee => priceBreakdown['shippingFee']!;
+  double get tax => priceBreakdown['tax']!;
+  double get total => priceBreakdown['total']!;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -52,7 +75,7 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
                     _buildQuantityControls(),
 
                     // Price Breakdown
-                    _buildPriceBreakdown(widget.totalPrice),
+                    _buildPriceBreakdown(),
                   ],
                 ),
               ),
@@ -160,8 +183,27 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
                     ),
                   ),
                   Text(
-                    '× \$${widget.buyerProduct.finalPrice.toStringAsFixed(2)}',
+                    '× ₹${unitPrice.toStringAsFixed(2)}',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+
+              // Subtotal
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'Subtotal',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                  Text(
+                    '₹${subtotal.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.bluePrimary,
+                    ),
                   ),
                 ],
               ),
@@ -172,7 +214,7 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
     );
   }
 
-  Widget _buildPriceBreakdown(totalPrice) {
+  Widget _buildPriceBreakdown() {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -184,14 +226,31 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Shipping
+          // Subtotal
+          _buildPriceRow(
+            'Subtotal',
+            '${widget.count} × ₹${unitPrice.toStringAsFixed(2)}',
+            '₹${subtotal.toStringAsFixed(2)}',
+          ),
+
+          const SizedBox(height: 8),
+
+          // Shipping Fee
           _buildPriceRow(
             'Shipping Fee',
-            'Standart',
-            // "${widget.buyerProduct.basePrice}",
-            "5",
-            // _shippingFee == 0 ? 'Free' : 'Standard',
-            // _shippingFee == 0 ? 'Free' : '\$${_shippingFee.toStringAsFixed(2)}',
+            shippingFee == 0
+                ? 'Free shipping on orders above ₹500'
+                : 'Standard delivery',
+            shippingFee == 0 ? 'FREE' : '₹${shippingFee.toStringAsFixed(2)}',
+          ),
+
+          const SizedBox(height: 8),
+
+          // Tax
+          _buildPriceRow(
+            'Tax (8%)',
+            'GST included',
+            '₹${tax.toStringAsFixed(2)}',
           ),
 
           const SizedBox(height: 12),
@@ -201,8 +260,7 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
           _buildPriceRow(
             'Total Amount',
             'Including all charges',
-            // '\$${widget.buyerProduct.finalPrice}',
-            "\$$totalPrice",
+            '₹${total.toStringAsFixed(2)}',
             isTotal: true,
           ),
         ],
@@ -273,6 +331,32 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
           ),
           child: Column(
             children: [
+              // Total Preview
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Total:',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    Text(
+                      '₹${total.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.bluePrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
               // Checkout Button
               SizedBox(
                 width: double.infinity,
@@ -311,7 +395,7 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
                           widget.buyerProduct.inStock &&
                                   widget.buyerProduct.stockQuantity >=
                                       widget.count
-                              ? 'Buy Now'
+                              ? 'Buy Now - ₹${total.toStringAsFixed(2)}'
                               : 'Out of Stock',
                           style: const TextStyle(
                             fontSize: 16,
@@ -328,16 +412,24 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
     );
   }
 
-  // In CartBottomSheet.dart - _handleDirectBuy method
   Future<void> _handleDirectBuy(
     BuildContext context,
     CartProvider cartProvider,
   ) async {
     try {
-      // Show loading
       final scaffoldMessenger = ScaffoldMessenger.of(context);
 
+      // Show price details
       log('🛍️ [DIRECT BUY] Starting direct purchase...');
+      log('📊 Price Breakdown:');
+      log('  Unit Price: ₹${unitPrice.toStringAsFixed(2)}');
+      log('  Quantity: ${widget.count}');
+      log('  Subtotal: ₹${subtotal.toStringAsFixed(2)}');
+      log(
+        '  Shipping: ${shippingFee == 0 ? "FREE" : "₹${shippingFee.toStringAsFixed(2)}"}',
+      );
+      log('  Tax (8%): ₹${tax.toStringAsFixed(2)}');
+      log('  Total: ₹${total.toStringAsFixed(2)}');
 
       // Call direct buy API
       final result = await cartProvider.directBuy(
@@ -355,7 +447,6 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
         paymentMethod: 'cod',
       );
 
-      // Hide loading snackbar
       scaffoldMessenger.hideCurrentSnackBar();
 
       log('📥 Direct buy result: $result');
@@ -364,53 +455,51 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
         final order = result['order'];
         final orderId = order?['orderId'];
         final totalAmount = order?['totalAmount'];
+        final List<dynamic> orderItems = order?['items'] ?? [];
 
-        // ✅ Get the actual order item ID from the items array
-        String? orderItemId;
-        if (order?['items'] != null && order['items'].isNotEmpty) {
-          orderItemId = order['items'][0]['itemId']; // This is the correct ID
+        // Get the actual order item ID from the items array
+        String orderItemId = '';
+        if (orderItems.isNotEmpty) {
+          orderItemId =
+              orderItems[0]['itemId']?.toString() ??
+              orderItems[0]['_id']?.toString() ??
+              '${orderId}_ITEM_1';
           log('✅ Found order item ID: $orderItemId');
-        } else {
-          orderItemId = '${orderId}_ITEM_1'; // Fallback
         }
 
         if (orderId != null) {
-          log(
-            ' Total Amount: \$$totalAmount ----   Order Item ID: $orderItemId ---  Order ID: $orderId ',
-          );
-
           // Show success message
           scaffoldMessenger.showSnackBar(
             SnackBar(
-              content: Text('Purchase successful! Order #$orderId'),
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Purchase successful! Order #$orderId'),
+                ],
+              ),
               backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
             ),
           );
 
           // Navigate to rating screen
-          await Future.delayed(Duration(milliseconds: 500));
-
+          await Future.delayed(Duration(milliseconds: 1500));
+          log('priceBreakdown. $priceBreakdown');
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => OrderRatingScreen(
                 orderId: orderId,
-                orderItemId: orderItemId
-                    .toString(), // ✅ Use actual order item ID
+                orderItemId: orderItemId,
                 items: [widget.buyerProduct.title],
                 buyerProduct: widget.buyerProduct,
                 cartItemId:
                     'DIRECT_BUY_${DateTime.now().millisecondsSinceEpoch}',
                 productId: widget.buyerProduct.id,
                 quantity: widget.count,
-                totalPrice: widget.totalPrice,
+                totalPrice: total,
+                // priceBreakdown: priceBreakdown,
               ),
-            ),
-          );
-        } else {
-          scaffoldMessenger.showSnackBar(
-            SnackBar(
-              content: Text('Purchase completed but no order ID returned'),
-              backgroundColor: Colors.orange,
             ),
           );
         }
@@ -420,6 +509,7 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
           SnackBar(
             content: Text(result['message'] ?? 'Failed to complete purchase'),
             backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
           ),
         );
       }
@@ -430,6 +520,7 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
         SnackBar(
           content: Text('Error: ${error.toString()}'),
           backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
         ),
       );
     }
@@ -442,7 +533,7 @@ class _CartBottomSheetState extends State<CartBottomSheet> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const Text(
-            'Cart',
+            'Checkout',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,

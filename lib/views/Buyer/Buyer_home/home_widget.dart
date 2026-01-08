@@ -5,160 +5,6 @@ import 'package:wood_service/views/Buyer/Buyer_home/favorite_button.dart';
 
 import '../../../app/index.dart';
 
-Widget buildPriceFilter(BuyerHomeViewModel viewModel) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      CustomText('Price Range', type: CustomTextType.bodySmall),
-      const SizedBox(height: 8),
-      RangeSlider(
-        values: RangeValues(viewModel.minPrice, viewModel.maxPrice),
-        min: 0,
-        max: 10000,
-        divisions: 100,
-        labels: RangeLabels(
-          '\$${viewModel.minPrice.toInt()}',
-          '\$${viewModel.maxPrice.toInt()}',
-        ),
-        onChanged: (values) {
-          viewModel.setPriceRange(values.start, values.end);
-        },
-      ),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text('\$${viewModel.minPrice.toInt()}'),
-          Text('\$${viewModel.maxPrice.toInt()}'),
-        ],
-      ),
-    ],
-  );
-}
-
-Widget buildDeliveryFilter(BuyerHomeViewModel viewModel) {
-  return Row(
-    children: [
-      Checkbox(
-        value: viewModel.freeDelivery,
-        onChanged: (value) => viewModel.setFreeDelivery(value ?? false),
-      ),
-      const SizedBox(width: 8),
-      CustomText('Free Delivery', type: CustomTextType.bodyMedium),
-    ],
-  );
-}
-
-Widget buildSalesFilter(BuyerHomeViewModel viewModel) {
-  return Row(
-    children: [
-      Checkbox(
-        value: viewModel.onSale,
-        onChanged: (value) => viewModel.setOnSale(value ?? false),
-      ),
-      const SizedBox(width: 8),
-      CustomText('On Sale', type: CustomTextType.bodyMedium),
-    ],
-  );
-}
-
-Widget buildProviderFilter(BuyerHomeViewModel viewModel) {
-  final providers = [
-    'IKEA',
-    'Ashley Furniture',
-    'Wayfair',
-    'Local Stores',
-
-    'All Providers',
-  ];
-
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      CustomText('Provider', type: CustomTextType.bodySmall),
-      const SizedBox(height: 8),
-      DropdownButtonFormField<String>(
-        value: viewModel.selectedProvider,
-        decoration: InputDecoration(
-          fillColor: AppColors.border,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 8,
-          ),
-        ),
-        items: providers.map((provider) {
-          return DropdownMenuItem(value: provider, child: Text(provider));
-        }).toList(),
-        onChanged: viewModel.setProvider,
-        hint: Text('Select Provider'),
-      ),
-    ],
-  );
-}
-
-Widget buildColorFilter(BuyerHomeViewModel viewModel) {
-  final colors = {
-    'Black': Colors.black,
-    'White': Colors.white,
-    'Brown': Colors.brown,
-    'Gray': Colors.grey,
-    'Blue': Colors.blue,
-    'Red': Colors.red,
-  };
-
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      CustomText('Color', type: CustomTextType.bodySmall),
-      const SizedBox(height: 8),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: colors.entries.map((entry) {
-          final isSelected = viewModel.selectedColor == entry.key;
-          return ChoiceChip(
-            label: Text(entry.key),
-            selected: isSelected,
-            onSelected: (selected) {
-              viewModel.setColor(selected ? entry.key : null);
-            },
-          );
-        }).toList(),
-      ),
-    ],
-  );
-}
-
-Widget buildFilterActions(BuyerHomeViewModel viewModel) {
-  return Row(
-    children: [
-      Expanded(
-        child: OutlinedButton(
-          onPressed: viewModel.resetAllFilters,
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-          ),
-          child: Text('Reset All'),
-        ),
-      ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: ElevatedButton(
-          onPressed: () {
-            // Apply filters logic here
-            viewModel.toggleMoreFilters();
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brightOrange,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-          ),
-          child: Text('Apply Filters', style: TextStyle(color: Colors.white)),
-        ),
-      ),
-    ],
-  );
-}
-
 Widget buildCategoryChip(
   String text, {
   bool isSelected = false,
@@ -319,43 +165,8 @@ Widget _buildImagesRow() {
   );
 }
 
-Widget buildCityFilter(BuyerHomeViewModel viewModel) {
-  final cities = [
-    'New York',
-    'Los Angeles',
-    'Chicago',
-    'Miami',
-    'Dallas',
-    'All Cities',
-  ];
-
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      CustomText('City', type: CustomTextType.bodySmall),
-      const SizedBox(height: 8),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: cities.map((city) {
-          final isSelected = viewModel.selectedCity == city;
-          return FilterChip(
-            label: Text(city),
-            selected: isSelected,
-            onSelected: (selected) {
-              viewModel.setCity(selected ? city : null);
-            },
-          );
-        }).toList(),
-      ),
-    ],
-  );
-}
-
-// ! Products Actual Data
 // ! Products Actual Data
 Widget buildProductCard(BuyerProductModel product, BuildContext context) {
-  // final viewModel = Provider.of<BuyerHomeViewModel>(context, listen: false);
   final bool hasDiscount = product.hasDiscount;
   final double discount = product.hasDiscount
       ? ((product.basePrice - product.finalPrice) / product.basePrice * 100)
@@ -368,7 +179,7 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-          color: Colors.black12,
+          color: Colors.black.withOpacity(0.1),
           blurRadius: 6,
           offset: const Offset(0, 2),
         ),
@@ -376,199 +187,237 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween, // ✅ Add this
       children: [
-        // Product Image with Badges
-        Stack(
-          children: [
-            // Product Image
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-              ),
-              child: Container(
-                height: 90,
-                color: Colors.grey[200],
-                child: Center(
-                  child: product.featuredImage != null
-                      ? Image.network(
+        Expanded(
+          flex: 2,
+          child: Stack(
+            children: [
+              // Product Image
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+                child: product.featuredImage != null
+                    ? ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16),
+                        ),
+                        child: Image.network(
                           product.featuredImage!,
                           fit: BoxFit.cover,
                           width: double.infinity,
+                          height: double.infinity,
                           errorBuilder: (context, error, stackTrace) {
-                            return Icon(
-                              Icons.image,
-                              size: 40,
-                              color: Colors.grey,
+                            return const Center(
+                              child: Icon(
+                                Icons.image,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
                             );
                           },
-                        )
-                      : CircleAvatar(radius: 60),
-                ),
-              ),
-            ),
-            // 🔥 FAVORITE & CHAT BUTTONS - Stacked Vertically
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Column(
-                children: [
-                  // Favorite Button
-                  FavoriteButton(
-                    productId: product.id,
-                    initialIsFavorited: product.isFavorited,
-                  ),
-
-                  const SizedBox(height: 8), // Space between buttons
-                  // Chat Button
-                  _buildChatButton(product, context),
-                ],
-              ),
-            ),
-
-            // Discount Badge
-            if (hasDiscount && discount > 0)
-              Positioned(
-                top: 12,
-                left: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '${discount.toInt()}% OFF',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-
-        // Product Details
-        Padding(
-          padding: const EdgeInsets.only(left: 5, right: 5, top: 5),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title
-              Text(
-                product.title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  height: 1.2,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-
-              Text(
-                product.shortDescription,
-                style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 3),
-
-              // Price and Stock
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Price
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '\$${product.finalPrice.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Colors.black,
+                        ),
+                      )
+                    : const Center(
+                        child: CircleAvatar(
+                          radius: 30,
+                          backgroundColor: Colors.grey,
+                          child: Icon(Icons.image, color: Colors.white),
                         ),
                       ),
-                      if (product.hasDiscount &&
-                          product.basePrice > product.finalPrice)
-                        Text(
-                          '\$${product.basePrice.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                            decoration: TextDecoration.lineThrough,
-                          ),
-                        ),
-                    ],
-                  ),
+              ),
 
-                  // Stock Status
-                  Container(
+              // 🔥 FAVORITE & CHAT BUTTONS
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Column(
+                  children: [
+                    FavoriteButton(
+                      productId: product.id,
+                      initialIsFavorited: product.isFavorited,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildChatButton(product, context),
+                  ],
+                ),
+              ),
+
+              // ✅ CORRECTED: Discount Badge (direct Positioned widget)
+              if (hasDiscount && discount > 0)
+                Positioned(
+                  top: 10,
+                  left: 8,
+                  child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 4,
-                      vertical: 2,
+                      vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: product.inStock ? Colors.green : Colors.red,
+                      color: Colors.red,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      product.inStock ? 'In Stock' : 'Out of Stock',
+                      '${discount.toInt()}% OFF',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+            ],
+          ),
+        ),
 
-              // Rating
-              if (product.rating != null)
-                Row(
+        // Product Details (fixed height section)
+        Expanded(
+          flex: 3, // Details take 4 parts
+          child: Padding(
+            padding: const EdgeInsets.only(
+              left: 10,
+              right: 10,
+              top: 5,
+              bottom: 3,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment:
+                  MainAxisAlignment.spaceBetween, // ✅ Space between
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.star, size: 14, color: Colors.amber),
-                    const SizedBox(width: 4),
+                    // Title
                     Text(
-                      '${product.rating}',
-                      style: const TextStyle(fontSize: 12),
+                      product.title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(width: 4),
+
+                    // Short Description
                     Text(
-                      '(${product.reviewCount ?? 0})',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      product.shortDescription,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[600],
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: CustomButton(
-                  backgroundColor: AppColors.yellowButton,
-                  height: 30,
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) {
-                          return ProductDetailScreen(product: product);
-                        },
+
+                // Price and Stock
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Rating
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Price Column
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '\$${product.finalPrice.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                if (product.hasDiscount &&
+                                    product.basePrice > product.finalPrice)
+                                  Text(
+                                    '\$${product.basePrice.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  ),
+                              ],
+                            ),
+
+                            // ✅ Rating moved here (next to price)
+                            if (product.rating != null)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.star,
+                                      size: 12,
+                                      color: Colors.amber,
+                                    ),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      '${product.rating}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                // Order Button
+                SizedBox(
+                  width: double.infinity,
+                  child: CustomButton(
+                    backgroundColor: AppColors.yellowButton,
+                    height: 32,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => ProductDetailScreen(product: product),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Order Now',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
-                    );
-                  },
-                  child: Text(
-                    'Order Now',
-                    style: TextStyle(color: Colors.black),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
@@ -583,8 +432,8 @@ Widget _buildChatButton(BuyerProductModel product, BuildContext context) {
       _startChatWithSeller(product, context);
     },
     child: Container(
-      width: 32,
-      height: 32,
+      width: 22,
+      height: 22,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),

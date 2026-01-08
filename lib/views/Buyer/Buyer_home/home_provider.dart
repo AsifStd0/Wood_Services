@@ -111,8 +111,7 @@ class BuyerHomeViewModel extends ChangeNotifier {
         final productIds = _products.map((p) => p.id).toList();
         await _favoriteProvider.loadFavoriteStatusForProducts(productIds);
       }
-
-      log('✅ Loaded ${_products.length} products');
+      log('✅ Loaded ${_products.toString()} products');
     } catch (e) {
       _error = 'Failed to load products: $e';
       log('❌ Product loading error: $e');

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class BuyerProductModel {
   final String id;
   final dynamic sellerId; // Could be String or Map
@@ -178,27 +180,13 @@ class BuyerProductModel {
   }
 
   factory BuyerProductModel.fromJson(Map<String, dynamic> json) {
-    print('🔍 Available fields: ${json.keys.join(', ')}');
+    print('🔍 ========== DEBUG JSON ==========');
+    print('All keys in JSON: ${json.keys.toList()}');
+    print('JSON has sellerInfo: ${json.containsKey('sellerInfo')}');
 
-    // Debug log for important fields
-    final debugFields = [
-      'longDescription',
-      'costPrice',
-      'taxRate',
-      'status',
-      'sellerInfo',
-      'dimensions',
-      'variantTypes',
-      'createdAt',
-      'updatedAt',
-    ];
-
-    for (final field in debugFields) {
-      if (json.containsKey(field)) {
-        print('🔍 $field exists: ${json[field]}');
-      } else {
-        print('🔍 $field NOT in API response');
-      }
+    if (json.containsKey('sellerInfo')) {
+      print('sellerInfo type: ${json['sellerInfo'].runtimeType}');
+      print('sellerInfo value: ${json['sellerInfo']}');
     }
 
     // Parse timestamps
@@ -211,15 +199,55 @@ class BuyerProductModel {
       return DateTime.now();
     }
 
+    // 🔥 FIX: Properly parse sellerInfo
+    Map<String, dynamic>? parsedSellerInfo;
+
+    if (json['sellerInfo'] != null) {
+      if (json['sellerInfo'] is Map<String, dynamic>) {
+        parsedSellerInfo = json['sellerInfo'] as Map<String, dynamic>;
+        print('✅ sellerInfo is already Map<String, dynamic>');
+      } else if (json['sellerInfo'] is Map) {
+        parsedSellerInfo = Map<String, dynamic>.from(json['sellerInfo']);
+        print('✅ sellerInfo is Map, converted to Map<String, dynamic>');
+      } else if (json['sellerInfo'] is String) {
+        // Try to parse if it's a JSON string
+        try {
+          print('⚠️ sellerInfo is String, trying to parse JSON');
+          parsedSellerInfo = Map<String, dynamic>.from(
+            jsonDecode(json['sellerInfo']),
+          );
+          print('✅ Successfully parsed sellerInfo from JSON string');
+        } catch (e) {
+          print('❌ Failed to parse sellerInfo string: $e');
+        }
+      } else {
+        print(
+          '❌ sellerInfo is unexpected type: ${json['sellerInfo'].runtimeType}',
+        );
+      }
+    } else {
+      print('⚠️ sellerInfo is null or not present');
+    }
+
+    print('🔍 Parsed sellerInfo keys: ${parsedSellerInfo?.keys.toList()}');
+    print('🔍 Parsed sellerInfo values: $parsedSellerInfo');
+
+    // Check if sellerInfo might be nested in 'seller' field
+    if (parsedSellerInfo == null &&
+        json['seller'] != null &&
+        json['seller'] is Map) {
+      print('⚠️ Trying to get sellerInfo from "seller" field');
+      parsedSellerInfo = Map<String, dynamic>.from(json['seller']);
+      print('✅ Got sellerInfo from "seller" field: ${parsedSellerInfo.keys}');
+    }
+
     return BuyerProductModel(
       // ID
       id: json['id']?.toString() ?? json['_id']?.toString() ?? 'unknown_id',
 
-      // Seller info
+      // 🔥 FIXED: Seller info parsing
       sellerId: json['seller'] ?? json['sellerId'],
-      sellerInfo: json['sellerInfo'] is Map
-          ? Map<String, dynamic>.from(json['sellerInfo'])
-          : null,
+      sellerInfo: parsedSellerInfo,
 
       // Basic info
       title: json['title']?.toString() ?? 'Untitled Product',
@@ -562,173 +590,6 @@ class ProductDimensions {
   @override
   String toString() => formatted ?? 'No dimensions';
 }
-// *********
-// *********
-// *********
-// *********
-// *********
-// *********
-// *********
-// *********// *********
-// *********
-// *********
-// *********// *********
-// *********
-// *********
-// *********// *********
-// *********
-// *********
-// *********// *********
-// *********
-// *********
-// *********// *********
-// *********
-// *********
-// *********
 
-// Updated FurnitureProductDummyData class with optional properties
-class FurnitureProductDummyData {
-  final String id;
-  final String name;
-  final String category;
-  final double price;
-  final double? originalPrice;
-  final String image;
-  final String description;
-  final double rating;
-  final int orders;
-  final bool isNew;
-  final bool freeDelivery;
-
-  FurnitureProductDummyData({
-    required this.id,
-    required this.name,
-    required this.category,
-    required this.price,
-    this.originalPrice,
-    required this.image,
-    required this.description,
-    this.rating = 4.5,
-    this.orders = 0,
-    this.isNew = false,
-    this.freeDelivery = false,
-  });
-}
-
-final List<FurnitureProductDummyData> furnitureproducts = [
-  FurnitureProductDummyData(
-    freeDelivery: false, // Has free delivery
-
-    id: '123',
-    name: 'Modern Sofa',
-    price: 499,
-    category: 'Living Room',
-    image: 'assets/images/sofa.jpg',
-    isNew: true,
-    description:
-        'Comfortable 3-seater sofa with premium fabric and wooden legs',
-  ),
-  FurnitureProductDummyData(
-    originalPrice: 400,
-    freeDelivery: true, // Has free delivery
-
-    id: '123',
-    name: 'Dining Table',
-    price: 249,
-    category: 'Dining Room',
-    image: 'assets/images/table.jpg',
-    description:
-        'Comfortable 3-seater sofa with premium fabric and wooden legs',
-  ),
-  FurnitureProductDummyData(
-    freeDelivery: true, // Has free delivery
-
-    id: '123',
-    name: 'Accent Chair',
-    price: 149,
-    category: 'Living Room',
-    image: 'assets/images/chair.jpg',
-    description:
-        'Comfortable 3-seater sofa with premium fabric and wooden legs',
-  ),
-  FurnitureProductDummyData(
-    freeDelivery: false, // Has free delivery
-
-    id: '123',
-    name: 'Queen Bed',
-    price: 599,
-    category: 'Bedroom',
-    image: 'assets/images/table2.jpg',
-    isNew: true,
-    description:
-        'Comfortable 3-seater sofa with premium fabric and wooden legs',
-  ),
-  FurnitureProductDummyData(
-    originalPrice: 400,
-    freeDelivery: true, // Has free delivery
-
-    id: '123',
-    name: 'Storage Cabinet',
-    price: 349,
-    category: 'Bedroom',
-    image: 'assets/images/sofa2.jpg',
-    description:
-        'Comfortable 3-seater sofa with premium fabric and wooden legs',
-  ),
-  FurnitureProductDummyData(
-    freeDelivery: true, // Has free delivery
-
-    id: '123',
-    name: 'Patio Set',
-    price: 799,
-    category: 'Outdoor',
-    image: 'assets/images/sofa.jpg',
-    description:
-        'Comfortable 3-seater sofa with premium fabric and wooden legs',
-  ),
-];
-
-final List<String> categories = [
-  'All',
-  'Living Room',
-  'Dining Room',
-  'Bedroom',
-  'Entryway',
-];
-
-final List<String> productTypes = [
-  'Ready Product',
-  'Customize Product',
-  'Indoor',
-  'Outdoor',
-];
-
-enum ProductType { readyProduct, customizeProduct }
-
-class Category {
-  final String name;
-  final bool isSelected;
-
-  Category({required this.name, required this.isSelected});
-
-  Category copyWith({String? name, bool? isSelected}) {
-    return Category(
-      name: name ?? this.name,
-      isSelected: isSelected ?? this.isSelected,
-    );
-  }
-}
-
-class ProductCategory {
-  final String name;
-  final bool isSelected;
-
-  ProductCategory({required this.name, required this.isSelected});
-
-  ProductCategory copyWith({String? name, bool? isSelected}) {
-    return ProductCategory(
-      name: name ?? this.name,
-      isSelected: isSelected ?? this.isSelected,
-    );
-  }
-}
+// *********
+// *********]]
