@@ -20,6 +20,7 @@ import 'package:wood_service/views/Seller/data/repository/seller_product_repo.da
 import 'package:wood_service/views/Seller/data/services/seller_auth.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_repository_seller.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home/visit_repo/seller_visit_view_model.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/view_request_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 import 'package:wood_service/views/Seller/seller_login.dart/seller_login_provider.dart';
@@ -109,5 +110,9 @@ List<SingleChildWidget> appProviders = [
   ChangeNotifierProvider(create: (_) => ReviewProvider()),
 
   // ! ****
-  ChangeNotifierProvider(create: (_) => SellerChatProvider()),
+  // ChangeNotifierProvider(create: (_) => SellerChatProvider()),
+
+  // ChangeNotifierProvider<SellerVisitViewModel>(
+  //   create: (_) => locator<SellerVisitViewModel>(),
+  // ),
 ];

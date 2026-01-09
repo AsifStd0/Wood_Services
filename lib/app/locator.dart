@@ -34,7 +34,7 @@ import 'package:wood_service/views/Seller/data/repository/seller_product_repo.da
 import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_repository_seller.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/view_request_provider.dart';
-import 'package:wood_service/views/Seller/data/views/seller_home/visit_repository.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home/visit_repo/visit_repository.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 import 'package:wood_service/views/Seller/seller_login.dart/seller_login_provider.dart';
 import 'package:wood_service/views/Seller/signup.dart/seller_signup_provider.dart';
@@ -114,18 +114,41 @@ Future<void> setupLocator() async {
   );
 
   // ========== STEP 6: Register Visit Repository ==========
-  locator.registerSingleton<VisitRepository>(
-    ApiVisitRepository(
-      dio: locator<Dio>(),
+
+  // locator.registerLazySingleton<SellerVisitRepository>(
+  //   () => ApiSellerVisitRepository(
+  //     storageService: locator<SellerLocalStorageService>(),
+  //   ),
+  // );
+  // ! ****
+  // ! *************
+  // ! *************
+  // ! *************
+  // ! *************
+  // ! *************
+
+  // locator.registerLazySingleton(
+  //   () => SellerVisitService(locator<SellerLocalStorageService>()),
+  // );
+
+  // In setupLocator() function, add this:
+
+  // Register VisitRepository (if not already registered)
+  locator.registerLazySingleton<VisitRepository>(
+    () => ApiVisitRepository(
       storageService: locator<SellerLocalStorageService>(),
     ),
   );
 
-  // ========== STEP 7: Register ViewModels (Lazy Singletons) ==========
+  // Register VisitRequestsViewModel
   locator.registerLazySingleton<VisitRequestsViewModel>(
     () => VisitRequestsViewModel(locator<VisitRepository>()),
   );
-
+  // ! *************
+  // ! *************
+  // ! *************
+  // ! *************
+  // ! *************
   // ✅ ADD THIS: Register OrdersViewModel in locator too
   locator.registerLazySingleton<OrdersViewModel>(
     () => OrdersViewModel(locator<OrderRepository>()),

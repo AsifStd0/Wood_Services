@@ -123,17 +123,21 @@ class AppColors {
   static Color getStatusColor(VisitStatus status) {
     switch (status) {
       case VisitStatus.pending:
-        return const Color(0xFFFFA726);
+        return Colors.orange;
       case VisitStatus.accepted:
-        return const Color(0xFF66BB6A);
+        return Colors.green;
       case VisitStatus.rejected:
-        return const Color(0xFFEF5350);
-      case VisitStatus.completed:
-        return const Color(0xFF42A5F5);
+        return Colors.red;
+      case VisitStatus.declined:
+        return Colors.red; // Same as rejected
       case VisitStatus.cancelled:
-        return const Color(0xFF78909C);
+        return Colors.grey;
+      case VisitStatus.completed:
+        return Colors.blue;
       case VisitStatus.noshow:
-        return const Color(0xFFAB47BC);
+        return Colors.purple;
+      case VisitStatus.active:
+        return Colors.amber;
     }
   }
 }

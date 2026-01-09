@@ -1,6 +1,10 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
+
+// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NWY0N2I5ZTIxZGVjMTRjMDg0Mzc2ZiIsImlhdCI6MTc2NzkzNDY4MywiZXhwIjoxNzcwNTI2NjgzfQ.EhD26aua5ngVyY2f5YUZ-nRrVal2scWfy4AlcvJsSN8
 
 class ShopPreviewCard extends StatelessWidget {
   final BuyerProductModel product;
@@ -195,21 +199,557 @@ class ShopPreviewCard extends StatelessWidget {
   }
 }
 
-class SimpleShopDialog extends StatelessWidget {
+class SimpleShopDialog extends StatefulWidget {
   final BuyerProductModel product;
 
   const SimpleShopDialog({super.key, required this.product});
 
   @override
-  Widget build(BuildContext context) {
-    final sellerInfo = product.sellerInfo ?? {};
+  State<SimpleShopDialog> createState() => _SimpleShopDialogState();
+}
 
+class _SimpleShopDialogState extends State<SimpleShopDialog> {
+  bool _isRequestingVisit = false;
+  String? _visitStatus;
+  final TextEditingController _messageController = TextEditingController();
+  String? _selectedDate;
+  String? _selectedTime;
+  List<Map<String, dynamic>> _myVisitRequests = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVisitStatus();
+    _loadMyVisitRequests();
+  }
+
+  void _loadVisitStatus() {
+    final viewModel = Provider.of<BuyerHomeViewModel>(context, listen: false);
+    final sellerId = widget.product.sellerId?.toString();
+    if (sellerId != null) {
+      _visitStatus = viewModel.getVisitStatusForSeller(sellerId);
+    }
+  }
+
+  Future<void> _loadMyVisitRequests() async {
+    try {
+      final viewModel = Provider.of<BuyerHomeViewModel>(context, listen: false);
+      _myVisitRequests = await viewModel.getMyVisitRequests();
+
+      // Update local status based on actual requests
+      final sellerId = widget.product.sellerId?.toString();
+      if (sellerId != null) {
+        final myRequest = _myVisitRequests.firstWhere(
+          (req) => req['seller']?['id'] == sellerId,
+          orElse: () => {},
+        );
+
+        if (myRequest.isNotEmpty) {
+          setState(() {
+            _visitStatus = myRequest['status']?.toString();
+          });
+        }
+      }
+    } catch (error) {
+      print('Error loading visit requests: $error');
+    }
+  }
+
+  Future<void> _requestVisit() async {
+    final sellerId = widget.product.sellerId?.toString();
+    final shopName =
+        widget.product.sellerInfo?['businessName'] ?? 'Unknown Shop';
+
+    if (sellerId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Seller ID not found'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isRequestingVisit = true;
+    });
+
+    try {
+      final viewModel = Provider.of<BuyerHomeViewModel>(context, listen: false);
+
+      final result = await viewModel.requestVisitToShop(
+        sellerId: sellerId,
+        shopName: shopName,
+        message: _messageController.text.isNotEmpty
+            ? _messageController.text
+            : null,
+        preferredDate: _selectedDate,
+        preferredTime: _selectedTime,
+        context: context,
+      );
+
+      // If result has error about existing request
+      if (result['hasExistingRequest'] == true) {
+        // Show options to cancel existing request
+        _showExistingRequestDialog(sellerId, shopName);
+        return;
+      }
+
+      // Update local status
+      setState(() {
+        _visitStatus = 'pending';
+      });
+
+      // Reload requests
+      await _loadMyVisitRequests();
+
+      // Close the form dialog (not the main dialog)
+      Navigator.of(context).pop(); // This closes the AlertDialog with the form
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $error'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRequestingVisit = false;
+        });
+      }
+    }
+  }
+
+  void _showExistingRequestDialog(String sellerId, String shopName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Existing Request Found'),
+        content: Text(
+          'You already have a pending visit request for $shopName.\n\n'
+          'Would you like to cancel it first?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Keep It'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close this dialog
+              await _cancelExistingRequest(sellerId);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Cancel & Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _cancelExistingRequest(String sellerId) async {
+    try {
+      // Find the existing request
+      final existingRequest = _myVisitRequests.firstWhere(
+        (req) => req['seller']?['id'] == sellerId && req['status'] == 'pending',
+        orElse: () => {},
+      );
+
+      if (existingRequest.isNotEmpty && existingRequest['id'] != null) {
+        final viewModel = Provider.of<BuyerHomeViewModel>(
+          context,
+          listen: false,
+        );
+
+        await viewModel.cancelShopVisit(
+          sellerId: sellerId,
+          requestId: existingRequest['id'].toString(),
+          context: context,
+        );
+
+        // Update local state
+        setState(() {
+          _visitStatus = null;
+        });
+
+        // Show the form again
+        _showVisitRequestForm();
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error cancelling request: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showVisitRequestForm() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Request Shop Visit'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Request to visit: ${widget.product.sellerInfo?['businessName'] ?? 'Unknown Shop'}',
+                style: const TextStyle(fontSize: 14),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Message field
+              TextField(
+                controller: _messageController,
+                decoration: const InputDecoration(
+                  labelText: 'Message (Optional)',
+                  hintText: 'Tell the seller why you want to visit...',
+                  border: OutlineInputBorder(),
+                  fillColor: Colors.white,
+                ),
+                maxLines: 3,
+              ),
+
+              const SizedBox(height: 16),
+
+              // Date picker
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final selectedDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  if (selectedDate != null) {
+                    setState(() {
+                      _selectedDate =
+                          '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+                    });
+                  }
+                },
+                icon: const Icon(Icons.calendar_today),
+                label: Text(_selectedDate ?? 'Select Preferred Date'),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Time picker
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final selectedTime = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.now(),
+                  );
+                  if (selectedTime != null) {
+                    setState(() {
+                      _selectedTime =
+                          '${selectedTime.hour}:${selectedTime.minute.toString().padLeft(2, '0')}';
+                    });
+                  }
+                },
+                icon: const Icon(Icons.access_time),
+                label: Text(_selectedTime ?? 'Select Preferred Time'),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: _isRequestingVisit ? null : _requestVisit,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade600,
+              foregroundColor: Colors.white,
+            ),
+            child: _isRequestingVisit
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(color: Colors.white),
+                  )
+                : const Text('Send Request'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showVisitDetails() {
+    final sellerId = widget.product.sellerId?.toString();
+    final shopName =
+        widget.product.sellerInfo?['businessName'] ?? 'Unknown Shop';
+
+    // Find the accepted request details
+    final acceptedRequest = _myVisitRequests.firstWhere(
+      (req) => req['seller']?['id'] == sellerId && req['status'] == 'accepted',
+      orElse: () => {},
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Visit Approved!'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Your visit request to $shopName has been approved!'),
+            const SizedBox(height: 16),
+            if (acceptedRequest['visitDate'] != null)
+              Text('📅 Date: ${acceptedRequest['visitDate']}'),
+            if (acceptedRequest['visitTime'] != null)
+              Text('⏰ Time: ${acceptedRequest['visitTime']}'),
+            if (acceptedRequest['location'] != null)
+              Text('📍 Location: ${acceptedRequest['location']}'),
+            if (acceptedRequest['duration'] != null)
+              Text('⏱️ Duration: ${acceptedRequest['duration']}'),
+            const SizedBox(height: 12),
+            if (acceptedRequest['sellerResponse']?['message'] != null)
+              Text(
+                '💬 Seller Message: ${acceptedRequest['sellerResponse']['message']}',
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVisitButton() {
+    final sellerId = widget.product.sellerId?.toString();
+    final shopName =
+        widget.product.sellerInfo?['businessName'] ?? 'Unknown Shop';
+
+    if (sellerId == null) {
+      return const SizedBox.shrink();
+    }
+
+    // Check if we have a pending request for this seller
+    final myRequest = _myVisitRequests.firstWhere(
+      (req) => req['seller']?['id'] == sellerId,
+      orElse: () => {},
+    );
+
+    // Use actual status from server or local status
+    final status = myRequest.isNotEmpty
+        ? myRequest['status']?.toString()
+        : _visitStatus;
+
+    if (status == null || status == 'cancelled' || status == 'declined') {
+      // No request yet or request was cancelled/declined - show request button
+      return ElevatedButton(
+        onPressed: _isRequestingVisit ? null : _showVisitRequestForm,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue.shade600,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: _isRequestingVisit
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(color: Colors.white),
+              )
+            : const Text('Request Visit'),
+      );
+    }
+
+    switch (status) {
+      case 'pending':
+        return OutlinedButton.icon(
+          onPressed: () {
+            _showPendingRequestOptions();
+          },
+          icon: const Icon(Icons.pending, size: 18),
+          label: const Text('Pending Approval'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.orange,
+            side: const BorderSide(color: Colors.orange),
+          ),
+        );
+
+      case 'accepted':
+        return ElevatedButton.icon(
+          onPressed: _showVisitDetails,
+          icon: const Icon(Icons.check_circle, size: 18),
+          label: const Text('Visit Approved'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.white,
+          ),
+        );
+
+      case 'declined':
+        return OutlinedButton.icon(
+          onPressed: _showVisitRequestForm,
+          icon: const Icon(Icons.cancel, size: 18),
+          label: const Text('Request Declined'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.red,
+            side: const BorderSide(color: Colors.red),
+          ),
+        );
+
+      default:
+        return ElevatedButton(
+          onPressed: _showVisitRequestForm,
+          child: const Text('Request Visit'),
+        );
+    }
+  }
+
+  void _showPendingRequestOptions() {
+    final sellerId = widget.product.sellerId?.toString();
+    final shopName =
+        widget.product.sellerInfo?['businessName'] ?? 'Unknown Shop';
+
+    if (sellerId == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pending Visit Request'),
+        content: Text(
+          'You have a pending visit request for $shopName.\n\n'
+          'What would you like to do?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Wait'),
+          ),
+          OutlinedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Show details of pending request
+              _showRequestDetails();
+            },
+            child: const Text('View Details'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _cancelPendingRequest();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Cancel Request'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRequestDetails() {
+    final sellerId = widget.product.sellerId?.toString();
+    final shopName =
+        widget.product.sellerInfo?['businessName'] ?? 'Unknown Shop';
+
+    final myRequest = _myVisitRequests.firstWhere(
+      (req) => req['seller']?['id'] == sellerId,
+      orElse: () => {},
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Request Details'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Shop: $shopName'),
+            const SizedBox(height: 8),
+            Text('Status: ${myRequest['status']?.toUpperCase() ?? 'Unknown'}'),
+            const SizedBox(height: 8),
+            if (myRequest['message'] != null && myRequest['message'].isNotEmpty)
+              Text('Your Message: ${myRequest['message']}'),
+            const SizedBox(height: 8),
+            if (myRequest['preferredDate'] != null)
+              Text('Preferred Date: ${myRequest['preferredDate']}'),
+            if (myRequest['preferredTime'] != null)
+              Text('Preferred Time: ${myRequest['preferredTime']}'),
+            const SizedBox(height: 8),
+            Text(
+              'Requested: ${myRequest['requestedDate'] != null ? DateTime.parse(myRequest['requestedDate']).toString().split(' ')[0] : 'N/A'}',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _cancelPendingRequest() async {
+    final sellerId = widget.product.sellerId?.toString();
+
+    if (sellerId == null) return;
+
+    try {
+      final viewModel = Provider.of<BuyerHomeViewModel>(context, listen: false);
+
+      // Find the request ID
+      final myRequest = _myVisitRequests.firstWhere(
+        (req) => req['seller']?['id'] == sellerId && req['status'] == 'pending',
+        orElse: () => {},
+      );
+
+      if (myRequest.isNotEmpty && myRequest['id'] != null) {
+        await viewModel.cancelShopVisit(
+          sellerId: sellerId,
+          requestId: myRequest['id'].toString(),
+          context: context,
+        );
+
+        // Update local state
+        setState(() {
+          _visitStatus = null;
+          _myVisitRequests.removeWhere(
+            (req) => req['seller']?['id'] == sellerId,
+          );
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $error'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sellerInfo = widget.product.sellerInfo ?? {};
     final shopName = sellerInfo['businessName'] ?? 'Unknown Shop';
     final sellerName = sellerInfo['name'] ?? 'Unknown Seller';
     final email = sellerInfo['email'];
     final phone = sellerInfo['phone'];
     final shopLogo = sellerInfo['shopLogo'];
-    final totalProducts = sellerInfo['totalProducts'] ?? 0;
     final verificationStatus = sellerInfo['verificationStatus'] ?? 'pending';
     final shopLocation = sellerInfo['address'] is Map
         ? _formatAddress(sellerInfo['address'])
@@ -217,217 +757,227 @@ class SimpleShopDialog extends StatelessWidget {
 
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Shop Logo with verification badge
-          Stack(
-            alignment: Alignment.bottomRight,
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.grey.shade300, width: 2),
-                  // image: shopLogo != null
-                  // ? DecorationImage(
-                  //     image: NetworkImage(_getFullImageUrl(shopLogo)),
-                  //     fit: BoxFit.cover,
-                  //   )
-                  // :
-                  // const DecorationImage(
-                  //     image: AssetImage(
-                  //       'assets/images/shop_placeholder.png',
-                  //     ),
-                  //     fit: BoxFit.cover,
-                  //   ),
-                ),
-                child: Icon(Icons.image),
-              ),
-              if (verificationStatus == 'verified')
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Icon(Icons.verified, color: Colors.green, size: 18),
-                ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Shop Name
-          Text(
-            shopName,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 4),
-
-          // Seller Name
-          Text(
-            sellerName,
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 20),
-
-          // Contact Information Section
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Shop Logo
+            Stack(
+              alignment: Alignment.bottomRight,
               children: [
-                const Text(
-                  'Contact Information',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey.shade300, width: 2),
+                    color: Colors.grey.shade100,
+                  ),
+                  child: shopLogo != null && shopLogo.isNotEmpty
+                      ? ClipOval(
+                          child: Image.network(
+                            _getFullImageUrl(shopLogo),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.store,
+                                size: 40,
+                                color: Colors.grey,
+                              );
+                            },
+                          ),
+                        )
+                      : const Icon(Icons.store, size: 40, color: Colors.grey),
                 ),
-
-                const SizedBox(height: 12),
-
-                // Email
-                if (email != null && email.isNotEmpty)
-                  _buildContactItem(
-                    icon: Icons.email,
-                    title: 'Email',
-                    value: email,
-                  ),
-
-                if (email != null && email.isNotEmpty)
-                  const SizedBox(height: 10),
-
-                // Phone
-                if (phone != null && phone.isNotEmpty)
-                  _buildContactItem(
-                    icon: Icons.phone,
-                    title: 'Phone',
-                    value: phone,
-                  ),
-
-                if (shopLocation != null && shopLocation.isNotEmpty)
-                  const SizedBox(height: 10),
-
-                // Location
-                if (shopLocation != null && shopLocation.isNotEmpty)
-                  _buildContactItem(
-                    icon: Icons.location_on,
-                    title: 'Location',
-                    value: shopLocation,
+                if (verificationStatus == 'verified')
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(Icons.verified, color: Colors.green, size: 18),
                   ),
               ],
             ),
-          ),
 
-          // Additional Info
-          if (verificationStatus != 'verified')
+            const SizedBox(height: 16),
+
+            // Shop Name
+            Text(
+              shopName,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 4),
+
+            // Seller Name
+            Text(
+              sellerName,
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 20),
+
+            // Contact Information
             Container(
-              margin: const EdgeInsets.only(top: 16),
-              padding: const EdgeInsets.all(12),
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.shade200),
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey.shade200),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: Colors.orange.shade700,
-                    size: 18,
+                  const Text(
+                    'Contact Information',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'This seller is currently under verification process.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.orange.shade700,
-                      ),
+
+                  const SizedBox(height: 12),
+
+                  // Email
+                  if (email != null && email.isNotEmpty)
+                    _buildContactItem(
+                      icon: Icons.email,
+                      title: 'Email',
+                      value: email,
                     ),
-                  ),
+
+                  if (email != null && email.isNotEmpty)
+                    const SizedBox(height: 10),
+
+                  // Phone
+                  if (phone != null && phone.isNotEmpty)
+                    _buildContactItem(
+                      icon: Icons.phone,
+                      title: 'Phone',
+                      value: phone,
+                    ),
+
+                  if (shopLocation != null && shopLocation.isNotEmpty)
+                    const SizedBox(height: 10),
+
+                  // Location
+                  if (shopLocation != null && shopLocation.isNotEmpty)
+                    _buildContactItem(
+                      icon: Icons.location_on,
+                      title: 'Location',
+                      value: shopLocation,
+                    ),
                 ],
               ),
             ),
-        ],
+
+            // Visit Request Status
+            if (_visitStatus != null)
+              Container(
+                margin: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(_visitStatus!).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _getStatusColor(_visitStatus!).withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _getStatusIcon(_visitStatus!),
+                      color: _getStatusColor(_visitStatus!),
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _getStatusMessage(_visitStatus!, shopName),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _getStatusColor(_visitStatus!),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Close'),
         ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
-            // Navigate to shop page
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Opening $shopName...'),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue.shade600,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: const Text('Visit Shop'),
-        ),
+        _buildVisitButton(),
       ],
     );
   }
 
-  Widget _buildStatItem({
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-  }) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 20, color: color),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-        ),
-      ],
-    );
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'pending':
+        return Colors.orange;
+      case 'accepted':
+        return Colors.green;
+      case 'declined':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'pending':
+        return Icons.pending;
+      case 'accepted':
+        return Icons.check_circle;
+      case 'declined':
+        return Icons.cancel;
+      default:
+        return Icons.info;
+    }
+  }
+
+  String _getStatusMessage(String status, String shopName) {
+    switch (status) {
+      case 'pending':
+        return 'Visit request sent to $shopName. Waiting for approval.';
+      case 'accepted':
+        return 'Your visit to $shopName has been approved!';
+      case 'declined':
+        return 'Your visit request to $shopName was declined.';
+      default:
+        return 'Visit status: $status';
+    }
+  }
+
+  String _getFullImageUrl(String? imagePath) {
+    if (imagePath == null) return '';
+    if (imagePath.startsWith('http')) return imagePath;
+    return 'http://10.0.20.221:5001$imagePath';
+  }
+
+  String _formatAddress(Map<String, dynamic>? address) {
+    if (address == null) return '';
+    final parts = <String>[];
+    if (address['street'] != null) parts.add(address['street']);
+    if (address['city'] != null) parts.add(address['city']);
+    if (address['state'] != null) parts.add(address['state']);
+    if (address['country'] != null) parts.add(address['country']);
+    return parts.join(', ');
   }
 
   Widget _buildContactItem({
@@ -466,796 +1016,6 @@ class SimpleShopDialog extends StatelessWidget {
       ],
     );
   }
-
-  String _formatAddress(Map<String, dynamic>? address) {
-    if (address == null) return '';
-
-    final parts = <String>[];
-    if (address['street'] != null) parts.add(address['street']);
-    if (address['city'] != null) parts.add(address['city']);
-    if (address['state'] != null) parts.add(address['state']);
-    if (address['country'] != null) parts.add(address['country']);
-
-    return parts.join(', ');
-  }
 }
 
-
 // ! ******
-
-// import 'dart:convert';
-// import 'package:flutter/material.dart';
-// import 'package:http/http.dart' as http;
-
-// class ShopVisitScreen extends StatefulWidget {
-//   final String sellerId;
-//   final String shopName;
-
-//   const ShopVisitScreen({
-//     super.key,
-//     required this.sellerId,
-//     required this.shopName,
-//   });
-
-//   @override
-//   State<ShopVisitScreen> createState() => _ShopVisitScreenState();
-// }
-
-// class _ShopVisitScreenState extends State<ShopVisitScreen> with SingleTickerProviderStateMixin {
-//   late TabController _tabController;
-//   final ShopApiService _apiService = ShopApiService();
-//   ShopDetails? _shopDetails;
-//   bool _isLoading = true;
-//   bool _isFollowing = false;
-//   String? _error;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _tabController = TabController(length: 4, vsync: this);
-//     _loadShopDetails();
-//     _checkFollowingStatus();
-//   }
-
-//   Future<void> _loadShopDetails() async {
-//     try {
-//       final details = await _apiService.visitShop(widget.sellerId);
-//       setState(() {
-//         _shopDetails = details;
-//         _isLoading = false;
-//       });
-//     } catch (e) {
-//       setState(() {
-//         _error = 'Failed to load shop details: $e';
-//         _isLoading = false;
-//       });
-//     }
-//   }
-
-//   Future<void> _checkFollowingStatus() async {
-//     try {
-//       final isFollowing = await _apiService.checkFollowing(widget.sellerId);
-//       setState(() {
-//         _isFollowing = isFollowing;
-//       });
-//     } catch (e) {
-//       print('Error checking following status: $e');
-//     }
-//   }
-
-//   Future<void> _toggleFollow() async {
-//     try {
-//       final result = await _apiService.toggleFollowShop(widget.sellerId);
-//       setState(() {
-//         _isFollowing = result;
-//       });
-      
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(
-//           content: Text(result ? 'Shop followed successfully!' : 'Shop unfollowed'),
-//           duration: const Duration(seconds: 2),
-//         ),
-//       );
-//     } catch (e) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(
-//           content: Text('Error: $e'),
-//           backgroundColor: Colors.red,
-//         ),
-//       );
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: _isLoading
-//           ? const Center(child: CircularProgressIndicator())
-//           : _error != null
-//               ? Center(child: Text(_error!))
-//               : _shopDetails == null
-//                   ? const Center(child: Text('No shop data available'))
-//                   : _buildShopScreen(),
-//     );
-//   }
-
-//   Widget _buildShopScreen() {
-//     final shop = _shopDetails!.shop;
-//     final stats = _shopDetails!.statistics;
-
-//     return NestedScrollView(
-//       headerSliverBuilder: (context, innerBoxIsScrolled) {
-//         return [
-//           SliverAppBar(
-//             expandedHeight: 250,
-//             floating: false,
-//             pinned: true,
-//             flexibleSpace: FlexibleSpaceBar(
-//               background: Stack(
-//                 fit: StackFit.expand,
-//                 children: [
-//                   // Cover Image
-//                   if (shop.coverImage != null)
-//                     Image.network(
-//                       _getFullImageUrl(shop.coverImage!),
-//                       fit: BoxFit.cover,
-//                     )
-//                   else
-//                     Container(
-//                       color: Colors.blue.shade100,
-//                       child: Icon(
-//                         Icons.store,
-//                         size: 100,
-//                         color: Colors.blue.shade300,
-//                       ),
-//                     ),
-                  
-//                   // Gradient overlay
-//                   Container(
-//                     decoration: BoxDecoration(
-//                       gradient: LinearGradient(
-//                         begin: Alignment.bottomCenter,
-//                         end: Alignment.topCenter,
-//                         colors: [
-//                           Colors.black.withOpacity(0.7),
-//                           Colors.transparent,
-//                         ],
-//                       ),
-//                     ),
-//                   ),
-                  
-//                   // Shop info overlay
-//                   Positioned(
-//                     bottom: 0,
-//                     left: 0,
-//                     right: 0,
-//                     child: Container(
-//                       padding: const EdgeInsets.all(16),
-//                       child: Row(
-//                         children: [
-//                           // Shop Logo
-//                           Container(
-//                             width: 80,
-//                             height: 80,
-//                             decoration: BoxDecoration(
-//                               shape: BoxShape.circle,
-//                               border: Border.all(color: Colors.white, width: 3),
-//                               image: shop.shopLogo != null
-//                                   ? DecorationImage(
-//                                       image: NetworkImage(_getFullImageUrl(shop.shopLogo!)),
-//                                       fit: BoxFit.cover,
-//                                     )
-//                                   : const DecorationImage(
-//                                       image: AssetImage('assets/images/shop_placeholder.png'),
-//                                       fit: BoxFit.cover,
-//                                     ),
-//                             ),
-//                           ),
-                          
-//                           const SizedBox(width: 16),
-                          
-//                           // Shop Name and Info
-//                           Expanded(
-//                             child: Column(
-//                               crossAxisAlignment: CrossAxisAlignment.start,
-//                               children: [
-//                                 Text(
-//                                   shop.shopName,
-//                                   style: const TextStyle(
-//                                     fontSize: 22,
-//                                     fontWeight: FontWeight.bold,
-//                                     color: Colors.white,
-//                                   ),
-//                                   maxLines: 1,
-//                                   overflow: TextOverflow.ellipsis,
-//                                 ),
-                                
-//                                 const SizedBox(height: 4),
-                                
-//                                 Text(
-//                                   shop.businessName,
-//                                   style: TextStyle(
-//                                     fontSize: 14,
-//                                     color: Colors.white.withOpacity(0.9),
-//                                   ),
-//                                 ),
-                                
-//                                 const SizedBox(height: 8),
-                                
-//                                 Row(
-//                                   children: [
-//                                     if (shop.verificationStatus == 'verified')
-//                                       Container(
-//                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-//                                         decoration: BoxDecoration(
-//                                           color: Colors.green,
-//                                           borderRadius: BorderRadius.circular(12),
-//                                         ),
-//                                         child: const Row(
-//                                           children: [
-//                                             Icon(Icons.verified, size: 12, color: Colors.white),
-//                                             SizedBox(width: 4),
-//                                             Text(
-//                                               'Verified',
-//                                               style: TextStyle(
-//                                                 fontSize: 10,
-//                                                 color: Colors.white,
-//                                                 fontWeight: FontWeight.bold,
-//                                               ),
-//                                             ),
-//                                           ],
-//                                         ),
-//                                       ),
-                                    
-//                                     const SizedBox(width: 8),
-                                    
-//                                     Icon(Icons.star, size: 14, color: Colors.amber),
-//                                     const SizedBox(width: 2),
-//                                     Text(
-//                                       stats.averageRating.toString(),
-//                                       style: const TextStyle(
-//                                         fontSize: 12,
-//                                         color: Colors.white,
-//                                       ),
-//                                     ),
-                                    
-//                                     const SizedBox(width: 8),
-                                    
-//                                     Icon(Icons.inventory, size: 14, color: Colors.white),
-//                                     const SizedBox(width: 2),
-//                                     Text(
-//                                       '${stats.totalProducts} products',
-//                                       style: const TextStyle(
-//                                         fontSize: 12,
-//                                         color: Colors.white,
-//                                       ),
-//                                     ),
-//                                   ],
-//                                 ),
-//                               ],
-//                             ),
-//                           ),
-//                         ],
-//                       ),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-          
-//           SliverPersistentHeader(
-//             pinned: true,
-//             delegate: _SliverAppBarDelegate(
-//               TabBar(
-//                 controller: _tabController,
-//                 labelColor: Colors.blue,
-//                 unselectedLabelColor: Colors.grey,
-//                 indicatorColor: Colors.blue,
-//                 tabs: const [
-//                   Tab(text: 'Overview'),
-//                   Tab(text: 'Products'),
-//                   Tab(text: 'Reviews'),
-//                   Tab(text: 'About'),
-//                 ],
-//               ),
-//             ),
-//           ),
-//         ];
-//       },
-//       body: TabBarView(
-//         controller: _tabController,
-//         children: [
-//           _buildOverviewTab(),
-//           _buildProductsTab(),
-//           _buildReviewsTab(),
-//           _buildAboutTab(),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildOverviewTab() {
-//     final shop = _shopDetails!.shop;
-//     final stats = _shopDetails!.statistics;
-//     final featured = _shopDetails!.featuredProducts;
-//     final bestSelling = _shopDetails!.bestSelling;
-//     final categories = _shopDetails!.categories;
-
-//     return SingleChildScrollView(
-//       child: Column(
-//         children: [
-//           // Stats Cards
-//           Padding(
-//             padding: const EdgeInsets.all(16),
-//             child: GridView.count(
-//               shrinkWrap: true,
-//               physics: const NeverScrollableScrollPhysics(),
-//               crossAxisCount: 2,
-//               childAspectRatio: 1.5,
-//               mainAxisSpacing: 10,
-//               crossAxisSpacing: 10,
-//               children: [
-//                 _buildStatCard(
-//                   icon: Icons.inventory,
-//                   value: '${stats.totalProducts}',
-//                   label: 'Products',
-//                   color: Colors.blue,
-//                 ),
-//                 _buildStatCard(
-//                   icon: Icons.shopping_cart,
-//                   value: '${stats.totalSales}',
-//                   label: 'Total Sales',
-//                   color: Colors.green,
-//                 ),
-//                 _buildStatCard(
-//                   icon: Icons.star,
-//                   value: stats.averageRating.toString(),
-//                   label: 'Avg Rating',
-//                   color: Colors.amber,
-//                 ),
-//                 _buildStatCard(
-//                   icon: Icons.people,
-//                   value: '${shop.followersCount}',
-//                   label: 'Followers',
-//                   color: Colors.purple,
-//                 ),
-//               ],
-//             ),
-//           ),
-
-//           // Follow Button
-//           Padding(
-//             padding: const EdgeInsets.symmetric(horizontal: 16),
-//             child: SizedBox(
-//               width: double.infinity,
-//               child: ElevatedButton.icon(
-//                 onPressed: _toggleFollow,
-//                 style: ElevatedButton.styleFrom(
-//                   backgroundColor: _isFollowing ? Colors.grey : Colors.blue,
-//                   foregroundColor: Colors.white,
-//                   padding: const EdgeInsets.symmetric(vertical: 12),
-//                   shape: RoundedRectangleBorder(
-//                     borderRadius: BorderRadius.circular(8),
-//                   ),
-//                 ),
-//                 icon: Icon(
-//                   _isFollowing ? Icons.check : Icons.add,
-//                   size: 20,
-//                 ),
-//                 label: Text(
-//                   _isFollowing ? 'Following' : 'Follow Shop',
-//                   style: const TextStyle(fontSize: 16),
-//                 ),
-//               ),
-//             ),
-//           ),
-
-//           const SizedBox(height: 20),
-
-//           // Featured Products
-//           if (featured.isNotEmpty)
-//             _buildProductSection(
-//               title: 'Featured Products',
-//               products: featured,
-//             ),
-
-//           // Categories
-//           if (categories.isNotEmpty)
-//             Padding(
-//               padding: const EdgeInsets.all(16),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   const Text(
-//                     'Shop Categories',
-//                     style: TextStyle(
-//                       fontSize: 18,
-//                       fontWeight: FontWeight.bold,
-//                     ),
-//                   ),
-//                   const SizedBox(height: 12),
-//                   Wrap(
-//                     spacing: 8,
-//                     runSpacing: 8,
-//                     children: categories.map((category) {
-//                       return Chip(
-//                         label: Text('${category.name} (${category.count})'),
-//                         backgroundColor: Colors.blue.shade100,
-//                       );
-//                     }).toList(),
-//                   ),
-//                 ],
-//               ),
-//             ),
-
-//           // Best Selling
-//           if (bestSelling.isNotEmpty)
-//             _buildProductSection(
-//               title: 'Best Selling',
-//               products: bestSelling,
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildProductsTab() {
-//     return FutureBuilder<ShopProductsResponse>(
-//       future: _apiService.getShopProducts(widget.sellerId),
-//       builder: (context, snapshot) {
-//         if (snapshot.connectionState == ConnectionState.waiting) {
-//           return const Center(child: CircularProgressIndicator());
-//         } else if (snapshot.hasError) {
-//           return Center(child: Text('Error: ${snapshot.error}'));
-//         } else if (!snapshot.hasData) {
-//           return const Center(child: Text('No products available'));
-//         } else {
-//           final response = snapshot.data!;
-//           return GridView.builder(
-//             padding: const EdgeInsets.all(8),
-//             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-//               crossAxisCount: 2,
-//               childAspectRatio: 0.7,
-//               crossAxisSpacing: 8,
-//               mainAxisSpacing: 8,
-//             ),
-//             itemCount: response.products.length,
-//             itemBuilder: (context, index) {
-//               final product = response.products[index];
-//               return ProductCard(product: product);
-//             },
-//           );
-//         }
-//       },
-//     );
-//   }
-
-//   Widget _buildReviewsTab() {
-//     return FutureBuilder<ShopReviewsResponse>(
-//       future: _apiService.getShopReviews(widget.sellerId),
-//       builder: (context, snapshot) {
-//         if (snapshot.connectionState == ConnectionState.waiting) {
-//           return const Center(child: CircularProgressIndicator());
-//         } else if (snapshot.hasError) {
-//           return Center(child: Text('Error: ${snapshot.error}'));
-//         } else if (!snapshot.hasData) {
-//           return const Center(child: Text('No reviews yet'));
-//         } else {
-//           final response = snapshot.data!;
-//           return ListView.builder(
-//             padding: const EdgeInsets.all(16),
-//             itemCount: response.reviews.length,
-//             itemBuilder: (context, index) {
-//               final review = response.reviews[index];
-//               return ReviewCard(review: review);
-//             },
-//           );
-//         }
-//       },
-//     );
-//   }
-
-//   Widget _buildAboutTab() {
-//     final shop = _shopDetails!.shop;
-
-//     return SingleChildScrollView(
-//       padding: const EdgeInsets.all(16),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           // Shop Description
-//           if (shop.description != null && shop.description!.isNotEmpty)
-//             Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 const Text(
-//                   'About This Shop',
-//                   style: TextStyle(
-//                     fontSize: 18,
-//                     fontWeight: FontWeight.bold,
-//                   ),
-//                 ),
-//                 const SizedBox(height: 8),
-//                 Text(
-//                   shop.description!,
-//                   style: TextStyle(
-//                     fontSize: 14,
-//                     color: Colors.grey.shade700,
-//                   ),
-//                 ),
-//                 const SizedBox(height: 20),
-//               ],
-//             ),
-
-//           // Contact Information
-//           Card(
-//             child: Padding(
-//               padding: const EdgeInsets.all(16),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   const Text(
-//                     'Contact Information',
-//                     style: TextStyle(
-//                       fontSize: 18,
-//                       fontWeight: FontWeight.bold,
-//                     ),
-//                   ),
-//                   const SizedBox(height: 12),
-                  
-//                   if (shop.email != null && shop.email!.isNotEmpty)
-//                     _buildContactItem(
-//                       icon: Icons.email,
-//                       label: 'Email',
-//                       value: shop.email!,
-//                     ),
-                  
-//                   if (shop.phone != null && shop.phone!.isNotEmpty)
-//                     _buildContactItem(
-//                       icon: Icons.phone,
-//                       label: 'Phone',
-//                       value: shop.phone!,
-//                     ),
-                  
-//                   if (shop.address != null && shop.address!.isNotEmpty)
-//                     _buildContactItem(
-//                       icon: Icons.location_on,
-//                       label: 'Address',
-//                       value: shop.address!,
-//                     ),
-//                 ],
-//               ),
-//             ),
-//           ),
-
-//           const SizedBox(height: 16),
-
-//           // Shop Stats
-//           Card(
-//             child: Padding(
-//               padding: const EdgeInsets.all(16),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   const Text(
-//                     'Shop Statistics',
-//                     style: TextStyle(
-//                       fontSize: 18,
-//                       fontWeight: FontWeight.bold,
-//                     ),
-//                   ),
-//                   const SizedBox(height: 12),
-                  
-//                   _buildStatItem(
-//                     label: 'Joined Date',
-//                     value: shop.joinedDate != null 
-//                         ? '${shop.joinedDate!.day}/${shop.joinedDate!.month}/${shop.joinedDate!.year}'
-//                         : 'N/A',
-//                   ),
-                  
-//                   _buildStatItem(
-//                     label: 'Verification Status',
-//                     value: shop.verificationStatus.toUpperCase(),
-//                     color: shop.verificationStatus == 'verified' 
-//                         ? Colors.green 
-//                         : Colors.orange,
-//                   ),
-                  
-//                   _buildStatItem(
-//                     label: 'Total Products',
-//                     value: '${_shopDetails!.statistics.totalProducts}',
-//                   ),
-                  
-//                   _buildStatItem(
-//                     label: 'Total Sales',
-//                     value: '${_shopDetails!.statistics.totalSales}',
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   // Helper widgets
-//   Widget _buildStatCard({
-//     required IconData icon,
-//     required String value,
-//     required String label,
-//     required Color color,
-//   }) {
-//     return Card(
-//       child: Padding(
-//         padding: const EdgeInsets.all(12),
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             Icon(icon, size: 30, color: color),
-//             const SizedBox(height: 8),
-//             Text(
-//               value,
-//               style: TextStyle(
-//                 fontSize: 18,
-//                 fontWeight: FontWeight.bold,
-//                 color: color,
-//               ),
-//             ),
-//             const SizedBox(height: 4),
-//             Text(
-//               label,
-//               style: TextStyle(
-//                 fontSize: 12,
-//                 color: Colors.grey.shade600,
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _buildProductSection({
-//     required String title,
-//     required List<Product> products,
-//   }) {
-//     return Padding(
-//       padding: const EdgeInsets.all(16),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Text(
-//             title,
-//             style: const TextStyle(
-//               fontSize: 18,
-//               fontWeight: FontWeight.bold,
-//             ),
-//           ),
-//           const SizedBox(height: 12),
-//           SizedBox(
-//             height: 200,
-//             child: ListView.builder(
-//               scrollDirection: Axis.horizontal,
-//               itemCount: products.length,
-//               itemBuilder: (context, index) {
-//                 final product = products[index];
-//                 return Container(
-//                   width: 150,
-//                   margin: const EdgeInsets.only(right: 12),
-//                   child: ProductCard(product: product),
-//                 );
-//               },
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildContactItem({
-//     required IconData icon,
-//     required String label,
-//     required String value,
-//   }) {
-//     return Padding(
-//       padding: const EdgeInsets.symmetric(vertical: 8),
-//       child: Row(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Icon(icon, size: 20, color: Colors.blue),
-//           const SizedBox(width: 12),
-//           Expanded(
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 Text(
-//                   label,
-//                   style: const TextStyle(
-//                     fontSize: 12,
-//                     color: Colors.grey,
-//                   ),
-//                 ),
-//                 const SizedBox(height: 2),
-//                 SelectableText(
-//                   value,
-//                   style: const TextStyle(
-//                     fontSize: 14,
-//                     fontWeight: FontWeight.w500,
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildStatItem({
-//     required String label,
-//     required String value,
-//     Color? color,
-//   }) {
-//     return Padding(
-//       padding: const EdgeInsets.symmetric(vertical: 6),
-//       child: Row(
-//         children: [
-//           Expanded(
-//             child: Text(
-//               label,
-//               style: const TextStyle(
-//                 fontSize: 14,
-//                 color: Colors.grey,
-//               ),
-//             ),
-//           ),
-//           Text(
-//             value,
-//             style: TextStyle(
-//               fontSize: 14,
-//               fontWeight: FontWeight.w500,
-//               color: color,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   String _getFullImageUrl(String imagePath) {
-//     if (imagePath.startsWith('http')) return imagePath;
-//     return 'http://192.168.137.78:5001$imagePath';
-//   }
-
-//   @override
-//   void dispose() {
-//     _tabController.dispose();
-//     super.dispose();
-//   }
-// }
-
-// class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-//   final TabBar _tabBar;
-
-//   _SliverAppBarDelegate(this._tabBar);
-
-//   @override
-//   double get minExtent => _tabBar.preferredSize.height;
-//   @override
-//   double get maxExtent => _tabBar.preferredSize.height;
-
-//   @override
-//   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-//     return Container(
-//       color: Colors.white,
-//       child: _tabBar,
-//     );
-//   }
-
-//   @override
-//   bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
-//     return false;
-//   }
-// }

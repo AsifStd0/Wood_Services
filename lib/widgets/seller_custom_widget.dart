@@ -4,45 +4,26 @@ import 'package:wood_service/views/Seller/data/views/seller_home/view_request_pr
 
 Widget buildEmptyState() {
   return Center(
-    child: Padding(
-      padding: const EdgeInsets.all(40.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 150,
-            height: 150,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.assignment_outlined,
-              size: 60,
-              color: Colors.grey[400],
-            ),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.calendar_today_rounded, size: 80, color: Colors.grey[300]),
+        const SizedBox(height: 20),
+        Text(
+          'No Visit Requests',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[500],
           ),
-          const SizedBox(height: 24),
-          Text(
-            'No Visit Requests',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'When you receive visit requests, they will appear here',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey[500],
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Visit requests from buyers will appear here',
+          style: TextStyle(fontSize: 14, color: Colors.grey[400]),
+          textAlign: TextAlign.center,
+        ),
+      ],
     ),
   );
 }

@@ -1,139 +1,245 @@
 // models/visit_request_model.dart
-enum VisitStatus { pending, accepted, rejected, completed, cancelled, noshow }
+import 'package:flutter/material.dart';
+
+// models/visit_request_model.dart
+enum VisitStatus {
+  pending,
+  accepted,
+  rejected,
+  declined, // Add this
+  cancelled,
+  completed,
+  noshow,
+  active,
+}
+
+enum VisitType { delivery, pickup, inspection, shopVisit }
 
 class VisitRequest {
   final String id;
-  final String orderId;
-  final String buyerName;
-  final String buyerPhone;
-  final String buyerEmail;
-  final String address;
-  final DateTime visitDate;
-  final String visitTime;
+  final String requestId;
+  final Map<String, dynamic> buyer;
+  final Map<String, dynamic> seller;
+  final String? message;
   final VisitStatus status;
+  final DateTime requestedDate;
+  final DateTime? preferredDate;
+  final String? preferredTime;
+  final Map<String, dynamic>? sellerResponse;
+  final DateTime? visitDate;
+  final String? visitTime;
+  final String? duration;
+  final String? location;
   final String? instructions;
-  final List<OrderItem> items;
-  final DateTime requestedAt;
-  final DateTime? acceptedAt;
-  final DateTime? completedAt;
-  final DateTime? cancelledAt;
+  final List<VisitItem> items;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final VisitType? visitType;
+  final String? address;
 
   VisitRequest({
     required this.id,
-    required this.orderId,
-    required this.buyerName,
-    required this.buyerPhone,
-    required this.buyerEmail,
-    required this.address,
-    required this.visitDate,
-    required this.visitTime,
+    required this.requestId,
+    required this.buyer,
+    required this.seller,
+    this.message,
     required this.status,
+    required this.requestedDate,
+    this.preferredDate,
+    this.preferredTime,
+    this.sellerResponse,
+    this.visitDate,
+    this.visitTime,
+    this.duration,
+    this.location,
     this.instructions,
-    required this.items,
-    required this.requestedAt,
-    this.acceptedAt,
-    this.completedAt,
-    this.cancelledAt,
+    this.items = const [],
+    this.createdAt,
+    this.updatedAt,
+    this.visitType,
+    this.address,
   });
 
   factory VisitRequest.fromJson(Map<String, dynamic> json) {
-    // Debug log to see what data you're getting
-    print('📥 Parsing order data: ${json.keys.toList()}');
-    print('📥 Order ID: ${json['orderId']}');
-    print('📥 Request Type: ${json['requestType']}');
-    print('📥 isVisitRequest: ${json['isVisitRequest']}');
-    print('📥 Visit Status: ${json['visitStatus']}');
-
-    // Handle address - could be String or Map
-    String address;
-    if (json['visitAddress'] is String) {
-      address = json['visitAddress'];
-    } else if (json['visitAddress'] is Map) {
-      final addr = json['visitAddress'] as Map<String, dynamic>;
-      address = '${addr['street'] ?? ''}, ${addr['city'] ?? ''}';
-    } else if (json['deliveryAddress'] is Map) {
-      final addr = json['deliveryAddress'] as Map<String, dynamic>;
-      address = '${addr['street'] ?? ''}, ${addr['city'] ?? ''}';
-    } else {
-      address = 'Address not specified';
-    }
-
-    // Handle date - could be string or already DateTime
-    DateTime visitDate;
-    if (json['visitDate'] is String) {
-      visitDate = DateTime.parse(json['visitDate']);
-    } else if (json['visitDate'] is DateTime) {
-      visitDate = json['visitDate'];
-    } else {
-      visitDate = DateTime.now().add(const Duration(days: 1));
-    }
-
     return VisitRequest(
-      id: json['_id'] ?? json['orderId'] ?? 'unknown',
-      orderId: json['orderId'] ?? 'unknown',
-      buyerName: json['buyerName'] ?? 'Unknown Buyer',
-      buyerPhone: json['buyerPhone'] ?? '',
-      buyerEmail: json['buyerEmail'] ?? '',
-      address: address,
-      visitDate: visitDate,
-      visitTime: json['visitTime'] ?? '10:00 AM',
-      status: _parseVisitStatus(
-        json['visitStatus'] ?? json['status'] ?? 'pending',
-      ),
-      instructions: json['visitInstructions'] ?? json['deliveryInstructions'],
-      items:
-          (json['items'] as List<dynamic>?)?.map((item) {
-            // Handle both product object and simple data
-            final productId =
-                item['productId']?['_id'] ?? item['productId'] ?? '';
-            final productName =
-                item['productName'] ??
-                item['productId']?['title'] ??
-                'Unknown Product';
-
-            return OrderItem(
-              productId: productId.toString(),
-              productName: productName.toString(),
-              productImage:
-                  item['productImage'] ??
-                  item['productId']?['featuredImage']?.toString(),
-              quantity: item['quantity'] ?? 1,
-              price: (item['unitPrice'] ?? item['price'] ?? 0).toDouble(),
-            );
-          }).toList() ??
-          [],
-      requestedAt: DateTime.parse(
-        json['requestedAt'] ?? DateTime.now().toIso8601String(),
-      ),
-      acceptedAt: json['acceptedAt'] != null
-          ? DateTime.parse(json['acceptedAt'])
+      id: json['_id'] ?? json['id'] ?? '',
+      requestId: json['_id'] ?? json['id'] ?? '',
+      buyer: json['buyer'] is Map
+          ? Map<String, dynamic>.from(json['buyer'])
+          : <String, dynamic>{},
+      seller: json['seller'] is Map
+          ? Map<String, dynamic>.from(json['seller'])
+          : <String, dynamic>{},
+      message: json['message'],
+      status: _parseStatus(json['status']?.toString() ?? 'pending'),
+      requestedDate: json['requestedDate'] != null
+          ? DateTime.parse(json['requestedDate']).toLocal()
+          : DateTime.parse(
+              json['createdAt'] ?? DateTime.now().toString(),
+            ).toLocal(),
+      preferredDate: json['preferredDate'] != null
+          ? DateTime.parse(json['preferredDate']).toLocal()
           : null,
-      completedAt: json['completedAt'] != null
-          ? DateTime.parse(json['completedAt'])
+      preferredTime: json['preferredTime'],
+      sellerResponse: json['sellerResponse'] is Map
+          ? Map<String, dynamic>.from(json['sellerResponse'])
           : null,
-      cancelledAt: json['cancelledAt'] != null
-          ? DateTime.parse(json['cancelledAt'])
+      visitDate: json['visitDate'] != null
+          ? DateTime.parse(json['visitDate']).toLocal()
           : null,
+      visitTime: json['visitTime'],
+      duration: json['duration'],
+      location: json['location'],
+      instructions: json['instructions'],
+      items: json['items'] is List
+          ? (json['items'] as List)
+                .map((item) => VisitItem.fromJson(item))
+                .toList()
+          : [],
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt']).toLocal()
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt']).toLocal()
+          : null,
+      visitType: _parseVisitType(json['visitType'] ?? json['type']),
+      address: json['address'] ?? json['location'] ?? '',
     );
   }
 
-  static VisitStatus _parseVisitStatus(String status) {
+  static VisitStatus _parseStatus(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
         return VisitStatus.pending;
       case 'accepted':
-      case 'scheduled':
         return VisitStatus.accepted;
-      case 'completed':
-        return VisitStatus.completed;
-      case 'cancelled':
-        return VisitStatus.cancelled;
-      case 'noshow':
-        return VisitStatus.noshow;
       case 'rejected':
         return VisitStatus.rejected;
+      case 'declined':
+        return VisitStatus.declined; // Add this case
+      case 'cancelled':
+        return VisitStatus.cancelled;
+      case 'completed':
+        return VisitStatus.completed;
+      case 'noshow':
+        return VisitStatus.noshow;
+      case 'active':
+        return VisitStatus.active;
       default:
         return VisitStatus.pending;
+    }
+  }
+
+  static VisitType? _parseVisitType(dynamic type) {
+    if (type == null) return null;
+    final typeStr = type.toString().toLowerCase();
+    switch (typeStr) {
+      case 'delivery':
+        return VisitType.delivery;
+      case 'pickup':
+        return VisitType.pickup;
+      case 'inspection':
+        return VisitType.inspection;
+      case 'shopvisit':
+      case 'shop_visit':
+      case 'shop-visit':
+        return VisitType.shopVisit;
+      default:
+        return null;
+    }
+  }
+
+  // Helper methods
+  String get buyerName {
+    return buyer['name'] ??
+        buyer['fullName'] ??
+        buyer['username'] ??
+        'Unknown Buyer';
+  }
+
+  String get buyerEmail {
+    return buyer['email'] ?? '';
+  }
+
+  String get buyerPhone {
+    return buyer['phone'] ?? buyer['mobile'] ?? '';
+  }
+
+  String get buyerProfileImage {
+    return buyer['profileImage'] ?? buyer['avatar'] ?? '';
+  }
+
+  String get sellerName {
+    return seller['businessName'] ??
+        seller['shopName'] ??
+        seller['name'] ??
+        'Unknown Seller';
+  }
+
+  bool get isPending => status == VisitStatus.pending;
+  bool get isAccepted => status == VisitStatus.accepted;
+  bool get isRejected => status == VisitStatus.rejected;
+  bool get isCancelled => status == VisitStatus.cancelled;
+  bool get isCompleted => status == VisitStatus.completed;
+
+  String get formattedRequestDate {
+    return '${requestedDate.day}/${requestedDate.month}/${requestedDate.year}';
+  }
+
+  String get formattedTime {
+    if (visitTime != null) return visitTime!;
+    if (preferredTime != null) return preferredTime!;
+    return 'Flexible';
+  }
+
+  String get formattedVisitDate {
+    if (visitDate != null) {
+      return '${visitDate!.day}/${visitDate!.month}/${visitDate!.year}';
+    }
+    if (preferredDate != null) {
+      return '${preferredDate!.day}/${preferredDate!.month}/${preferredDate!.year}';
+    }
+    return 'Not scheduled';
+  }
+
+  // In VisitRequest class
+  Color get statusColor {
+    switch (status) {
+      case VisitStatus.pending:
+        return Colors.orange;
+      case VisitStatus.accepted:
+        return Colors.green;
+      case VisitStatus.rejected:
+      case VisitStatus.declined:
+        return Colors.red;
+      case VisitStatus.cancelled:
+        return Colors.grey;
+      case VisitStatus.completed:
+        return Colors.blue;
+      case VisitStatus.noshow:
+        return Colors.purple;
+      case VisitStatus.active:
+        return Colors.amber;
+    }
+  }
+
+  IconData get statusIcon {
+    switch (status) {
+      case VisitStatus.pending:
+        return Icons.pending;
+      case VisitStatus.accepted:
+        return Icons.check_circle;
+      case VisitStatus.rejected:
+      case VisitStatus.declined:
+        return Icons.cancel;
+      case VisitStatus.cancelled:
+        return Icons.block;
+      case VisitStatus.completed:
+        return Icons.done_all;
+      case VisitStatus.noshow:
+        return Icons.person_off;
+      case VisitStatus.active:
+        return Icons.access_time;
     }
   }
 
@@ -145,103 +251,61 @@ class VisitRequest {
         return 'Accepted';
       case VisitStatus.rejected:
         return 'Rejected';
-      case VisitStatus.completed:
-        return 'Completed';
+      case VisitStatus.declined:
+        return 'Declined';
       case VisitStatus.cancelled:
         return 'Cancelled';
+      case VisitStatus.completed:
+        return 'Completed';
       case VisitStatus.noshow:
         return 'No Show';
+      case VisitStatus.active:
+        return 'Active';
     }
   }
 
-  String get formattedRequestedDate {
-    final now = DateTime.now();
-    final difference = now.difference(requestedAt);
-
-    if (difference.inDays > 7) {
-      return '${requestedAt.day}/${requestedAt.month}/${requestedAt.year}';
-    } else if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'Just now';
+  String get visitTypeText {
+    switch (visitType) {
+      case VisitType.delivery:
+        return 'Delivery';
+      case VisitType.pickup:
+        return 'Pickup';
+      case VisitType.inspection:
+        return 'Inspection';
+      case VisitType.shopVisit:
+        return 'Shop Visit';
+      default:
+        return 'Visit';
     }
-  }
-
-  String get formattedAcceptedDate {
-    if (acceptedAt == null) return '';
-    final now = DateTime.now();
-    final difference = now.difference(acceptedAt!);
-
-    if (difference.inDays > 7) {
-      return '${acceptedAt!.day}/${acceptedAt!.month}/${acceptedAt!.year}';
-    } else if (difference.inDays > 0) {
-      return 'Accepted ${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return 'Accepted ${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return 'Accepted ${difference.inMinutes}m ago';
-    } else {
-      return 'Accepted just now';
-    }
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      '_id': id,
-      'orderId': orderId,
-      'buyerName': buyerName,
-      'buyerPhone': buyerPhone,
-      'buyerEmail': buyerEmail,
-      'address': address,
-      'visitDate': visitDate.toIso8601String(),
-      'visitTime': visitTime,
-      'status': statusText.toLowerCase(),
-      'instructions': instructions,
-      'items': items.map((item) => item.toJson()).toList(),
-      'requestedAt': requestedAt.toIso8601String(),
-      'acceptedAt': acceptedAt?.toIso8601String(),
-      'completedAt': completedAt?.toIso8601String(),
-      'cancelledAt': cancelledAt?.toIso8601String(),
-    };
   }
 }
 
-class OrderItem {
-  final String productId;
+class VisitItem {
   final String productName;
   final String? productImage;
   final int quantity;
   final double price;
 
-  OrderItem({
-    required this.productId,
+  VisitItem({
     required this.productName,
     this.productImage,
     required this.quantity,
     required this.price,
   });
 
-  factory OrderItem.fromJson(Map<String, dynamic> json) {
-    return OrderItem(
-      productId: json['productId'] ?? '',
-      productName: json['productName'] ?? 'Unknown Product',
-      productImage: json['productImage'],
-      quantity: json['quantity'] ?? 1,
-      price: (json['unitPrice'] ?? 0).toDouble(),
+  factory VisitItem.fromJson(Map<String, dynamic> json) {
+    return VisitItem(
+      productName: json['productName'] ?? json['name'] ?? 'Unknown Product',
+      productImage: json['productImage'] ?? json['image'],
+      quantity: (json['quantity'] ?? 1).toInt(),
+      price: (json['price'] ?? 0.0).toDouble(),
     );
   }
+}
 
-  Map<String, dynamic> toJson() {
-    return {
-      'productId': productId,
-      'productName': productName,
-      'productImage': productImage,
-      'quantity': quantity,
-      'unitPrice': price,
-    };
-  }
+// For backward compatibility with your existing code
+extension VisitRequestExtension on VisitRequest {
+  String get orderId => id;
+  String get formattedAcceptedDate => formattedRequestDate;
+  String get formattedRequestedDate => formattedRequestDate;
 }
