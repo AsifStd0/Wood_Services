@@ -8,10 +8,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    // Setup GetIt dependency injection
     await setupLocator();
-
-    // Check auth status BEFORE running app
     await checkAuthStatus();
 
     // Run app with all providers

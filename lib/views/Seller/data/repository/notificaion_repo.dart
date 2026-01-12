@@ -1,6 +1,6 @@
 // repositories/notification_repository.dart
 
-import 'package:wood_service/views/Seller/data/view_models/seller_notificaion_model.dart';
+import 'package:wood_service/views/Seller/data/models/seller_notificaion_model.dart';
 
 abstract class NotificationRepository {
   Future<List<SellerNotificaionModel>> getNotifications();

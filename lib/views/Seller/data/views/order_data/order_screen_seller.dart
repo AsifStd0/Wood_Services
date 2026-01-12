@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
-import 'package:wood_service/views/Seller/data/views/order_data/order_model.dart';
+import 'package:wood_service/views/Seller/data/models/order_model.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
-import 'package:wood_service/views/Seller/data/views/order_data/orders_widgets.dart';
 
 class OrdersScreenSeller extends StatefulWidget {
   const OrdersScreenSeller({super.key});

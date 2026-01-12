@@ -19,15 +19,11 @@ class SellerAuthService {
   SellerAuthService(this._dio, this._localStorageService);
 
   // ========== AUTH STATUS ==========
-  Future<bool> isLoggedIn() async {
+  Future<bool> checkSellerToken() async {
     try {
       final token = await _localStorageService.getSellerToken();
-      final sellerData = await _localStorageService.getSellerData();
 
-      return token != null &&
-          token.isNotEmpty &&
-          sellerData != null &&
-          sellerData.isNotEmpty;
+      return token != null && token.isNotEmpty;
     } catch (e) {
       log('Error checking login status: $e');
       return false;
@@ -56,6 +52,20 @@ class SellerAuthService {
     await _localStorageService.saveSellerLoginStatus(true);
   }
 
+  SellerModel _ensureSellerHasId(
+    String token,
+    Map<String, dynamic> sellerJson,
+  ) {
+    final id = _extractIdFromToken(token);
+    if (id != null &&
+        !sellerJson.containsKey('_id') &&
+        !sellerJson.containsKey('id')) {
+      sellerJson['_id'] = id;
+      sellerJson['id'] = id;
+    }
+    return SellerModel.fromJson(sellerJson);
+  }
+
   String? _extractIdFromToken(String token) {
     try {
       final parts = token.split('.');
@@ -71,20 +81,6 @@ class SellerAuthService {
       log('Failed to extract ID from token: $e');
       return null;
     }
-  }
-
-  SellerModel _ensureSellerHasId(
-    String token,
-    Map<String, dynamic> sellerJson,
-  ) {
-    final id = _extractIdFromToken(token);
-    if (id != null &&
-        !sellerJson.containsKey('_id') &&
-        !sellerJson.containsKey('id')) {
-      sellerJson['_id'] = id;
-      sellerJson['id'] = id;
-    }
-    return SellerModel.fromJson(sellerJson);
   }
 
   // ========== REGISTER ==========
@@ -349,97 +345,3 @@ class SellerAuthData {
 
   SellerAuthData({required this.seller, required this.token, this.expiresAt});
 }
-
-
-
-  // // ========== FORGOT PASSWORD ==========
-  // Future<Either<Failure, void>> forgotPassword(String email) async {
-  //   try {
-  //     log('🔐 Sending password reset request for: $email');
-
-  //     final response = await _dio.post(
-  //       '/api/seller/auth/forgot-password',
-  //       data: {'email': email.trim()},
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       log('✅ Password reset email sent to: $email');
-  //       return const Right(null);
-  //     } else {
-  //       return Left(ServerFailure('Failed to send reset email'));
-  //     }
-  //   } on DioException catch (e) {
-  //     log('❌ Dio error during password reset: ${e.message}');
-  //     return Left(NetworkFailure('Network error: ${e.message}'));
-  //   } catch (e) {
-  //     log('❌ Unexpected error: $e');
-  //     return Left(UnknownFailure('Unexpected error: $e'));
-  //   }
-  // }
-
-  // // ========== RESET PASSWORD ==========
-  // Future<Either<Failure, void>> resetPassword({
-  //   required String token,
-  //   required String newPassword,
-  // }) async {
-  //   try {
-  //     log('🔐 Resetting password...');
-
-  //     final response = await _dio.post(
-  //       '/api/seller/auth/reset-password',
-  //       data: {'token': token, 'newPassword': newPassword},
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       log('✅ Password reset successfully');
-  //       return const Right(null);
-  //     } else {
-  //       return Left(ServerFailure('Failed to reset password'));
-  //     }
-  //   } on DioException catch (e) {
-  //     log('❌ Dio error during password reset: ${e.message}');
-  //     return Left(NetworkFailure('Network error: ${e.message}'));
-  //   } catch (e) {
-  //     log('❌ Unexpected error: $e');
-  //     return Left(UnknownFailure('Unexpected error: $e'));
-  //   }
-  // }
-
-  // // ========== REFRESH TOKEN ==========
-  // Future<Either<Failure, String>> refreshToken() async {
-  //   try {
-  //     log('🔄 Refreshing token...');
-
-  //     final currentToken = await _localStorageService.getSellerToken();
-  //     if (currentToken == null) {
-  //       return Left(AuthFailure('No token found'));
-  //     }
-
-  //     final response = await _dio.post(
-  //       '/api/seller/auth/refresh-token',
-  //       data: {'token': currentToken},
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       final newToken = response.data['token'];
-  //       if (newToken == null) {
-  //         return Left(AuthFailure('Invalid response from server'));
-  //       }
-
-  //       // Save new token
-  //       await _localStorageService.saveSellerToken(newToken);
-  //       log('✅ Token refreshed successfully');
-
-  //       return Right(newToken);
-  //     } else {
-  //       return Left(AuthFailure('Failed to refresh token'));
-  //     }
-  //   } on DioException catch (e) {
-  //     log('❌ Dio error during token refresh: ${e.message}');
-  //     return Left(NetworkFailure('Network error: ${e.message}'));
-  //   } catch (e) {
-  //     log('❌ Unexpected error: $e');
-  //     return Left(UnknownFailure('Unexpected error: $e'));
-  //   }
-  // }
-

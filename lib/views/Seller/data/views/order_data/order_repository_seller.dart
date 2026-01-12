@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:wood_service/app/config.dart';
 import 'package:wood_service/core/services/seller_local_storage_service.dart';
-import 'package:wood_service/views/Seller/data/views/order_data/order_model.dart';
+import 'package:wood_service/views/Seller/data/models/order_model.dart';
 
 abstract class OrderRepository {
   Future<List<OrderModelSeller>> getOrders({String? status, String? type});

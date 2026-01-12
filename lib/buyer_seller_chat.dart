@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_provider.dart';
 import 'package:wood_service/chats/Buyer/buyer_outer_messages_screen.dart';
-import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_outer.dart';
-import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_provider.dart';
+import 'package:wood_service/chats/Seller/seller_chat_outer.dart';
+import 'package:wood_service/chats/Seller/seller_chat_provider.dart';
 
 class ChatBuyer extends StatefulWidget {
   const ChatBuyer({super.key});

@@ -1,10 +1,5 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/core/services/buyer_local_storage_service.dart';
-import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_auth_services.dart';
-import 'package:wood_service/views/Seller/data/services/seller_auth.dart';
 
 // Global auth state
 bool isSellerLoggedInCheck = false;
@@ -16,17 +11,15 @@ Future<Map<String, dynamic>> checkAuthStatus() async {
     log('🔐 ========== CHECKING AUTH STATUS ==========');
 
     // Check seller
-    final sellerAuth = locator<SellerAuthService>();
-    isSellerLoggedInCheck = await sellerAuth.isLoggedIn();
+    isSellerLoggedInCheck = await locator<SellerAuthService>()
+        .checkSellerToken();
 
-    // Check buyer
-    final buyerAuth = locator<BuyerAuthService>();
-    isBuyerLoggedInCheck = await buyerAuth.isBuyerLoggedIn();
+    isBuyerLoggedInCheck = await locator<BuyerAuthService>().isBuyerLoggedIn();
 
     // ✅ If buyer is logged in, check if data is complete
     if (isBuyerLoggedInCheck) {
-      final buyerStorage = locator<BuyerLocalStorageService>();
-      final buyerData = await buyerStorage.getBuyerData();
+      final buyerData = await locator<BuyerLocalStorageService>()
+          .getBuyerData();
 
       if (buyerData != null) {
         log('🔍 Fields: -------- 22222 ${buyerData.values.toList()}');
@@ -43,12 +36,14 @@ Future<Map<String, dynamic>> checkAuthStatus() async {
 
         if (missingFields.isNotEmpty) {
           // Try to refresh data
-          final refreshed = await buyerAuth.refreshBuyerData();
+          final refreshed = await locator<BuyerAuthService>()
+              .refreshBuyerData();
           if (refreshed) {
             log('✅ Successfully refreshed buyer data');
 
             // Get the fresh data
-            final freshData = await buyerStorage.getBuyerData();
+            final freshData = await locator<BuyerLocalStorageService>()
+                .getBuyerData();
             if (freshData != null) {
               log('✅ Fresh data loaded with ${freshData.length} fields');
             }

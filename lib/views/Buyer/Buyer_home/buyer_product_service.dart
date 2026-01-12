@@ -8,8 +8,8 @@ import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 
 class BuyerProductService {
   static const String baseUrlProducts =
-      'http://10.0.20.221:5001/api/buyer/products';
-  static const String baseUrl = 'http://10.0.20.221:5001/api/buyer/shops';
+      'http://192.168.18.107:5001/api/buyer/products';
+  static const String baseUrl = 'http://192.168.18.107:5001/api/buyer/shops';
 
   final BuyerLocalStorageService _storage = locator<BuyerLocalStorageService>();
 

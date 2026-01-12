@@ -379,7 +379,7 @@ class ProductActionButtons extends StatelessWidget {
           Expanded(
             child: CustomButtonUtils.login(
               height: 45,
-              padding: EdgeInsets.all(0),
+              // padding: EdgeInsets.all(0),
               title: cartViewModel.isProductInCart(product.id)
                   ? 'Added to Cart'
                   : 'Add to Cart',
@@ -430,7 +430,7 @@ class ProductActionButtons extends StatelessWidget {
           Expanded(
             child: CustomButtonUtils.login(
               height: 45,
-              padding: EdgeInsets.all(0),
+              // padding: EdgeInsets.all(0),
               title: 'Buy Now',
               backgroundColor: AppColors.brightOrange,
               borderRadius: 6,

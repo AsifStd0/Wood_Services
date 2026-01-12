@@ -10,7 +10,6 @@ class CustomButton extends StatelessWidget {
   const CustomButton({
     super.key,
     required this.onPressed,
-    this.onLongPress,
     required this.child,
     this.type = ButtonType.primary,
     this.size = ButtonSize.medium,
@@ -27,13 +26,10 @@ class CustomButton extends StatelessWidget {
     this.borderColor,
     this.hapticFeedback = true,
     this.elevation,
-    this.shadowColor,
-    this.gradient,
     this.borderWidth = 1.0,
   });
 
   final VoidCallback? onPressed;
-  final VoidCallback? onLongPress;
   final Widget child;
   final ButtonType type;
   final ButtonSize size;
@@ -50,8 +46,6 @@ class CustomButton extends StatelessWidget {
   final Color? borderColor;
   final bool hapticFeedback;
   final double? elevation;
-  final Color? shadowColor;
-  final Gradient? gradient;
   final double borderWidth;
 
   bool get _isEnabled => !disabled && !isLoading && onPressed != null;
@@ -68,7 +62,7 @@ class CustomButton extends StatelessWidget {
         return Colors.transparent;
       case ButtonType.textButton:
         return Colors.transparent;
-      case ButtonType buyButton:
+      case ButtonType.buyButton:
         return AppColors.yellowButton;
     }
   }
@@ -86,7 +80,7 @@ class CustomButton extends StatelessWidget {
       case ButtonType.textButton:
         return Theme.of(context).primaryColor;
       case ButtonType.buyButton:
-        return AppColors.yellowButton;
+        return AppColors.black;
     }
   }
 
@@ -115,7 +109,7 @@ class CustomButton extends StatelessWidget {
       case ButtonType.textButton:
         return Colors.transparent;
       case ButtonType.buyButton:
-        return AppColors.yellowButton;
+        return AppColors.yellowButton.withOpacity(0.5);
     }
   }
 
@@ -128,7 +122,7 @@ class CustomButton extends StatelessWidget {
       case ButtonType.textButton:
         return AppColors.grey.withOpacity(0.7);
       case ButtonType.buyButton:
-        return AppColors.yellowButton;
+        return AppColors.black.withOpacity(0.7);
     }
   }
 
@@ -142,7 +136,7 @@ class CustomButton extends StatelessWidget {
       case ButtonType.textButton:
         return Colors.transparent;
       case ButtonType.buyButton:
-        return AppColors.yellowButton;
+        return AppColors.yellowButton.withOpacity(0.5);
     }
   }
 
@@ -219,13 +213,6 @@ class CustomButton extends StatelessWidget {
     onPressed?.call();
   }
 
-  void _handleLongPress() {
-    if (hapticFeedback) {
-      HapticFeedback.mediumImpact();
-    }
-    onLongPress?.call();
-  }
-
   @override
   Widget build(BuildContext context) {
     final backgroundColor = _isEnabled
@@ -246,18 +233,12 @@ class CustomButton extends StatelessWidget {
       height: height,
       child: ElevatedButton(
         onPressed: _isEnabled ? _handlePress : null,
-        onLongPress: _isEnabled && onLongPress != null
-            ? _handleLongPress
-            : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: gradient != null
-              ? Colors.transparent
-              : backgroundColor,
+          backgroundColor: backgroundColor,
           foregroundColor: foregroundColor,
           disabledBackgroundColor: _getDisabledBackgroundColor(context),
           disabledForegroundColor: _getDisabledForegroundColor(context),
           elevation: elevation,
-          shadowColor: shadowColor,
           padding: padding,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(borderRadius),
@@ -265,95 +246,51 @@ class CustomButton extends StatelessWidget {
           ),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-        child: Container(
-          decoration: gradient != null
-              ? BoxDecoration(
-                  gradient: gradient,
-                  borderRadius: BorderRadius.circular(borderRadius),
-                )
-              : null,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Content
-              Opacity(
-                opacity: isLoading ? 0.0 : 1.0,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (prefixIcon != null) ...[
-                      prefixIcon!,
-                      const SizedBox(width: 8),
-                    ],
-                    Flexible(
-                      child: DefaultTextStyle(
-                        style: _getTextStyle(context),
-                        child: child,
-                      ),
-                    ),
-                    if (suffixIcon != null) ...[
-                      const SizedBox(width: 8),
-                      suffixIcon!,
-                    ],
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Opacity(
+              opacity: isLoading ? 0.0 : 1.0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (prefixIcon != null) ...[
+                    prefixIcon!,
+                    const SizedBox(width: 8),
                   ],
-                ),
-              ),
-              // Loading indicator
-              if (isLoading)
-                Positioned.fill(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        foregroundColor,
-                      ),
+                  Flexible(
+                    child: DefaultTextStyle(
+                      style: _getTextStyle(context),
+                      child: child,
                     ),
                   ),
+                  if (suffixIcon != null) ...[
+                    const SizedBox(width: 8),
+                    suffixIcon!,
+                  ],
+                ],
+              ),
+            ),
+            if (isLoading)
+              Positioned.fill(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(foregroundColor),
+                  ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
   }
 }
 
-// Utility class with static methods for common button types
 class CustomButtonUtils {
-  // "I'm Buying" and "I'm Selling" buttons
-  static CustomButton categorySelection({
-    Key? key,
-    required VoidCallback? onPressed,
-    required Widget child,
-    Color color = AppColors.blueLight,
-    bool isLoading = false,
-    bool disabled = false,
-    double? width,
-    bool hapticFeedback = true,
-  }) {
-    return CustomButton(
-      key: key,
-      onPressed: onPressed,
-      type: ButtonType.outline,
-      size: ButtonSize.large,
-      isLoading: isLoading,
-      disabled: disabled,
-      width: width ?? double.infinity,
-      height: 60, // Tall height for category buttons
-      borderRadius: 16.0, // More rounded corners
-      // padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      hapticFeedback: hapticFeedback,
-      // elevation: 2.0,
-      borderWidth: 2.0, // Thicker border
-      backgroundColor: color,
-      child: child,
-    );
-  }
-
-  // "Google" button
   static CustomButton googleSignIn({
     Key? key,
     required VoidCallback? onPressed,
@@ -377,12 +314,11 @@ class CustomButtonUtils {
       borderWidth: 1.5,
       borderColor: AppColors.greyDim,
       backgroundColor: AppColors.white,
-
       foregroundColor: Colors.black87,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.g_mobiledata, size: 24), // Placeholder icon
+          const Icon(Icons.g_mobiledata, size: 24),
           const SizedBox(width: 12),
           Text(
             'Google',
@@ -393,7 +329,6 @@ class CustomButtonUtils {
     );
   }
 
-  // "Apple" button
   static CustomButton appleSignIn({
     Key? key,
     required VoidCallback? onPressed,
@@ -406,7 +341,6 @@ class CustomButtonUtils {
       key: key,
       onPressed: onPressed,
       type: ButtonType.primary,
-      // size: ButtonSize.large,
       isLoading: isLoading,
       disabled: disabled,
       width: width ?? double.infinity,
@@ -418,12 +352,11 @@ class CustomButtonUtils {
       borderWidth: 1.5,
       borderColor: AppColors.greyDim,
       backgroundColor: AppColors.white,
-
       foregroundColor: AppColors.black,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.apple, size: 24), // Apple icon
+          const Icon(Icons.apple, size: 24),
           const SizedBox(width: 12),
           Text(
             'Apple',
@@ -440,39 +373,35 @@ class CustomButtonUtils {
 
   static CustomButton login({
     Key? key,
-    required String title,
+    String? title,
     Color? backgroundColor,
     required VoidCallback? onPressed,
     bool isLoading = false,
     bool disabled = false,
     double? width,
     bool hapticFeedback = true,
-    EdgeInsetsGeometry? padding,
     double? height,
     Color? color,
     double? borderRadius,
-    Widget? child, // ADD THIS
+    Widget? child,
   }) {
     return CustomButton(
       key: key,
       onPressed: onPressed,
       type: ButtonType.primary,
-      // size: ButtonSize.large,
       isLoading: isLoading,
       disabled: disabled,
       width: width ?? double.infinity,
       height: height ?? 50,
       backgroundColor: backgroundColor ?? AppColors.buttonColor,
       borderRadius: borderRadius ?? 15.0,
-      // padding: padding ?? EdgeInsets.symmetric(vertical: 16),
       hapticFeedback: hapticFeedback,
       elevation: 4.0,
       borderWidth: 0,
       child:
           child ??
           Text(
-            // USE CHILD IF PROVIDED, ELSE USE TITLE
-            title,
+            title ?? 'Login',
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 16,
@@ -482,54 +411,9 @@ class CustomButtonUtils {
     );
   }
 
-  static CustomButton primary({
-    Key? key,
-    required VoidCallback? onPressed,
-    VoidCallback? onLongPress,
-    required Widget child,
-    ButtonSize size = ButtonSize.medium,
-    bool isLoading = false,
-    bool disabled = false,
-    double? width,
-    double? height,
-    double? borderRadius,
-    EdgeInsetsGeometry? padding,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    bool hapticFeedback = true,
-    double? elevation,
-    Color? shadowColor,
-    double borderWidth = 1.0,
-    Color? backgroundColor = AppColors.buttonColor,
-  }) {
-    return CustomButton(
-      key: key,
-
-      onPressed: onPressed,
-      onLongPress: onLongPress,
-      type: ButtonType.primary,
-      size: size,
-      isLoading: isLoading,
-      disabled: disabled,
-      width: width,
-      height: height,
-      borderRadius: borderRadius,
-      padding: padding,
-      backgroundColor: backgroundColor,
-      prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon,
-      hapticFeedback: hapticFeedback,
-      elevation: elevation,
-      shadowColor: shadowColor,
-      borderWidth: borderWidth,
-      child: child,
-    );
-  }
-
   static CustomButton textButton({
     Key? key,
     required VoidCallback? onPressed,
-    VoidCallback? onLongPress,
     required Widget child,
     ButtonSize size = ButtonSize.medium,
     bool isLoading = false,
@@ -545,7 +429,6 @@ class CustomButtonUtils {
     return CustomButton(
       key: key,
       onPressed: onPressed,
-      onLongPress: onLongPress,
       type: ButtonType.textButton,
       size: size,
       isLoading: isLoading,
@@ -562,41 +445,40 @@ class CustomButtonUtils {
       child: child,
     );
   }
+}
 
-  static CustomButton buyButton({
-    Key? key,
-    required VoidCallback? onPressed,
-    VoidCallback? onLongPress,
-    required Widget child,
-    ButtonSize size = ButtonSize.medium,
-    bool isLoading = false,
-    bool disabled = false,
-    double? width,
-    double? height,
-    EdgeInsetsGeometry? padding,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    Color? foregroundColor,
-    bool hapticFeedback = true,
-  }) {
-    return CustomButton(
-      key: key,
-      onPressed: onPressed,
-      onLongPress: onLongPress,
-      type: ButtonType.textButton,
-      size: size,
-      isLoading: isLoading,
-      disabled: disabled,
-      width: width,
-      height: height,
-      padding: padding,
-      prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon,
-      foregroundColor: foregroundColor,
-      hapticFeedback: hapticFeedback,
-      elevation: 0,
-      borderWidth: 0,
-      child: child,
+class AuthBottomText extends StatelessWidget {
+  final String questionText; // e.g. "Don't have an account?"
+  final String actionText; // e.g. "Sign Up"
+  final VoidCallback onPressed; // action when clicked
+  // final Color questionColor;
+  // final Color actionColor;
+
+  const AuthBottomText({
+    super.key,
+    required this.questionText,
+    required this.actionText,
+    required this.onPressed,
+    // this.questionColor = Colors.grey,
+    // this.actionColor = Colors.blue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(questionText, style: TextStyle(color: AppColors.brightOrange)),
+          TextButton(
+            onPressed: onPressed,
+            child: Text(
+              actionText,
+              style: TextStyle(color: AppColors.brightOrange),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

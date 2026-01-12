@@ -967,7 +967,7 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
   String _getFullImageUrl(String? imagePath) {
     if (imagePath == null) return '';
     if (imagePath.startsWith('http')) return imagePath;
-    return 'http://10.0.20.221:5001$imagePath';
+    return 'http://192.168.18.107:5001$imagePath';
   }
 
   String _formatAddress(Map<String, dynamic>? address) {

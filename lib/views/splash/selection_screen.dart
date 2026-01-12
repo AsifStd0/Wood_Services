@@ -268,49 +268,6 @@ class _SelectionScreenState extends State<SelectionScreen>
                                   ],
                                 ),
                               ),
-                              // SizedBox(height: 10),
-                              // OutlinedButton(
-                              //   style: _outlinedButtonStyle(context),
-                              //   onPressed: () {
-                              //     Navigator.of(context).push(
-                              //       MaterialPageRoute(
-                              //         builder: (context) {
-                              //           return AdminLoginScreen();
-                              //         },
-                              //       ),
-                              //     );
-                              //     // context.push('/seller_login');
-                              //   },
-                              //   child: Row(
-                              //     mainAxisAlignment:
-                              //         MainAxisAlignment.spaceBetween,
-                              //     children: [
-                              //       Row(
-                              //         children: [
-                              //           const Icon(
-                              //             Icons.storefront_outlined,
-                              //             size: 20,
-                              //           ),
-                              //           const SizedBox(width: 10),
-                              //           Text(
-                              //             "Admin",
-                              //             style:
-                              //                 AppCustomTextStyle.buttonText(
-                              //                   context,
-                              //                 ).copyWith(
-                              //                   color: AppColors.bluePrimary,
-                              //                 ),
-                              //           ),
-                              //         ],
-                              //       ),
-                              //       const Icon(
-                              //         Icons.arrow_forward_ios,
-                              //         size: 16,
-                              //         color: AppColors.bluePrimary,
-                              //       ),
-                              //     ],
-                              //   ),
-                              // ),
                             ],
                           ),
 
@@ -318,19 +275,7 @@ class _SelectionScreenState extends State<SelectionScreen>
 
                           // small extra action (optional)
                           TextButton(
-                            onPressed: () {
-                              // // maybe show a modal or navigate to info screen
-                              // showAboutDialog(
-                              //   context: context,
-                              //   applicationName: 'FurniFind',
-                              //   applicationVersion: '1.0.0',
-                              //   children: const [
-                              //     Text(
-                              //       'Match buyers and sellers of fine furniture.',
-                              //     ),
-                              //   ],
-                              // );
-                            },
+                            onPressed: () {},
                             child: const Text('Learn more'),
                           ),
                         ],

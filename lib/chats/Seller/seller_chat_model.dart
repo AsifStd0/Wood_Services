@@ -1,8 +1,8 @@
-import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_model.dart';
+import 'package:wood_service/chats/Seller/seller_chat_model.dart';
 
 // Re-export original models for compatibility
 export 'package:wood_service/chats/Buyer/buyer_chat_model.dart'
-    show ChatParticipant, ChatAttachment, ChatStartRequest;
+    show ChatParticipant, ChatAttachment;
 
 class SellerChatRoom {
   String id;

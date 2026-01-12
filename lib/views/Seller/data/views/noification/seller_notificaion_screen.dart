@@ -1,8 +1,8 @@
 // views/notifications_screen.dart
 import 'package:flutter/material.dart';
-import 'package:wood_service/views/Seller/data/view_models/seller_notificaion_model.dart';
+import 'package:wood_service/views/Seller/data/models/seller_notificaion_model.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
-import 'package:wood_service/views/Seller/data/views/noification_model.dart/notification_provider.dart';
+import 'package:wood_service/views/Seller/data/views/noification/notification_provider.dart';
 
 class SellerNotificaionScreen extends StatefulWidget {
   const SellerNotificaionScreen({super.key});

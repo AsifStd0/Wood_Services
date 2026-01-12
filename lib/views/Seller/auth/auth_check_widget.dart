@@ -15,7 +15,9 @@ class AuthWrapper extends StatelessWidget {
       return _buildLoadingScreen();
     }
 
-    return authProvider.isLoggedIn ? MainSellerScreen() : OnboardingScreen();
+    return authProvider.checkSellerToken
+        ? MainSellerScreen()
+        : OnboardingScreen();
   }
 
   Widget _buildLoadingScreen() {

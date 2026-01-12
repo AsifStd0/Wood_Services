@@ -61,12 +61,39 @@ class VisitRequest {
   });
 
   factory VisitRequest.fromJson(Map<String, dynamic> json) {
+    // Handle buyer data
+    Map<String, dynamic> buyerData = {};
+
+    if (json['buyer'] is Map) {
+      buyerData = Map<String, dynamic>.from(json['buyer']);
+
+      // Extract name from buyer data
+      if (!buyerData.containsKey('name') && json.containsKey('buyerName')) {
+        buyerData['name'] = json['buyerName'];
+      }
+      if (!buyerData.containsKey('email') && json.containsKey('buyerEmail')) {
+        buyerData['email'] = json['buyerEmail'];
+      }
+    } else {
+      // Fallback to individual fields
+      buyerData = {
+        'name': json['buyerName'] ?? 'Unknown Buyer',
+        'email': json['buyerEmail'] ?? '',
+        'phone': json['buyerPhone'] ?? '',
+      };
+    }
+
+    // Handle profile image - ensure it's properly structured
+    final profileImage = buyerData['profileImage'];
+    if (profileImage is String) {
+      // If it's a string, convert to map
+      buyerData['profileImage'] = {'url': profileImage};
+    }
+
     return VisitRequest(
       id: json['_id'] ?? json['id'] ?? '',
       requestId: json['_id'] ?? json['id'] ?? '',
-      buyer: json['buyer'] is Map
-          ? Map<String, dynamic>.from(json['buyer'])
-          : <String, dynamic>{},
+      buyer: buyerData,
       seller: json['seller'] is Map
           ? Map<String, dynamic>.from(json['seller'])
           : <String, dynamic>{},
@@ -77,28 +104,7 @@ class VisitRequest {
           : DateTime.parse(
               json['createdAt'] ?? DateTime.now().toString(),
             ).toLocal(),
-      preferredDate: json['preferredDate'] != null
-          ? DateTime.parse(json['preferredDate']).toLocal()
-          : null,
-      preferredTime: json['preferredTime'],
-      sellerResponse: json['sellerResponse'] is Map
-          ? Map<String, dynamic>.from(json['sellerResponse'])
-          : null,
-      visitDate: json['visitDate'] != null
-          ? DateTime.parse(json['visitDate']).toLocal()
-          : null,
-      visitTime: json['visitTime'],
-      duration: json['duration'],
-      location: json['location'],
-      instructions: json['instructions'],
-      items: json['items'] is List
-          ? (json['items'] as List)
-                .map((item) => VisitItem.fromJson(item))
-                .toList()
-          : [],
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt']).toLocal()
-          : null,
+
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt']).toLocal()
           : null,
@@ -166,7 +172,15 @@ class VisitRequest {
   }
 
   String get buyerProfileImage {
-    return buyer['profileImage'] ?? buyer['avatar'] ?? '';
+    final profileImage = buyer['profileImage'];
+
+    if (profileImage is Map<String, dynamic>) {
+      return profileImage['url'] ?? profileImage['path'] ?? '';
+    } else if (profileImage is String) {
+      return profileImage;
+    }
+
+    return '';
   }
 
   String get sellerName {

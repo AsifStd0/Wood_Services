@@ -2,9 +2,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_model.dart';
-import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_model.dart';
-import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_service.dart';
-import 'package:wood_service/chats/Seller/new_seller_chat/seller_socket_service.dart';
+import 'package:wood_service/chats/Seller/seller_chat_model.dart';
+import 'package:wood_service/chats/Seller/seller_chat_service.dart';
+import 'package:wood_service/chats/Seller/seller_socket_service.dart';
 import 'package:wood_service/core/services/seller_local_storage_service.dart';
 
 class SellerChatProvider extends ChangeNotifier {

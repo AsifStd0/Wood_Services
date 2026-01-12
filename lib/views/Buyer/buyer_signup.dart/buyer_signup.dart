@@ -436,13 +436,10 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
         if (errorWidget != null) errorWidget,
         if (successWidget != null) successWidget,
         CustomButtonUtils.login(
-          padding: EdgeInsets.all(0),
           title: 'Complete Registration',
           backgroundColor: AppColors.brightOrange,
           onPressed: () async {
-            // Hide keyboard
             FocusScope.of(context).unfocus();
-            // Submit registration
             final result = await provider.registerBuyer();
 
             if (result['success'] == true) {

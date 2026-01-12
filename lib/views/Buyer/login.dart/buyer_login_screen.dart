@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/login.dart/auth_provider.dart';
-import 'package:wood_service/widgets/auth_button_txt.dart';
 import 'package:wood_service/widgets/custom_text_style.dart';
 
 class BuyerLoginScreen extends StatefulWidget {

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Seller/signup.dart/seller_signup_provider.dart';
 import 'package:wood_service/views/Seller/signup.dart/signup_widget.dart';
-import 'package:wood_service/widgets/auth_button_txt.dart';
 
 class SellerSignupScreen extends StatelessWidget {
   const SellerSignupScreen({super.key});
@@ -53,7 +52,7 @@ class SellerSignupScreen extends StatelessWidget {
 
     return CustomButtonUtils.login(
       title: 'Register Seller',
-      padding: EdgeInsets.all(0),
+      // padding: EdgeInsets.all(0),
       backgroundColor: AppColors.brightOrange,
       onPressed: viewModel.isLoading ? null : () => _handleSubmission(context),
     );

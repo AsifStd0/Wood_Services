@@ -118,16 +118,16 @@ class SelllerSettingProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final isLoggedIn = await _authService.isLoggedIn();
+      final checkSellerToken = await _authService.checkSellerToken();
 
-      if (!isLoggedIn) {
+      if (!checkSellerToken) {
         log('⚠️ Seller not logged in');
         _hasData = false;
         return;
       }
 
       final seller = await _authService.getCurrentSeller();
-      log('seller. seller seller seller ----- ${seller.toString()}');
+      // log('seller. seller seller seller ----- ${seller.toString()}');
 
       if (seller != null) {
         // Extract data from seller model

@@ -1,6 +1,6 @@
 // view_models/notifications_view_model.dart
 import 'package:flutter/foundation.dart';
-import 'package:wood_service/views/Seller/data/view_models/seller_notificaion_model.dart';
+import 'package:wood_service/views/Seller/data/models/seller_notificaion_model.dart';
 
 enum NotificationType { all, unread, visits, contracts }
 

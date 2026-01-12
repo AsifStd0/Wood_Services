@@ -3,7 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/chats/Seller/new_seller_chat/seller_chat_provider.dart';
+import 'package:wood_service/chats/Seller/seller_chat_provider.dart';
 import 'package:wood_service/chats/message_bubble.dart' show MessageBubble;
 import 'package:wood_service/core/theme/app_colors.dart';
 

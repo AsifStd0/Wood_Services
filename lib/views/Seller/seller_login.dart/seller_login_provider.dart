@@ -18,7 +18,7 @@ class SellerAuthProvider extends ChangeNotifier {
   String? _successMessage;
 
   // Getters
-  bool get isLoggedIn => _isLoggedIn;
+  bool get checkSellerToken => _isLoggedIn;
   bool get isLoading => _isLoading;
   bool get obscurePassword => _obscurePassword;
   String? get errorMessage => _errorMessage;
@@ -37,7 +37,7 @@ class SellerAuthProvider extends ChangeNotifier {
     _setLoading(true);
 
     try {
-      _isLoggedIn = await _authService.isLoggedIn();
+      _isLoggedIn = await _authService.checkSellerToken();
       log(
         _isLoggedIn ? '✅ Seller is logged in' : '🔐 No active seller session',
       );
@@ -136,7 +136,7 @@ class SellerAuthProvider extends ChangeNotifier {
   // ✅ FIX 1: Add this method for checking existing login
   Future<bool> checkExistingLogin() async {
     try {
-      return await _authService.isLoggedIn();
+      return await _authService.checkSellerToken();
     } catch (e) {
       log('❌ Error checking existing login: $e');
       return false;
@@ -279,7 +279,7 @@ class SellerAuthProvider extends ChangeNotifier {
 //   // Check if seller is already logged in
 //   Future<bool> checkExistingLogin() async {
 //     try {
-//       return await _sellerAuthService.isLoggedIn();
+//       return await _sellerAuthService.checkSellerToken();
 //     } catch (e) {
 //       log('❌ Error checking login status: $e');
 //       return false;

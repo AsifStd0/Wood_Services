@@ -1,5 +1,5 @@
 // models/seller_notification_model.dart
-import 'package:wood_service/views/Seller/data/views/noification_model.dart/notification_provider.dart';
+import 'package:wood_service/views/Seller/data/views/noification/notification_provider.dart';
 
 class SellerNotificaionModel {
   final String id;

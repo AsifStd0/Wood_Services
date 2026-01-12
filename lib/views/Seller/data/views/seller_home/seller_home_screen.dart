@@ -1,7 +1,6 @@
 // screens/seller/seller_home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/views/Seller/data/models/visit_request_model.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/view_request_provider.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/visit_repo/seller_home_screen_widget.dart';
 // import 'package:wood_service/views/Seller/data/views/seller_home/visit_repository.dart';
@@ -32,22 +31,13 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
         title: 'Visit Requests',
         showBackButton: false,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => _showVisitSettings(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {
-              // Navigate to notifications
-            },
-          ),
+          IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
         ],
       ),
       body: Consumer<VisitRequestsViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.isLoading && viewModel.visitRequests.isEmpty) {
-            return _buildLoadingState();
+            return Center(child: CircularProgressIndicator());
           }
 
           if (viewModel.hasError) {
@@ -58,7 +48,6 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
             children: [
               // Header with Stats
               _buildHeaderStats(viewModel),
-
               // Filter Tabs
               _buildFilterTabs(viewModel),
 
@@ -69,10 +58,6 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
         },
       ),
     );
-  }
-
-  Widget _buildLoadingState() {
-    return const Center(child: CircularProgressIndicator());
   }
 
   Widget _buildErrorState(VisitRequestsViewModel viewModel) {
@@ -100,6 +85,7 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
   Widget _buildHeaderStats(VisitRequestsViewModel viewModel) {
     return Container(
       width: double.infinity,
+      padding: EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -118,7 +104,7 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
             '${viewModel.totalVisits}',
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 48,
+              fontSize: 42,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -126,7 +112,7 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
             'Total Visit Requests',
             style: TextStyle(color: Colors.white, fontSize: 14),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
 
           // Stats row
           Row(
@@ -200,18 +186,10 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
 
   Widget _buildFilterTabs(VisitRequestsViewModel viewModel) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(4),
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -327,12 +305,15 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
                     ],
                   ),
                 ),
-                VisitRequestCard(visitRequest: request),
+                VisitRequestCard(
+                  visitRequest: request,
+                  viewModel: viewModel,
+                ), // Pass viewModel
               ],
             );
           }
 
-          return VisitRequestCard(visitRequest: request);
+          return VisitRequestCard(visitRequest: request, viewModel: viewModel);
         },
       ),
     );
@@ -386,53 +367,6 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.orange.shade100),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Quick Test:',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.orange.shade800,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '1. Open buyer app on another device\n'
-                    '2. Search for your shop\n'
-                    '3. Click "Request Visit"\n'
-                    '4. Check back here',
-                    style: TextStyle(
-                      color: Colors.orange.shade700,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () => viewModel.loadVisitRequests(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryColor,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Refresh'),
-                ),
-              ],
-            ),
           ],
         ),
       ),
@@ -457,287 +391,4 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
       ),
     );
   }
-
-  void _showVisitSettings(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Visit Settings'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Configure your visit preferences:'),
-            SizedBox(height: 16),
-            ListTile(
-              leading: Icon(Icons.access_time),
-              title: Text('Visit Hours'),
-              subtitle: Text('9:00 AM - 6:00 PM'),
-            ),
-            ListTile(
-              leading: Icon(Icons.calendar_today),
-              title: Text('Visit Days'),
-              subtitle: Text('Monday - Saturday'),
-            ),
-            ListTile(
-              leading: Icon(Icons.timer),
-              title: Text('Duration'),
-              subtitle: Text('1 hour per visit'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: Implement settings update
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Settings updated'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
 }
-// class SellerHomeScreen extends StatefulWidget {
-//   const SellerHomeScreen({super.key});
-
-//   @override
-//   State<SellerHomeScreen> createState() => _SellerHomeScreenState();
-// }
-
-// class _SellerHomeScreenState extends State<SellerHomeScreen> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: const Color(0xFFF8FAFC),
-//       appBar: CustomAppBar(
-//         title: 'Visit Requests',
-//         showBackButton: false,
-//         actions: [
-//           IconButton(
-//             icon: const Icon(Icons.notifications),
-//             onPressed: () {
-//               // Navigator.of(context).push(
-//               //   MaterialPageRoute(
-//               //     builder: (_) => SellerNotificationScreen(),
-//               //   ),
-//               // );
-//             },
-//           ),
-//         ],
-//       ),
-//       body: Consumer<VisitRequestsViewModel>(
-//         builder: (context, viewModel, child) {
-//           if (viewModel.isLoading) {
-//             return _buildLoadingState();
-//           }
-
-//           if (viewModel.hasError) {
-//             return _buildErrorState(viewModel);
-//           }
-
-//           return Column(
-//             children: [
-//               // Header with Stats
-//               _buildHeaderStats(viewModel),
-
-//               // Filter Tabs
-//               _buildFilterTabs(viewModel),
-
-//               // Visit Requests List
-//               Expanded(child: _buildVisitList(viewModel)),
-//             ],
-//           );
-//         },
-//       ),
-//     );
-//   }
-
-//   Widget _buildLoadingState() {
-//     return const Center(child: CircularProgressIndicator());
-//   }
-
-//   Widget _buildErrorState(VisitRequestsViewModel viewModel) {
-//     return Center(
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           const Icon(Icons.error_outline, size: 64, color: Colors.red),
-//           const SizedBox(height: 16),
-//           Text(
-//             viewModel.errorMessage,
-//             style: const TextStyle(color: Colors.red),
-//             textAlign: TextAlign.center,
-//           ),
-//           const SizedBox(height: 16),
-//           ElevatedButton(
-//             onPressed: () => viewModel.loadVisitRequests(),
-//             child: const Text('Retry'),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildHeaderStats(VisitRequestsViewModel viewModel) {
-//     return Container(
-//       width: double.infinity,
-//       padding: const EdgeInsets.all(14),
-//       decoration: BoxDecoration(
-//         gradient: AppColors.primaryGradient,
-//         borderRadius: const BorderRadius.only(
-//           bottomLeft: Radius.circular(32),
-//           bottomRight: Radius.circular(32),
-//         ),
-//       ),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Row(
-//             mainAxisAlignment: MainAxisAlignment.spaceAround,
-//             children: [
-//               _buildStatItem(
-//                 'Total',
-//                 viewModel.totalVisits.toString(),
-//                 Icons.assignment_rounded,
-//                 const Color(0xFFFFD93D),
-//               ),
-//               _buildStatItem(
-//                 'Pending',
-//                 viewModel.pendingVisits.toString(),
-//                 Icons.pending_actions_rounded,
-//                 const Color(0xFF6BCF7F),
-//               ),
-//               _buildStatItem(
-//                 'Accepted',
-//                 viewModel.acceptedVisits.toString(),
-//                 Icons.verified_rounded,
-//                 const Color(0xFF4D96FF),
-//               ),
-//             ],
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildStatItem(
-//     String title,
-//     String value,
-//     IconData icon,
-//     Color color,
-//   ) {
-//     return Column(
-//       children: [
-//         Container(
-//           width: 50,
-//           height: 50,
-//           decoration: BoxDecoration(
-//             color: Colors.white.withOpacity(0.15),
-//             borderRadius: BorderRadius.circular(20),
-//             border: Border.all(
-//               color: Colors.white.withOpacity(0.3),
-//               width: 1.5,
-//             ),
-//           ),
-//           child: Icon(icon, color: Colors.white, size: 30),
-//         ),
-//         const SizedBox(height: 4),
-//         Text(
-//           value,
-//           style: const TextStyle(
-//             color: Colors.white,
-//             fontSize: 20,
-//             fontWeight: FontWeight.w800,
-//           ),
-//         ),
-//         const SizedBox(height: 4),
-//         Text(
-//           title,
-//           style: TextStyle(
-//             color: Colors.white.withOpacity(0.9),
-//             fontSize: 12,
-//             fontWeight: FontWeight.w500,
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-
-//   Widget _buildFilterTabs(VisitRequestsViewModel viewModel) {
-//     return Container(
-//       margin: const EdgeInsets.fromLTRB(20, 5, 10, 0),
-//       padding: const EdgeInsets.all(6),
-//       decoration: BoxDecoration(
-//         color: Colors.white,
-//         borderRadius: BorderRadius.circular(20),
-//         border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
-//       ),
-//       child: Row(
-//         children: [
-//           _buildFilterTab('Active', VisitFilter.all, viewModel),
-//           _buildFilterTab('Cancelled', VisitFilter.cancelled, viewModel),
-//           _buildFilterTab('Completed', VisitFilter.completed, viewModel),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildFilterTab(
-//     String label,
-//     VisitFilter filter,
-//     VisitRequestsViewModel viewModel,
-//   ) {
-//     final isActive = viewModel.currentFilter == filter;
-
-//     return Expanded(
-//       child: InkWell(
-//         onTap: () => viewModel.setFilter(filter),
-//         borderRadius: BorderRadius.circular(14),
-//         child: Container(
-//           padding: const EdgeInsets.symmetric(vertical: 10),
-//           decoration: BoxDecoration(
-//             color: isActive ? AppColors.primaryColor : Colors.transparent,
-//             borderRadius: BorderRadius.circular(14),
-//           ),
-//           child: Center(
-//             child: Text(
-//               label,
-//               style: TextStyle(
-//                 color: isActive ? Colors.white : Colors.grey[600],
-//                 fontWeight: FontWeight.w600,
-//                 fontSize: 13,
-//               ),
-//             ),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _buildVisitList(VisitRequestsViewModel viewModel) {
-//     final visits = viewModel.filteredVisits;
-
-//     if (visits.isEmpty) {
-//       return buildEmptyState();
-//     }
-
-//     return ListView.builder(
-//       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-//       itemCount: visits.length,
-//       itemBuilder: (context, index) {
-//         return VisitRequestCard(visitRequest: visits[index]);
-//       },
-//     );
-//   }
-// }

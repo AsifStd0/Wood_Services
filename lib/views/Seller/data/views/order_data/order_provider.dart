@@ -1,6 +1,6 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:wood_service/views/Seller/data/views/order_data/order_model.dart';
+import 'package:wood_service/views/Seller/data/models/order_model.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_repository_seller.dart';
 
 class OrdersViewModel with ChangeNotifier {
