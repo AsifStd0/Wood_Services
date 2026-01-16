@@ -3,12 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_provider.dart';
 
 class FavoriteButton extends StatefulWidget {
-  final String productId;
+  final String productId; // Can be serviceId or productId (same value)
   final bool initialIsFavorited;
 
   const FavoriteButton({
     super.key,
-    required this.productId,
+    required this.productId, // This is actually serviceId in the new API
     this.initialIsFavorited = false,
   });
 
@@ -30,11 +30,15 @@ class _FavoriteButtonState extends State<FavoriteButton> {
   Widget build(BuildContext context) {
     return Consumer<FavoriteProvider>(
       builder: (context, favoriteProvider, child) {
-        // Get current favorite status
+        // Get current favorite status from provider (syncs with server)
         final providerStatus = favoriteProvider.isProductFavorited(
           widget.productId,
         );
-        final isFavorited = providerStatus ?? _isFavorited;
+        // Use provider status, but sync local state
+        if (providerStatus != _isFavorited) {
+          _isFavorited = providerStatus;
+        }
+        final isFavorited = providerStatus;
         final isLoading = favoriteProvider.isLoading || _isLoading;
 
         return GestureDetector(

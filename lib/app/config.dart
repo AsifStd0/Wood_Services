@@ -5,7 +5,7 @@ class Config {
   static const Environment currentEnvironment = Environment.development;
 
   // Environment-based URLs
-  static const String _devBaseUrl = "http://192.168.18.107:5001";
+  static const String _devBaseUrl = "http://3.27.171.3";
 
   static const String _prodBaseUrl = "https://api.woodservice.com";
 

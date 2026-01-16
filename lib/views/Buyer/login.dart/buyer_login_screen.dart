@@ -1,12 +1,20 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:wood_service/app/index.dart';
-import 'package:wood_service/views/Buyer/login.dart/auth_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:wood_service/core/theme/app_colors.dart';
+import 'package:wood_service/core/theme/app_text_style.dart';
+import 'package:wood_service/views/Buyer/buyer_main/buyer_main.dart';
+import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_signup.dart';
+import 'package:wood_service/views/Buyer/forgot_password/forgot_password.dart';
+import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
+import 'package:wood_service/views/Seller/main_seller_screen.dart';
+import 'package:wood_service/widgets/custom_button.dart';
 import 'package:wood_service/widgets/custom_text_style.dart';
+import 'package:wood_service/widgets/custom_textfield.dart';
 
 class BuyerLoginScreen extends StatefulWidget {
-  const BuyerLoginScreen({super.key});
+  final String role;
+
+  const BuyerLoginScreen({super.key, required this.role});
 
   @override
   State<BuyerLoginScreen> createState() => _BuyerLoginScreenState();
@@ -15,21 +23,9 @@ class BuyerLoginScreen extends StatefulWidget {
 class _BuyerLoginScreenState extends State<BuyerLoginScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  final FocusNode _emailFocusNode = FocusNode();
-  final FocusNode _passwordFocusNode = FocusNode();
-
   AnimationController? _animController;
   Animation<double>? _fadeAnim;
   Animation<Offset>? _slideAnim;
-
-  // ! **********
-  // ! **********
-  // ! **********
-  // ! **********
-  // ! **********
 
   @override
   void initState() {
@@ -62,117 +58,13 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
   @override
   void dispose() {
     _animController?.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _emailFocusNode.dispose();
-    _passwordFocusNode.dispose();
-
-    // Clear any pending operations
-    _animController?.stop();
-
     super.dispose();
-  }
-
-  // ! **********
-  // ! **********
-  // ! **********
-  // ! **********
-  // ! **********
-  Future<void> _submit(
-    BuildContext context,
-    BuyerAuthProvider authProvider,
-  ) async {
-    log('done111');
-
-    // Check if widget is still mounted before proceeding
-    if (!mounted) return;
-
-    if (_formKey.currentState!.validate()) {
-      authProvider.setEmail(_emailController.text.trim());
-      authProvider.setPassword(_passwordController.text);
-
-      try {
-        // Call login
-        final result = await authProvider.login();
-
-        // Check if widget is still mounted before updating UI
-        if (!mounted) return;
-
-        if (result['success'] == true) {
-          // Login successful
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Login successful!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          // Navigate after a small delay to ensure state is stable
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => BuyerMainScreen()),
-              );
-            }
-          });
-        } else {
-          // Login failed
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(result['message'] ?? 'Login failed'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-          );
-        }
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final slide = _slideAnim;
     final fade = _fadeAnim;
-
-    Widget content = Stack(
-      children: [
-        // Main content
-        _buildCard(context),
-
-        // Bottom signup text positioned at bottom
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14.0),
-            child: AuthBottomText(
-              questionText: "Don't have an account? ",
-              actionText: "Sign Up",
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => BuyerSignupScreen()));
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-
-    if (slide != null && fade != null) {
-      content = SlideTransition(
-        position: slide,
-        child: FadeTransition(opacity: fade, child: content),
-      );
-    }
 
     return Scaffold(
       body: Container(
@@ -192,7 +84,7 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
               ),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
-                child: content,
+                child: _buildAnimatedContent(slide, fade),
               ),
             ),
           ),
@@ -201,9 +93,56 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
     );
   }
 
-  Widget _buildCard(BuildContext context) {
-    return Consumer<BuyerAuthProvider>(
-      builder: (context, authProvider, child) {
+  Widget _buildAnimatedContent(
+    Animation<Offset>? slide,
+    Animation<double>? fade,
+  ) {
+    Widget content = Stack(
+      children: [
+        // Main content
+        _buildLoginCard(),
+
+        // Bottom signup text positioned at bottom
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14.0),
+            child: AuthBottomText(
+              questionText: "Don't have an account? ",
+              actionText: "Sign Up",
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => BuyerSignupScreen(role: 'buyer'),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+
+    if (slide != null && fade != null) {
+      content = SlideTransition(
+        position: slide,
+        child: FadeTransition(opacity: fade, child: content),
+      );
+    }
+
+    return content;
+  }
+
+  Widget _buildLoginCard() {
+    return Consumer<RegisterViewModel>(
+      builder: (context, viewModel, child) {
+        // Set the login role
+        if (viewModel.loginRole != widget.role) {
+          viewModel.loginRole = widget.role;
+        }
+
         return Card(
           elevation: 18,
           shape: RoundedRectangleBorder(
@@ -215,7 +154,7 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header - Changed to buyer theme
+                // Header
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -233,7 +172,7 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                           ),
                         ],
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Icon(
                           Icons.shopping_cart_outlined,
                           color: Colors.white,
@@ -269,49 +208,57 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                   key: _formKey,
                   child: Column(
                     children: [
-                      // Email
+                      // Email Field
                       CustomTextFormField.email(
-                        controller: _emailController,
+                        controller: viewModel.loginEmailController,
                         hintText: 'Email Address',
-                        onChanged: (value) {
-                          authProvider.setEmail(value);
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Email is required';
+                          }
+                          if (!value.contains('@')) {
+                            return 'Please enter a valid email';
+                          }
+                          return null;
                         },
-                        focusNode: _emailFocusNode,
                       ),
                       const SizedBox(height: 14),
 
-                      // Password
+                      // Password Field
                       CustomTextFormField.password(
-                        controller: _passwordController,
+                        controller: viewModel.loginPasswordController,
                         hintText: 'Password',
-                        onChanged: (value) {
-                          authProvider.setPassword(value);
+                        obscureText: viewModel.obscurePassword,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Password is required';
+                          }
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters';
+                          }
+                          return null;
                         },
-                        focusNode: _passwordFocusNode,
-                        obscureText: authProvider.obscurePassword,
                         suffixIcon: IconButton(
                           icon: Icon(
-                            authProvider.obscurePassword
+                            viewModel.obscurePassword
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
                             color: AppColors.grey,
                           ),
-                          onPressed: () {
-                            authProvider.togglePasswordVisibility();
-                          },
+                          onPressed: viewModel.togglePasswordVisibility,
                         ),
                       ),
 
                       const SizedBox(height: 10),
 
-                      // Forgot password
+                      // Forgot Password
                       Align(
                         alignment: Alignment.centerRight,
                         child: CustomButtonUtils.textButton(
                           onPressed: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) => BuyerForgotPassword(),
+                                builder: (_) => const BuyerForgotPassword(),
                               ),
                             );
                           },
@@ -327,27 +274,30 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
 
                       const SizedBox(height: 6),
 
-                      // Login button
+                      // Login Button
                       SizedBox(
                         width: double.infinity,
                         child: CustomButtonUtils.login(
                           backgroundColor: AppColors.brightOrange,
-                          title: authProvider.isLoading
+                          title: viewModel.isLoginLoading
                               ? 'Logging in...'
                               : 'Login',
-                          onPressed: authProvider.isLoading
+                          onPressed: viewModel.isLoginLoading
                               ? null
-                              : () => _submit(context, authProvider),
+                              : () => _handleLogin(context, viewModel),
                         ),
                       ),
 
-                      // Show error message
-                      if (authProvider.errorMessage != null)
+                      // Error Message
+                      if (viewModel.loginErrorMessage != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 12),
                           child: Text(
-                            authProvider.errorMessage!,
-                            style: TextStyle(color: Colors.red, fontSize: 14),
+                            viewModel.loginErrorMessage!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 14,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -405,6 +355,114 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
           ),
         );
       },
+    );
+  }
+
+  Future<void> _handleLogin(
+    BuildContext context,
+    RegisterViewModel viewModel,
+  ) async {
+    // Validate form
+    if (_formKey.currentState?.validate() != true) {
+      return;
+    }
+
+    // Close keyboard
+    FocusScope.of(context).unfocus();
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // Call login
+      final result = await viewModel.login();
+
+      // Close loading
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      if (result == null) {
+        // Login failed - error is already shown in viewModel
+        return;
+      }
+
+      // Login successful
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login Successful!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        await Future.delayed(const Duration(seconds: 1));
+
+        // Navigate based on role
+        if (widget.role == 'seller') {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => MainSellerScreen()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const BuyerMainScreen()),
+          );
+        }
+      }
+    } catch (error) {
+      // Close loading
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login error: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+}
+
+// Helper widget for bottom text
+class AuthBottomText extends StatelessWidget {
+  final String questionText;
+  final String actionText;
+  final VoidCallback onPressed;
+
+  const AuthBottomText({
+    super.key,
+    required this.questionText,
+    required this.actionText,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(questionText, style: AppCustomTextStyle.inputHint(context)),
+        GestureDetector(
+          onTap: onPressed,
+          child: Text(
+            actionText,
+            style: TextStyle(
+              color: AppColors.brightOrange,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

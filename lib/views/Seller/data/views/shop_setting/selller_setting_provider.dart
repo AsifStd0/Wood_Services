@@ -1,358 +1,373 @@
+// lib/providers/selller_setting_provider.dart
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-// import 'package:wood_service/views/Seller/data/services/profile_service.dart';
-import 'package:wood_service/core/services/seller_local_storage_service.dart';
-import 'package:wood_service/views/Seller/data/services/seller_auth.dart';
+import 'package:wood_service/app/locator.dart';
+import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
+import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';
 
-// import 'package:wood_service/views/Buyer/Service/profile_service.dart';
 class SelllerSettingProvider extends ChangeNotifier {
-  final SellerAuthService _authService;
-  final SellerLocalStorageService localStorageService;
+  final UnifiedLocalStorageServiceImpl _storage;
+  final Dio _dio;
 
-  // Profile data
-  String _fullName = '';
-  String _email = '';
-  String _phone = '';
-  String _shopName = '';
-  String _businessName = '';
-  String _description = '';
-  String _address = '';
-  String _bankName = '';
-  String _accountNumber = '';
-  String _iban = '';
-  List<String> _categories = [];
+  // Profile data from UserModel
+  UserModel? _currentUser;
+  bool _isLoading = false;
+  bool _isEditing = false;
+  bool _isVerified = false;
+  String? _errorMessage;
+  String? _successMessage;
 
-  // Text Editing Controllers for ALL fields
-  late TextEditingController fullNameController;
+  // For image updates (new images selected by user)
+  File? _newShopLogo;
+  File? _newShopBanner;
+  File? _newBusinessLicense;
+  File? _newTaxCertificate;
+  File? _newIdentityProof;
+  final ImagePicker _imagePicker = ImagePicker();
+
+  // Text Editing Controllers
+  late TextEditingController nameController;
   late TextEditingController emailController;
   late TextEditingController phoneController;
   late TextEditingController shopNameController;
   late TextEditingController businessNameController;
   late TextEditingController descriptionController;
   late TextEditingController addressController;
+  late TextEditingController ibanController;
   late TextEditingController bankNameController;
   late TextEditingController accountNumberController;
-  late TextEditingController ibanController;
 
-  // Images
-  File? _shopLogo;
-  File? _shopBanner;
-  File? _businessLicense;
-  File? _taxCertificate;
-  File? _identityProof;
-
-  // State
-  bool _isLoading = false;
-  bool _isEditing = false;
-  bool _isVerified = false;
-  bool _hasData = false;
-  String? _errorMessage;
+  // Categories (not in UserModel, but used in UI)
+  List<String> _categories = [];
 
   // Getters
-  String get fullName => _fullName;
-  String get email => _email;
-  String get phone => _phone;
-  String get shopName => _shopName;
-  String get businessName => _businessName;
-  String get description => _description;
-  String get address => _address;
-  String get bankName => _bankName;
-  String get accountNumber => _accountNumber;
-  String get iban => _iban;
-  List<String> get categories => _categories;
-  File? get shopLogo => _shopLogo;
-  File? get shopBanner => _shopBanner;
-  File? get businessLicense => _businessLicense;
-  File? get taxCertificate => _taxCertificate;
-  File? get identityProof => _identityProof;
+  UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isEditing => _isEditing;
   bool get isVerified => _isVerified;
-  bool get hasData => _hasData;
   String? get errorMessage => _errorMessage;
+  String? get successMessage => _successMessage;
+  bool get hasData => _currentUser != null;
+  List<String> get categories => _categories;
+
+  // Image getters (show new image if selected, otherwise show URL from user model)
+  File? get shopLogo => _newShopLogo;
+  File? get shopBanner => _newShopBanner;
+  File? get businessLicense => _newBusinessLicense;
+  File? get taxCertificate => _newTaxCertificate;
+  File? get identityProof => _newIdentityProof;
+
+  // Convenience getters from UserModel
+  String get fullName => _currentUser?.name ?? '';
+  String get email => _currentUser?.email ?? '';
+  String get phone => _currentUser?.phone?.toString() ?? '';
+  String get shopName => _currentUser?.shopName ?? '';
+  String get businessName => _currentUser?.businessName ?? '';
+  String get description => _currentUser?.businessDescription ?? '';
+  String get address => _currentUser?.address ?? '';
+  String get iban => _currentUser?.iban ?? '';
+  String? get shopLogoUrl => _currentUser?.shopLogo;
+  String? get shopBannerUrl => _currentUser?.shopBanner;
+
+  // Note: bankName and accountNumber are not in UserModel, but kept for UI compatibility
+  String get bankName => bankNameController.text;
+  String get accountNumber => accountNumberController.text;
 
   // Constructor
-  SelllerSettingProvider({
-    required SellerAuthService authService,
-    required SellerLocalStorageService localStorageService,
-  }) : _authService = authService,
-       localStorageService = localStorageService {
-    // Initialize all controllers
+  SelllerSettingProvider({UnifiedLocalStorageServiceImpl? storage, Dio? dio})
+    : _storage = storage ?? locator<UnifiedLocalStorageServiceImpl>(),
+      _dio = dio ?? locator<Dio>() {
     _initializeControllers();
+    loadSellerData();
   }
 
   void _initializeControllers() {
-    fullNameController = TextEditingController();
+    nameController = TextEditingController();
     emailController = TextEditingController();
     phoneController = TextEditingController();
     shopNameController = TextEditingController();
     businessNameController = TextEditingController();
     descriptionController = TextEditingController();
     addressController = TextEditingController();
+    ibanController = TextEditingController();
     bankNameController = TextEditingController();
     accountNumberController = TextEditingController();
-    ibanController = TextEditingController();
   }
 
-  void _updateControllersFromData() {
-    // Update all controllers with current data
-    fullNameController.text = _fullName;
-    emailController.text = _email;
-    phoneController.text = _phone;
-    shopNameController.text = _shopName;
-    businessNameController.text = _businessName;
-    descriptionController.text = _description;
-    addressController.text = _address;
-    bankNameController.text = _bankName;
-    accountNumberController.text = _accountNumber;
-    ibanController.text = _iban;
+  void _updateControllersFromUser() {
+    if (_currentUser != null) {
+      nameController.text = _currentUser!.name;
+      emailController.text = _currentUser!.email;
+      phoneController.text = _currentUser!.phone?.toString() ?? '';
+      shopNameController.text = _currentUser!.shopName ?? '';
+      businessNameController.text = _currentUser!.businessName ?? '';
+      descriptionController.text = _currentUser!.businessDescription ?? '';
+      addressController.text = _currentUser!.address ?? '';
+      ibanController.text = _currentUser!.iban ?? '';
+      // Note: bankName and accountNumber not in UserModel, keep existing values
+    }
   }
 
-  // ========== LOAD SELLER DATA ==========
+  // Load profile data from storage
   Future<void> loadSellerData() async {
-    _isLoading = true;
-    _hasData = false;
-    _errorMessage = null;
-    notifyListeners();
-
     try {
-      final checkSellerToken = await _authService.checkSellerToken();
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
 
-      if (!checkSellerToken) {
-        log('⚠️ Seller not logged in');
-        _hasData = false;
-        return;
-      }
+      final user = _storage.getUserModel();
 
-      final seller = await _authService.getCurrentSeller();
-      // log('seller. seller seller seller ----- ${seller.toString()}');
-
-      if (seller != null) {
-        // Extract data from seller model
-        _fullName = seller.personalInfo.fullName;
-        _email = seller.personalInfo.email;
-        _phone = seller.personalInfo.phone;
-        _businessName = seller.businessInfo.businessName;
-        _shopName = seller.businessInfo.shopName;
-        _description = seller.businessInfo.description;
-        _address = seller.businessInfo.address;
-        _categories = seller.businessInfo.categories;
-        _bankName = seller.bankDetails.bankName;
-        _accountNumber = seller.bankDetails.accountNumber;
-        _iban = seller.bankDetails.iban;
-
-        // Update controllers with loaded data
-        _updateControllersFromData();
-
-        // Load images if paths exist
-        if (seller.shopBrandingImages.shopLogo != null) {
-          final logoPath = seller.shopBrandingImages.shopLogo.toString();
-          if (await File(logoPath).exists()) {
-            _shopLogo = File(logoPath);
-          }
-        }
-
-        _hasData = true;
+      if (user != null && user.role == 'seller') {
+        _currentUser = user;
+        _updateControllersFromUser();
         log('✅ Seller profile data loaded successfully!');
       } else {
-        log('❌ No seller data found');
-        _hasData = false;
+        log('⚠️ No seller profile found');
       }
     } catch (e) {
       log('❌ Error loading seller data: $e');
-      _errorMessage = 'Error loading profile: $e';
-      _hasData = false;
+      _errorMessage = 'Failed to load profile: $e';
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // ========== SETTERS ==========
-  void setFullName(String value) {
-    _fullName = value;
-    fullNameController.text = value;
-    notifyListeners();
-  }
-
-  void setEmail(String value) {
-    _email = value;
-    emailController.text = value;
-    notifyListeners();
-  }
-
-  void setPhone(String value) {
-    _phone = value;
-    phoneController.text = value;
-    notifyListeners();
-  }
-
-  void setShopName(String value) {
-    _shopName = value;
-    shopNameController.text = value;
-    notifyListeners();
-  }
-
-  void setBusinessName(String value) {
-    _businessName = value;
-    businessNameController.text = value;
-    notifyListeners();
-  }
-
-  void setDescription(String value) {
-    _description = value;
-    descriptionController.text = value;
-    notifyListeners();
-  }
-
-  void setAddress(String value) {
-    _address = value;
-    addressController.text = value;
-    notifyListeners();
-  }
-
-  void setBankName(String value) {
-    _bankName = value;
-    bankNameController.text = value;
-    notifyListeners();
-  }
-
-  void setAccountNumber(String value) {
-    _accountNumber = value;
-    accountNumberController.text = value;
-    notifyListeners();
-  }
-
-  void setIban(String value) {
-    _iban = value;
-    ibanController.text = value;
-    notifyListeners();
-  }
-
-  // ========== SAVE CHANGES ==========
-  Future<bool> saveChanges() async {
-    // Get current values from ALL controllers
-    return await updateProfile(
-      fullName: fullNameController.text,
-      email: emailController.text,
-      phone: phoneController.text,
-      shopName: shopNameController.text,
-      businessName: businessNameController.text,
-      description: descriptionController.text,
-      address: addressController.text,
-      bankName: bankNameController.text,
-      accountNumber: accountNumberController.text,
-      iban: ibanController.text,
-      categories: _categories,
-      shopLogo: _shopLogo,
-      shopBanner: _shopBanner,
-      businessLicense: _businessLicense,
-      taxCertificate: _taxCertificate,
-      identityProof: _identityProof,
-    );
-  }
-
-  // ========== EDITING STATE ==========
-  void setEditing(bool value) {
-    _isEditing = value;
-
-    if (!value) {
-      // If turning off editing, revert controllers to saved values
-      _updateControllersFromData();
-    }
-
-    notifyListeners();
-  }
-
-  // ========== DISPOSE ==========
-  void disposeControllers() {
-    fullNameController.dispose();
-    emailController.dispose();
-    phoneController.dispose();
-    shopNameController.dispose();
-    businessNameController.dispose();
-    descriptionController.dispose();
-    addressController.dispose();
-    bankNameController.dispose();
-    accountNumberController.dispose();
-    ibanController.dispose();
-  }
-
-  // ========== UPDATE PROFILE ==========
-  Future<bool> updateProfile({
-    String? fullName,
-    String? email,
-    String? phone,
-    String? shopName,
-    String? businessName,
-    String? description,
-    String? address,
-    String? bankName,
-    String? accountNumber,
-    String? iban,
-    List<String>? categories,
-    File? shopLogo,
-    File? shopBanner,
-    File? businessLicense,
-    File? taxCertificate,
-    File? identityProof,
-  }) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
+  Future<void> refreshProfile() async {
     try {
-      // Prepare update data
-      final updateData = <String, dynamic>{};
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
 
-      if (fullName != null) updateData['fullName'] = fullName;
-      if (email != null) updateData['email'] = email;
-      if (phone != null) updateData['phone'] = phone;
-      if (shopName != null) updateData['shopName'] = shopName;
-      if (businessName != null) updateData['businessName'] = businessName;
-      if (description != null) updateData['description'] = description;
-      if (address != null) updateData['address'] = address;
-      if (bankName != null) updateData['bankName'] = bankName;
-      if (accountNumber != null) updateData['accountNumber'] = accountNumber;
-      if (iban != null) updateData['iban'] = iban;
-      if (categories != null) updateData['categories'] = categories;
+      final token = _storage.getToken();
+      if (token == null || token.isEmpty) {
+        _errorMessage = 'No token available';
+        return;
+      }
 
-      // Call updateProfile method (you need to implement this in SellerAuthService)
-      final result = await _authService.updateProfile(updates: updateData);
+      final response = await _dio.get(
+        '/auth/me',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+        ),
+      );
 
-      if (result['success'] == true) {
-        // Update local state
-        if (fullName != null) _fullName = fullName;
-        if (email != null) _email = email;
-        if (phone != null) _phone = phone;
-        if (shopName != null) _shopName = shopName;
-        if (businessName != null) _businessName = businessName;
-        if (description != null) _description = description;
-        if (address != null) _address = address;
-        if (bankName != null) _bankName = bankName;
-        if (accountNumber != null) _accountNumber = accountNumber;
-        if (iban != null) _iban = iban;
-        if (categories != null) _categories = categories;
-        if (shopLogo != null) _shopLogo = shopLogo;
-        if (shopBanner != null) _shopBanner = shopBanner;
-        if (businessLicense != null) _businessLicense = businessLicense;
-        if (taxCertificate != null) _taxCertificate = taxCertificate;
-        if (identityProof != null) _identityProof = identityProof;
+      if (response.statusCode == 200) {
+        Map<String, dynamic> userData;
 
+        if (response.data['data'] != null &&
+            response.data['data']['user'] != null) {
+          userData = response.data['data']['user'] as Map<String, dynamic>;
+        } else if (response.data['user'] != null) {
+          userData = response.data['user'] as Map<String, dynamic>;
+        } else {
+          userData = response.data as Map<String, dynamic>;
+        }
+
+        log('''
+================ USER DATA =================
+${const JsonEncoder.withIndent('  ').convert(userData)}
+==========================================
+''');
+
+        final user = UserModel.fromJson(userData);
+
+        await _storage.saveUserData(user.toJson());
+        _currentUser = user;
+        _updateControllersFromUser();
+        _successMessage = 'Profile refreshed successfully';
+
+        log('✅ Profile refreshed successfully');
+      } else {
+        _errorMessage = 'Failed to refresh profile';
+      }
+    } catch (e, s) {
+      log('❌ Error refreshing profile', error: e, stackTrace: s);
+      _errorMessage = 'Failed to refresh profile: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Update profile with text data and images
+  Future<bool> saveChanges() async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      _successMessage = null;
+      notifyListeners();
+
+      final token = _storage.getToken();
+      if (token == null) {
+        _errorMessage = 'Not authenticated';
+        return false;
+      }
+
+      log('🔄 Starting profile update...');
+
+      final updates = <String, dynamic>{};
+      if (nameController.text.isNotEmpty) {
+        updates['name'] = nameController.text.trim();
+      }
+      if (emailController.text.isNotEmpty) {
+        updates['email'] = emailController.text.trim();
+      }
+      if (phoneController.text.isNotEmpty) {
+        final phoneDigits = phoneController.text.replaceAll(
+          RegExp(r'[^0-9]'),
+          '',
+        );
+        if (phoneDigits.isNotEmpty) {
+          updates['phone'] = int.tryParse(phoneDigits);
+        }
+      }
+      if (shopNameController.text.isNotEmpty) {
+        updates['shopName'] = shopNameController.text.trim();
+      }
+      if (businessNameController.text.isNotEmpty) {
+        updates['businessName'] = businessNameController.text.trim();
+      }
+      if (descriptionController.text.isNotEmpty) {
+        updates['businessDescription'] = descriptionController.text.trim();
+      }
+      if (addressController.text.isNotEmpty) {
+        updates['address'] = addressController.text.trim();
+      }
+      if (ibanController.text.isNotEmpty) {
+        updates['iban'] = ibanController.text.trim();
+      }
+      // Note: bankName and accountNumber not in UserModel, but send if needed by API
+      if (bankNameController.text.isNotEmpty) {
+        updates['bankName'] = bankNameController.text.trim();
+      }
+      if (accountNumberController.text.isNotEmpty) {
+        updates['accountNumber'] = accountNumberController.text.trim();
+      }
+
+      // Build FormData with files
+      final formData = FormData();
+
+      // Add text fields
+      updates.forEach((key, value) {
+        formData.fields.add(MapEntry(key, value.toString()));
+      });
+
+      // Add image files
+      if (_newShopLogo != null) {
+        formData.files.add(
+          MapEntry(
+            'shopLogo',
+            await MultipartFile.fromFile(
+              _newShopLogo!.path,
+              filename: 'shopLogo-${DateTime.now().millisecondsSinceEpoch}.jpg',
+            ),
+          ),
+        );
+      }
+      if (_newShopBanner != null) {
+        formData.files.add(
+          MapEntry(
+            'shopBanner',
+            await MultipartFile.fromFile(
+              _newShopBanner!.path,
+              filename:
+                  'shopBanner-${DateTime.now().millisecondsSinceEpoch}.jpg',
+            ),
+          ),
+        );
+      }
+      if (_newBusinessLicense != null) {
+        formData.files.add(
+          MapEntry(
+            'businessLicense',
+            await MultipartFile.fromFile(
+              _newBusinessLicense!.path,
+              filename:
+                  'businessLicense-${DateTime.now().millisecondsSinceEpoch}.jpg',
+            ),
+          ),
+        );
+      }
+      if (_newTaxCertificate != null) {
+        formData.files.add(
+          MapEntry(
+            'taxCertificate',
+            await MultipartFile.fromFile(
+              _newTaxCertificate!.path,
+              filename:
+                  'taxCertificate-${DateTime.now().millisecondsSinceEpoch}.jpg',
+            ),
+          ),
+        );
+      }
+      if (_newIdentityProof != null) {
+        formData.files.add(
+          MapEntry(
+            'identityProof',
+            await MultipartFile.fromFile(
+              _newIdentityProof!.path,
+              filename:
+                  'identityProof-${DateTime.now().millisecondsSinceEpoch}.jpg',
+            ),
+          ),
+        );
+      }
+
+      final response = await _dio.put(
+        '/auth/profile',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+          contentType: 'multipart/form-data',
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        Map<String, dynamic> userData;
+        if (response.data['data'] != null &&
+            response.data['data']['user'] != null) {
+          userData = response.data['data']['user'] as Map<String, dynamic>;
+        } else if (response.data['user'] != null) {
+          userData = response.data['user'] as Map<String, dynamic>;
+        } else {
+          userData = response.data as Map<String, dynamic>;
+        }
+        final user = UserModel.fromJson(userData);
+
+        await _storage.saveUserData(user.toJson());
+        _currentUser = user;
+        _updateControllersFromUser();
+        _successMessage =
+            response.data['message'] ?? 'Profile updated successfully';
         _isEditing = false;
-        log('✅ Profile updated successfully');
+        _clearNewImages();
+
+        log('✅ Profile updated successfully: ${_currentUser?.name}');
         notifyListeners();
         return true;
       } else {
-        _errorMessage = result['message'] ?? 'Update failed';
-        log('❌ Update failed: ${result['message']}');
+        _errorMessage = response.data['message'] ?? 'Failed to update profile';
         return false;
       }
+    } on DioException catch (e) {
+      log('❌ Dio error updating profile: ${e.message}');
+      _errorMessage =
+          e.response?.data['message'] ?? 'Network error: ${e.message}';
+      return false;
     } catch (e) {
-      _errorMessage = 'Update error: $e';
-      log('❌ Update error: $e');
+      log('❌ Error updating profile: $e');
+      _errorMessage = 'Failed to update profile: $e';
       return false;
     } finally {
       _isLoading = false;
@@ -360,10 +375,10 @@ class SelllerSettingProvider extends ChangeNotifier {
     }
   }
 
-  // ========== IMAGE PICKERS ==========
+  // Image pickers
   Future<void> pickShopLogo() async {
     try {
-      final image = await ImagePicker().pickImage(
+      final image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 800,
         maxHeight: 800,
@@ -371,7 +386,7 @@ class SelllerSettingProvider extends ChangeNotifier {
       );
 
       if (image != null) {
-        _shopLogo = File(image.path);
+        _newShopLogo = File(image.path);
         log('📷 Shop logo selected: ${image.path}');
         notifyListeners();
       }
@@ -384,7 +399,7 @@ class SelllerSettingProvider extends ChangeNotifier {
 
   Future<void> pickShopBanner() async {
     try {
-      final image = await ImagePicker().pickImage(
+      final image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 1200,
         maxHeight: 400,
@@ -392,7 +407,7 @@ class SelllerSettingProvider extends ChangeNotifier {
       );
 
       if (image != null) {
-        _shopBanner = File(image.path);
+        _newShopBanner = File(image.path);
         log('📷 Shop banner selected: ${image.path}');
         notifyListeners();
       }
@@ -403,17 +418,15 @@ class SelllerSettingProvider extends ChangeNotifier {
     }
   }
 
-  // ! ******/
-  // Add document picker methods
   Future<void> pickBusinessLicense() async {
     try {
-      final image = await ImagePicker().pickImage(
+      final image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 80,
       );
 
       if (image != null) {
-        _businessLicense = File(image.path);
+        _newBusinessLicense = File(image.path);
         log('📄 Business license selected: ${image.path}');
         notifyListeners();
       }
@@ -426,13 +439,13 @@ class SelllerSettingProvider extends ChangeNotifier {
 
   Future<void> pickTaxCertificate() async {
     try {
-      final image = await ImagePicker().pickImage(
+      final image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 80,
       );
 
       if (image != null) {
-        _taxCertificate = File(image.path);
+        _newTaxCertificate = File(image.path);
         log('📄 Tax certificate selected: ${image.path}');
         notifyListeners();
       }
@@ -445,13 +458,13 @@ class SelllerSettingProvider extends ChangeNotifier {
 
   Future<void> pickIdentityProof() async {
     try {
-      final image = await ImagePicker().pickImage(
+      final image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 80,
       );
 
       if (image != null) {
-        _identityProof = File(image.path);
+        _newIdentityProof = File(image.path);
         log('📄 Identity proof selected: ${image.path}');
         notifyListeners();
       }
@@ -462,87 +475,92 @@ class SelllerSettingProvider extends ChangeNotifier {
     }
   }
 
-  // ========== Enhanced logout with navigation ==========
-  Future<bool> logoutAndNavigate(BuildContext context) async {
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      await logout();
-
-      // After successful logout, navigate to login
-      // Note: This method requires BuildContext
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/seller_login', // Your login route
-          (route) => false,
-        );
-      });
-
-      return true;
-    } catch (e) {
-      _errorMessage = 'Logout failed: $e';
-      notifyListeners();
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+  // Clear new images
+  void _clearNewImages() {
+    _newShopLogo = null;
+    _newShopBanner = null;
+    _newBusinessLicense = null;
+    _newTaxCertificate = null;
+    _newIdentityProof = null;
   }
 
-  Future<bool> logout() async {
-    try {
-      // Clear all storage
-      await localStorageService.deleteSellerAuth();
-      await localStorageService.clearAll();
-
-      // Double-check everything is cleared
-      final token = await localStorageService.getSellerToken();
-      final loginStatus = await localStorageService.getSellerLoginStatus();
-
-      if (token == null && (loginStatus == null || loginStatus == false)) {
-        log('✅ Seller logged out successfully - Verified');
-        return true;
-      } else {
-        log('⚠️ Logout incomplete - retrying...');
-        // Retry once
-        await localStorageService.clearAll();
-        return true;
-      }
-    } catch (e) {
-      log('❌ Logout error: $e');
-      return false;
-    }
-  }
-
-  void setShopLogoFile(File? file) {
-    _shopLogo = file;
+  void clearShopLogo() {
+    _newShopLogo = null;
     notifyListeners();
   }
 
-  void setShopBannerFile(File? file) {
-    _shopBanner = file;
+  void clearShopBanner() {
+    _newShopBanner = null;
     notifyListeners();
   }
 
-  // ! Add setters
-  set businessLicense(File? value) {
-    _businessLicense = value;
+  void clearBusinessLicense() {
+    _newBusinessLicense = null;
     notifyListeners();
   }
 
-  set taxCertificate(File? value) {
-    _taxCertificate = value;
+  void clearTaxCertificate() {
+    _newTaxCertificate = null;
     notifyListeners();
   }
 
-  set identityProof(File? value) {
-    _identityProof = value;
+  void clearIdentityProof() {
+    _newIdentityProof = null;
     notifyListeners();
   }
-  // ! ****
 
+  // Setters (for compatibility with existing widgets)
+  void setFullName(String value) {
+    nameController.text = value;
+    notifyListeners();
+  }
+
+  void setEmail(String value) {
+    emailController.text = value;
+    notifyListeners();
+  }
+
+  void setPhone(String value) {
+    phoneController.text = value;
+    notifyListeners();
+  }
+
+  void setShopName(String value) {
+    shopNameController.text = value;
+    notifyListeners();
+  }
+
+  void setBusinessName(String value) {
+    businessNameController.text = value;
+    notifyListeners();
+  }
+
+  void setDescription(String value) {
+    descriptionController.text = value;
+    notifyListeners();
+  }
+
+  void setAddress(String value) {
+    addressController.text = value;
+    notifyListeners();
+  }
+
+  void setBankName(String value) {
+    bankNameController.text = value;
+    notifyListeners();
+  }
+
+  void setAccountNumber(String value) {
+    accountNumberController.text = value;
+    notifyListeners();
+  }
+
+  void setIban(String value) {
+    ibanController.text = value;
+    notifyListeners();
+  }
+
+  // Categories (not in UserModel, but used in UI)
   void addCategory(String category) {
     if (category.isNotEmpty && !_categories.contains(category)) {
       _categories.add(category);
@@ -555,62 +573,114 @@ class SelllerSettingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setLoading(bool value) {
-    _isLoading = value;
+  // Logout
+  Future<bool> logout() async {
+    try {
+      log('🔄 Starting logout...');
+      _isLoading = true;
+      _errorMessage = null;
+      _successMessage = null;
+      notifyListeners();
+
+      // Verify user data exists before logout
+      final userBeforeLogout = _storage.getUserModel();
+      final tokenBeforeLogout = _storage.getToken();
+      log(
+        '📊 Before logout - User: ${userBeforeLogout?.email}, Token: ${tokenBeforeLogout?.substring(0, 10)}...',
+      );
+
+      // Clear storage first
+      await _storage.logout();
+      log('🗑️ Storage cleared');
+
+      // Verify storage is cleared
+      final userAfterLogout = _storage.getUserModel();
+      final tokenAfterLogout = _storage.getToken();
+      final isLoggedInAfterLogout = _storage.isLoggedIn();
+      log(
+        '📊 After logout - User: ${userAfterLogout?.email ?? "null"}, Token: ${tokenAfterLogout ?? "null"}, IsLoggedIn: $isLoggedInAfterLogout',
+      );
+
+      // Clear local state
+      _currentUser = null;
+      _clearNewImages();
+      log('🗑️ Local state cleared');
+
+      _isLoading = false;
+      notifyListeners();
+
+      log('✅ Logout completed successfully');
+      return true;
+    } catch (e, stackTrace) {
+      log('❌ Error during logout: $e', error: e, stackTrace: stackTrace);
+      _errorMessage = 'Logout failed: $e';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Set editing mode
+  void setEditing(bool value) {
+    _isEditing = value;
+    if (!value) {
+      // If turning off editing, revert controllers to saved values
+      _updateControllersFromUser();
+      _clearNewImages();
+    }
     notifyListeners();
   }
 
+  // Clear error
   void clearError() {
     _errorMessage = null;
     notifyListeners();
   }
 
-  // ========== CLEAR FORM ==========
-  void clearForm() {
-    _fullName = '';
-    _email = '';
-    _phone = '';
-    _shopName = '';
-    _businessName = '';
-    _description = '';
-    _address = '';
-    _bankName = '';
-    _accountNumber = '';
-    _iban = '';
-    _categories.clear();
-    _shopLogo = null;
-    _shopBanner = null;
-    _isEditing = false;
-    _errorMessage = null;
-
+  // Clear success message
+  void clearSuccess() {
+    _successMessage = null;
     notifyListeners();
-    log('🧹 Form cleared');
   }
 
-  // Clear local ViewModel state
-  void clearLocalState() {
-    _fullName = '';
-    _email = '';
-    _phone = '';
-    _shopName = '';
-    _businessName = '';
-    _description = '';
-    _address = '';
-    _bankName = '';
-    _accountNumber = '';
-    _iban = '';
-    _categories.clear();
-    _shopLogo = null;
-    _shopBanner = null;
-    _isEditing = false;
-    _isVerified = false;
-    _hasData = false;
-    _errorMessage = null;
-    _isLoading = false;
-    _businessLicense = null;
-    _taxCertificate = null;
-    _identityProof = null;
+  // Legacy methods for compatibility
+  void setShopLogoFile(File? file) {
+    _newShopLogo = file;
     notifyListeners();
-    log('🧹 Local state cleared');
+  }
+
+  void setShopBannerFile(File? file) {
+    _newShopBanner = file;
+    notifyListeners();
+  }
+
+  set businessLicense(File? value) {
+    _newBusinessLicense = value;
+    notifyListeners();
+  }
+
+  set taxCertificate(File? value) {
+    _newTaxCertificate = value;
+    notifyListeners();
+  }
+
+  set identityProof(File? value) {
+    _newIdentityProof = value;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    shopNameController.dispose();
+    businessNameController.dispose();
+    descriptionController.dispose();
+    addressController.dispose();
+    ibanController.dispose();
+    bankNameController.dispose();
+    accountNumberController.dispose();
+    super.dispose();
   }
 }

@@ -86,12 +86,13 @@ class InventoryTab extends StatelessWidget {
                 child: _buildDimensionField(
                   'Length (cm)',
                   Icons.straighten_rounded,
-                  product.length?.toString() ?? '',
+                  // product.dimensions.length.toString() ?? '',
+                  product.dimensions?.length?.toString() ?? '', // ✅ FIXED
                   (value) {
                     final length = value.isEmpty
                         ? null
                         : double.tryParse(value);
-                    productProvider.updateLength(length);
+                    productProvider.updateDimensions(length: length); // ✅ FIXED
                   },
                 ),
               ),
@@ -104,10 +105,10 @@ class InventoryTab extends StatelessWidget {
                 child: _buildDimensionField(
                   'Width (cm)',
                   Icons.straighten_rounded,
-                  product.width?.toString() ?? '',
+                  product.dimensions?.width?.toString() ?? '', // ✅ FIXED
                   (value) {
                     final width = value.isEmpty ? null : double.tryParse(value);
-                    productProvider.updateWidth(width);
+                    productProvider.updateDimensions(width: width); // ✅ FIXED
                   },
                 ),
               ),
@@ -116,12 +117,12 @@ class InventoryTab extends StatelessWidget {
                 child: _buildDimensionField(
                   'Height (cm)',
                   Icons.height_rounded,
-                  product.height?.toString() ?? '',
+                  product.dimensions?.height?.toString() ?? '', // ✅ FIXED
                   (value) {
                     final height = value.isEmpty
                         ? null
                         : double.tryParse(value);
-                    productProvider.updateHeight(height);
+                    productProvider.updateDimensions(height: height); // ✅ FIXED
                   },
                 ),
               ),
@@ -135,8 +136,10 @@ class InventoryTab extends StatelessWidget {
             'Human-readable dimensions (e.g., 180cm x 90cm x 75cm)',
             'Enter dimensions',
             Icons.aspect_ratio_rounded,
-            product.dimensionSpec,
-            (value) => productProvider.updateDimensionSpec(value),
+            product.dimensions?.specification ?? '', // ✅ FIXED
+            (value) => productProvider.updateDimensions(
+              specification: value,
+            ), // ✅ FIXED
           ),
           const SizedBox(height: 70),
         ],

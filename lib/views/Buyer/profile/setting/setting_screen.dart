@@ -75,8 +75,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     BuildContext context,
     BuyerProfileViewProvider provider,
   ) {
-    final buyer = provider.currentBuyer;
-    if (buyer == null) {
+    final user = provider.currentUser;
+    if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No profile data available')),
       );
@@ -85,35 +85,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     // Create text editing controllers with current data
     final TextEditingController fullNameController = TextEditingController(
-      text: buyer.fullName,
+      text: provider.fullName,
     );
     final TextEditingController emailController = TextEditingController(
-      text: buyer.email,
-    );
-    final TextEditingController contactNameController = TextEditingController(
-      text: buyer.contactName ?? '',
+      text: provider.email,
     );
     final TextEditingController businessNameController = TextEditingController(
-      text: buyer.businessName ?? '',
+      text: provider.businessName,
     );
     final TextEditingController addressController = TextEditingController(
-      text: buyer.address ?? '',
+      text: provider.address,
     );
     final TextEditingController descriptionController = TextEditingController(
-      text: buyer.description ?? '',
-    );
-    final TextEditingController bankNameController = TextEditingController(
-      text: buyer.bankName ?? '',
+      text: provider.description,
     );
     final TextEditingController ibanController = TextEditingController(
-      text: buyer.iban ?? '',
+      text: provider.iban,
     );
 
     bool isEditing = false;
     File? tempProfileImage;
-    print(
-      'name namenamenamenamenamenamenamenamenamenamenamenamenamenamename ${buyer.bankName} ---- ${buyer.iban} &&&& ${buyer.email}',
-    );
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -190,11 +181,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     provider,
                                     fullName: fullNameController.text,
                                     email: emailController.text,
-                                    contactName: contactNameController.text,
                                     businessName: businessNameController.text,
                                     address: addressController.text,
                                     description: descriptionController.text,
-                                    bankName: bankNameController.text,
                                     iban: ibanController.text,
                                     profileImage: tempProfileImage,
                                   );
@@ -260,10 +249,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                                   fit: BoxFit.cover,
                                                 ),
                                               )
-                                            : buyer.profileImagePath != null
+                                            : provider.profileImagePath != null
                                             ? ClipOval(
                                                 child: Image.network(
-                                                  buyer.profileImagePath!,
+                                                  provider.profileImagePath!,
                                                   fit: BoxFit.cover,
                                                   errorBuilder:
                                                       (
@@ -277,9 +266,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                                                   .brown
                                                                   .shade100,
                                                           child: Text(
-                                                            buyer.fullName
-                                                                .substring(0, 1)
-                                                                .toUpperCase(),
+                                                            provider
+                                                                    .fullName
+                                                                    .isNotEmpty
+                                                                ? provider
+                                                                      .fullName
+                                                                      .substring(
+                                                                        0,
+                                                                        1,
+                                                                      )
+                                                                      .toUpperCase()
+                                                                : 'U',
                                                             style:
                                                                 const TextStyle(
                                                                   fontSize: 36,
@@ -298,9 +295,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                                 backgroundColor:
                                                     Colors.brown.shade100,
                                                 child: Text(
-                                                  buyer.fullName
-                                                      .substring(0, 1)
-                                                      .toUpperCase(),
+                                                  provider.fullName.isNotEmpty
+                                                      ? provider.fullName
+                                                            .substring(0, 1)
+                                                            .toUpperCase()
+                                                      : 'U',
                                                   style: const TextStyle(
                                                     fontSize: 36,
                                                     fontWeight: FontWeight.bold,
@@ -353,11 +352,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     isEditing: isEditing,
                                     keyboardType: TextInputType.emailAddress,
                                   ),
-                                  _buildProfileField(
-                                    label: 'Contact Name',
-                                    controller: contactNameController,
-                                    isEditing: isEditing,
-                                  ),
                                 ],
                               ),
 
@@ -392,12 +386,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 'Bank Details',
                                 Icons.account_balance_outlined,
                                 isEditing,
+
                                 [
-                                  _buildProfileField(
-                                    label: 'Bank Name',
-                                    controller: bankNameController,
-                                    isEditing: isEditing,
-                                  ),
                                   _buildProfileField(
                                     label: 'IBAN',
                                     controller: ibanController,
@@ -538,11 +528,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     BuyerProfileViewProvider provider, {
     required String fullName,
     required String email,
-    required String contactName,
     required String businessName,
     required String address,
     required String description,
-    required String bankName,
     required String iban,
     File? profileImage,
   }) async {
@@ -556,11 +544,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final success = await provider.updateProfileData(
         fullName: fullName,
         email: email,
-        contactName: contactName,
         businessName: businessName,
         address: address,
         description: description,
-        bankName: bankName,
         iban: iban,
       );
 

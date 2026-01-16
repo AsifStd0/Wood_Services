@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:wood_service/app/config.dart';
-import 'package:wood_service/core/services/buyer_local_storage_service_impl.dart';
+import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 
 class ReviewProvider with ChangeNotifier {
   bool _isLoading = false;
@@ -17,15 +17,17 @@ class ReviewProvider with ChangeNotifier {
   List<dynamic> get myReviews => _myReviews;
 
   String? _cachedToken;
-  final BuyerLocalStorageServiceImpl _storage = BuyerLocalStorageServiceImpl();
+  // final BuyerLocalStorageServiceImpl _storage = BuyerLocalStorageServiceImpl();
+  final UnifiedLocalStorageServiceImpl _storage =
+      UnifiedLocalStorageServiceImpl();
 
   Future<void> initialize() async {
     await _storage.initialize();
-    _cachedToken = await _storage.getBuyerToken();
+    _cachedToken = await _storage.getToken();
   }
 
   Future<String?> _getToken() async {
-    _cachedToken ??= await _storage.getBuyerToken();
+    _cachedToken ??= await _storage.getToken();
     return _cachedToken;
   }
 
@@ -71,38 +73,38 @@ class ReviewProvider with ChangeNotifier {
   }
 
   // ========== SUBMIT REVIEW ==========
+  /// POST /api/buyer/reviews
+  /// Body: { serviceId, sellerId, rating, comment }
   Future<Map<String, dynamic>> submitReview({
-    required String orderId,
-    required String orderItemId,
-    required String productId,
+    required String serviceId, // Changed from productId to serviceId
+    required String sellerId, // NEW: Required field
     required int rating,
-    String? title,
     String? comment,
-    List<Map<String, String>> images = const [],
+    String? orderId, // Optional: for backward compatibility
+    String? orderItemId, // Optional: for backward compatibility
+    String? productId, // Optional: for backward compatibility (legacy)
+    String? title, // Optional: not in new API
+    List<Map<String, String>> images = const [], // Optional: not in new API
   }) async {
     try {
       _isLoading = true;
       notifyListeners();
 
       print('📝 Submitting review...');
-      print('• Order ID: $orderId');
-      print('• Order Item ID: $orderItemId');
-      print('• Product ID: $productId');
+      print('• Service ID: $serviceId');
+      print('• Seller ID: $sellerId');
       print('• Rating: $rating');
+      print('• Comment: $comment');
 
       final headers = await _getHeaders();
       final response = await http.post(
-        Uri.parse('${Config.apiBaseUrl}/buyer/reviews'),
-
+        Uri.parse('${Config.apiBaseUrl}/api/buyer/reviews'),
         headers: headers,
         body: json.encode({
-          'orderId': orderId,
-          'orderItemId': orderItemId,
-          'productId': productId,
+          'serviceId': serviceId,
+          'sellerId': sellerId,
           'rating': rating,
-          'title': title ?? 'Great product!',
           'comment': comment ?? '',
-          'images': images,
         }),
       );
 

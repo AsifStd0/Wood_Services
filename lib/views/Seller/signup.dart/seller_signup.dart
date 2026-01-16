@@ -1,23 +1,30 @@
 // views/seller_signup_view.dart
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/views/Seller/signup.dart/seller_signup_provider.dart';
+import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
+// import 'package:wood_service/views/Seller/signup.dart/seller_signup_provider.dart';
 import 'package:wood_service/views/Seller/signup.dart/signup_widget.dart';
+import 'package:wood_service/widgets/custom_button.dart' hide AuthBottomText;
 
 class SellerSignupScreen extends StatelessWidget {
-  const SellerSignupScreen({super.key});
+  String role = 'seller';
+  SellerSignupScreen({super.key, required this.role});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
+      appBar: AppBar(
+        title: Text('Seller Signup'),
+        centerTitle: true,
+        backgroundColor: AppColors.brightOrange,
+      ),
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -48,13 +55,15 @@ class SellerSignupScreen extends StatelessWidget {
   }
 
   Widget _buildSubmitButton(BuildContext context) {
-    final viewModel = context.watch<SellerSignupViewModel>();
+    final viewModel = context.watch<RegisterViewModel>();
 
     return CustomButtonUtils.login(
       title: 'Register Seller',
       // padding: EdgeInsets.all(0),
       backgroundColor: AppColors.brightOrange,
-      onPressed: viewModel.isLoading ? null : () => _handleSubmission(context),
+      onPressed: viewModel.isLoading
+          ? null
+          : () => viewModel.handleSubmission(context, role),
     );
   }
 
@@ -68,7 +77,7 @@ class SellerSignupScreen extends StatelessWidget {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) {
-                return SellerLogin();
+                return SellerLogin(role: 'seller');
               },
             ),
           );
@@ -77,90 +86,5 @@ class SellerSignupScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _handleSubmission(BuildContext context) async {
-    final viewModel = context.read<SellerSignupViewModel>();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        child: Center(child: CircularProgressIndicator()),
-      ),
-    );
-
-    try {
-      final result = await viewModel.submitApplication();
-
-      if (context.mounted) Navigator.of(context).pop();
-
-      result.fold(
-        (failure) {
-          if (context.mounted) {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: Text('Registration Failed'),
-                content: Text(failure.message ?? 'An error occurred'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text('OK'),
-                  ),
-                ],
-              ),
-            );
-          }
-        },
-        (authResponse) async {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.white),
-                    SizedBox(width: 10),
-                    Text('Registration Successful!'),
-                  ],
-                ),
-                backgroundColor: Colors.green,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-
-            await Future.delayed(Duration(milliseconds: 1500));
-
-            if (context.mounted) {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (_) {
-                    return MainSellerScreen();
-                  },
-                ),
-              );
-            }
-          }
-        },
-      );
-    } catch (error) {
-      if (context.mounted) Navigator.of(context).pop();
-
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Error'),
-            content: Text('Network error: $error'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-    }
-  }
+  // In your UI - Update _handleSubmission method
 }

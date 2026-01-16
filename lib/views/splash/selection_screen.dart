@@ -191,7 +191,7 @@ class _SelectionScreenState extends State<SelectionScreen>
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (_) {
-                                        return BuyerLoginScreen();
+                                        return BuyerLoginScreen(role: 'buyer');
                                       },
                                     ),
                                   );
@@ -233,7 +233,7 @@ class _SelectionScreenState extends State<SelectionScreen>
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (context) {
-                                        return SellerLogin();
+                                        return SellerLogin(role: 'seller');
                                       },
                                     ),
                                   );

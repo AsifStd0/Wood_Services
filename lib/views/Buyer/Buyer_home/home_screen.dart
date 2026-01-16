@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/home_widget.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
+import 'package:provider/provider.dart';
 
 class BuyerHomeScreen extends StatefulWidget {
   const BuyerHomeScreen({super.key});
@@ -90,7 +93,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   // ! Products Actuall Dta
   // // ! Products Actual Data
   Widget _buildProductsGrid() {
-    return Consumer<BuyerHomeViewModel>(
+    return Consumer<BuyerHomeViewProvider>(
       builder: (context, viewModel, child) {
         // Load products on first build
         if (viewModel.products.isEmpty &&
@@ -172,7 +175,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   // ! *******
   // ! *******
   Widget _buildFilterSection() {
-    return Consumer<BuyerHomeViewModel>(
+    return Consumer<BuyerHomeViewProvider>(
       builder: (context, viewModel, child) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,7 +208,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   }
 
   Widget _buildImageSlider() {
-    return Consumer<BuyerHomeViewModel>(
+    return Consumer<BuyerHomeViewProvider>(
       builder: (context, viewModel, child) {
         return SizedBox(
           height: 140,
@@ -274,7 +277,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   }
 
   Widget _buildCategoriesSection() {
-    return Consumer<BuyerHomeViewModel>(
+    return Consumer<BuyerHomeViewProvider>(
       builder: (context, viewModel, child) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

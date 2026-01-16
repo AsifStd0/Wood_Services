@@ -75,21 +75,27 @@ class BuyerCartModel {
 
 class BuyerCartItem {
   final String id;
-  final String productId;
+  final String
+  productId; // Keep for backward compatibility, but API uses serviceId
+  final String? serviceId; // NEW: API uses serviceId
   final int quantity;
   final String? selectedVariant;
   final String? selectedSize;
+  final List<Map<String, String>>?
+  selectedVariants; // NEW: API uses selectedVariants array
   final double price;
   final double subtotal;
-  final BuyerProductModel? product; // Populated product details
+  final BuyerProductModel? product; // Populated product details (service)
   final DateTime addedAt;
 
   BuyerCartItem({
     required this.id,
     required this.productId,
+    this.serviceId,
     required this.quantity,
     this.selectedVariant,
     this.selectedSize,
+    this.selectedVariants,
     required this.price,
     required this.subtotal,
     this.product,
@@ -97,21 +103,95 @@ class BuyerCartItem {
   });
 
   factory BuyerCartItem.fromJson(Map<String, dynamic> json) {
+    // Parse selectedVariants array if present
+    List<Map<String, String>>? parsedVariants;
+    if (json['selectedVariants'] != null && json['selectedVariants'] is List) {
+      parsedVariants = (json['selectedVariants'] as List).map((v) {
+        if (v is Map) {
+          return {
+            'type': v['type']?.toString() ?? '',
+            'value': v['value']?.toString() ?? '',
+          };
+        }
+        return {'type': '', 'value': ''};
+      }).toList();
+
+      // Also extract selectedVariant and selectedSize from selectedVariants for backward compatibility
+      String? extractedVariant;
+      String? extractedSize;
+      for (var variant in parsedVariants) {
+        if (variant['type']?.toLowerCase() == 'size') {
+          extractedSize = variant['value'];
+        } else {
+          extractedVariant = variant['value'];
+        }
+      }
+
+      // Use extracted values if individual fields not present
+      final selectedVariant =
+          json['selectedVariant']?.toString() ?? extractedVariant;
+      final selectedSize = json['selectedSize']?.toString() ?? extractedSize;
+
+      // Extract serviceId or productId
+      final serviceId = json['serviceId']?.toString();
+      final productIdValue = json['productId'] is Map
+          ? (json['productId']['_id']?.toString() ??
+                json['productId']['id']?.toString() ??
+                '')
+          : json['productId']?.toString() ??
+                json['serviceId']?.toString() ??
+                '';
+
+      return BuyerCartItem(
+        id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+        productId: productIdValue,
+        serviceId: serviceId ?? productIdValue,
+        quantity: json['quantity']?.toInt() ?? 1,
+        selectedVariant: selectedVariant,
+        selectedSize: selectedSize,
+        selectedVariants: parsedVariants,
+        price: (json['price'] ?? 0).toDouble(),
+        subtotal: (json['subtotal'] ?? 0).toDouble(),
+        product: json['serviceId'] is Map
+            ? BuyerProductModel.fromJson(json['serviceId'])
+            : json['productId'] is Map
+            ? BuyerProductModel.fromJson(json['productId'])
+            : null,
+        addedAt: DateTime.parse(
+          json['createdAt'] ??
+              json['addedAt'] ??
+              DateTime.now().toIso8601String(),
+        ),
+      );
+    }
+
+    // Fallback for old format (no selectedVariants)
+    final serviceIdFallback = json['serviceId']?.toString();
+    final productIdValue = json['productId'] is Map
+        ? (json['productId']['_id']?.toString() ??
+              json['productId']['id']?.toString() ??
+              '')
+        : json['productId']?.toString() ?? json['serviceId']?.toString() ?? '';
+
     return BuyerCartItem(
-      id: json['_id']?.toString() ?? '',
-      productId: json['productId'] is Map
-          ? (json['productId']['_id']?.toString() ?? '')
-          : json['productId']?.toString() ?? '',
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      productId: productIdValue,
+      serviceId: serviceIdFallback ?? productIdValue,
       quantity: json['quantity']?.toInt() ?? 1,
       selectedVariant: json['selectedVariant']?.toString(),
       selectedSize: json['selectedSize']?.toString(),
+      selectedVariants: parsedVariants,
       price: (json['price'] ?? 0).toDouble(),
       subtotal: (json['subtotal'] ?? 0).toDouble(),
       product: json['productId'] is Map
           ? BuyerProductModel.fromJson(json['productId'])
+          : json['serviceId'] is Map
+          ? BuyerProductModel.fromJson(json['serviceId'])
           : null,
       addedAt: DateTime.parse(
-        json['createdAt'] ?? DateTime.now().toIso8601String(),
+        json['createdAt'] ??
+            json['addedAt'] ??
+            DateTime.now().toIso8601String(),
       ),
     );
   }
@@ -119,9 +199,12 @@ class BuyerCartItem {
   Map<String, dynamic> toJson() {
     return {
       'productId': productId,
+      'serviceId': serviceId ?? productId,
       'quantity': quantity,
-      'selectedVariant': selectedVariant,
-      'selectedSize': selectedSize,
+      if (selectedVariants != null && selectedVariants!.isNotEmpty)
+        'selectedVariants': selectedVariants,
+      if (selectedVariant != null) 'selectedVariant': selectedVariant,
+      if (selectedSize != null) 'selectedSize': selectedSize,
       'price': price,
     };
   }
@@ -129,9 +212,11 @@ class BuyerCartItem {
   BuyerCartItem copyWith({
     String? id,
     String? productId,
+    String? serviceId,
     int? quantity,
     String? selectedVariant,
     String? selectedSize,
+    List<Map<String, String>>? selectedVariants,
     double? price,
     double? subtotal,
     BuyerProductModel? product,
@@ -140,9 +225,11 @@ class BuyerCartItem {
     return BuyerCartItem(
       id: id ?? this.id,
       productId: productId ?? this.productId,
+      serviceId: serviceId ?? this.serviceId,
       quantity: quantity ?? this.quantity,
       selectedVariant: selectedVariant ?? this.selectedVariant,
       selectedSize: selectedSize ?? this.selectedSize,
+      selectedVariants: selectedVariants ?? this.selectedVariants,
       price: price ?? this.price,
       subtotal: subtotal ?? this.subtotal,
       product: product ?? this.product,

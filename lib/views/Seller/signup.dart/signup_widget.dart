@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_text_style.dart';
-import 'package:wood_service/views/Seller/signup.dart/seller_signup_provider.dart';
+import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
 
 Widget buildFormField({
@@ -32,10 +32,7 @@ Widget buildFormField({
   );
 }
 
-void showAddCategoryDialog(
-  BuildContext context,
-  SellerSignupViewModel viewModel,
-) {
+void showAddCategoryDialog(BuildContext context, RegisterViewModel viewModel) {
   final controller = TextEditingController();
   showDialog(
     context: context,
@@ -66,7 +63,7 @@ void showAddCategoryDialog(
 }
 
 Widget buildDescriptionField(BuildContext context) {
-  final viewModel = context.read<SellerSignupViewModel>();
+  final viewModel = context.read<RegisterViewModel>();
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,7 +73,7 @@ Widget buildDescriptionField(BuildContext context) {
         padding: const EdgeInsets.only(top: 4, bottom: 12),
         child: CustomTextFormField(
           prefixIcon: Icon(Icons.description, color: AppColors.grey),
-          controller: viewModel.descriptionController,
+          controller: viewModel.businessDescriptionController,
           hintText: 'Describe your business and products',
           maxLines: 4,
           minline: 3,
@@ -87,7 +84,7 @@ Widget buildDescriptionField(BuildContext context) {
 }
 
 Widget buildShopBrandingSection(BuildContext context) {
-  final viewModel = context.watch<SellerSignupViewModel>();
+  final viewModel = context.watch<RegisterViewModel>();
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,6 +99,7 @@ Widget buildShopBrandingSection(BuildContext context) {
         label: 'Shop Logo',
         image: viewModel.shopLogo,
         onTap: viewModel.pickShopLogo,
+        onRemove: viewModel.clearShopLogo,
         size: const Size(120, 120),
         hintText: 'Upload Logo',
       ),
@@ -110,6 +108,7 @@ Widget buildShopBrandingSection(BuildContext context) {
         label: 'Shop Banner',
         image: viewModel.shopBanner,
         onTap: viewModel.pickShopBanner,
+        onRemove: viewModel.clearShopBanner,
         size: const Size(double.infinity, 120),
         hintText: 'Upload Banner (1200x400 recommended)',
       ),
@@ -121,6 +120,7 @@ Widget buildImageUploader({
   required String label,
   required File? image,
   required VoidCallback onTap,
+  required VoidCallback? onRemove,
   required Size size,
   required String hintText,
 }) {
@@ -140,9 +140,36 @@ Widget buildImageUploader({
             border: Border.all(color: Colors.grey[300]!),
           ),
           child: image != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(image, fit: BoxFit.cover),
+              ? Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(image, fit: BoxFit.cover),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: () {
+                          if (onRemove != null) {
+                            onRemove();
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 )
               : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -163,7 +190,7 @@ Widget buildImageUploader({
   );
 }
 
-Widget buildCategoriesList(SellerSignupViewModel viewModel) {
+Widget buildCategoriesList(RegisterViewModel viewModel) {
   return Wrap(
     spacing: 8,
     runSpacing: 8,
@@ -199,7 +226,7 @@ Widget buildCategoriesList(SellerSignupViewModel viewModel) {
 
 Widget buildAddCategoryButton(
   BuildContext context,
-  SellerSignupViewModel viewModel,
+  RegisterViewModel viewModel,
 ) {
   return GestureDetector(
     onTap: () => showAddCategoryDialog(context, viewModel),
@@ -226,7 +253,7 @@ Widget buildAddCategoryButton(
 }
 
 Widget buildBankDetailsSection(BuildContext context) {
-  final viewModel = context.read<SellerSignupViewModel>();
+  final viewModel = context.read<RegisterViewModel>();
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,7 +299,7 @@ Widget buildBankDetailsSection(BuildContext context) {
 }
 
 Widget buildPhoneField(BuildContext context) {
-  final viewModel = context.read<SellerSignupViewModel>();
+  final viewModel = context.read<RegisterViewModel>();
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,7 +365,7 @@ Widget buildPasswordField(
 }
 
 Widget buildBusinessInfoSection(BuildContext context) {
-  final viewModel = context.read<SellerSignupViewModel>();
+  final viewModel = context.read<RegisterViewModel>();
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,7 +400,7 @@ Widget buildBusinessInfoSection(BuildContext context) {
 }
 
 Widget buildCategoriesSection(BuildContext context) {
-  final viewModel = context.watch<SellerSignupViewModel>();
+  final viewModel = context.watch<RegisterViewModel>();
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -401,7 +428,7 @@ Widget buildDocumentUploader(
   String title,
   String documentType,
 ) {
-  final viewModel = context.watch<SellerSignupViewModel>();
+  final viewModel = context.watch<RegisterViewModel>();
   final file = viewModel.documents[documentType];
 
   return Column(
@@ -420,9 +447,32 @@ Widget buildDocumentUploader(
             border: Border.all(color: Colors.grey[300]!),
           ),
           child: file != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(file, fit: BoxFit.cover),
+              ? Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(file, fit: BoxFit.cover),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: () => viewModel.clearDocument(documentType),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 )
               : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -481,7 +531,7 @@ Widget buildHeader() {
 }
 
 Widget buildPersonalInfoSection(BuildContext context) {
-  final viewModel = context.read<SellerSignupViewModel>();
+  final viewModel = context.read<RegisterViewModel>();
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -494,7 +544,7 @@ Widget buildPersonalInfoSection(BuildContext context) {
       const SizedBox(height: 15),
       buildFormField(
         label: 'Full Name *',
-        controller: viewModel.fullNameController,
+        controller: viewModel.nameController,
         icon: Icons.person,
         hintText: 'Enter your full name',
       ),
@@ -511,17 +561,15 @@ Widget buildPersonalInfoSection(BuildContext context) {
         label: 'Password *',
         controller: viewModel.passwordController,
         isObscure: viewModel.obscurePassword,
-        onToggle: () =>
-            viewModel.setObscurePassword(!viewModel.obscurePassword),
+        onToggle: () => viewModel.togglePasswordVisibility(),
+        // viewModel.setObscurePassword(!viewModel.obscurePassword),
       ),
       buildPasswordField(
         context,
         label: 'Confirm Password *',
         controller: viewModel.confirmPasswordController,
         isObscure: viewModel.obscureConfirmPassword,
-        onToggle: () => viewModel.setObscureConfirmPassword(
-          !viewModel.obscureConfirmPassword,
-        ),
+        onToggle: () => viewModel.toggleConfirmPasswordVisibility(),
       ),
     ],
   );

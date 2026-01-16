@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
@@ -27,41 +28,19 @@ class _SellerSettingsScreenState extends State<SellerSettingsScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Logging out...'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-
-              final success = await viewModel.logout();
-
-              if (success && context.mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => OnboardingScreen()),
-                  (route) => false,
-                );
-              } else if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Logout failed: ${viewModel.errorMessage}'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              // Use outer context for navigation
+              _performLogout(context, viewModel);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -72,6 +51,74 @@ class _SellerSettingsScreenState extends State<SellerSettingsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _performLogout(
+    BuildContext context,
+    SelllerSettingProvider provider,
+  ) async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      log('🔄 Starting logout process...');
+
+      // Perform logout
+      final success = await provider.logout();
+
+      log('🔄 Logout result: $success');
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      if (success) {
+        log('✅ Logout successful, navigating to OnboardingScreen...');
+
+        // Navigate to onboarding screen
+        if (context.mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+            (route) => false,
+          );
+        }
+      } else {
+        log('❌ Logout failed: ${provider.errorMessage}');
+
+        // Show error message
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(provider.errorMessage ?? 'Logout failed'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e, stackTrace) {
+      log('❌ Error during logout: $e', error: e, stackTrace: stackTrace);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logout failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -243,7 +290,7 @@ class _ShopSettingsContent extends StatelessWidget {
           const SizedBox(height: 16),
           buildInfoField(
             label: 'Full Name',
-            controller: viewModel.fullNameController,
+            controller: viewModel.nameController,
             icon: Icons.person_rounded,
             isEditing: viewModel.isEditing,
             onChanged: (value) => viewModel.setFullName(value),

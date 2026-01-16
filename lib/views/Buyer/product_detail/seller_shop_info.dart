@@ -1,5 +1,5 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
@@ -18,10 +18,11 @@ class ShopPreviewCard extends StatelessWidget {
     // Use the correct field names
     final shopName = sellerInfo?['businessName'] ?? 'Unknown Shop';
     final sellerName = sellerInfo?['name'] ?? 'Unknown Seller';
-    final shopLogo = sellerInfo?['shopLogo'];
+    final shopLogo = sellerInfo?['profileImage'];
     final totalProducts = sellerInfo?['totalProducts'] ?? 0;
     final verificationStatus = sellerInfo?['verificationStatus'] ?? 'pending';
-
+    // shop ssellerIngo all data
+    log(sellerInfo.toString());
     return GestureDetector(
       onTap: () {
         _showShopDetailsDialog(context);
@@ -54,13 +55,14 @@ class ShopPreviewCard extends StatelessWidget {
                     border: Border.all(color: Colors.grey.shade300),
                     image: shopLogo != null
                         ? DecorationImage(
-                            image: NetworkImage(_getFullImageUrl(shopLogo)),
+                            image: NetworkImage(
+                              product.sellerInfo?['profileImage'] ?? '',
+                            ),
+
                             fit: BoxFit.cover,
                           )
-                        : const DecorationImage(
-                            image: AssetImage(
-                              'assets/images/shop_placeholder.png',
-                            ),
+                        : DecorationImage(
+                            image: AssetImage('assets/images/logo.png'),
                             fit: BoxFit.cover,
                           ),
                   ),
@@ -185,12 +187,6 @@ class ShopPreviewCard extends StatelessWidget {
     );
   }
 
-  String _getFullImageUrl(String? imagePath) {
-    if (imagePath == null) return '';
-    if (imagePath.startsWith('http')) return imagePath;
-    return 'http://192.168.137.78:5001$imagePath';
-  }
-
   void _showShopDetailsDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -220,50 +216,84 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
   void initState() {
     super.initState();
     _loadVisitStatus();
-    _loadMyVisitRequests();
+    // _loadMyVisitRequests();
+  }
+
+  /// Build address object for API (required fields: street, city, country)
+  /// Uses product location or seller info if available, otherwise provides defaults
+  Map<String, dynamic> _buildAddressObject() {
+    // Try to get address from seller info
+    final sellerInfo = widget.product.sellerInfo;
+    if (sellerInfo?['address'] != null && sellerInfo!['address'] is Map) {
+      final sellerAddress = Map<String, dynamic>.from(sellerInfo['address']);
+      // Ensure required fields exist
+      return {
+        'street': sellerAddress['street']?.toString() ?? 'Not specified',
+        'city': sellerAddress['city']?.toString() ?? 'Not specified',
+        'state': sellerAddress['state']?.toString(),
+        'zipCode': sellerAddress['zipCode']?.toString(),
+        'country': sellerAddress['country']?.toString() ?? 'Not specified',
+      };
+    }
+
+    // Default address - API requires these fields
+    // In production, you might want to collect these from user or seller profile
+    return {
+      'street': 'Address to be confirmed', // Required by API
+      'city': 'To be specified', // Required by API
+      'state': null, // Optional
+      'zipCode': null, // Optional
+      'country': 'Pakistan', // Required by API - use default or get from seller
+    };
   }
 
   void _loadVisitStatus() {
-    final viewModel = Provider.of<BuyerHomeViewModel>(context, listen: false);
+    final viewModel = Provider.of<BuyerHomeViewProvider>(
+      context,
+      listen: false,
+    );
     final sellerId = widget.product.sellerId?.toString();
     if (sellerId != null) {
       _visitStatus = viewModel.getVisitStatusForSeller(sellerId);
+      // _visitStatus = viewModel.getVisitStatusForSeller(sellerId);
     }
   }
 
-  Future<void> _loadMyVisitRequests() async {
-    try {
-      final viewModel = Provider.of<BuyerHomeViewModel>(context, listen: false);
-      _myVisitRequests = await viewModel.getMyVisitRequests();
+  // Future<void> _loadMyVisitRequests() async {
+  //   try {
+  //     final viewModel = Provider.of<BuyerHomeViewProvider>(context, listen: false);
+  //     _myVisitRequests = await viewModel.getMyVisitRequests();
 
-      // Update local status based on actual requests
-      final sellerId = widget.product.sellerId?.toString();
-      if (sellerId != null) {
-        final myRequest = _myVisitRequests.firstWhere(
-          (req) => req['seller']?['id'] == sellerId,
-          orElse: () => {},
-        );
+  //     // Update local status based on actual requests
+  //     final sellerId = widget.product.sellerId?.toString();
+  //     if (sellerId != null) {
+  //       final myRequest = _myVisitRequests.firstWhere(
+  //         (req) => req['seller']?['id'] == sellerId,
+  //         orElse: () => {},
+  //       );
 
-        if (myRequest.isNotEmpty) {
-          setState(() {
-            _visitStatus = myRequest['status']?.toString();
-          });
-        }
-      }
-    } catch (error) {
-      print('Error loading visit requests: $error');
-    }
-  }
+  //       if (myRequest.isNotEmpty) {
+  //         setState(() {
+  //           _visitStatus = myRequest['status']?.toString();
+  //         });
+  //       }
+  //     }
+  //   } catch (error) {
+  //     print('Error loading visit requests: $error');
+  //   }
+  // }
 
   Future<void> _requestVisit() async {
+    // API uses serviceId (product/service ID), not sellerId
+    final serviceId = widget.product.id;
     final sellerId = widget.product.sellerId?.toString();
     final shopName =
         widget.product.sellerInfo?['businessName'] ?? 'Unknown Shop';
 
-    if (sellerId == null) {
+    if (serviceId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Seller ID not found'),
+          content: Text('Service ID not found'),
           backgroundColor: Colors.red,
         ),
       );
@@ -275,23 +305,39 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
     });
 
     try {
-      final viewModel = Provider.of<BuyerHomeViewModel>(context, listen: false);
+      final viewModel = Provider.of<BuyerHomeViewProvider>(
+        context,
+        listen: false,
+      );
 
-      final result = await viewModel.requestVisitToShop(
-        sellerId: sellerId,
+      // Map message to description (API uses description)
+      final description = _messageController.text.isNotEmpty
+          ? _messageController.text
+          : null;
+
+      // Build address - API requires street, city, and country (all required)
+      // Try to get from product location or seller info, otherwise use defaults
+      Map<String, dynamic> address = _buildAddressObject();
+
+      final result = await viewModel.requestVisit(
+        sellerId:
+            serviceId, // Pass serviceId (product.id) - API expects serviceId
         shopName: shopName,
-        message: _messageController.text.isNotEmpty
-            ? _messageController.text
-            : null,
+        description: description, // Use description instead of message
+        message: description, // Keep for backward compatibility
+        address: address, // Optional address
         preferredDate: _selectedDate,
         preferredTime: _selectedTime,
+        specialRequirements: null, // Can be added to UI if needed
         context: context,
       );
 
       // If result has error about existing request
       if (result['hasExistingRequest'] == true) {
         // Show options to cancel existing request
-        _showExistingRequestDialog(sellerId, shopName);
+        // Use sellerId if available, otherwise use serviceId for the dialog
+        final dialogId = sellerId ?? serviceId;
+        _showExistingRequestDialog(dialogId, shopName);
         return;
       }
 
@@ -301,7 +347,7 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
       });
 
       // Reload requests
-      await _loadMyVisitRequests();
+      // await _loadMyVisitRequests();
 
       // Close the form dialog (not the main dialog)
       Navigator.of(context).pop(); // This closes the AlertDialog with the form
@@ -359,7 +405,7 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
       );
 
       if (existingRequest.isNotEmpty && existingRequest['id'] != null) {
-        final viewModel = Provider.of<BuyerHomeViewModel>(
+        final viewModel = Provider.of<BuyerHomeViewProvider>(
           context,
           listen: false,
         );
@@ -534,8 +580,6 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
 
   Widget _buildVisitButton() {
     final sellerId = widget.product.sellerId?.toString();
-    final shopName =
-        widget.product.sellerInfo?['businessName'] ?? 'Unknown Shop';
 
     if (sellerId == null) {
       return const SizedBox.shrink();
@@ -710,7 +754,10 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
     if (sellerId == null) return;
 
     try {
-      final viewModel = Provider.of<BuyerHomeViewModel>(context, listen: false);
+      final viewModel = Provider.of<BuyerHomeViewProvider>(
+        context,
+        listen: false,
+      );
 
       // Find the request ID
       final myRequest = _myVisitRequests.firstWhere(

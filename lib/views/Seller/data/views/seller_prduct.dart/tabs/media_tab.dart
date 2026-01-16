@@ -77,7 +77,7 @@ class _MediaTabState extends State<MediaTab> {
         ),
 
         // Loading overlay
-        if (productProvider.isUploadingImages || productProvider.isLoading)
+        if (productProvider.isLoading)
           Container(
             color: Colors.black54,
             child: Center(
@@ -89,7 +89,8 @@ class _MediaTabState extends State<MediaTab> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    productProvider.isUploadingImages
+                    productProvider.isLoading
+                        // isUploadingImages
                         ? 'Uploading images...'
                         : 'Publishing product...',
                     style: TextStyle(color: Colors.white),

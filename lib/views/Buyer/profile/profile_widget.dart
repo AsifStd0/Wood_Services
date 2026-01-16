@@ -1,5 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
-import 'package:wood_service/views/Buyer/Service/profile_service.dart';
+import 'package:provider/provider.dart';
+import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
 import 'package:wood_service/views/splash/splash_screen.dart';
 
 Widget buildStatItem(String value, String label, IconData icon) {
@@ -163,40 +166,69 @@ Widget buildMenuHeader(String title) {
   );
 }
 
-Future<void> _performLogout(BuildContext context) async {
+Future<void> _performLogout(
+  BuildContext context,
+  BuyerProfileViewProvider provider,
+) async {
+  // Show loading
+  showDialog(
+    context: context,
+    builder: (context) => const Center(child: CircularProgressIndicator()),
+    barrierDismissible: false,
+  );
+
   try {
-    // Show loading
-    showDialog(
-      context: context,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-    // Create service instance
-    final profileService = BuyerProfileService();
-
-    // 1. Logout via service (clears local storage)
-    await profileService.logout();
-
-    // 2. Navigate to login
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => OnboardingScreen()),
-      (route) => false,
-    );
-
-    print('✅ Logout successful via ProfileService');
+    // Get provider instance
+    log('🔄 Starting 4444...');
+    // final provider = context.read<BuyerProfileViewProvider>();
+    log('🔄 Starting 5555...');
+    // Logout via provider (clears local storage)
+    final success = await provider.logout();
+    log('🔄 Starting 6666...');
+    // Close loading dialog
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
+    log('🔄 Starting 7777...');
+    if (success) {
+      // Navigate to login
+      if (context.mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => OnboardingScreen()),
+          (route) => false,
+        );
+      }
+    } else {
+      // Show error
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(provider.errorMessage ?? 'Logout failed'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   } catch (e) {
-    // Close loading
-    Navigator.of(context).pop();
+    // Close loading dialog
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
 
     // Show error
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Logout failed: $e'), backgroundColor: Colors.red),
-    );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Logout failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
 
-void showLogoutDialog(BuildContext context) {
+void showLogoutDialog(BuildContext context, BuyerProfileViewProvider provider) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -261,7 +293,10 @@ void showLogoutDialog(BuildContext context) {
                     child: ElevatedButton(
                       onPressed: () async {
                         Navigator.of(context).pop(); // Close dialog first
-                        await _performLogout(context); // Call logout function
+                        await _performLogout(
+                          context,
+                          provider,
+                        ); // Call logout function
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,

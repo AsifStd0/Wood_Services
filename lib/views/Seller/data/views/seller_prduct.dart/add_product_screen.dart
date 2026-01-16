@@ -24,26 +24,46 @@ class AddProductScreen extends StatelessWidget {
           showBackButton: false,
           backgroundColor: Colors.white,
         ),
-        body: const _AddProductContent(),
+        body: _AddProductContent(),
       ),
     );
   }
 }
 
 class _AddProductContent extends StatelessWidget {
-  const _AddProductContent();
+  _AddProductContent();
+  final List<Widget> _tabs = [
+    BasicTab(),
+    PricingTab(),
+    InventoryTab(),
+    const VariantsTab(),
+    const MediaTab(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Consumer<SellerProductProvider>(
       builder: (context, viewModel, _) {
+        print(
+          "🎯 Consumer rebuilt - Current tab: ${viewModel.currentTabIndex}",
+        );
+        print("🎯 Product title: ${viewModel.product.title}");
+        print("🎯 Product hash: ${viewModel.hashCode}");
+
         return Stack(
           children: [
             // Main Content
             Column(
               children: [
                 _buildTabBar(viewModel),
-                Expanded(child: _buildTabContent(viewModel)),
+
+                Expanded(
+                  child: IndexedStack(
+                    // ← Use IndexedStack
+                    index: viewModel.currentTabIndex,
+                    children: _tabs,
+                  ),
+                ),
               ],
             ),
 
@@ -180,19 +200,6 @@ class _AddProductContent extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Widget _buildTabContent(SellerProductProvider viewModel) {
-    final tabWidgets = [
-      BasicTab(),
-      PricingTab(),
-      InventoryTab(),
-      const VariantsTab(),
-      const MediaTab(),
-    ];
-
-    final index = viewModel.currentTabIndex.clamp(0, tabWidgets.length - 1);
-    return tabWidgets[index];
   }
 
   Widget _buildBottomActions(

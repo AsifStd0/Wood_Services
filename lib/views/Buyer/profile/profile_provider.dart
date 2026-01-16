@@ -1,17 +1,20 @@
 // lib/providers/buyer_profile_viewmodel.dart
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wood_service/app/locator.dart';
-import 'package:wood_service/views/Buyer/Service/profile_service.dart';
-import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_signup_model.dart';
+import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
+import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';
 
 class BuyerProfileViewProvider extends ChangeNotifier {
-  final BuyerProfileService _profileService;
+  final UnifiedLocalStorageServiceImpl _storage;
+  final Dio _dio;
 
-  // Profile data from BuyerModel
-  BuyerModel? _currentBuyer;
+  // Profile data from UserModel
+  UserModel? _currentUser;
   bool _isLoading = false;
   bool _isEditing = false;
   String? _errorMessage;
@@ -22,29 +25,28 @@ class BuyerProfileViewProvider extends ChangeNotifier {
   final ImagePicker _imagePicker = ImagePicker();
 
   // Getters
-  BuyerModel? get currentBuyer => _currentBuyer;
+  UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isEditing => _isEditing;
   String? get errorMessage => _errorMessage;
   String? get successMessage => _successMessage;
   File? get newProfileImage => _newProfileImage;
   // Convenience getters
-  String get fullName => _currentBuyer?.fullName ?? '';
-  String get email => _currentBuyer?.email ?? '';
-  String get contactName => _currentBuyer?.contactName ?? '';
-  String get businessName => _currentBuyer?.businessName ?? '';
-  String get address => _currentBuyer?.address ?? '';
-  String get description => _currentBuyer?.description ?? '';
-  String get bankName => _currentBuyer?.bankName ?? '';
-  String get iban => _currentBuyer?.iban ?? '';
-  String? get profileImagePath => _currentBuyer?.profileImagePath;
-  bool get hasData => _currentBuyer != null;
+  String get fullName => _currentUser?.name ?? '';
+  String get email => _currentUser?.email ?? '';
+  String get businessName => _currentUser?.businessName ?? '';
+  String get address => _currentUser?.address ?? '';
+  String get description => _currentUser?.businessDescription ?? '';
+  String get iban => _currentUser?.iban ?? '';
+  String? get profileImagePath => _currentUser?.profileImage;
+  bool get hasData => _currentUser != null;
   bool get isLoggedIn => hasData;
+  // add address
 
   // Constructor
-  BuyerProfileViewProvider({BuyerProfileService? profileService})
-    : _profileService = profileService ?? locator<BuyerProfileService>() {
-    // log('🔄 BuyerProfileViewModel initialized');
+  BuyerProfileViewProvider({UnifiedLocalStorageServiceImpl? storage, Dio? dio})
+    : _storage = storage ?? locator<UnifiedLocalStorageServiceImpl>(),
+      _dio = dio ?? locator<Dio>() {
     loadProfile();
   }
 
@@ -55,11 +57,10 @@ class BuyerProfileViewProvider extends ChangeNotifier {
       _errorMessage = null;
       notifyListeners();
 
-      final buyer = await _profileService.getCurrentBuyer();
+      final user = _storage.getUserModel();
 
-      if (buyer != null) {
-        _currentBuyer = buyer;
-        // log('✅ Profile loaded: ${buyer.fullName} ${buyer.iban}');
+      if (user != null) {
+        _currentUser = user;
       } else {
         log('⚠️ No profile found');
       }
@@ -72,24 +73,61 @@ class BuyerProfileViewProvider extends ChangeNotifier {
     }
   }
 
-  // Refresh from API
   Future<void> refreshProfile() async {
     try {
       _isLoading = true;
       _errorMessage = null;
       notifyListeners();
 
-      final buyer = await _profileService.fetchProfileFromApi();
+      final token = _storage.getToken();
+      if (token == null || token.isEmpty) {
+        _errorMessage = 'No token available';
+        return;
+      }
 
-      if (buyer != null) {
-        _currentBuyer = buyer;
+      final response = await _dio.get(
+        '/auth/me',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        Map<String, dynamic> userData;
+
+        if (response.data['data'] != null &&
+            response.data['data']['user'] != null) {
+          userData = response.data['data']['user'] as Map<String, dynamic>;
+        } else if (response.data['user'] != null) {
+          userData = response.data['user'] as Map<String, dynamic>;
+        } else if (response.data['success'] == true &&
+            response.data['buyer'] != null) {
+          userData = response.data['buyer'] as Map<String, dynamic>;
+        } else {
+          userData = response.data as Map<String, dynamic>;
+        }
+
+        log('''
+================ USER DATA =================
+${const JsonEncoder.withIndent('  ').convert(userData)}
+==========================================
+''');
+
+        final user = UserModel.fromJson(userData);
+
+        await _storage.saveUserData(userData);
+        _currentUser = user;
         _successMessage = 'Profile refreshed successfully';
-        log('✅ Profile refreshed: ${buyer.fullName}');
+
+        log('✅ Profile refreshed successfully');
       } else {
         _errorMessage = 'Failed to refresh profile';
       }
-    } catch (e) {
-      log('❌ Error refreshing profile: $e');
+    } catch (e, s) {
+      log('❌ Error refreshing profile', error: e, stackTrace: s);
       _errorMessage = 'Failed to refresh profile: $e';
     } finally {
       _isLoading = false;
@@ -121,84 +159,102 @@ class BuyerProfileViewProvider extends ChangeNotifier {
       _successMessage = null;
       notifyListeners();
 
+      final token = _storage.getToken();
+      if (token == null) {
+        _errorMessage = 'Not authenticated';
+        return false;
+      }
+
       print('🔄 Starting profile update...');
-      print(
-        '📝 Updates: fullName=$fullName, businessName=$businessName, bankName=$bankName, iban=$iban',
-      );
 
       final updates = <String, dynamic>{};
       if (fullName != null && fullName.isNotEmpty) {
-        updates['fullName'] = fullName;
-        print('✅ Adding fullName: $fullName');
+        updates['name'] = fullName;
       }
       if (email != null && email.isNotEmpty) {
         updates['email'] = email;
-        print('✅ Adding email: $email');
-      }
-      if (contactName != null) {
-        updates['contactName'] = contactName;
-        print('✅ Adding contactName: $contactName');
       }
       if (businessName != null) {
         updates['businessName'] = businessName;
-        print('✅ Adding businessName: $businessName');
       }
       if (address != null) {
         updates['address'] = address;
-        print('✅ Adding address: $address');
       }
       if (description != null) {
-        updates['description'] = description;
-        print('✅ Adding description: $description');
-      }
-      if (bankName != null) {
-        updates['bankName'] = bankName;
-        print('✅ Adding bankName: $bankName');
+        updates['businessDescription'] = description;
       }
       if (iban != null) {
         updates['iban'] = iban;
-        print('✅ Adding iban: $iban');
       }
 
-      print('📤 Sending updates to service: $updates');
+      FormData formData;
+      if (_newProfileImage != null) {
+        formData = FormData.fromMap({
+          ...updates,
+          'profileImage': await MultipartFile.fromFile(
+            _newProfileImage!.path,
+            filename: 'profile-${DateTime.now().millisecondsSinceEpoch}.jpg',
+          ),
+        });
+      } else {
+        formData = FormData.fromMap(updates);
+      }
 
-      final result = await _profileService.updateProfileBuyer(
-        updates: updates,
-        profileImage: _newProfileImage,
+      final response = await _dio.put(
+        '/auth/profile',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+          contentType: _newProfileImage != null
+              ? 'multipart/form-data'
+              : 'application/json',
+        ),
       );
 
-      print('📥 Received result: ${result['success']}');
-      print('📥 Message: ${result['message']}');
-      print('📥 Buyer data: ${result['buyer']}');
+      if (response.statusCode == 200) {
+        Map<String, dynamic> userData;
+        if (response.data['data'] != null &&
+            response.data['data']['user'] != null) {
+          userData = response.data['data']['user'] as Map<String, dynamic>;
+        } else if (response.data['user'] != null) {
+          userData = response.data['user'] as Map<String, dynamic>;
+        } else if (response.data['success'] == true &&
+            response.data['buyer'] != null) {
+          userData = response.data['buyer'] as Map<String, dynamic>;
+        } else {
+          userData = response.data as Map<String, dynamic>;
+        }
+        final user = UserModel.fromJson(userData);
 
-      if (result['success'] == true) {
-        _currentBuyer = result['buyer'];
-        _successMessage = result['message'];
+        await _storage.saveUserData(userData);
+        _currentUser = user;
+        _successMessage =
+            response.data['message'] ?? 'Profile updated successfully';
         _isEditing = false;
         _newProfileImage = null;
 
-        print('✅ Profile updated successfully: ${_currentBuyer?.fullName}');
-        print('✅ New businessName: ${_currentBuyer?.businessName}');
-        print('✅ New bankName: ${_currentBuyer?.bankName}');
-        print('✅ New iban: ${_currentBuyer?.iban}');
-
-        // Force notify all listeners
+        print('✅ Profile updated successfully: ${_currentUser?.name}');
         notifyListeners();
         return true;
       } else {
-        _errorMessage = result['message'];
-        print('❌ Update failed: $_errorMessage');
+        _errorMessage = response.data['message'] ?? 'Failed to update profile';
         return false;
       }
+    } on DioException catch (e) {
+      print('❌ Dio error updating profile: ${e.message}');
+      _errorMessage =
+          e.response?.data['message'] ?? 'Network error: ${e.message}';
+      return false;
     } catch (e) {
       print('❌ Error updating profile: $e');
       _errorMessage = 'Failed to update profile: $e';
       return false;
     } finally {
       _isLoading = false;
-      // Make sure to notify listeners
       notifyListeners();
-      print('🏁 Update process completed');
     }
   }
 
@@ -231,30 +287,32 @@ class BuyerProfileViewProvider extends ChangeNotifier {
   }
 
   // Logout
-  Future<bool> logout(BuildContext context) async {
+  Future<bool> logout() async {
     try {
+      log('🔄 Starting logout...');
       _isLoading = true;
+      _errorMessage = null;
+      _successMessage = null;
       notifyListeners();
 
-      await _profileService.logout();
+      // Clear storage first
+      await _storage.logout();
 
-      _currentBuyer = null;
-      _successMessage = 'Logged out successfully';
+      // Clear local state
+      _currentUser = null;
+      _newProfileImage = null;
 
-      // Navigate to login
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-      });
+      _isLoading = false;
+      notifyListeners();
 
       log('✅ Logout completed');
       return true;
     } catch (e) {
       log('❌ Error during logout: $e');
       _errorMessage = 'Logout failed: $e';
-      return false;
-    } finally {
       _isLoading = false;
       notifyListeners();
+      return false;
     }
   }
 
@@ -276,34 +334,27 @@ class BuyerProfileViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Update individual fields
-  void updateField(String field, String value) {
-    if (_currentBuyer != null) {
-      // Create a temporary updated buyer
-      final updatedBuyer = BuyerModel(
-        id: _currentBuyer!.id,
-        fullName: field == 'fullName' ? value : _currentBuyer!.fullName,
-        email: field == 'email' ? value : _currentBuyer!.email,
-        password: _currentBuyer!.password,
-        contactName: field == 'contactName'
-            ? value
-            : _currentBuyer!.contactName,
-        businessName: field == 'businessName'
-            ? value
-            : _currentBuyer!.businessName,
-        address: field == 'address' ? value : _currentBuyer!.address,
-        description: field == 'description'
-            ? value
-            : _currentBuyer!.description,
-        bankName: field == 'bankName' ? value : _currentBuyer!.bankName,
-        iban: field == 'iban' ? value : _currentBuyer!.iban,
-        profileImagePath: _currentBuyer!.profileImagePath,
-        profileCompleted: true,
-        isActive: true,
-      );
+  // // Update individual fields
+  // void updateField(String field, String value) {
+  //   if (_currentUser != null) {
+  //     final updatedUser = _currentUser!.copyWith(
+  //       name: field == 'fullName' || field == 'name'
+  //           ? value
+  //           : _currentUser!.name,
+  //       email: field == 'email' ? value : _currentUser!.email,
+  //       businessName: field == 'businessName'
+  //           ? value
+  //           : _currentUser!.businessName,
+  //       address: field == 'address' ? value : _currentUser!.address,
+  //       businessDescription:
+  //           field == 'description' || field == 'businessDescription'
+  //           ? value
+  //           : _currentUser!.businessDescription,
+  //       iban: field == 'iban' ? value : _currentUser!.iban,
+  //     );
 
-      _currentBuyer = updatedBuyer;
-      notifyListeners();
-    }
-  }
+  //     _currentUser = updatedUser;
+  //     notifyListeners();
+  //   }
+  // }
 }

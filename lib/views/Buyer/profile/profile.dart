@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_signup_model.dart';
 import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
 import 'package:wood_service/views/Buyer/profile/profile_widget.dart';
 import 'package:wood_service/views/Buyer/profile/setting/setting_screen.dart';
+import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -85,8 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     BuildContext context,
     BuyerProfileViewProvider provider,
   ) {
-    final buyer = provider.currentBuyer!;
-
+    final user = provider.currentUser!;
     return RefreshIndicator(
       onRefresh: () async {
         await provider.refreshProfile();
@@ -98,15 +96,15 @@ class _ProfileScreenState extends State<ProfileScreen>
           child: Column(
             children: [
               // User Header Section with REAL DATA
-              _buildUserHeader(buyer, provider),
+              _buildUserHeader(user, provider),
               const SizedBox(height: 20),
 
               // Stats Section
-              _buildStatsSection(),
+              _buildStatsSection(provider),
               const SizedBox(height: 20),
 
               // Main Menu Section
-              _buildMenuSection(context),
+              _buildMenuSection(context, provider),
             ],
           ),
         ),
@@ -115,7 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   // BuyerProfileViewProvider
-  Widget _buildUserHeader(BuyerModel buyer, BuyerProfileViewProvider provider) {
+  Widget _buildUserHeader(UserModel user, BuyerProfileViewProvider provider) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -195,7 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      buyer.fullName,
+                      provider.fullName,
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -204,16 +202,16 @@ class _ProfileScreenState extends State<ProfileScreen>
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      buyer.email,
+                      provider.email,
                       style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                     ),
-                    if (buyer.businessName.isNotEmpty)
+                    if (provider.businessName.isNotEmpty)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 5),
                           Text(
-                            buyer.businessName,
+                            provider.businessName,
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[700],
@@ -233,7 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   // Enhanced Stats Section
-  Widget _buildStatsSection() {
+  Widget _buildStatsSection(BuyerProfileViewProvider provider) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -271,7 +269,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   // Enhanced Main Menu Section
-  Widget _buildMenuSection(BuildContext context) {
+  Widget _buildMenuSection(
+    BuildContext context,
+    BuyerProfileViewProvider provider,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -398,7 +399,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             icon: Icons.logout_outlined,
             title: 'Sign Out',
             subtitle: 'Logout from your account',
-            onTap: () => showLogoutDialog(context),
+            onTap: () => showLogoutDialog(context, provider),
             iconColor: Colors.red,
             textColor: Colors.red,
             // gradient: [Colors.red.shade400, Colors.red.shade600],
@@ -408,7 +409,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             icon: Icons.logout_outlined,
             title: 'Delete Account',
             subtitle: 'Permanently remove account',
-            onTap: () => showLogoutDialog(context),
+            onTap: () => showLogoutDialog(context, provider),
             iconColor: Colors.red,
             textColor: Colors.red,
             // gradient: [Colors.red.shade400, Colors.red.shade600],

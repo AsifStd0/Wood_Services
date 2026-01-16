@@ -49,6 +49,7 @@ class ProductDetailScreen extends StatelessWidget {
                 MinimalQuantityStockWidget(
                   product: product,
                   onQuantityChanged: (quantity) {
+                    log('🔄 Quantity updated to: $quantity');
                     final cartViewModel = context.read<BuyerCartViewModel>();
                     cartViewModel.updateQuantity(quantity);
                   },

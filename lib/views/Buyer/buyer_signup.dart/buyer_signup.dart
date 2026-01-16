@@ -1,96 +1,106 @@
+import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_text_style.dart';
-import 'package:wood_service/views/Buyer/buyer_main/buyer_main.dart';
-import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_signup_provider.dart';
+import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 import 'package:wood_service/widgets/custom_text_style.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
-import 'package:provider/provider.dart';
 
 class BuyerSignupScreen extends StatefulWidget {
-  const BuyerSignupScreen({super.key});
+  String role;
+  BuyerSignupScreen({super.key, required this.role});
 
   @override
   State<BuyerSignupScreen> createState() => _BuyerSignupScreenState();
 }
 
 class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
+  // Add this to both SellerSignupScreen and BuyerSignupScreen
+
+  @override
+  void dispose() {
+    // Clear form when screen is disposed (when user navigates away)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final viewModel = context.read<RegisterViewModel>();
+      viewModel.clearForm();
+    });
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => BuyerSignupProvider(),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: SafeArea(
-          child: Consumer<BuyerSignupProvider>(
-            builder: (context, provider, child) {
-              return Stack(
-                children: [
-                  Column(
-                    children: [
-                      /// Scrollable content
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Header Section
-                              _buildHeaderSection(),
-                              const SizedBox(height: 20),
-
-                              // Profile Image Section
-                              _buildProfileImageSection(provider),
-                              const SizedBox(height: 20),
-
-                              // Personal Information Section
-                              _buildPersonalInfoSection(provider),
-                              const SizedBox(height: 20),
-
-                              // Business Information Section
-                              _buildBusinessInfoSection(provider),
-                              const SizedBox(height: 20),
-
-                              // Bank Details Section
-                              _buildBankDetailsSection(provider),
-                              const SizedBox(height: 30),
-
-                              // Submit Button
-                              _buildSubmitButton(provider),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // Loading overlay
-                  if (provider.isLoading)
-                    Container(
-                      color: Colors.black54,
-                      child: Center(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Consumer<RegisterViewModel>(
+          builder: (context, viewModel, child) {
+            return Stack(
+              children: [
+                Column(
+                  children: [
+                    /// Scrollable content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24.0),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                AppColors.brightOrange,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Registering...',
-                              style: TextStyle(color: Colors.white),
-                            ),
+                            // Header Section
+                            _buildHeaderSection(),
+                            const SizedBox(height: 20),
+
+                            // Profile Image Section
+                            _buildProfileImageSection(viewModel),
+                            const SizedBox(height: 20),
+
+                            // Personal Information Section
+                            _buildPersonalInfoSection(viewModel),
+                            const SizedBox(height: 20),
+
+                            // Business Information Section
+                            _buildBusinessInfoSection(viewModel),
+                            const SizedBox(height: 20),
+
+                            // Bank Details Section
+                            _buildBankDetailsSection(viewModel),
+                            const SizedBox(height: 30),
+
+                            // Submit Button
+                            _buildSubmitButton(viewModel, widget.role),
                           ],
                         ),
                       ),
                     ),
-                ],
-              );
-            },
-          ),
+                  ],
+                ),
+
+                // Loading overlay
+                if (viewModel.isLoading)
+                  Container(
+                    color: Colors.black54,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.brightOrange,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Registering...',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -119,7 +129,7 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
     );
   }
 
-  Widget _buildProfileImageSection(BuyerSignupProvider provider) {
+  Widget _buildProfileImageSection(RegisterViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -127,7 +137,9 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
         const SizedBox(height: 8),
         Center(
           child: GestureDetector(
-            onTap: () => provider.pickProfileImage(),
+            onTap: () => viewModel.pickImage(
+              'profile',
+            ), // Use RegisterViewModel's method
             child: Container(
               width: 120,
               height: 120,
@@ -139,10 +151,10 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
                   width: 2,
                 ),
               ),
-              child: provider.profileImage != null
+              child: viewModel.profileImage != null
                   ? ClipOval(
                       child: Image.file(
-                        provider.profileImage!,
+                        viewModel.profileImage!,
                         fit: BoxFit.cover,
                         width: 120,
                         height: 120,
@@ -168,7 +180,7 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
     );
   }
 
-  Widget _buildPersonalInfoSection(BuyerSignupProvider provider) {
+  Widget _buildPersonalInfoSection(RegisterViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -180,25 +192,23 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
         ),
         const SizedBox(height: 15),
 
-        // Full Name Field
+        // Full Name Field - Using RegisterViewModel
         CustomText('Full Name *', type: CustomTextType.subtitleMedium),
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
-            textFieldType: TextFieldType.name,
-            onChanged: provider.setFullName,
+            controller: viewModel.nameController, // Use viewModel's controller
             validator: (value) => value?.isEmpty == true ? 'Required' : null,
             hintText: 'e.g. John Doe',
           ),
         ),
 
-        // Email Field
+        // Email Field - Using RegisterViewModel
         CustomText('Email Address *', type: CustomTextType.subtitleMedium),
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
-            textFieldType: TextFieldType.email,
-            onChanged: provider.setEmail,
+            controller: viewModel.emailController, // Use viewModel's controller
             validator: (value) {
               if (value?.isEmpty == true) return 'Required';
               if (!value!.contains('@')) return 'Invalid email';
@@ -209,54 +219,57 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
           ),
         ),
 
-        // Password Field
+        // Password Field - Using RegisterViewModel
         CustomText('Password *', type: CustomTextType.subtitleMedium),
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
-            textFieldType: TextFieldType.password,
-            onChanged: provider.setPassword,
+            controller:
+                viewModel.passwordController, // Use viewModel's controller
             validator: (value) {
               if (value?.isEmpty == true) return 'Required';
               if (value!.length < 6) return 'At least 6 characters';
               return null;
             },
             hintText: 'Enter your password',
-            obscureText: provider.obscurePassword,
+            obscureText: viewModel.obscurePassword,
             suffixIcon: IconButton(
               icon: Icon(
-                provider.obscurePassword
+                viewModel.obscurePassword
                     ? Icons.visibility_off
                     : Icons.visibility,
                 color: AppColors.grayMedium,
               ),
-              onPressed: provider.togglePasswordVisibility,
+              onPressed:
+                  viewModel.togglePasswordVisibility, // Use viewModel's method
             ),
           ),
         ),
 
-        // Confirm Password Field
+        // Confirm Password Field - Using RegisterViewModel
         CustomText('Confirm Password *', type: CustomTextType.subtitleMedium),
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
-            textFieldType: TextFieldType.confrimpassword,
-            onChanged: provider.setConfirmPassword,
+            controller: viewModel
+                .confirmPasswordController, // Use viewModel's controller
             validator: (value) {
               if (value?.isEmpty == true) return 'Required';
-              if (value != provider.password) return 'Passwords do not match';
+              if (value != viewModel.passwordController.text)
+                return 'Passwords do not match';
               return null;
             },
             hintText: 'Confirm your password',
-            obscureText: provider.obscureConfirmPassword,
+            obscureText: viewModel.obscureConfirmPassword,
             suffixIcon: IconButton(
               icon: Icon(
-                provider.obscureConfirmPassword
+                viewModel.obscureConfirmPassword
                     ? Icons.visibility_off
                     : Icons.visibility,
                 color: AppColors.grayMedium,
               ),
-              onPressed: provider.toggleConfirmPasswordVisibility,
+              onPressed: viewModel
+                  .toggleConfirmPasswordVisibility, // Use viewModel's method
             ),
           ),
         ),
@@ -264,59 +277,82 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
     );
   }
 
-  Widget _buildBusinessInfoSection(BuyerSignupProvider provider) {
+  Widget _buildBusinessInfoSection(RegisterViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CustomText('Contact Number *', type: CustomTextType.subtitleMedium),
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 12),
+              child: CustomTextFormField(
+                prefixIcon: CountryCodePicker(
+                  onChanged: (CountryCode countryCode) {
+                    viewModel.countryCode = countryCode.dialCode ?? '+1';
+                  },
+                  initialSelection: 'US',
+                  favorite: const ['+1', 'US'],
+                  showCountryOnly: false,
+                  showOnlyCountryWhenClosed: false,
+                  alignLeft: false,
+                  showFlag: true,
+                  showFlagDialog: true,
+                  padding: EdgeInsets.zero,
+                  textStyle: const TextStyle(fontSize: 14),
+                ),
+                controller: viewModel.phoneController,
+                hintText: 'Enter your phone number',
+                textInputType: TextInputType.phone,
+              ),
+            ),
+          ],
+        ),
         CustomText(
-          'Business Information',
+          'Business Information (Optional)',
           fontSize: 18,
           fontWeight: FontWeight.bold,
           color: AppColors.brightOrange,
         ),
         const SizedBox(height: 15),
 
-        // Business Name Field
-        CustomText('Business Name', type: CustomTextType.subtitleMedium),
+        // Business Name Field - Optional for buyer
+        CustomText(
+          'Business Name (Optional)',
+          type: CustomTextType.subtitleMedium,
+        ),
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
-            textFieldType: TextFieldType.businessName,
-            onChanged: provider.setBusinessName,
+            controller: viewModel.businessNameController, // Optional for buyer
             hintText: 'e.g. Modern Design Co.',
           ),
         ),
 
-        // Contact Name Field
-        CustomText('Contact Name', type: CustomTextType.subtitleMedium),
+        // Address Field - Optional for buyer
+        CustomText('Address (Optional)', type: CustomTextType.subtitleMedium),
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
-            textFieldType: TextFieldType.contactName,
-            onChanged: provider.setContactName,
-            hintText: 'e.g. James Smith',
-          ),
-        ),
-
-        // Address Field
-        CustomText('Address', type: CustomTextType.subtitleMedium),
-        Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
-          child: CustomTextFormField(
-            textFieldType: TextFieldType.address,
-            onChanged: provider.setAddress,
+            controller: viewModel.addressController, // Optional for buyer
             hintText: 'Enter your full address',
           ),
         ),
 
-        // Description Field
-        CustomText('Short Description (Optional)'),
+        // Description Field - Optional for buyer
+        CustomText(
+          'Short Description (Optional)',
+          type: CustomTextType.subtitleMedium,
+        ),
+
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
+            controller:
+                viewModel.businessDescriptionController, // Optional for buyer
             minline: 4,
             maxLines: 4,
-            onChanged: provider.setDescription,
             hintText: 'A little about your business...',
           ),
         ),
@@ -324,12 +360,12 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
     );
   }
 
-  Widget _buildBankDetailsSection(BuyerSignupProvider provider) {
+  Widget _buildBankDetailsSection(RegisterViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CustomText(
-          'Bank Details',
+          'Bank Details (Optional)',
           fontSize: 18,
           fontWeight: FontWeight.bold,
           color: AppColors.brightOrange,
@@ -342,23 +378,30 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
             color: AppColors.grayMedium,
           ),
         ),
-
-        // Bank Name Field
-        CustomText('Bank Name', type: CustomTextType.subtitleMedium),
+        // IBAN Field - Optional for buyer
+        CustomText('Bank Name *', type: CustomTextType.subtitleMedium),
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
-            onChanged: provider.setBankName,
-            hintText: 'e.g. Premier National Bank',
+            controller: viewModel.bankNameController, // Optional for buyer
+            hintText: 'Enter your bank name',
           ),
         ),
-
-        // IBAN Field
-        CustomText('IBAN', type: CustomTextType.subtitleMedium),
+        // IBAN Field - Optional for buyer
+        CustomText('Account Number *', type: CustomTextType.subtitleMedium),
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
-            onChanged: provider.setIban,
+            controller: viewModel.accountNumberController, // Optional for buyer
+            hintText: 'Enter your account number',
+          ),
+        ),
+        // IBAN Field - Optional for buyer
+        CustomText('IBAN (Optional)', type: CustomTextType.subtitleMedium),
+        Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: 12),
+          child: CustomTextFormField(
+            controller: viewModel.ibanController, // Optional for buyer
             hintText: 'SA00 0000 0000 0000 0000 0000',
           ),
         ),
@@ -366,10 +409,10 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
     );
   }
 
-  Widget _buildSubmitButton(BuyerSignupProvider provider) {
+  Widget _buildSubmitButton(RegisterViewModel viewModel, String role) {
     // Show error message if exists
     Widget? errorWidget;
-    if (provider.errorMessage != null) {
+    if (viewModel.errorMessage != null) {
       errorWidget = Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: Container(
@@ -385,74 +428,24 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  provider.errorMessage!,
+                  viewModel.errorMessage!,
                   style: TextStyle(color: Colors.red[800]),
                 ),
               ),
-              IconButton(
-                icon: Icon(Icons.close, size: 16, color: Colors.red[800]),
-                onPressed: provider.clearError,
-              ),
             ],
           ),
         ),
       );
     }
-
-    // Show success message if exists
-    Widget? successWidget;
-    if (provider.successMessage != null) {
-      successWidget = Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.green[50],
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.green),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.green[800]),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  provider.successMessage!,
-                  style: TextStyle(color: Colors.green[800]),
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.close, size: 16, color: Colors.green[800]),
-                onPressed: provider.clearSuccess,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Column(
       children: [
         if (errorWidget != null) errorWidget,
-        if (successWidget != null) successWidget,
         CustomButtonUtils.login(
           title: 'Complete Registration',
           backgroundColor: AppColors.brightOrange,
-          onPressed: () async {
-            FocusScope.of(context).unfocus();
-            final result = await provider.registerBuyer();
-
-            if (result['success'] == true) {
-              // Navigate to main screen after successful registration
-              await Future.delayed(const Duration(seconds: 1));
-              if (context.mounted) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => BuyerMainScreen()),
-                );
-              }
-            }
-          },
+          onPressed: viewModel.isLoading
+              ? null
+              : () => viewModel.handleSubmission(context, role),
         ),
       ],
     );

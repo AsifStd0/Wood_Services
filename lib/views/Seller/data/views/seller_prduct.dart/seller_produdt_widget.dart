@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
 
 Widget buildPreviousButton(SellerProductProvider viewModel) {
@@ -84,6 +85,21 @@ Future<void> _publishProduct(
   BuildContext context,
   SellerProductProvider viewModel,
 ) async {
+  log('Data is here ${viewModel.product.toJson()}');
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
+  // ! *******
   // Validate media tab before publishing
   if (viewModel.selectedImages.isEmpty) {
     showSnackBar(

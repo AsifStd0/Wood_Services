@@ -154,8 +154,8 @@ class _VariantsTabState extends State<VariantsTab> {
           ),
           const SizedBox(height: 24),
 
-          // Current Variants - FIXED: Check if variants exist in your model
-          if (product.variants != null && product.variants.isNotEmpty) ...[
+          // Current Variants
+          if (product.variants.isNotEmpty) ...[
             Text(
               'Current Variants (${product.variants.length})',
               style: TextStyle(
@@ -245,9 +245,18 @@ class _VariantsTabState extends State<VariantsTab> {
 
           // Variant info
           Expanded(
-            child: Text(
-              variant.name,
-              style: const TextStyle(fontWeight: FontWeight.w500),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${variant.type}: ${variant.value}', // ✅ Use type and value
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  'Price Adjustment: \$${variant.priceAdjustment}',
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+              ],
             ),
           ),
 
@@ -270,10 +279,17 @@ class _VariantsTabState extends State<VariantsTab> {
             icon: const Icon(Icons.delete, size: 18),
             color: Colors.grey,
             onPressed: () {
-              viewModel.removeVariant(variant.id.toString());
+              // Since your model doesn't have ID, remove by index
+              final index = viewModel.product.variants.indexOf(variant);
+              if (index != -1) {
+                viewModel.removeVariant(index); // ✅ FIXED: remove by index
+              }
+
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Removed ${variant.name}'),
+                  content: Text(
+                    'Removed ${variant.type}: ${variant.value}',
+                  ), // ✅ FIXED: use type and value
                   backgroundColor: Colors.red,
                 ),
               );
@@ -300,7 +316,7 @@ class _VariantsTabState extends State<VariantsTab> {
   void _addVariant(BuildContext context, SellerProductProvider viewModel) {
     if (_variantColorController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter variant name')),
+        const SnackBar(content: Text('Please enter variant value')),
       );
       return;
     }
@@ -315,11 +331,9 @@ class _VariantsTabState extends State<VariantsTab> {
     final price = double.tryParse(_variantPriceController.text) ?? 0.0;
 
     final variant = ProductVariant(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: _selectedType,
-      name: _variantColorController.text,
+      value: _variantColorController.text, // ✅ FIXED: 'value' not 'name'
       priceAdjustment: price,
-      stock: 10,
     );
 
     viewModel.addVariant(variant);
@@ -336,24 +350,18 @@ class _VariantsTabState extends State<VariantsTab> {
     );
   }
 
+  // Template methods - add only one variant per button click
   void _addSizeTemplate(BuildContext context, SellerProductProvider viewModel) {
-    const sizes = ['Small', 'Medium', 'Large'];
-    const prices = [0.0, 10.0, 20.0];
-
-    for (int i = 0; i < sizes.length; i++) {
-      final variant = ProductVariant(
-        id: '${DateTime.now().millisecondsSinceEpoch}_$i',
-        type: 'Size',
-        name: sizes[i],
-        priceAdjustment: prices[i],
-        stock: 10,
-      );
-      viewModel.addVariant(variant);
-    }
+    final variant = ProductVariant(
+      type: 'Size',
+      value: 'Medium',
+      priceAdjustment: 0.0,
+    );
+    viewModel.addVariant(variant);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Added 3 size variants'),
+        content: Text('Added Size variant'),
         backgroundColor: Colors.green,
       ),
     );
@@ -363,22 +371,16 @@ class _VariantsTabState extends State<VariantsTab> {
     BuildContext context,
     SellerProductProvider viewModel,
   ) {
-    const colors = ['Red', 'Blue', 'Green'];
-
-    for (var color in colors) {
-      final variant = ProductVariant(
-        id: '${DateTime.now().millisecondsSinceEpoch}_$color',
-        type: 'Color',
-        name: color,
-        priceAdjustment: 0.0,
-        stock: 10,
-      );
-      viewModel.addVariant(variant);
-    }
+    final variant = ProductVariant(
+      type: 'Color',
+      value: 'Red',
+      priceAdjustment: 0.0,
+    );
+    viewModel.addVariant(variant);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Added 3 color variants'),
+        content: Text('Added Color variant'),
         backgroundColor: Colors.green,
       ),
     );
@@ -388,22 +390,16 @@ class _VariantsTabState extends State<VariantsTab> {
     BuildContext context,
     SellerProductProvider viewModel,
   ) {
-    const materials = ['Wood', 'Metal'];
-
-    for (var material in materials) {
-      final variant = ProductVariant(
-        id: '${DateTime.now().millisecondsSinceEpoch}_$material',
-        type: 'Material',
-        name: material,
-        priceAdjustment: material == 'Metal' ? 15.0 : 0.0,
-        stock: 10,
-      );
-      viewModel.addVariant(variant);
-    }
+    final variant = ProductVariant(
+      type: 'Material',
+      value: 'Wood',
+      priceAdjustment: 0.0,
+    );
+    viewModel.addVariant(variant);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Added 2 material variants'),
+        content: Text('Added Material variant'),
         backgroundColor: Colors.green,
       ),
     );

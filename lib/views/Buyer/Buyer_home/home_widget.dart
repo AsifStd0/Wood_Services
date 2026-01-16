@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:wood_service/chats/Buyer/buyer_chating.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/favorite_button.dart';
+import 'package:wood_service/views/Buyer/product_detail/product_detail.dart';
+import 'package:wood_service/widgets/custom_button.dart';
 
 import '../../../app/index.dart';
 
@@ -35,7 +36,7 @@ Widget buildCategoryChip(
 }
 
 Widget buildNewSection() {
-  return Consumer<BuyerHomeViewModel>(
+  return Consumer<BuyerHomeViewProvider>(
     builder: (context, viewModel, child) {
       List<List<String>> chunks = [];
       for (int i = 0; i < viewModel.allOptions.length; i += 2) {
@@ -490,17 +491,17 @@ void _startChatWithSeller(BuyerProductModel product, BuildContext context) {
   print('   Seller ID: $sellerIdString');
   print('   Seller Name: $sellerNameString');
 
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => BuyerChatScreen(
-        sellerId: sellerIdString,
-        sellerName: sellerNameString,
-        productId: product.id,
-        productName: product.title,
-        // ✅ Remove orderId or set it to null
-        // orderId: null, // Or don't pass this parameter at all
-      ),
-    ),
-  );
+  // Navigator.push(
+  //   context,
+  //   MaterialPageRoute(
+  //     builder: (context) => BuyerChatScreen(
+  //       sellerId: sellerIdString,
+  //       sellerName: sellerNameString,
+  //       productId: product.id,
+  //       productName: product.title,
+  //       // ✅ Remove orderId or set it to null
+  //       // orderId: null, // Or don't pass this parameter at all
+  //     ),
+  //   ),
+  // );
 }

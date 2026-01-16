@@ -3,12 +3,15 @@ import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:wood_service/app/config.dart';
-import 'package:wood_service/core/services/buyer_local_storage_service.dart';
+import 'package:wood_service/app/locator.dart';
+import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/buyer_favorite_product_model.dart';
 
 class FavoriteProvider extends ChangeNotifier {
   // ========== STATE VARIABLES ==========
-  final BuyerLocalStorageService _buyerLocalStorageService;
+  // Use locator to get the initialized instance
+  final UnifiedLocalStorageServiceImpl _storage =
+      locator<UnifiedLocalStorageServiceImpl>();
   final Map<String, bool> _favorites = {}; // productId -> isFavorited
   final Map<String, String> _favoriteIds = {}; // productId -> favoriteId
   bool _isLoading = false;
@@ -20,7 +23,7 @@ class FavoriteProvider extends ChangeNotifier {
   static String get _baseUrl => Config.baseUrl;
 
   // ========== CONSTRUCTOR ==========
-  FavoriteProvider(this._buyerLocalStorageService);
+  FavoriteProvider();
 
   // ========== GETTERS ==========
   bool get isLoading => _isLoading;
@@ -51,20 +54,23 @@ class FavoriteProvider extends ChangeNotifier {
   // ========== CORE METHODS ==========
 
   // ✅ TOGGLE FAVORITE (Add/Remove)
-  Future<void> toggleFavorite(String productId) async {
+  /// POST /api/buyer/favorites
+  /// Body: { serviceId }
+  Future<void> toggleFavorite(String serviceId) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final token = await _buyerLocalStorageService.getBuyerToken();
+      final token = await _storage.getToken();
 
       if (token == null || token.isEmpty) {
         throw Exception('Please login to add favorites');
       }
 
-      log('❤️ Toggling favorite for product: $productId');
+      log('❤️ Adding favorite for service: $serviceId');
 
-      final url = Uri.parse('$_baseUrl/api/buyer/favorites/toggle/$productId');
+      final url = Uri.parse('$_baseUrl/api/buyer/favorites');
+      final body = json.encode({'serviceId': serviceId});
 
       final client = http.Client();
       try {
@@ -75,6 +81,7 @@ class FavoriteProvider extends ChangeNotifier {
                 'Authorization': 'Bearer $token',
                 'Content-Type': 'application/json',
               },
+              body: body,
             )
             .timeout(
               const Duration(seconds: 10),
@@ -86,20 +93,28 @@ class FavoriteProvider extends ChangeNotifier {
         log('📡 Response status: ${response.statusCode}');
         log('📡 Response body: ${response.body}');
 
-        if (response.statusCode == 200) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
           final jsonData = json.decode(response.body);
 
-          if (jsonData['success'] == true) {
-            final isFavorited = jsonData['data']['isFavorited'];
-            final favoriteCount = jsonData['data']['favoriteCount'];
+          if (jsonData['success'] == true || response.statusCode == 201) {
+            final isFavorited = jsonData['data']?['isFavorited'] ?? true;
+            final favoriteCount =
+                jsonData['data']?['favoriteCount'] ?? _totalFavorites + 1;
+            final favoriteId =
+                jsonData['data']?['favoriteId']?.toString() ??
+                jsonData['data']?['_id']?.toString();
 
             // Update local state
-            _favorites[productId] = isFavorited;
+            _favorites[serviceId] = isFavorited;
             _totalFavorites = favoriteCount;
+
+            if (favoriteId != null) {
+              _favoriteIds[serviceId] = favoriteId;
+            }
 
             // Remove from cached list if unfavorited
             if (!isFavorited) {
-              _cachedFavorites.removeWhere((fav) => fav.productId == productId);
+              _cachedFavorites.removeWhere((fav) => fav.productId == serviceId);
             }
 
             log('✅ Favorite toggled: $isFavorited, Total: $_totalFavorites');
@@ -125,7 +140,7 @@ class FavoriteProvider extends ChangeNotifier {
   // ✅ LOAD FAVORITE STATUS FOR MULTIPLE PRODUCTS
   Future<void> loadFavoriteStatusForProducts(List<String> productIds) async {
     try {
-      final token = await _buyerLocalStorageService.getBuyerToken();
+      final token = await _storage.getToken();
 
       if (token == null || token.isEmpty) {
         log('⚠️ Skipping favorite status load - no token');
@@ -185,7 +200,7 @@ class FavoriteProvider extends ChangeNotifier {
     }
 
     try {
-      final token = await _buyerLocalStorageService.getBuyerToken();
+      final token = await _storage.getToken();
 
       if (token == null || token.isEmpty) {
         throw Exception('Please login to view favorites');
@@ -247,15 +262,19 @@ class FavoriteProvider extends ChangeNotifier {
   }
 
   // ✅ REMOVE FROM FAVORITES
-  Future<void> removeFromFavorites(String productId) async {
+  /// DELETE /api/buyer/favorites/:id
+  /// Where :id is the favoriteId (not serviceId)
+  Future<void> removeFromFavorites(String favoriteId) async {
     try {
-      final token = await _buyerLocalStorageService.getBuyerToken();
+      final token = await _storage.getToken();
 
       if (token == null || token.isEmpty) {
         throw Exception('Please login to remove favorites');
       }
 
-      final url = Uri.parse('$_baseUrl/api/buyer/favorites/$productId');
+      log('🗑️ Removing favorite with ID: $favoriteId');
+
+      final url = Uri.parse('$_baseUrl/api/buyer/favorites/$favoriteId');
 
       final response = await http.delete(
         url,
@@ -265,18 +284,29 @@ class FavoriteProvider extends ChangeNotifier {
         },
       );
 
+      log('📡 Response status: ${response.statusCode}');
+      log('📡 Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
 
         if (jsonData['success'] == true) {
-          // Update local state
-          _favorites.remove(productId);
-          _favoriteIds.remove(productId);
-          _cachedFavorites.removeWhere((fav) => fav.productId == productId);
-          _totalFavorites =
-              jsonData['data']['favoriteCount'] ?? _totalFavorites - 1;
+          // Find and remove by favoriteId
+          final removedFavorite = _cachedFavorites.firstWhere(
+            (fav) => fav.id == favoriteId,
+            orElse: () => _cachedFavorites.first,
+          );
 
-          log('✅ Removed from favorites: $productId');
+          final serviceId = removedFavorite.productId;
+
+          // Update local state
+          _favorites.remove(serviceId);
+          _favoriteIds.remove(serviceId);
+          _cachedFavorites.removeWhere((fav) => fav.id == favoriteId);
+          _totalFavorites =
+              jsonData['data']?['favoriteCount'] ?? _totalFavorites - 1;
+
+          log('✅ Removed from favorites: $favoriteId (serviceId: $serviceId)');
           notifyListeners();
         } else {
           throw Exception(jsonData['message'] ?? 'Failed to remove favorite');
@@ -290,10 +320,32 @@ class FavoriteProvider extends ChangeNotifier {
     }
   }
 
+  // ✅ REMOVE FROM FAVORITES BY SERVICE ID (Helper method)
+  /// Helper method to remove favorite using serviceId
+  Future<void> removeFavoriteByServiceId(String serviceId) async {
+    try {
+      final favoriteId = _favoriteIds[serviceId];
+      if (favoriteId != null) {
+        await removeFromFavorites(favoriteId);
+      } else {
+        // Try to find in cached favorites
+        final favorite = _cachedFavorites.firstWhere(
+          (fav) => fav.productId == serviceId,
+          orElse: () =>
+              throw Exception('Favorite not found for service: $serviceId'),
+        );
+        await removeFromFavorites(favorite.id);
+      }
+    } catch (e) {
+      log('❌ Remove favorite by serviceId error: $e');
+      rethrow;
+    }
+  }
+
   // ✅ CLEAR ALL FAVORITES
   Future<void> clearAllFavorites() async {
     try {
-      final token = await _buyerLocalStorageService.getBuyerToken();
+      final token = await _storage.getToken();
 
       if (token == null || token.isEmpty) {
         throw Exception('Please login to clear favorites');
@@ -336,7 +388,7 @@ class FavoriteProvider extends ChangeNotifier {
   // ✅ LOAD FAVORITE COUNT
   Future<void> loadFavoriteCount() async {
     try {
-      final token = await _buyerLocalStorageService.getBuyerToken();
+      final token = await _storage.getToken();
 
       if (token == null || token.isEmpty) {
         _totalFavorites = 0;

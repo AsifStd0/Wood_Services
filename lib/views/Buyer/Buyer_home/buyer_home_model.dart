@@ -47,7 +47,7 @@ class BuyerProductModel {
   String? get sellerEmail => sellerInfo?['email'];
   String? get sellerPhone => sellerInfo?['phone'];
   String? get shopName => sellerInfo?['shopName'];
-  String? get shopLogo => sellerInfo?['shopLogo'];
+  String? get shopLogo => sellerInfo?['profileImage'];
   double? get sellerRating => (sellerInfo?['rating'] as num?)?.toDouble();
   int? get sellerTotalProducts => sellerInfo?['totalProducts'];
   String? get sellerVerificationStatus => sellerInfo?['verificationStatus'];
@@ -199,66 +199,74 @@ class BuyerProductModel {
       return DateTime.now();
     }
 
-    // 🔥 FIX: Properly parse sellerInfo
+    // 🔥 FIX: Parse sellerInfo from sellerId object (API returns sellerId as object)
     Map<String, dynamic>? parsedSellerInfo;
+    String? sellerIdString;
 
-    if (json['sellerInfo'] != null) {
+    // API returns sellerId as an object with seller details: { _id, name, email, phone, profileImage }
+    if (json['sellerId'] != null && json['sellerId'] is Map) {
+      final sellerIdObj = json['sellerId'] as Map;
+      parsedSellerInfo = Map<String, dynamic>.from(sellerIdObj);
+      // Extract the seller ID string from _id field
+      sellerIdString =
+          sellerIdObj['_id']?.toString() ?? sellerIdObj['id']?.toString();
+      print(
+        '✅ sellerInfo parsed from sellerId object, seller ID: $sellerIdString',
+      );
+    } else if (json['sellerInfo'] != null) {
       if (json['sellerInfo'] is Map<String, dynamic>) {
         parsedSellerInfo = json['sellerInfo'] as Map<String, dynamic>;
-        print('✅ sellerInfo is already Map<String, dynamic>');
       } else if (json['sellerInfo'] is Map) {
         parsedSellerInfo = Map<String, dynamic>.from(json['sellerInfo']);
-        print('✅ sellerInfo is Map, converted to Map<String, dynamic>');
       } else if (json['sellerInfo'] is String) {
-        // Try to parse if it's a JSON string
         try {
-          print('⚠️ sellerInfo is String, trying to parse JSON');
           parsedSellerInfo = Map<String, dynamic>.from(
             jsonDecode(json['sellerInfo']),
           );
-          print('✅ Successfully parsed sellerInfo from JSON string');
         } catch (e) {
           print('❌ Failed to parse sellerInfo string: $e');
         }
-      } else {
-        print(
-          '❌ sellerInfo is unexpected type: ${json['sellerInfo'].runtimeType}',
-        );
       }
-    } else {
-      print('⚠️ sellerInfo is null or not present');
+      sellerIdString =
+          parsedSellerInfo?['_id']?.toString() ??
+          parsedSellerInfo?['id']?.toString();
+    } else if (json['seller'] != null && json['seller'] is Map) {
+      parsedSellerInfo = Map<String, dynamic>.from(json['seller']);
+      sellerIdString =
+          parsedSellerInfo['_id']?.toString() ??
+          parsedSellerInfo['id']?.toString();
+    } else if (json['sellerId'] is String) {
+      sellerIdString = json['sellerId']?.toString();
     }
 
     print('🔍 Parsed sellerInfo keys: ${parsedSellerInfo?.keys.toList()}');
-    print('🔍 Parsed sellerInfo values: $parsedSellerInfo');
-
-    // Check if sellerInfo might be nested in 'seller' field
-    if (parsedSellerInfo == null &&
-        json['seller'] != null &&
-        json['seller'] is Map) {
-      print('⚠️ Trying to get sellerInfo from "seller" field');
-      parsedSellerInfo = Map<String, dynamic>.from(json['seller']);
-      print('✅ Got sellerInfo from "seller" field: ${parsedSellerInfo.keys}');
-    }
 
     return BuyerProductModel(
-      // ID
-      id: json['id']?.toString() ?? json['_id']?.toString() ?? 'unknown_id',
+      // ID - API returns _id
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? 'unknown_id',
 
-      // 🔥 FIXED: Seller info parsing
-      sellerId: json['seller'] ?? json['sellerId'],
+      // 🔥 FIXED: Seller info parsing - API returns sellerId as object
+      // sellerId should be the string ID, sellerInfo should be the full object
+      sellerId:
+          sellerIdString ??
+          (json['sellerId'] is Map
+              ? (json['sellerId'] as Map)['_id']?.toString()
+              : json['sellerId']?.toString()),
       sellerInfo: parsedSellerInfo,
 
       // Basic info
       title: json['title']?.toString() ?? 'Untitled Product',
       shortDescription:
           json['shortDescription']?.toString() ?? 'No description',
-      longDescription: json['longDescription']?.toString() ?? '',
+      longDescription:
+          json['description']?.toString() ??
+          json['longDescription']?.toString() ??
+          '',
       category: json['category']?.toString() ?? 'Uncategorized',
       tags: _parseStringList(json['tags']),
 
-      // Pricing
-      basePrice: _parseDouble(json['basePrice']),
+      // Pricing - API uses 'price' not 'basePrice'
+      basePrice: _parseDouble(json['price'] ?? json['basePrice']),
       salePrice: _parseDouble(json['salePrice']),
       costPrice: json.containsKey('costPrice')
           ? _parseDouble(json['costPrice'])
@@ -267,7 +275,10 @@ class BuyerProductModel {
           ? _parseDouble(json['taxRate'])
           : null,
       currency: json['currency']?.toString() ?? 'USD',
-      hasDiscount: json['hasDiscount'] ?? false,
+      hasDiscount:
+          (json['salePrice'] != null &&
+          _parseDouble(json['salePrice']) <
+              _parseDouble(json['price'] ?? json['basePrice'] ?? 0)),
       sku: json['sku']?.toString(),
       stockQuantity: json['stockQuantity'] ?? 0,
       lowStockAlert: json['lowStockAlert'],
@@ -277,37 +288,48 @@ class BuyerProductModel {
       dimensions: json['dimensions'] != null && json['dimensions'] is Map
           ? ProductDimensions.fromJson(json['dimensions'])
           : null,
-      dimensionSpec: json['dimensionSpec']?.toString(),
+      dimensionSpec:
+          json['dimensionSpec']?.toString() ??
+          (json['dimensions']?['specification']?.toString()),
 
       // Variants
       variants: _parseVariants(json['variants']),
       variantTypes: _parseStringList(json['variantTypes']),
 
-      // Media
+      // Media - API uses 'images' array and 'featuredImage' string
       featuredImage: _parseImageField(json['featuredImage']),
-      imageGallery: _parseImageGallery(json['imageGallery']),
+      imageGallery: _parseImageGallery(json['images'] ?? json['imageGallery']),
       video: json['video'] is Map
           ? Map<String, dynamic>.from(json['video'])
           : null,
 
-      // Status
-      status: json['status']?.toString() ?? 'draft',
+      // Status - API uses 'availability' field
+      status:
+          json['availability']?.toString() ??
+          json['status']?.toString() ??
+          'available',
       isActive: json.containsKey('isActive')
           ? (json['isActive'] ?? true)
           : true,
 
       // Performance metrics
       views: json['views'] ?? 0,
-      salesCount: json['salesCount'] ?? 0,
+      salesCount: json['salesCount'] ?? json['completedProjects'] ?? 0,
 
       // Computed fields
-      inStock: json['inStock'] ?? false,
+      inStock:
+          (json['availability']?.toString().toLowerCase() == 'available') ||
+          (json['stockQuantity'] ?? 0) > 0 ||
+          (json['inStock'] ?? false),
       finalPrice: _parseDouble(
-        json['finalPrice'] ?? json['salePrice'] ?? json['basePrice'],
+        json['salePrice'] ?? json['price'] ?? json['basePrice'] ?? 0,
       ),
-      discountPercentage: _parseDouble(json['discountPercentage'] ?? 0),
-      rating: _parseDouble(json['rating']),
-      reviewCount: json['reviewCount'],
+      discountPercentage: _calculateDiscountPercentage(
+        _parseDouble(json['price'] ?? json['basePrice'] ?? 0),
+        _parseDouble(json['salePrice']),
+      ),
+      rating: _parseDouble(json['ratings']?['average'] ?? json['rating']),
+      reviewCount: json['ratings']?['count'] ?? json['reviewCount'] ?? 0,
 
       // Favorite fields
       isFavorited: json['isFavorited'] ?? false,
@@ -410,6 +432,15 @@ class BuyerProductModel {
     return 0.0;
   }
 
+  static double _calculateDiscountPercentage(
+    double basePrice,
+    double? salePrice,
+  ) {
+    if (salePrice == null || salePrice <= 0 || basePrice <= 0) return 0.0;
+    if (salePrice >= basePrice) return 0.0;
+    return ((basePrice - salePrice) / basePrice) * 100;
+  }
+
   static List<Variant> _parseVariants(dynamic data) {
     if (data == null || data is! List) return <Variant>[];
 
@@ -500,12 +531,14 @@ class Variant {
   }
 
   factory Variant.fromJson(Map<String, dynamic> json) {
+    // API returns variant with: type, value, priceAdjustment, _id
+    // Note: API doesn't have 'name' field, only 'value'
     return Variant(
-      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
       type: json['type']?.toString() ?? 'unknown',
-      name: json['name']?.toString() ?? 'Unknown',
+      name: json['name']?.toString() ?? json['value']?.toString() ?? 'Unknown',
       value: json['value']?.toString() ?? json['name']?.toString() ?? 'Unknown',
-      priceAdjustment: _parseDouble(json['priceAdjustment']),
+      priceAdjustment: _parseDouble(json['priceAdjustment'] ?? 0),
       sku: json['sku']?.toString(),
       stock: json['stock'] is int ? json['stock'] : null,
       isActive: json['isActive'] ?? true,

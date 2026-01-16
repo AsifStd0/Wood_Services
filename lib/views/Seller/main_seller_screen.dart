@@ -1,5 +1,6 @@
 // lib/views/Seller/Main/main_seller_screen.dart
 import 'package:flutter/material.dart';
+import 'package:wood_service/buyer_seller_chat.dart';
 // Import from correct file
 import 'package:wood_service/chats/Seller/seller_chat_outer.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_screen_seller.dart';

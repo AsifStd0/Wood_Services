@@ -26,10 +26,13 @@ class PricingTab extends StatelessWidget {
             'Set the regular price for your product',
             '0.00',
             Icons.attach_money_rounded,
-            product.basePrice.toString(),
+            product.price
+                .toString(), // ✅ FIXED: product.price not product.basePrice
             (value) {
               final price = double.tryParse(value) ?? 0.0;
-              productProvider.updateBasePrice(price);
+              productProvider.updatePrice(
+                price,
+              ); // ✅ FIXED: updatePrice() not updateBasePrice()
             },
           ),
           const SizedBox(height: 24),
@@ -201,7 +204,8 @@ class PricingTab extends StatelessWidget {
   }
 
   Widget _buildPriceSummary(SellerProduct product) {
-    final sellingPrice = product.salePrice ?? product.basePrice;
+    final sellingPrice =
+        product.salePrice ?? product.price; // ✅ FIXED: product.price
     final taxAmount = sellingPrice * (product.taxRate / 100);
     final finalPrice = sellingPrice + taxAmount;
     final profit = product.costPrice != null
@@ -231,7 +235,7 @@ class PricingTab extends StatelessWidget {
           const SizedBox(height: 12),
           _buildSummaryRow(
             'Base Price',
-            '\$${product.basePrice.toStringAsFixed(2)}',
+            '\$${product.price.toStringAsFixed(2)}', // ✅ FIXED: product.price
           ),
           if (product.salePrice != null)
             _buildSummaryRow(

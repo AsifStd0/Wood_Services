@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/payment/rating/review_provider.dart';
+import 'package:wood_service/widgets/custom_button.dart';
 
 class OrderRatingScreen extends StatefulWidget {
   final String orderId;
@@ -117,68 +118,69 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
                   ? AppColors.brightOrange
                   : Colors.grey.shade400,
               title: 'Submit Review',
-              onPressed: _selectedRating > 0 ? _submitReview : null,
+              onPressed: () {},
+              // onPressed: _selectedRating > 0 ? _submitReview : null,
             ),
     );
   }
 
-  Future<void> _submitReview() async {
-    debugPrint('================ SUBMIT REVIEW START ================');
+  // Future<void> _submitReview() async {
+  //   debugPrint('================ SUBMIT REVIEW START ================');
 
-    if (_selectedRating == 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Please select a rating')));
-      return;
-    }
+  //   if (_selectedRating == 0) {
+  //     ScaffoldMessenger.of(
+  //       context,
+  //     ).showSnackBar(SnackBar(content: Text('Please select a rating')));
+  //     return;
+  //   }
 
-    setState(() => _isLoading = true);
+  //   setState(() => _isLoading = true);
 
-    try {
-      final reviewProvider = Provider.of<ReviewProvider>(
-        context,
-        listen: false,
-      );
-      final result = await reviewProvider.submitReview(
-        orderId: widget.orderId,
-        orderItemId: widget.orderItemId,
-        productId: widget.buyerProduct.id,
-        rating: _selectedRating,
-        title: _reviewController.text.isNotEmpty
-            ? _reviewController.text.substring(
-                0,
-                min(_reviewController.text.length, 50),
-              )
-            : 'Rating for ${widget.buyerProduct.title}',
-        comment: _reviewController.text,
-      );
+  //   try {
+  //     final reviewProvider = Provider.of<ReviewProvider>(
+  //       context,
+  //       listen: false,
+  //     );
+  //     final result = await reviewProvider.submitReview(
+  //       orderId: widget.orderId,
+  //       orderItemId: widget.orderItemId,
+  //       productId: widget.buyerProduct.id,
+  //       rating: _selectedRating,
+  //       title: _reviewController.text.isNotEmpty
+  //           ? _reviewController.text.substring(
+  //               0,
+  //               min(_reviewController.text.length, 50),
+  //             )
+  //           : 'Rating for ${widget.buyerProduct.title}',
+  //       comment: _reviewController.text,
+  //     );
 
-      setState(() => _isLoading = false);
+  //     setState(() => _isLoading = false);
 
-      if (result['success'] == true) {
-        _showSuccessDialog();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message']),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('🔥 ERROR: $e');
-      setState(() => _isLoading = false);
+  //     if (result['success'] == true) {
+  //       _showSuccessDialog();
+  //     } else {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //           content: Text(result['message']),
+  //           backgroundColor: Colors.red,
+  //         ),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     debugPrint('🔥 ERROR: $e');
+  //     setState(() => _isLoading = false);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error submitting review: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text('Error submitting review: $e'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //   }
 
-    debugPrint('================ SUBMIT REVIEW END =================');
-  }
+  //   debugPrint('================ SUBMIT REVIEW END =================');
+  // }
 
   Widget _buildHeaderSection() {
     return Column(
@@ -330,17 +332,17 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
   }
 
   // Also update the initialization to fetch reviewable orders
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final reviewProvider = Provider.of<ReviewProvider>(
-        context,
-        listen: false,
-      );
-      reviewProvider.fetchReviewableOrders();
-    });
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     final reviewProvider = Provider.of<ReviewProvider>(
+  //       context,
+  //       listen: false,
+  //     );
+  //     reviewProvider.fetchReviewableOrders();
+  //   });
+  // }
 
   void _showSuccessDialog() {
     showDialog(

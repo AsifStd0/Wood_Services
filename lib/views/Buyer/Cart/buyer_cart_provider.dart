@@ -44,7 +44,7 @@ class BuyerCartViewModel with ChangeNotifier {
   // ========== Product Selection Methods ==========
   void updateQuantity(int newQuantity) {
     _selectedQuantity = newQuantity;
-    log('🔄 Quantity updated to: $_selectedQuantity');
+    log('🔄 Quantity updated to: ----------- $_selectedQuantity');
     notifyListeners();
   }
 
@@ -92,7 +92,7 @@ class BuyerCartViewModel with ChangeNotifier {
   }
 
   Future<Map<String, dynamic>?> addToCart({
-    required String productId,
+    required String serviceId, // Changed from productId to serviceId
     int? quantity,
     String? selectedVariant,
     String? selectedSize,
@@ -103,17 +103,24 @@ class BuyerCartViewModel with ChangeNotifier {
       final finalSize = selectedSize ?? _selectedSize;
 
       log('🛒 Adding to cart:');
-      log('   Product ID: $productId');
+      log('   Service ID: $serviceId');
       log('   Quantity: $finalQuantity');
       log('   Size: $finalSize');
       log('   Variant: $finalVariant');
 
       final result = await _cartService.addToCartService(
-        productId: productId,
+        serviceId: serviceId, // Changed parameter name
         quantity: finalQuantity,
         selectedVariant: finalVariant,
         selectedSize: finalSize,
       );
+
+      // Check if the result indicates failure
+      if (result['success'] == false) {
+        final errorMessage = result['message'] ?? 'Failed to add to cart';
+        log('❌ Add to cart failed: $errorMessage');
+        throw Exception(errorMessage);
+      }
 
       await loadCart();
       resetSelection();
@@ -137,35 +144,35 @@ class BuyerCartViewModel with ChangeNotifier {
     }
   }
 
-  Future<void> removeFromCart(String itemId) async {
-    try {
-      await _cartService.removeFromCart(itemId);
+  // Future<void> removeFromCart(String itemId) async {
+  //   try {
+  //     await _cartService.removeFromCart(itemId);
 
-      // Reload cart
-      await loadCart();
-    } catch (error) {
-      log('❌ Remove from cart error: $error');
-      rethrow;
-    }
-  }
+  //     // Reload cart
+  //     await loadCart();
+  //   } catch (error) {
+  //     log('❌ Remove from cart error: $error');
+  //     rethrow;
+  //   }
+  // }
 
-  Future<void> clearCart() async {
-    try {
-      await _cartService.clearCart();
+  // Future<void> clearCart() async {
+  //   try {
+  //     await _cartService.clearCart();
 
-      // Clear local cart
-      _cart = null;
-      _cartStreamController.add(null);
-      notifyListeners();
-    } catch (error) {
-      log('❌ Clear cart error: $error');
-      rethrow;
-    }
-  }
+  //     // Clear local cart
+  //     _cart = null;
+  //     _cartStreamController.add(null);
+  //     notifyListeners();
+  //   } catch (error) {
+  //     log('❌ Clear cart error: $error');
+  //     rethrow;
+  //   }
+  // }
 
-  Future<void> refreshCart() async {
-    await loadCart();
-  }
+  // Future<void> refreshCart() async {
+  //   await loadCart();
+  // }
 
   void clearError() {
     _hasError = false;
@@ -173,16 +180,21 @@ class BuyerCartViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  bool isProductInCart(String productId) {
-    return cartItems.any((item) => item.productId == productId);
+  bool isProductInCart(String serviceId) {
+    // Changed from productId to serviceId
+    return cartItems.any(
+      (item) => item.serviceId == serviceId || item.productId == serviceId,
+    );
   }
 
-  int getProductQuantityInCart(String productId) {
+  int getProductQuantityInCart(String serviceId) {
+    // Changed from productId to serviceId
     final item = cartItems.firstWhere(
-      (item) => item.productId == productId,
+      (item) => item.serviceId == serviceId || item.productId == serviceId,
       orElse: () => BuyerCartItem(
         id: '',
         productId: '',
+        serviceId: null,
         quantity: 0,
         price: 0,
         subtotal: 0,
@@ -205,7 +217,6 @@ class BuyerCartViewModel with ChangeNotifier {
   }
 
   // *****
-  // In BuyerCartViewModel
   double getCurrentProductTotal(BuyerProductModel product) {
     final unitPrice = product.finalPrice;
     final subtotal = unitPrice * _selectedQuantity;

@@ -1,10 +1,8 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
-import 'package:wood_service/views/Buyer/payment/cart_data/car_bottom_sheet.dart';
 import 'package:wood_service/views/Buyer/product_detail/seller_shop_info.dart';
+import 'package:wood_service/widgets/custom_button.dart';
 
 import '../../../app/index.dart';
 
@@ -69,108 +67,108 @@ class ProductBasicInfo extends StatelessWidget {
   }
 }
 
-// ! ****
+// // ! ****
 
-class SizeSelectionWidget extends StatelessWidget {
-  final Function(String?) onSizeSelected;
+// class SizeSelectionWidget extends StatelessWidget {
+//   final Function(String?) onSizeSelected;
 
-  const SizeSelectionWidget({super.key, required this.onSizeSelected});
+//   const SizeSelectionWidget({super.key, required this.onSizeSelected});
 
-  @override
-  Widget build(BuildContext context) {
-    // Get selected size from Provider
-    final selectedSize = context.select<BuyerCartViewModel, String?>(
-      (viewModel) => viewModel.selectedSize,
-    );
+//   @override
+//   Widget build(BuildContext context) {
+//     // Get selected size from Provider
+//     final selectedSize = context.select<BuyerCartViewModel, String?>(
+//       (viewModel) => viewModel.selectedSize,
+//     );
 
-    final List<String> sizes = ['Small', 'Medium', 'Large'];
-    final List<String> sizeDimensions = ['80x80cm', '120x120cm', '150x150cm'];
+//     final List<String> sizes = ['Small', 'Medium', 'Large'];
+//     final List<String> sizeDimensions = ['80x80cm', '120x120cm', '150x150cm'];
 
-    // Find index of selected size
-    int selectedIndex = sizes.indexWhere((size) => size == selectedSize);
-    if (selectedIndex == -1) selectedIndex = 1; // Default to Medium
+//     // Find index of selected size
+//     int selectedIndex = sizes.indexWhere((size) => size == selectedSize);
+//     if (selectedIndex == -1) selectedIndex = 1; // Default to Medium
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            CustomText(
-              'Size',
-              type: CustomTextType.buttonMedium,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-            Text(
-              sizeDimensions[selectedIndex],
-              style: TextStyle(color: Colors.grey[600], fontSize: 12),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            for (int i = 0; i < sizes.length; i++) ...[
-              if (i > 0) const SizedBox(width: 12),
-              _buildSizeOption(sizes[i], i == selectedIndex, i, onSizeSelected),
-            ],
-          ],
-        ),
-      ],
-    );
-  }
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Row(
+//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//           children: [
+//             CustomText(
+//               'Size',
+//               type: CustomTextType.buttonMedium,
+//               fontSize: 16,
+//               fontWeight: FontWeight.bold,
+//             ),
+//             Text(
+//               sizeDimensions[selectedIndex],
+//               style: TextStyle(color: Colors.grey[600], fontSize: 12),
+//             ),
+//           ],
+//         ),
+//         const SizedBox(height: 12),
+//         Row(
+//           children: [
+//             for (int i = 0; i < sizes.length; i++) ...[
+//               if (i > 0) const SizedBox(width: 12),
+//               _buildSizeOption(sizes[i], i == selectedIndex, i, onSizeSelected),
+//             ],
+//           ],
+//         ),
+//       ],
+//     );
+//   }
 
-  Widget _buildSizeOption(
-    String size,
-    bool isSelected,
-    int index,
-    Function(String?) onSizeSelected,
-  ) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          onSizeSelected(size);
-        },
-        child: Container(
-          height: 40,
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.blue : Colors.transparent,
-            border: Border.all(
-              color: isSelected ? Colors.blue : Colors.grey[300]!,
-              width: isSelected ? 2 : 1,
-            ),
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.blue.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                size,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.black,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+//   Widget _buildSizeOption(
+//     String size,
+//     bool isSelected,
+//     int index,
+//     Function(String?) onSizeSelected,
+//   ) {
+//     return Expanded(
+//       child: GestureDetector(
+//         onTap: () {
+//           onSizeSelected(size);
+//         },
+//         child: Container(
+//           height: 40,
+//           decoration: BoxDecoration(
+//             color: isSelected ? Colors.blue : Colors.transparent,
+//             border: Border.all(
+//               color: isSelected ? Colors.blue : Colors.grey[300]!,
+//               width: isSelected ? 2 : 1,
+//             ),
+//             borderRadius: BorderRadius.circular(8),
+//             boxShadow: isSelected
+//                 ? [
+//                     BoxShadow(
+//                       color: Colors.blue.withOpacity(0.2),
+//                       blurRadius: 8,
+//                       offset: const Offset(0, 2),
+//                     ),
+//                   ]
+//                 : [],
+//           ),
+//           child: Column(
+//             mainAxisAlignment: MainAxisAlignment.center,
+//             children: [
+//               Text(
+//                 size,
+//                 style: TextStyle(
+//                   color: isSelected ? Colors.white : Colors.black,
+//                   fontWeight: FontWeight.w600,
+//                   fontSize: 14,
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
-// ! *****
+// // ! *****
 
 class MinimalQuantityStockWidget extends StatelessWidget {
   final BuyerProductModel product;
@@ -184,6 +182,7 @@ class MinimalQuantityStockWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Use context.watch to rebuild when quantity changes
     final cartViewModel = context.watch<BuyerCartViewModel>();
     final selectedQuantity = cartViewModel.selectedQuantity;
     final totalPrice = cartViewModel.getCurrentProductTotal(product);
@@ -192,10 +191,6 @@ class MinimalQuantityStockWidget extends StatelessWidget {
 
     // Calculate prices
     final double unitPrice = product.finalPrice;
-    // final double subtotal = unitPrice * selectedQuantity;
-    // final double taxAmount = (product.taxRate ?? 0) * subtotal / 100;
-    // final double total = subtotal + taxAmount;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -401,11 +396,10 @@ class ProductActionButtons extends StatelessWidget {
                   log('message $totalPrice');
 
                   await cartViewModel.addToCart(
-                    productId: product.id,
+                    serviceId: product.id,
                     quantity: selectedQuantity,
-
-                    selectedSize: '',
-                    selectedVariant: '',
+                    selectedSize: selectedSize,
+                    selectedVariant: selectedVariant,
                     // Quantity, size, variant will be taken from viewModel's state
                   );
 
@@ -465,17 +459,17 @@ void showCartBottomSheet(
   BuyerProductModel buyerProduct,
   double totalPrice,
 ) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    constraints: BoxConstraints(
-      maxHeight: MediaQuery.of(context).size.height * 0.9,
-    ),
-    builder: (context) => CartBottomSheet(
-      count: count,
-      buyerProduct: buyerProduct,
-      totalPrice: totalPrice,
-    ),
-  );
+  // showModalBottomSheet(
+  //   context: context,
+  //   isScrollControlled: true,
+  //   backgroundColor: Colors.transparent,
+  //   constraints: BoxConstraints(
+  //     maxHeight: MediaQuery.of(context).size.height * 0.9,
+  //   ),
+  //   builder: (context) => CartBottomSheet(
+  //     count: count,
+  //     buyerProduct: buyerProduct,
+  //     totalPrice: totalPrice,
+  //   ),
+  // );
 }

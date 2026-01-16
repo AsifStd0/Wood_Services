@@ -4,12 +4,14 @@ import 'package:http/http.dart' as http;
 import 'package:wood_service/app/config.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/services/buyer_local_storage_service.dart';
+import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 
 class ReviewService {
-  final BuyerLocalStorageService _storage = locator<BuyerLocalStorageService>();
-
+  // final BuyerLocalStorageService _storage = locator<BuyerLocalStorageService>();
+  final UnifiedLocalStorageServiceImpl _storage =
+      UnifiedLocalStorageServiceImpl();
   Future<String?> _getToken() async {
-    return await _storage.getBuyerToken();
+    return await _storage.getToken();
   }
 
   Future<Map<String, String>> _getHeaders() async {
@@ -26,14 +28,16 @@ class ReviewService {
     return headers;
   }
 
-  // Get product reviews
+  // Get product/service reviews
+  /// GET /api/reviews/product/:serviceId or /api/reviews/service/:serviceId
   Future<Map<String, dynamic>> getProductReviews({
-    required String productId,
+    required String productId, // Can be serviceId or productId
     int page = 1,
     int limit = 10,
     String? sort = 'newest',
   }) async {
     try {
+      // API might accept both /product/:id or /service/:id
       String url =
           '${Config.apiBaseUrl}/api/reviews/product/$productId?page=$page&limit=$limit';
       if (sort != null) url += '&sort=$sort';
@@ -72,9 +76,11 @@ class ReviewService {
     }
   }
 
-  // Get review statistics for a product
+  // Get review statistics for a product/service
+  /// GET /api/reviews/product/:serviceId or /api/reviews/service/:serviceId
   Future<Map<String, dynamic>> getReviewStats(String productId) async {
     try {
+      // API might accept both /product/:id or /service/:id
       final response = await http.get(
         Uri.parse(
           '${Config.apiBaseUrl}/api/reviews/product/$productId?limit=1',

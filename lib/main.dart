@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wood_service/app/all_provider.dart';
 import 'package:wood_service/app/helper.dart';
-import 'package:wood_service/app/index.dart';
-import 'package:wood_service/core/theme/app_theme.dart';
+import 'package:wood_service/app/locator.dart';
+import 'package:wood_service/views/Buyer/buyer_main/buyer_main.dart';
+import 'package:wood_service/views/seller/main_seller_screen.dart';
+import 'package:wood_service/views/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
+    // Setup
     await setupLocator();
     await checkAuthStatus();
 
-    // Run app with all providers
-    runApp(AppWithProviders());
+    // Run app
+    runApp(const AppWithProviders());
   } catch (e) {
-    print('❌ Failed to initialize app: $e');
-    runApp(ErrorApp(error: e.toString()));
+    print('❌ App start error: $e');
   }
 }
 
@@ -24,94 +27,36 @@ class AppWithProviders extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: appProviders,
-      child: MyApp(
-        isSellerLoggedIn: isSellerLoggedInCheck,
-        isBuyerLoggedIn: isBuyerLoggedInCheck, // Add this
-        workingServerUrl: workingServerUrl,
-      ),
-    );
+    return MultiProvider(providers: appProviders, child: const MyApp());
   }
 }
 
 class MyApp extends StatelessWidget {
-  final bool isSellerLoggedIn;
-  final bool isBuyerLoggedIn; // Add this
-  final String? workingServerUrl;
-
-  const MyApp({
-    super.key,
-    required this.isSellerLoggedIn,
-    required this.isBuyerLoggedIn, // Add this
-    this.workingServerUrl,
-  });
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
       debugShowCheckedModeBanner: false,
       home: _getInitialScreen(),
-
-      builder: (context, child) {
-        return GestureDetector(
-          onTap: () => dismissKeyboard(context),
-          child: child,
-        );
-      },
     );
   }
 
   Widget _getInitialScreen() {
-    // Check if seller is logged in
-    if (isSellerLoggedIn) {
-      return MainSellerScreen();
+    // Check auth and show correct screen
+    if (isUserLoggedIn) {
+      switch (userRole) {
+        case 'seller':
+          return const MainSellerScreen();
+        case 'buyer':
+          return const BuyerMainScreen();
+        // case 'admin':
+        //   return const AdminMainScreen();
+        default:
+          return const OnboardingScreen();
+      }
+    } else {
+      return const OnboardingScreen();
     }
-
-    // Check if buyer is logged in
-    if (isBuyerLoggedIn) {
-      return BuyerMainScreen();
-    }
-
-    // If neither is logged in, show onboarding
-    return OnboardingScreen();
-  }
-}
-
-class ErrorApp extends StatelessWidget {
-  final String error;
-
-  const ErrorApp({super.key, required this.error});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 60, color: Colors.red),
-                SizedBox(height: 20),
-                Text(
-                  'App Initialization Error',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 10),
-                Text(
-                  error,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

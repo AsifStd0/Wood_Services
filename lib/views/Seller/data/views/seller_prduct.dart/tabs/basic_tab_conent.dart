@@ -54,8 +54,8 @@ class BasicTab extends StatelessWidget {
             minline: 6,
             maxLines: 6,
             hintText: 'Enter detailed description...',
-            initialValue: product.longDescription,
-            onChanged: (value) => productProvider.updateLongDescription(value),
+            initialValue: product.description,
+            onChanged: (value) => productProvider.updateDescription(value),
           ),
           const SizedBox(height: 24),
 
@@ -67,7 +67,6 @@ class BasicTab extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: Colors.grey.withOpacity(0.5)),
             ),
-
             child: DropdownButtonFormField<String>(
               value: product.category.isNotEmpty ? product.category : null,
               decoration: InputDecoration(
@@ -83,22 +82,14 @@ class BasicTab extends StatelessWidget {
                 ),
               ),
               items: const [
-                DropdownMenuItem(value: 'Clothing', child: Text('Clothing')),
                 DropdownMenuItem(
-                  value: 'Electronics',
-                  child: Text('Electronics'),
+                  value: 'Custom Furniture', // ← Exact match from database
+                  child: Text('Custom Furniture'),
                 ),
+                // ProductType : Ready Product, Customize Product
                 DropdownMenuItem(
-                  value: 'Home & Garden',
-                  child: Text('Home & Garden'),
-                ),
-                DropdownMenuItem(value: 'Sports', child: Text('Sports')),
-                DropdownMenuItem(value: 'Beauty', child: Text('Beauty')),
-                DropdownMenuItem(value: 'Toys', child: Text('Toys')),
-                DropdownMenuItem(value: 'Books', child: Text('Books')),
-                DropdownMenuItem(
-                  value: 'Food & Beverages',
-                  child: Text('Food & Beverages'),
+                  value: 'Ready Furniture', // Add other valid categories
+                  child: Text('Ready Furniture'),
                 ),
               ],
               onChanged: (value) {

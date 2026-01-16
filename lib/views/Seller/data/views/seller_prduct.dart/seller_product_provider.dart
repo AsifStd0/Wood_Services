@@ -8,47 +8,94 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wood_service/app/locator.dart';
-import 'package:wood_service/core/services/seller_local_storage_service.dart';
+import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_model.dart';
 
-// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NDM3MTE3MGRjYzgzYTcwNWM0YmZmOCIsImlhdCI6MTc2NjMxMzI0NiwiZXhwIjoxNzY4OTA1MjQ2fQ.jXWiJqFwB6DMTa4CbCEvxcLPdNGqwfA5imge2FtFtCk
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:wood_service/app/locator.dart';
+import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
+
+// view_models/add_product_view_model.dart
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:wood_service/app/locator.dart';
+import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
+
 class SellerProductProvider extends ChangeNotifier {
+  final UnifiedLocalStorageServiceImpl _storage;
+  final Dio _dio;
+
+  SellerProductProvider({UnifiedLocalStorageServiceImpl? storage, Dio? dio})
+    : _storage = storage ?? locator<UnifiedLocalStorageServiceImpl>(),
+      _dio = dio ?? Dio() {
+    // Initialize Dio with correct base URL
+    _dio.options.baseUrl = 'http://3.27.171.3/api';
+    _dio.options.connectTimeout = const Duration(seconds: 30);
+    _dio.options.receiveTimeout = const Duration(seconds: 30);
+    _dio.options.headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+  }
+
+  Future<String?> _getToken() async {
+    try {
+      final token = await _storage.getToken();
+      log(
+        '🔑 Token retrieved: ${token != null && token.isNotEmpty ? "Yes" : "No"}',
+      );
+
+      if (token == null || token.isEmpty) {
+        log('❌ No token found in storage.');
+        return null;
+      }
+
+      return token;
+    } catch (e) {
+      log('❌ Error retrieving token: $e');
+      return null;
+    }
+  }
+
+  // Initialize product - Match exactly with screenshot
   SellerProduct _product = SellerProduct(
     title: '',
     shortDescription: '',
-    longDescription: '',
+    description: '',
     category: '',
+    productType:
+        'Customize Product', // MUST match: "Customize Product" or "Ready Product"
     tags: [],
-    basePrice: 0.0,
+    price: 0.0,
     salePrice: null,
     costPrice: null,
     taxRate: 0.0,
     currency: 'USD',
+    priceUnit: 'per item', // MUST match: "per item", "per hour", etc.
     sku: '',
     stockQuantity: 0,
-    lowStockAlert: 5,
+    lowStockAlert: 2,
     weight: null,
-    length: null,
-    width: null,
-    height: null,
-    dimensionSpec: '',
+    dimensions: null,
     variants: [],
-    variantTypes: [],
+    location: '',
     images: [],
-    videos: [],
-    status: 'draft',
-    isActive: true,
   );
 
-  // Tab state
+  // State
   int _currentTabIndex = 0;
   bool _isLoading = false;
   String? _errorMessage;
-
-  // Image handling
   final List<File> _selectedImages = [];
   File? _featuredImage;
-  final bool _isUploadingImages = false;
 
   // Getters
   SellerProduct get product => _product;
@@ -57,15 +104,13 @@ class SellerProductProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   List<File> get selectedImages => _selectedImages;
   File? get featuredImage => _featuredImage;
-  bool get isUploadingImages => _isUploadingImages;
 
-  // Tab navigation
   void setCurrentTab(int index) {
     _currentTabIndex = index;
     notifyListeners();
   }
 
-  // Basic Tab
+  // Update methods (keep all your existing update methods)
   void updateTitle(String title) {
     _product = _product.copyWith(title: title);
     notifyListeners();
@@ -76,13 +121,39 @@ class SellerProductProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateLongDescription(String desc) {
-    _product = _product.copyWith(longDescription: desc);
+  void updateDescription(String desc) {
+    _product = _product.copyWith(description: desc);
     notifyListeners();
   }
 
+  // In your updateCategory method
   void updateCategory(String category) {
-    _product = _product.copyWith(category: category);
+    log('📝 Updating category to: "$category"');
+    log('📝 Category length: ${category.length}');
+    log('📝 Category characters: ${category.codeUnits}');
+
+    // Trim any whitespace or commas
+    final trimmedCategory = category.trim();
+    if (trimmedCategory != category) {
+      log('⚠️ Category was trimmed from "$category" to "$trimmedCategory"');
+    }
+
+    _product = _product.copyWith(category: trimmedCategory);
+    notifyListeners();
+  }
+
+  // Add debugging for productType
+  void updateProductType(String type) {
+    log('📝 Updating productType to: "$type"');
+    log('📝 productType length: ${type.length}');
+
+    // Trim any trailing commas or whitespace
+    final trimmedType = type.trim().replaceAll(',', '');
+    if (trimmedType != type) {
+      log('⚠️ productType was trimmed from "$type" to "$trimmedType"');
+    }
+
+    _product = _product.copyWith(productType: trimmedType);
     notifyListeners();
   }
 
@@ -91,9 +162,13 @@ class SellerProductProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Pricing Tab
-  void updateBasePrice(double price) {
-    _product = _product.copyWith(basePrice: price);
+  void updateLocation(String location) {
+    _product = _product.copyWith(location: location);
+    notifyListeners();
+  }
+
+  void updatePrice(double price) {
+    _product = _product.copyWith(price: price);
     notifyListeners();
   }
 
@@ -117,7 +192,11 @@ class SellerProductProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Inventory Tab
+  void updatePriceUnit(String unit) {
+    _product = _product.copyWith(priceUnit: unit);
+    notifyListeners();
+  }
+
   void updateSku(String sku) {
     _product = _product.copyWith(sku: sku);
     notifyListeners();
@@ -138,27 +217,22 @@ class SellerProductProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateLength(double? length) {
-    _product = _product.copyWith(length: length);
+  void updateDimensions({
+    double? length,
+    double? width,
+    double? height,
+    String? specification,
+  }) {
+    final dimensions = ProductDimensions(
+      length: length ?? 0.0,
+      width: width ?? 0.0,
+      height: height ?? 0.0,
+      specification: specification,
+    );
+    _product = _product.copyWith(dimensions: dimensions);
     notifyListeners();
   }
 
-  void updateWidth(double? width) {
-    _product = _product.copyWith(width: width);
-    notifyListeners();
-  }
-
-  void updateHeight(double? height) {
-    _product = _product.copyWith(height: height);
-    notifyListeners();
-  }
-
-  void updateDimensionSpec(String spec) {
-    _product = _product.copyWith(dimensionSpec: spec);
-    notifyListeners();
-  }
-
-  // Variants
   void addVariant(ProductVariant variant) {
     final updatedVariants = List<ProductVariant>.from(_product.variants)
       ..add(variant);
@@ -166,48 +240,43 @@ class SellerProductProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeVariant(String variantId) {
-    final updatedVariants = List<ProductVariant>.from(_product.variants)
-      ..removeWhere((v) => v.id == variantId);
-    _product = _product.copyWith(variants: updatedVariants);
-    notifyListeners();
+  void removeVariant(int index) {
+    if (index >= 0 && index < _product.variants.length) {
+      final updatedVariants = List<ProductVariant>.from(_product.variants)
+        ..removeAt(index);
+      _product = _product.copyWith(variants: updatedVariants);
+      notifyListeners();
+    }
   }
 
-  void updateVariantTypes(List<String> types) {
-    _product = _product.copyWith(variantTypes: types);
-    notifyListeners();
-  }
-
-  // Image handling methods
+  // Image handling
   void addImage(File image) {
-    _selectedImages.add(image);
-    notifyListeners();
+    if (_selectedImages.length < 10) {
+      _selectedImages.add(image);
+      _product = _product.copyWith(images: [..._selectedImages]);
+      notifyListeners();
+    }
   }
 
   void setFeaturedImage(File image) {
     _featuredImage = image;
     if (!_selectedImages.any((file) => file.path == image.path)) {
-      _selectedImages.insert(0, image); // Insert at beginning as featured
+      _selectedImages.insert(0, image);
+      _product = _product.copyWith(images: [..._selectedImages]);
     }
     notifyListeners();
   }
 
   void removeImage(int index) {
     if (index >= 0 && index < _selectedImages.length) {
-      // If removing featured image, clear it
       if (_featuredImage != null &&
           _selectedImages[index].path == _featuredImage!.path) {
         _featuredImage = null;
       }
       _selectedImages.removeAt(index);
+      _product = _product.copyWith(images: [..._selectedImages]);
       notifyListeners();
     }
-  }
-
-  void clearImages() {
-    _selectedImages.clear();
-    _featuredImage = null;
-    notifyListeners();
   }
 
   Future<void> pickFeaturedImage() async {
@@ -244,26 +313,7 @@ class SellerProductProvider extends ChangeNotifier {
     }
   }
 
-  // Validation
-  bool validateCurrentTab() {
-    switch (_currentTabIndex) {
-      case 0: // Basic
-        return _product.title.isNotEmpty &&
-            _product.shortDescription.isNotEmpty &&
-            _product.longDescription.isNotEmpty &&
-            _product.category.isNotEmpty;
-      case 1: // Pricing
-        return _product.basePrice > 0;
-      case 2: // Inventory
-        return true; // Optional
-      case 3: // Variants
-        return true; // Optional
-      case 4: // Media
-        return _selectedImages.isNotEmpty;
-      default:
-        return false;
-    }
-  }
+  // ! ========== PUBLISH PRODUCT - CORRECTED VERSION ==========
 
   Future<bool> publishProduct() async {
     _isLoading = true;
@@ -271,12 +321,25 @@ class SellerProductProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Validate all required fields
-      if (!validateCurrentTab()) {
+      // In your publishProduct() method, add this at the beginning:
+      log('🔍 === DEBUG BEFORE VALIDATION ===');
+      log('🔍 Category: "${_product.category}"');
+      log('🔍 Category type: ${_product.category.runtimeType}');
+      log('🔍 productType: "${_product.productType}"');
+      log('🔍 productType type: ${_product.productType.runtimeType}');
+      log('🔍 Category trimmed: "${_product.category.trim()}"');
+      log('🔍 productType trimmed: "${_product.productType.trim()}"');
+      log('🔍 === END DEBUG ===');
+
+      // Then check what your formData contains
+
+      // Validate
+      if (_product.title.isEmpty ||
+          _product.description.isEmpty ||
+          _product.category.isEmpty) {
         throw Exception('Please complete all required fields');
       }
 
-      // Validate images
       if (_selectedImages.isEmpty) {
         throw Exception('Please upload at least one product image');
       }
@@ -284,136 +347,106 @@ class SellerProductProvider extends ChangeNotifier {
       // Get token
       final token = await _getToken();
       if (token == null || token.isEmpty) {
-        throw Exception('Authentication token not found. Please login again.');
+        throw Exception('Authentication token not found.');
       }
 
-      // Get the Dio instance
-      final dio = locator<Dio>();
-
-      // Prepare FormData for multipart upload
+      // Prepare FormData
       final formData = FormData();
 
-      // Add all product data as individual fields
-      formData.fields.add(MapEntry('title', _product.title));
-      formData.fields.add(
-        MapEntry('shortDescription', _product.shortDescription),
-      );
-      formData.fields.add(
-        MapEntry('longDescription', _product.longDescription),
-      );
-      formData.fields.add(MapEntry('category', _product.category));
-      formData.fields.add(MapEntry('basePrice', _product.basePrice.toString()));
-      formData.fields.add(MapEntry('taxRate', _product.taxRate.toString()));
-      formData.fields.add(MapEntry('currency', _product.currency));
-      formData.fields.add(MapEntry('sku', _product.sku));
-      formData.fields.add(
-        MapEntry('stockQuantity', _product.stockQuantity.toString()),
-      );
-      formData.fields.add(
-        MapEntry('lowStockAlert', (_product.lowStockAlert ?? 5).toString()),
-      );
-      formData.fields.add(MapEntry('status', 'draft'));
+      // ========== ADD TEXT FIELDS ==========
+      // Use EXACT camelCase field names from your screenshot
+      final Map<String, dynamic> apiFields = {
+        'title': _product.title,
+        'shortDescription': _product.shortDescription,
+        'description': _product.description,
+        'category': _product.category,
+        'productType': _product
+            .productType, // Must be "Customize Product" or "Ready Product"
+        'tags': jsonEncode(_product.tags), // JSON array string
+        'price': _product.price.toString(),
+        'salePrice': _product.salePrice?.toString() ?? '',
+        'costPrice': _product.costPrice?.toString() ?? '',
+        'taxRate': _product.taxRate.toString(),
+        'currency': _product.currency,
+        'priceUnit': _product.priceUnit, // Must be "per item", "per hour", etc.
+        'sku': _product.sku,
+        'stockQuantity': _product.stockQuantity.toString(),
+        'lowStockAlert': _product.lowStockAlert?.toString() ?? '2',
+        'weight': _product.weight?.toString() ?? '',
+        'location': 'peshawar pakitan',
+      };
+      log('📋 === FORM DATA FIELDS ===');
+      apiFields.forEach((key, value) {
+        if (key == 'category' || key == 'productType') {
+          log('   $key: "$value" (length: ${value.toString().length})');
+          log('   $key chars: ${value.toString().codeUnits}');
+        } else {
+          log('   $key: $value');
+        }
+      });
 
-      // Add optional fields if they exist
-      if (_product.salePrice != null) {
-        formData.fields.add(
-          MapEntry('salePrice', _product.salePrice.toString()),
-        );
-      }
-      if (_product.costPrice != null) {
-        formData.fields.add(
-          MapEntry('costPrice', _product.costPrice.toString()),
-        );
-      }
-      if (_product.weight != null) {
-        formData.fields.add(MapEntry('weight', _product.weight.toString()));
-      }
-      if (_product.length != null) {
-        formData.fields.add(MapEntry('length', _product.length.toString()));
-      }
-      if (_product.width != null) {
-        formData.fields.add(MapEntry('width', _product.width.toString()));
-      }
-      if (_product.height != null) {
-        formData.fields.add(MapEntry('height', _product.height.toString()));
-      }
-      if (_product.dimensionSpec.isNotEmpty) {
-        formData.fields.add(MapEntry('dimensionSpec', _product.dimensionSpec));
+      // Add dimensions if available
+      if (_product.dimensions != null) {
+        apiFields['dimensions'] = jsonEncode({
+          'length': _product.dimensions!.length,
+          'width': _product.dimensions!.width,
+          'height': _product.dimensions!.height,
+          'specification': _product.dimensions!.specification ?? '',
+        });
       }
 
-      // Add lists as JSON strings
-      if (_product.tags.isNotEmpty) {
-        formData.fields.add(MapEntry('tags', jsonEncode(_product.tags)));
-      }
+      // Add variants if available
       if (_product.variants.isNotEmpty) {
-        formData.fields.add(
-          MapEntry(
-            'variants',
-            jsonEncode(_product.variants.map((v) => v.toJson()).toList()),
-          ),
-        );
-      }
-      if (_product.variantTypes.isNotEmpty) {
-        formData.fields.add(
-          MapEntry('variantTypes', jsonEncode(_product.variantTypes)),
+        apiFields['variants'] = jsonEncode(
+          _product.variants.map((v) => v.toJson()).toList(),
         );
       }
 
-      // ========== ADD IMAGES AS FILES ==========
-      // First image is featured image
-      if (_selectedImages.isNotEmpty && _featuredImage != null) {
-        formData.files.add(
-          MapEntry(
-            'featuredImage',
-            await MultipartFile.fromFile(
-              _featuredImage!.path,
-              filename: 'featured_${DateTime.now().millisecondsSinceEpoch}.jpg',
-            ),
-          ),
-        );
+      // Add all fields to formData
+      log('📋 === FORM DATA FIELDS ===');
+      apiFields.forEach((key, value) {
+        if (value != null && value.toString().isNotEmpty) {
+          formData.fields.add(MapEntry(key, value.toString()));
+          log('   $key: $value');
+        }
+      });
+      log('📋 =======================');
 
-        log('📸 Added featured image: ${_featuredImage!.path}');
-      }
-
-      // Remaining images as gallery images
+      // ========== ADD IMAGES ==========
+      // According to screenshot: "images" field (plural)
+      // "First image in the list would be featured image"
       for (int i = 0; i < _selectedImages.length; i++) {
         final image = _selectedImages[i];
 
-        // Skip if this is the featured image (already added)
-        if (_featuredImage != null && image.path == _featuredImage!.path) {
-          continue;
-        }
-
+        // Use 'images' as field name for all images
         formData.files.add(
           MapEntry(
-            'galleryImages',
+            'images', // SINGLE field name for ALL images
             await MultipartFile.fromFile(
               image.path,
               filename:
-                  'gallery_${DateTime.now().millisecondsSinceEpoch}_$i.jpg',
+                  'product_${DateTime.now().millisecondsSinceEpoch}_$i.jpg',
             ),
           ),
         );
 
-        log('📸 Added gallery image $i: ${image.path}');
+        log('📸 Added image $i to "images" field');
       }
 
-      log('=== UPLOAD DETAILS ===');
-      log('Total images: ${_selectedImages.length}');
-      log('Featured image: ${_featuredImage != null ? "Yes" : "No"}');
+      log('📁 Total files: ${formData.files.length}');
 
-      // Debug what we're sending
-      log('=== FORM DATA FIELDS ===');
-      for (var field in formData.fields) {
-        log('${field.key}: ${field.value}');
-      }
+      // ========== SEND REQUEST ==========
+      log('🌐 === API REQUEST ===');
+      log('   Endpoint: /seller/services');
+      log('   Method: POST');
+      log('   Fields: ${formData.fields.length}');
+      log('   Files: ${formData.files.length}');
+      log('🌐 ===================');
 
-      // Call API
-      final response = await dio.post(
-        '/api/seller/products',
+      final response = await _dio.post(
+        '/seller/services',
         data: formData,
         options: Options(
-          contentType: 'multipart/form-data',
           headers: {
             'Authorization': 'Bearer $token',
             'Accept': 'application/json',
@@ -421,12 +454,15 @@ class SellerProductProvider extends ChangeNotifier {
         ),
       );
 
-      // Debug response
-      log('Response Data is here: ${response.data}');
+      log('✅ === API RESPONSE ===');
+      log('   Status: ${response.statusCode}');
+      log('   Data: ${response.data}');
+      log('✅ ===================');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        log('🎉 Product published successfully!');
         _isLoading = false;
-        resetForm(); // Clear form after successful publish
+        resetForm();
         notifyListeners();
         return true;
       } else {
@@ -434,87 +470,68 @@ class SellerProductProvider extends ChangeNotifier {
           response.data['message'] ?? 'Failed to publish product',
         );
       }
-    } catch (e) {
-      log('=== ERROR ===');
-      log(e.toString());
-      if (e is DioException) {
-        log('Dio Error Type: ${e.type}');
-        log('Dio Error Message: ${e.message}');
-        log('Response Data: ${e.response?.data}');
-        log('Status Code: ${e.response?.statusCode}');
-        log('Request URL: ${e.requestOptions.path}');
-      }
-      log('=============');
+    } on DioException catch (e) {
+      log('❌ === DIO ERROR ===');
+      log('   Type: ${e.type}');
+      log('   Status: ${e.response?.statusCode}');
+      log('   Response: ${e.response?.data}');
+      log('❌ =================');
 
-      _isLoading = false;
+      if (e.response?.statusCode == 500) {
+        final errorMsg = e.response?.data?['message']?.toString() ?? '';
+        if (errorMsg.contains('Unexpected field')) {
+          _errorMessage = 'Server rejected a field. Check field names.';
+
+          // Debug: Print what we're actually sending
+          log('⚠️ Server says "Unexpected field". Checking...');
+          // log('   Sending ${formData.fields.length} fields:');
+          // for (var field in formData.fields) {
+          //   log('     ${field.key}: ${field.value}');
+          // }
+          // log('   Sending ${formData.files.length} files:');
+          // for (var file in formData.files) {
+          //   log('     ${file.key}: ${file.value}');
+          // }
+        } else {
+          _errorMessage = 'Server error: $errorMsg';
+        }
+      } else {
+        _errorMessage =
+            'Error ${e.response?.statusCode}: ${e.response?.data?['message']}';
+      }
+    } catch (e) {
+      log('❌ === ERROR ===');
+      log('   $e');
       _errorMessage = e.toString();
-      notifyListeners();
-      return false;
     }
-  }
 
-  Future<String?> _getToken() async {
-    try {
-      final localStorage = locator<SellerLocalStorageService>();
-
-      // First try to get seller token
-      final sellerToken = await localStorage.getSellerToken();
-
-      // Debug token retrieval
-      log('=== TOKEN RETRIEVAL ===');
-      log('Seller Token retrieved: ${sellerToken != null}');
-
-      if (sellerToken != null && sellerToken.isNotEmpty) {
-        return sellerToken;
-      }
-
-      // Fallback to general token
-      final generalToken = await localStorage.getSellerToken();
-      log('General Token retrieved: ${generalToken != null}');
-      if (generalToken != null && generalToken.isNotEmpty) {
-        return generalToken;
-      }
-
-      log('❌ No token found in storage');
-
-      return null;
-    } catch (e) {
-      log('Error retrieving token: $e');
-      return null;
-    }
-  }
-
-  void clearError() {
-    _errorMessage = null;
+    _isLoading = false;
     notifyListeners();
+    return false;
   }
 
   void resetForm() {
     _product = SellerProduct(
       title: '',
       shortDescription: '',
-      longDescription: '',
+      description: '',
       category: '',
+      productType: 'Customize Product',
       tags: [],
-      basePrice: 0.0,
+      price: 0.0,
       salePrice: null,
       costPrice: null,
       taxRate: 0.0,
       currency: 'USD',
+      priceUnit: 'per item',
       sku: '',
       stockQuantity: 0,
-      lowStockAlert: 5,
+      lowStockAlert: 2,
       weight: null,
-      length: null,
-      width: null,
-      height: null,
-      dimensionSpec: '',
+      dimensions: null,
       variants: [],
-      variantTypes: [],
+      location: '',
       images: [],
-      videos: [],
-      // documents: [],
-      status: 'draft',
     );
     _currentTabIndex = 0;
     _selectedImages.clear();

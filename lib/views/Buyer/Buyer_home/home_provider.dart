@@ -2,13 +2,17 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_product_service.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_provider.dart';
 
-class BuyerHomeViewModel extends ChangeNotifier {
-  final BuyerProductService _productService = BuyerProductService();
+class BuyerHomeViewProvider extends ChangeNotifier {
+  final BuyerProductService _productService = locator<BuyerProductService>();
   final FavoriteProvider _favoriteProvider;
+
+  BuyerHomeViewProvider({FavoriteProvider? favoriteProvider})
+    : _favoriteProvider = favoriteProvider ?? FavoriteProvider();
 
   // Authentication
   String? _authToken;
@@ -81,20 +85,19 @@ class BuyerHomeViewModel extends ChangeNotifier {
   String? get selectedColor => _selectedColor;
 
   // ========== CONSTRUCTOR ==========
-  BuyerHomeViewModel(this._favoriteProvider);
 
-  // ========== AUTH METHODS ==========
-  void setAuthToken(String token) {
-    _authToken = token;
-    _favoriteProvider.setToken(token);
-    notifyListeners();
-  }
+  // // ========== AUTH METHODS ==========
+  // void setAuthToken(String token) {
+  //   _authToken = token;
+  //   _favoriteProvider.setToken(token);
+  //   notifyListeners();
+  // }
 
-  void clearAuthToken() {
-    _authToken = null;
-    _favoriteProvider.setToken(null);
-    notifyListeners();
-  }
+  // void clearAuthToken() {
+  //   _authToken = null;
+  //   _favoriteProvider.setToken(null);
+  //   notifyListeners();
+  // }
 
   // ========== PRODUCT METHODS ==========
   Future<void> loadProducts() async {
@@ -287,14 +290,16 @@ class BuyerHomeViewModel extends ChangeNotifier {
   bool get isRequestingVisit => _isRequestingVisit;
   String? get visitRequestError => _visitRequestError;
 
-  // In your BuyerHomeViewModel
-
+  // Request visit to shop
   Future<Map<String, dynamic>> requestVisitToShop({
-    required String sellerId,
+    required String serviceId, // Changed from sellerId to serviceId
     required String shopName,
-    String? message,
+    String? description, // Changed from message to description (optional)
+    String? message, // Keep for backward compatibility, maps to description
+    Map<String, dynamic>? address, // NEW: Optional address object
     String? preferredDate,
     String? preferredTime,
+    String? specialRequirements, // NEW: Optional special requirements
     BuildContext? context,
   }) async {
     try {
@@ -302,11 +307,16 @@ class BuyerHomeViewModel extends ChangeNotifier {
       _visitRequestError = null;
       notifyListeners();
 
+      // Use description if provided, otherwise use message (backward compatibility)
+      final finalDescription = description ?? message;
+
       final response = await _productService.requestVisit(
-        sellerId: sellerId,
-        message: message,
+        serviceId: serviceId,
+        description: finalDescription,
+        address: address,
         preferredDate: preferredDate,
         preferredTime: preferredTime,
+        specialRequirements: specialRequirements,
       );
 
       // Check if response indicates existing request
@@ -315,8 +325,8 @@ class BuyerHomeViewModel extends ChangeNotifier {
         return {'hasExistingRequest': true, 'message': response['message']};
       }
 
-      // Update status
-      _visitRequestStatus[sellerId] = 'pending';
+      // Update status (use serviceId as key, but also support sellerId for backward compatibility)
+      _visitRequestStatus[serviceId] = 'pending';
 
       // Show success message
       if (context != null && context.mounted) {
@@ -357,23 +367,23 @@ class BuyerHomeViewModel extends ChangeNotifier {
     BuildContext? context,
   }) async {
     try {
-      final response = await _productService.cancelVisitRequest(
-        sellerId: sellerId,
-        requestId: requestId,
-      );
+      // final response = await _productService.cancelVisitRequest(
+      //   sellerId: sellerId,
+      //   requestId: requestId,
+      // );
 
       // Remove status
       _visitRequestStatus.remove(sellerId);
 
-      if (context != null && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response['message'] ?? 'Visit request cancelled'),
-            backgroundColor: Colors.orange,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
+      // if (context != null && context.mounted) {
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     SnackBar(
+      //       content: Text(response['message'] ?? 'Visit request cancelled'),
+      //       backgroundColor: Colors.orange,
+      //       duration: const Duration(seconds: 3),
+      //     ),
+      //   );
+      // }
     } catch (error) {
       if (context != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -390,32 +400,47 @@ class BuyerHomeViewModel extends ChangeNotifier {
   // Load existing visit requests
   Future<void> loadMyVisitRequests() async {
     try {
-      final requests = await _productService.getMyVisitRequests();
+      // final requests = await _productService.getMyVisitRequests();
 
       // Update status for each seller
-      for (final request in requests) {
-        final sellerId = request['seller']?['id']?.toString();
-        final status = request['status']?.toString();
-        if (sellerId != null && status != null) {
-          _visitRequestStatus[sellerId] = status;
-        }
-      }
+      // for (final request in requests) {
+      //   final sellerId = request['seller']?['id']?.toString();
+      //   final status = request['status']?.toString();
+      //   if (sellerId != null && status != null) {
+      //     _visitRequestStatus[sellerId] = status;
+      //   }
+      // }
 
-      notifyListeners();
+      // notifyListeners();
     } catch (error) {
       print('Error loading visit requests: $error');
     }
   }
-  // In your BuyerHomeViewModel class, add this method:
 
-  Future<List<Map<String, dynamic>>> getMyVisitRequests() async {
-    try {
-      // If you already have this method in your product service, call it:
-      return await _productService.getMyVisitRequests();
-    } catch (error) {
-      print('Error getting visit requests: $error');
-      return [];
-    }
+  // Alias method for backward compatibility (maps sellerId to serviceId)
+  Future<Map<String, dynamic>> requestVisit({
+    required String sellerId, // This is actually serviceId in the new API
+    required String shopName,
+    String? message, // Maps to description
+    String? description, // NEW: Direct description parameter
+    Map<String, dynamic>? address, // NEW: Optional address
+    String? preferredDate,
+    String? preferredTime,
+    String? specialRequirements, // NEW: Optional special requirements
+    BuildContext? context,
+  }) async {
+    // In the new API, sellerId is actually serviceId (product/service ID)
+    return await requestVisitToShop(
+      serviceId: sellerId, // Pass as serviceId
+      shopName: shopName,
+      description:
+          description ?? message, // Use description if provided, else message
+      address: address,
+      preferredDate: preferredDate,
+      preferredTime: preferredTime,
+      specialRequirements: specialRequirements,
+      context: context,
+    );
   }
 }
 

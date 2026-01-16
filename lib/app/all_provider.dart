@@ -1,90 +1,50 @@
-import 'package:wood_service/app/index.dart';
+// app/providers.dart
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:provider/single_child_widget.dart';
+import 'package:wood_service/app/locator.dart';
+import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
+import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
+import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_provider.dart';
+import 'package:wood_service/views/Buyer/buyer_main/buyer_main_provider.dart';
+import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
+import 'package:wood_service/views/Seller/data/services/new_service/auth_service.dart';
+import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 
 List<SingleChildWidget> appProviders = [
-  // ========== SERVICES (Synchronous) ==========
-  Provider<ProductRepository>(create: (_) => locator<ProductRepository>()),
-
-  // ========== FAVORITE PROVIDER ==========
-  ChangeNotifierProvider<FavoriteProvider>(
-    create: (context) => FavoriteProvider(locator<BuyerLocalStorageService>()),
+  // Services
+  Provider<UnifiedLocalStorageServiceImpl>(
+    create: (context) => locator<UnifiedLocalStorageServiceImpl>(),
   ),
 
-  // ========== BUYER PROVIDERS ==========
-  ChangeNotifierProxyProvider<FavoriteProvider, BuyerHomeViewModel>(
-    create: (context) => BuyerHomeViewModel(
-      Provider.of<FavoriteProvider>(context, listen: false),
-    ),
-    update: (context, favoriteProvider, previous) {
-      if (previous == null) {
-        return BuyerHomeViewModel(favoriteProvider);
-      }
-      return previous;
-    },
+  Provider<AuthService>(create: (context) => locator<AuthService>()),
+
+  // ViewModels
+  ChangeNotifierProvider<RegisterViewModel>(
+    create: (context) => locator<RegisterViewModel>(),
   ),
-
-  ChangeNotifierProvider<BuyerProfileViewProvider>(
-    create: (_) => BuyerProfileViewProvider(),
-  ),
-
-  // ========== BUYER CART VIEWMODEL ==========
-  ChangeNotifierProvider<BuyerCartViewModel>(
-    create: (_) => locator<BuyerCartViewModel>(),
-  ),
-
-  // ========== BUYER AUTH PROVIDERS ==========
-  ChangeNotifierProvider<BuyerSignupProvider>(
-    create: (_) => BuyerSignupProvider(),
-  ),
-
-  ChangeNotifierProvider<BuyerAuthProvider>(create: (_) => BuyerAuthProvider()),
-
-  // ========== BUYER ORDER PROVIDER ==========
-  ChangeNotifierProvider<BuyerOrderProvider>(
-    create: (_) => BuyerOrderProvider(
-      ApiBuyerOrderRepository(
-        storageService: locator<BuyerLocalStorageService>(),
-      ),
-    ),
-  ),
-
-  // ========== SELLER VIEWMODELS ==========
-  ChangeNotifierProvider<SellerAuthProvider>(
-    create: (_) => SellerAuthProvider(locator<SellerAuthService>()),
-  ),
-
-  ChangeNotifierProvider<OrdersViewModel>(
-    create: (_) => OrdersViewModel(locator<OrderRepository>()),
-  ),
-
-  ChangeNotifierProvider<SellerSignupViewModel>(
-    create: (_) => locator<SellerSignupViewModel>(),
-  ),
-
-  // ========== SELLER SETTINGS ==========
-  ChangeNotifierProvider<SelllerSettingProvider>(
-    create: (_) => locator<SelllerSettingProvider>(),
-  ),
-
-  // ========== VISIT REQUESTS VIEWMODEL ==========
-  ChangeNotifierProvider<VisitRequestsViewModel>(
-    create: (_) => locator<VisitRequestsViewModel>(),
-  ),
-
-  // ========== CHAT PROVIDERS ==========
-  ChangeNotifierProvider<BuyerChatProvider>(create: (_) => BuyerChatProvider()),
-
-  // ✅ ADD THIS: SELLER CHAT PROVIDER (UNCOMMENTED)
-  ChangeNotifierProvider<SellerChatProvider>(
-    create: (_) =>
-        SellerChatProvider(), // or locator<SellerChatProvider>() if registered
-  ),
-
-  // ========== CART & REVIEW PROVIDERS ==========
-  ChangeNotifierProvider<CartProvider>(create: (_) => locator<CartProvider>()),
-
-  ChangeNotifierProvider<ReviewProvider>(create: (_) => ReviewProvider()),
-
   ChangeNotifierProvider<MainScreenProvider>(
-    create: (_) => MainScreenProvider(),
+    create: (context) => locator<MainScreenProvider>(),
+  ),
+
+  ChangeNotifierProvider<SelllerSettingProvider>(
+    create: (context) => locator<SelllerSettingProvider>(),
+  ),
+
+  ChangeNotifierProvider<SellerProductProvider>(
+    create: (context) => locator<SellerProductProvider>(),
+  ),
+
+  ChangeNotifierProvider<BuyerHomeViewProvider>(
+    create: (context) => locator<BuyerHomeViewProvider>(),
+  ),
+
+  ChangeNotifierProvider<BuyerCartViewModel>(
+    create: (context) => locator<BuyerCartViewModel>(),
+  ),
+  ChangeNotifierProvider<FavoriteProvider>(
+    create: (context) => locator<FavoriteProvider>(),
   ),
 ];
