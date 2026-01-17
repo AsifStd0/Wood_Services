@@ -11,24 +11,6 @@ import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_model.dart';
 
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:wood_service/app/locator.dart';
-import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
-
-// view_models/add_product_view_model.dart
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:wood_service/app/locator.dart';
-import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
-
 class SellerProductProvider extends ChangeNotifier {
   final UnifiedLocalStorageServiceImpl _storage;
   final Dio _dio;

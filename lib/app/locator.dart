@@ -15,6 +15,8 @@ import 'package:wood_service/views/Seller/data/registration_data/register_viewmo
 import 'package:wood_service/views/Seller/data/services/new_service/auth_service.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_services.dart';
 
 final GetIt locator = GetIt.instance;
 
@@ -118,6 +120,16 @@ Future<void> setupLocator() async {
     );
   }
 
+  // Register UploadedProductService
+  if (!locator.isRegistered<UploadedProductService>()) {
+    locator.registerSingleton<UploadedProductService>(
+      UploadedProductService(
+        dio: locator<Dio>(),
+        storage: locator<UnifiedLocalStorageServiceImpl>(),
+      ),
+    );
+  }
+
   // ========== STEP 5: Register Provider Factories ==========
   // Register RegisterViewModel
   locator.registerFactory<RegisterViewModel>(
@@ -138,6 +150,11 @@ Future<void> setupLocator() async {
       storage: locator<UnifiedLocalStorageServiceImpl>(),
       dio: locator<Dio>(),
     ),
+  );
+
+  // Register UploadedProductProvider
+  locator.registerFactory<UploadedProductProvider>(
+    () => UploadedProductProvider(service: locator<UploadedProductService>()),
   );
 
   // Register BuyerProfileViewProvider

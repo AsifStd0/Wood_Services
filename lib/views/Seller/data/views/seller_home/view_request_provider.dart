@@ -3,12 +3,11 @@
 
 // import 'package:flutter/foundation.dart';
 // import 'package:wood_service/views/Seller/data/models/visit_request_model.dart';
-// import 'package:wood_service/views/Seller/data/views/seller_home/visit_repo/visit_repository.dart';
 
 // enum VisitFilter { all, pending, accepted, cancelled, completed }
 
 // class VisitRequestsViewModel with ChangeNotifier {
-//   final VisitService
+//   final VisitRepository
 //   _visitService; // Use VisitService instead of VisitRepository
 
 //   VisitRequestsViewModel(this._visitService);

@@ -435,6 +435,7 @@ Widget buildCategoriesSection(
   );
 }
 
+// Fix buildShopHeader to show both local file and URL
 Widget buildShopHeader(SelllerSettingProvider viewModel) {
   return Container(
     padding: const EdgeInsets.all(20),
@@ -452,20 +453,35 @@ Widget buildShopHeader(SelllerSettingProvider viewModel) {
     ),
     child: Row(
       children: [
-        // Shop Logo
+        // Shop Logo - FIXED: Check file first, then URL
         Container(
           width: 60,
           height: 60,
           decoration: BoxDecoration(
-            color: viewModel.shopLogo != null
-                ? Colors.transparent
-                : Color(0xFF667EEA),
+            color: (viewModel.shopLogo == null && viewModel.shopLogoUrl == null)
+                ? Color(0xFF667EEA)
+                : Colors.transparent,
             shape: BoxShape.circle,
           ),
           child: viewModel.shopLogo != null
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(30),
                   child: Image.file(viewModel.shopLogo!, fit: BoxFit.cover),
+                )
+              : viewModel.shopLogoUrl != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(30),
+                  child: Image.network(
+                    viewModel.shopLogoUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
+                        Icons.store_rounded,
+                        color: Colors.white,
+                        size: 30,
+                      );
+                    },
+                  ),
                 )
               : Icon(Icons.store_rounded, color: Colors.white, size: 30),
         ),
@@ -516,7 +532,7 @@ Widget buildShopHeader(SelllerSettingProvider viewModel) {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: viewModel.isVerified
+                      color: viewModel.currentUser?.isVerified == true
                           ? Colors.green.withOpacity(0.1)
                           : Colors.orange.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
@@ -525,20 +541,22 @@ Widget buildShopHeader(SelllerSettingProvider viewModel) {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          viewModel.isVerified
+                          viewModel.currentUser?.isVerified == true
                               ? Icons.verified_rounded
                               : Icons.pending_rounded,
                           size: 12,
-                          color: viewModel.isVerified
+                          color: viewModel.currentUser?.isVerified == true
                               ? Colors.green
                               : Colors.orange,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          viewModel.isVerified ? 'Verified' : 'Pending',
+                          viewModel.currentUser?.isVerified == true
+                              ? 'Verified'
+                              : 'Pending',
                           style: TextStyle(
                             fontSize: 10,
-                            color: viewModel.isVerified
+                            color: viewModel.currentUser?.isVerified == true
                                 ? Colors.green
                                 : Colors.orange,
                             fontWeight: FontWeight.w600,
@@ -614,7 +632,11 @@ Widget buildShopBanner(SelllerSettingProvider viewModel) {
             width: double.infinity,
             height: 140,
             decoration: BoxDecoration(
-              color: viewModel.shopBanner == null ? Colors.grey[50] : null,
+              color:
+                  (viewModel.shopBanner == null &&
+                      viewModel.shopBannerUrl == null)
+                  ? Colors.grey[50]
+                  : null,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.grey.withOpacity(0.3)),
             ),
@@ -623,27 +645,39 @@ Widget buildShopBanner(SelllerSettingProvider viewModel) {
                     borderRadius: BorderRadius.circular(12),
                     child: Image.file(viewModel.shopBanner!, fit: BoxFit.cover),
                   )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.add_photo_alternate_rounded,
-                        size: 32,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Upload Banner Image',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
+                : viewModel.shopBannerUrl != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      viewModel.shopBannerUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _buildPlaceholderBanner();
+                      },
+                    ),
+                  )
+                : _buildPlaceholderBanner(),
           ),
         ),
       ],
     ),
+  );
+}
+
+Widget _buildPlaceholderBanner() {
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(
+        Icons.add_photo_alternate_rounded,
+        size: 32,
+        color: Colors.grey[400],
+      ),
+      const SizedBox(height: 8),
+      Text(
+        'Upload Banner Image',
+        style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500),
+      ),
+    ],
   );
 }

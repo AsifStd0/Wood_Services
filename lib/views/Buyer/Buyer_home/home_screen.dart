@@ -52,11 +52,23 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CustomAppBar(
+      appBar: CustomAppBar(
         title: 'Search',
         showBackButton: false,
         showSearch: true,
-        actions: [Icon(Icons.notifications)],
+        actions: [
+          IconButton(
+            icon: Icon(Icons.notifications),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: GestureDetector(
         onTap: () {
@@ -157,7 +169,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
             crossAxisCount: 2,
             crossAxisSpacing: 5, // ✅ Increased spacing
             mainAxisSpacing: 5, // ✅ Increased spacing
-            childAspectRatio: 0.74, // ✅ Adjusted for better proportions
+            childAspectRatio: 0.72, // ✅ Adjusted for better proportions
             // mainAxisExtent: 320, // ✅ Fixed height for all cards
           ),
           itemCount: filteredProducts.length,

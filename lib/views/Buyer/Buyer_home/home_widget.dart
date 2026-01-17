@@ -283,10 +283,10 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
           flex: 3, // Details take 4 parts
           child: Padding(
             padding: const EdgeInsets.only(
-              left: 10,
-              right: 10,
+              left: 8,
+              right: 8,
               top: 5,
-              bottom: 3,
+              bottom: 2,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

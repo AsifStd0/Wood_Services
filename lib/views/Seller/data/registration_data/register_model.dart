@@ -1,5 +1,7 @@
 // models/user_model.dart - Update UserModel class
 
+import 'dart:convert';
+
 class UserModel {
   final String? id;
   final String name;
@@ -24,7 +26,9 @@ class UserModel {
   final String? businessLicense;
   final String? taxCertificate;
   final String? identityProof;
-
+  // ! *****
+  final bool isVerified;
+  final bool isActive;
   UserModel({
     this.id,
     required this.name,
@@ -45,6 +49,8 @@ class UserModel {
     this.businessLicense,
     this.taxCertificate,
     this.identityProof,
+    this.isVerified = false,
+    this.isActive = true,
   });
 
   // factory UserModel.fromLoginResponse(Map<String, dynamic> response) {
@@ -78,6 +84,8 @@ class UserModel {
       if (taxCertificate != null)
         'taxCertificate': _ensureString(taxCertificate!),
       if (identityProof != null) 'identityProof': _ensureString(identityProof!),
+      'isVerified': isVerified,
+      'isActive': isActive,
     };
   }
 
@@ -116,6 +124,36 @@ class UserModel {
         return null;
       }
 
+      dynamic addressValue = json['address'];
+      String? parsedAddress;
+
+      if (addressValue == null) {
+        parsedAddress = null;
+      } else if (addressValue is String) {
+        // Check if it's a JSON string like "{}"
+        if (addressValue == '{}' || addressValue.isEmpty) {
+          parsedAddress = null;
+        } else {
+          try {
+            // Try to decode as JSON
+            final decoded = jsonDecode(addressValue);
+            if (decoded is Map && decoded.isEmpty) {
+              parsedAddress = null;
+            } else {
+              parsedAddress = addressValue;
+            }
+          } catch (e) {
+            // If not JSON, use as is
+            parsedAddress = addressValue;
+          }
+        }
+      } else if (addressValue is Map) {
+        // Convert map to string if needed
+        parsedAddress = addressValue.toString();
+      } else {
+        parsedAddress = addressValue.toString();
+      }
+
       return UserModel(
         id: json['_id']?.toString() ?? json['id']?.toString(),
         name: json['name']?.toString() ?? '',
@@ -124,7 +162,7 @@ class UserModel {
         existingPassword: json['existingPassword']?.toString(),
         phone: parsePhone(json['phone']), // Use helper
         role: parseRole(json['roles'] ?? json['role']), // Use helper
-        address: extractString(json['address']),
+        address: parsedAddress,
         businessName: extractString(json['businessName']),
         shopName: extractString(json['shopName']),
         businessDescription: extractString(json['businessDescription']),
@@ -137,6 +175,8 @@ class UserModel {
         businessLicense: extractString(json['businessLicense']),
         taxCertificate: extractString(json['taxCertificate']),
         identityProof: extractString(json['identityProof']),
+        isVerified: json['isVerified'] ?? false,
+        isActive: json['isActive'] ?? true,
       );
     } catch (e) {
       print('❌ Error parsing UserModel: $e');

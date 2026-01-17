@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/shop_widgets.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_products_screen.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 
 class SellerSettingsScreen extends StatefulWidget {
@@ -176,6 +177,12 @@ class _ShopSettingsContent extends StatelessWidget {
         if (!viewModel.hasData) {
           return CircularProgressIndicator();
         }
+        log(
+          '🔄 Building Shop Settings Content...${viewModel.currentUser?.toJson()}',
+        );
+        log(
+          '🔄 Building Shop Settings Content...${viewModel.currentUser?.toJson()}',
+        );
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(10),
@@ -185,6 +192,10 @@ class _ShopSettingsContent extends StatelessWidget {
               // Shop Header
               buildShopHeader(viewModel),
 
+              const SizedBox(height: 14),
+
+              // Uploaded Products Button
+              _buildUploadedProductsButton(context),
               const SizedBox(height: 14),
 
               // Shop Banner
@@ -378,6 +389,77 @@ class _ShopSettingsContent extends StatelessWidget {
             onChanged: (value) => viewModel.setAddress(value),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildUploadedProductsButton(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const UploadedProductsScreen(),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.brown[50],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.inventory_2,
+                    color: Colors.brown,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'My Uploaded Products',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.brown,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'View and manage all your products',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: Colors.grey),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

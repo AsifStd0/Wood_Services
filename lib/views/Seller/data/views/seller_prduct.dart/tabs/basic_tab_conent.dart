@@ -81,19 +81,34 @@ class BasicTab extends StatelessWidget {
                   vertical: 16,
                 ),
               ),
+              // ✅ MUST match EXACTLY with backend enum
               items: const [
                 DropdownMenuItem(
-                  value: 'Custom Furniture', // ← Exact match from database
+                  value: 'Wood Cutting',
+                  child: Text('Wood Cutting'),
+                ),
+                DropdownMenuItem(
+                  value: 'Wood Polishing',
+                  child: Text('Wood Polishing'),
+                ),
+                DropdownMenuItem(
+                  value: 'Wood Installation',
+                  child: Text('Wood Installation'),
+                ),
+                DropdownMenuItem(
+                  value: 'Custom Furniture', // ✅ This is correct
                   child: Text('Custom Furniture'),
                 ),
-                // ProductType : Ready Product, Customize Product
                 DropdownMenuItem(
-                  value: 'Ready Furniture', // Add other valid categories
-                  child: Text('Ready Furniture'),
+                  value: 'Wood Repair',
+                  child: Text('Wood Repair'),
                 ),
+                DropdownMenuItem(value: 'Other', child: Text('Other')),
               ],
               onChanged: (value) {
-                if (value != null) productProvider.updateCategory(value);
+                if (value != null) {
+                  productProvider.updateCategory(value);
+                }
               },
             ),
           ),

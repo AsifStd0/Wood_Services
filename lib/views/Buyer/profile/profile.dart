@@ -114,6 +114,8 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   // BuyerProfileViewProvider
   Widget _buildUserHeader(UserModel user, BuyerProfileViewProvider provider) {
+    // Use provider's profileImagePath for consistency with settings screen
+    final profileImageUrl = provider.profileImagePath ?? user.profileImage;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -148,16 +150,59 @@ class _ProfileScreenState extends State<ProfileScreen>
                         colors: [Colors.brown.shade400, Colors.orange.shade400],
                       ),
                     ),
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.brown.shade100,
-
-                      child: const Icon(
-                        Icons.person,
-                        size: 40,
-                        color: Colors.brown,
-                      ),
-                    ),
+                    child:
+                        (profileImageUrl != null && profileImageUrl.isNotEmpty)
+                        ? ClipOval(
+                            child: Image.network(
+                              profileImageUrl,
+                              fit: BoxFit.cover,
+                              width: 80,
+                              height: 80,
+                              errorBuilder: (context, error, stackTrace) {
+                                return CircleAvatar(
+                                  radius: 40,
+                                  backgroundColor: Colors.brown.shade100,
+                                  child: Text(
+                                    user.name.isNotEmpty
+                                        ? user.name
+                                              .substring(0, 1)
+                                              .toUpperCase()
+                                        : 'U',
+                                    style: const TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.brown,
+                                    ),
+                                  ),
+                                );
+                              },
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return CircleAvatar(
+                                      radius: 40,
+                                      backgroundColor: Colors.brown.shade100,
+                                      child: const CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    );
+                                  },
+                            ),
+                          )
+                        : CircleAvatar(
+                            radius: 40,
+                            backgroundColor: Colors.brown.shade100,
+                            child: Text(
+                              user.name.isNotEmpty
+                                  ? user.name.substring(0, 1).toUpperCase()
+                                  : 'U',
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.brown,
+                              ),
+                            ),
+                          ),
                   ),
 
                   Positioned(

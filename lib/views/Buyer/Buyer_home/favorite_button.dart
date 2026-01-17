@@ -39,7 +39,9 @@ class _FavoriteButtonState extends State<FavoriteButton> {
           _isFavorited = providerStatus;
         }
         final isFavorited = providerStatus;
-        final isLoading = favoriteProvider.isLoading || _isLoading;
+        // Check if THIS specific product is loading, not all products
+        final isLoading =
+            favoriteProvider.isProductLoading(widget.productId) || _isLoading;
 
         return GestureDetector(
           onTap: isLoading

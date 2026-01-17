@@ -114,14 +114,66 @@ class RegisterViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Compress image file to reduce size before upload
+  /// Returns compressed file path
+  Future<File?> _compressImage(File imageFile) async {
+    try {
+      log('🗜️ Compressing image: ${imageFile.path}');
+      log('   Original size: ${await imageFile.length()} bytes');
+
+      // Get temporary directory for compressed image
+      final tempDir = await path_provider.getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileName = path.basenameWithoutExtension(imageFile.path);
+      final extension = path.extension(imageFile.path);
+      final targetPath =
+          '${tempDir.path}/${fileName}_compressed_$timestamp$extension';
+
+      // Compress image
+      // Quality: 70 (0-100, lower = smaller file size)
+      // Min width/height: 1920 (max dimensions to maintain quality)
+      final compressedFile = await FlutterImageCompress.compressAndGetFile(
+        imageFile.absolute.path,
+        targetPath,
+        quality: 70, // 70% quality - good balance
+        minWidth: 1920, // Max width
+        minHeight: 1920, // Max height
+        keepExif: false, // Remove EXIF data to reduce size
+      );
+
+      if (compressedFile != null) {
+        final compressedFileObj = File(compressedFile.path);
+        final compressedSize = await compressedFileObj.length();
+        final originalSize = await imageFile.length();
+        final compressionRatio = ((1 - compressedSize / originalSize) * 100)
+            .toStringAsFixed(1);
+        log('   ✅ Compressed size: $compressedSize bytes');
+        log('   📊 Compression ratio: $compressionRatio% reduction');
+        return compressedFileObj;
+      } else {
+        log('   ⚠️ Compression returned null, using original');
+        return imageFile;
+      }
+    } catch (e) {
+      log('   ❌ Compression error: $e, using original file');
+      return imageFile; // Return original if compression fails
+    }
+  }
+
   // Image picking methods
   Future<void> pickImage(String type) async {
     try {
       final pickedFile = await ImagePicker().pickImage(
         source: ImageSource.gallery,
+        imageQuality: 85, // Initial quality from picker (optional)
       );
       if (pickedFile != null) {
-        final file = File(pickedFile.path);
+        final originalFile = File(pickedFile.path);
+
+        // Compress the image before storing
+        log('🖼️ Picking image for type: $type');
+        final compressedFile = await _compressImage(originalFile);
+        final file = compressedFile ?? originalFile;
 
         switch (type) {
           case 'profile':
@@ -194,12 +246,12 @@ class RegisterViewModel extends ChangeNotifier {
       );
       if (pickedFile != null) {
         final originalFile = File(pickedFile.path);
-        
+
         // Compress the document image before storing
         log('📄 Picking document: $documentType');
         final compressedFile = await _compressImage(originalFile);
         final file = compressedFile ?? originalFile;
-        
+
         _documents[documentType] = file;
 
         // Also update individual properties
@@ -411,8 +463,6 @@ class RegisterViewModel extends ChangeNotifier {
       return null;
     }
   }
-
-
 
   Future<void> _saveUserData(Map<String, dynamic> response) async {
     try {

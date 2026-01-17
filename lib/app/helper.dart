@@ -28,7 +28,9 @@ Future<Map<String, dynamic>> checkAuthStatus() async {
       final userModel = storage.getUserModel();
 
       if (userData != null) {
-        log('📊 User data fields: ${userData.keys.toList()}');
+        log(
+          '📊 User data fields: ${userData.keys.toList()} print id  ${userData.values.toList()}',
+        );
         log('📊 User model values: ${storage.getToken()}}');
 
         // Check for required fields based on role

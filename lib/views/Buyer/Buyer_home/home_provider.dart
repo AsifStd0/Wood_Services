@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/locator.dart';
+import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_product_service.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_provider.dart';
@@ -110,11 +111,23 @@ class BuyerHomeViewProvider extends ChangeNotifier {
     try {
       _products = await _productService.getProducts();
 
-      if (_authToken != null) {
+      // Sync initial favorite status from product model
+      for (var product in _products) {
+        _favoriteProvider.syncInitialFavoriteStatus(
+          product.id,
+          product.isFavorited,
+          favoriteId: product.favoriteId,
+        );
+      }
+
+      // Load favorite status from server to ensure accuracy
+      final storage = locator<UnifiedLocalStorageServiceImpl>();
+      final token = await storage.getToken();
+      if (token != null && token.isNotEmpty) {
         final productIds = _products.map((p) => p.id).toList();
         await _favoriteProvider.loadFavoriteStatusForProducts(productIds);
       }
-      log('✅ Loaded ${_products.toString()} products');
+      log('✅ Loaded ${_products.length} products');
     } catch (e) {
       _error = 'Failed to load products: $e';
       log('❌ Product loading error: $e');

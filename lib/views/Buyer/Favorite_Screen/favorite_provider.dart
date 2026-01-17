@@ -15,6 +15,7 @@ class FavoriteProvider extends ChangeNotifier {
   final Map<String, bool> _favorites = {}; // productId -> isFavorited
   final Map<String, String> _favoriteIds = {}; // productId -> favoriteId
   bool _isLoading = false;
+  final Map<String, bool> _loadingProducts = {}; // productId -> isLoading
   List<FavoriteProduct> _cachedFavorites = [];
   int _totalFavorites = 0;
 
@@ -29,6 +30,11 @@ class FavoriteProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   int get favoriteCount => _totalFavorites;
   List<FavoriteProduct> get cachedFavorites => _cachedFavorites;
+
+  // Check if a specific product is loading
+  bool isProductLoading(String productId) {
+    return _loadingProducts[productId] ?? false;
+  }
 
   // Check if product is favorited
   bool isProductFavorited(String productId) {
@@ -54,10 +60,18 @@ class FavoriteProvider extends ChangeNotifier {
   // ========== CORE METHODS ==========
 
   // ✅ TOGGLE FAVORITE (Add/Remove)
-  /// POST /api/buyer/favorites
-  /// Body: { serviceId }
+  /// POST /api/buyer/favorites (add)
+  /// DELETE /api/buyer/favorites/:id (remove)
+  /// Body: { serviceId } for POST
   Future<void> toggleFavorite(String serviceId) async {
-    _isLoading = true;
+    // Check if this specific product is already loading
+    if (_loadingProducts[serviceId] == true) {
+      log('⚠️ Toggle already in progress for: $serviceId');
+      return;
+    }
+
+    // Set loading state for this specific product only
+    _loadingProducts[serviceId] = true;
     notifyListeners();
 
     try {
@@ -67,72 +81,130 @@ class FavoriteProvider extends ChangeNotifier {
         throw Exception('Please login to add favorites');
       }
 
-      log('❤️ Adding favorite for service: $serviceId');
+      final isCurrentlyFavorited = _favorites[serviceId] ?? false;
+      final favoriteId = _favoriteIds[serviceId];
 
-      final url = Uri.parse('$_baseUrl/api/buyer/favorites');
-      final body = json.encode({'serviceId': serviceId});
+      // If already favorited, remove it (DELETE)
+      if (isCurrentlyFavorited && favoriteId != null) {
+        log(
+          '🗑️ Removing favorite for service: $serviceId (favoriteId: $favoriteId)',
+        );
 
-      final client = http.Client();
-      try {
-        final response = await client
-            .post(
-              url,
-              headers: {
-                'Authorization': 'Bearer $token',
-                'Content-Type': 'application/json',
-              },
-              body: body,
-            )
-            .timeout(
-              const Duration(seconds: 10),
-              onTimeout: () {
-                throw Exception('Request timeout');
-              },
-            );
+        final url = Uri.parse('$_baseUrl/api/buyer/favorites/$favoriteId');
+        final client = http.Client();
+        try {
+          final response = await client
+              .delete(
+                url,
+                headers: {
+                  'Authorization': 'Bearer $token',
+                  'Content-Type': 'application/json',
+                },
+              )
+              .timeout(
+                const Duration(seconds: 10),
+                onTimeout: () {
+                  throw Exception('Request timeout');
+                },
+              );
 
-        log('📡 Response status: ${response.statusCode}');
-        log('📡 Response body: ${response.body}');
+          log('📡 DELETE Response status: ${response.statusCode}');
+          log('📡 DELETE Response body: ${response.body}');
 
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          final jsonData = json.decode(response.body);
+          if (response.statusCode == 200) {
+            final jsonData = json.decode(response.body);
 
-          if (jsonData['success'] == true || response.statusCode == 201) {
-            final isFavorited = jsonData['data']?['isFavorited'] ?? true;
-            final favoriteCount =
-                jsonData['data']?['favoriteCount'] ?? _totalFavorites + 1;
-            final favoriteId =
-                jsonData['data']?['favoriteId']?.toString() ??
-                jsonData['data']?['_id']?.toString();
-
-            // Update local state
-            _favorites[serviceId] = isFavorited;
-            _totalFavorites = favoriteCount;
-
-            if (favoriteId != null) {
-              _favoriteIds[serviceId] = favoriteId;
-            }
-
-            // Remove from cached list if unfavorited
-            if (!isFavorited) {
+            if (jsonData['success'] == true) {
+              // Update local state - remove favorite
+              _favorites.remove(serviceId);
+              _favoriteIds.remove(serviceId);
               _cachedFavorites.removeWhere((fav) => fav.productId == serviceId);
-            }
+              _totalFavorites =
+                  jsonData['data']?['favoriteCount'] ??
+                  (_totalFavorites > 0 ? _totalFavorites - 1 : 0);
 
-            log('✅ Favorite toggled: $isFavorited, Total: $_totalFavorites');
-            notifyListeners();
+              log('✅ Favorite removed. Total: $_totalFavorites');
+              notifyListeners();
+            } else {
+              throw Exception(
+                jsonData['message'] ?? 'Failed to remove favorite',
+              );
+            }
           } else {
-            throw Exception(jsonData['message'] ?? 'Failed to toggle favorite');
+            throw Exception(
+              'Request failed with status: ${response.statusCode}',
+            );
           }
-        } else {
-          throw Exception('Request failed with status: ${response.statusCode}');
+        } finally {
+          client.close();
         }
-      } finally {
-        client.close();
+      } else {
+        // Add favorite (POST)
+        log('❤️ Adding favorite for service: $serviceId');
+
+        final url = Uri.parse('$_baseUrl/api/buyer/favorites');
+        final body = json.encode({'serviceId': serviceId});
+
+        final client = http.Client();
+        try {
+          final response = await client
+              .post(
+                url,
+                headers: {
+                  'Authorization': 'Bearer $token',
+                  'Content-Type': 'application/json',
+                },
+                body: body,
+              )
+              .timeout(
+                const Duration(seconds: 10),
+                onTimeout: () {
+                  throw Exception('Request timeout');
+                },
+              );
+
+          log('📡 POST Response status: ${response.statusCode}');
+          log('📡 POST Response body: ${response.body}');
+
+          if (response.statusCode == 200 || response.statusCode == 201) {
+            final jsonData = json.decode(response.body);
+
+            if (jsonData['success'] == true || response.statusCode == 201) {
+              final isFavorited = jsonData['data']?['isFavorited'] ?? true;
+              final favoriteCount =
+                  jsonData['data']?['favoriteCount'] ?? _totalFavorites + 1;
+              final newFavoriteId =
+                  jsonData['data']?['favoriteId']?.toString() ??
+                  jsonData['data']?['_id']?.toString();
+
+              // Update local state - add favorite
+              _favorites[serviceId] = isFavorited;
+              _totalFavorites = favoriteCount;
+
+              if (newFavoriteId != null) {
+                _favoriteIds[serviceId] = newFavoriteId;
+              }
+
+              log('✅ Favorite added. Total: $_totalFavorites');
+              notifyListeners();
+            } else {
+              throw Exception(jsonData['message'] ?? 'Failed to add favorite');
+            }
+          } else {
+            throw Exception(
+              'Request failed with status: ${response.statusCode}',
+            );
+          }
+        } finally {
+          client.close();
+        }
       }
     } catch (e) {
       log('❌ Toggle favorite error: $e');
       rethrow;
     } finally {
-      _isLoading = false;
+      // Clear loading state for this product
+      _loadingProducts.remove(serviceId);
       notifyListeners();
     }
   }
@@ -419,6 +491,22 @@ class FavoriteProvider extends ChangeNotifier {
     }
   }
 
+  // ✅ SYNC INITIAL FAVORITE STATUS (from product model)
+  /// Initialize favorite status from product data
+  void syncInitialFavoriteStatus(
+    String productId,
+    bool isFavorited, {
+    String? favoriteId,
+  }) {
+    // Only set if not already in map (to avoid overwriting server data)
+    if (!_favorites.containsKey(productId)) {
+      _favorites[productId] = isFavorited;
+      if (favoriteId != null) {
+        _favoriteIds[productId] = favoriteId;
+      }
+    }
+  }
+
   // ✅ CLEAR ALL DATA (Logout)
   void clearAllData() {
     _favorites.clear();
@@ -426,6 +514,7 @@ class FavoriteProvider extends ChangeNotifier {
     _cachedFavorites.clear();
     _totalFavorites = 0;
     _isLoading = false;
+    _loadingProducts.clear();
     notifyListeners();
   }
 }

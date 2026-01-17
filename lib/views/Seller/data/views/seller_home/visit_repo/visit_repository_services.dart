@@ -2,6 +2,9 @@
 // import 'dart:convert';
 // import 'dart:developer';
 // import 'package:http/http.dart' as http;
+// import 'package:wood_service/app/config.dart';
+// import 'package:wood_service/app/locator.dart';
+// import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 // import 'package:wood_service/core/services/seller_local_storage_service.dart';
 // import 'package:wood_service/views/Seller/data/models/visit_request_model.dart';
 
@@ -17,7 +20,8 @@
 //     String? requestType,
 //   }) async {
 //     try {
-//       final token = await storageService.getSellerToken();
+//       // final token = await SellerLocalStorageService().getSellerToken();
+//       final token = await locator<UnifiedLocalStorageServiceImpl>().getToken();
 
 //       if (token == null || token.isEmpty) {
 //         log('❌ No seller token found');
@@ -25,7 +29,7 @@
 //       }
 
 //       // Build URL with status filter if provided
-//       String url = '$baseUrl/dashboard/visit-requests';
+//       String url = '${Config.apiBaseUrl}/seller/dashboard/visit-requests';
 //       if (status != null) {
 //         url += '?status=$status';
 //       }
@@ -82,7 +86,8 @@
 //     VisitStatus newStatus,
 //   ) async {
 //     try {
-//       final token = await storageService.getSellerToken();
+//       final token = await locator<UnifiedLocalStorageServiceImpl>().getToken();
+//       // final token = await storageService.getSellerToken();
 
 //       if (token == null || token.isEmpty) {
 //         throw Exception('Please login as seller');
@@ -105,9 +110,9 @@
 
 //       // Try multiple endpoints
 //       final endpoints = [
-//         '$baseUrl/visit-requests/$requestId/status',
-//         '$baseUrl/visit-requests/$requestId',
-//         '$baseUrl/orders/$requestId/status',
+//         '${Config.apiBaseUrl}/seller/visit-requests/$requestId/status',
+//         '${Config.apiBaseUrl}/seller/visit-requests/$requestId',
+//         '${Config.apiBaseUrl}/seller/orders/$requestId/status',
 //       ];
 
 //       Exception? lastError;
@@ -163,13 +168,14 @@
 //     String? location,
 //   }) async {
 //     try {
-//       final token = await storageService.getSellerToken();
+//       // final token = await storageService.getSellerToken();
+//       final token = await locator<UnifiedLocalStorageServiceImpl>().getToken();
 
 //       if (token == null || token.isEmpty) {
 //         throw Exception('Please login as seller');
 //       }
 
-//       final url = '$baseUrl/dashboard/visit-requests/$requestId/accept';
+//       final url = '${Config.apiBaseUrl}/seller/dashboard/visit-requests/$requestId/accept';
 //       log('🌐 Accepting request: $url');
 
 //       final response = await http.put(
@@ -214,13 +220,14 @@
 //     String? message,
 //   }) async {
 //     try {
-//       final token = await storageService.getSellerToken();
+//       // final token = await storageService.getSellerToken();
+//       final token = await locator<UnifiedLocalStorageServiceImpl>().getToken();
 
 //       if (token == null || token.isEmpty) {
 //         throw Exception('Please login as seller');
 //       }
 
-//       final url = '$baseUrl/dashboard/visit-requests/$requestId/decline';
+//       final url = '${Config.apiBaseUrl}/seller/dashboard/visit-requests/$requestId/decline';
 //       log('🌐 Declining request: $url');
 
 //       final response = await http.put(
@@ -259,13 +266,14 @@
 //     String? appointmentDuration,
 //   }) async {
 //     try {
-//       final token = await storageService.getSellerToken();
+//       // final token = await storageService.getSellerToken();
+//       final token = await locator<UnifiedLocalStorageServiceImpl>().getToken();
 
 //       if (token == null || token.isEmpty) {
 //         throw Exception('Please login as seller');
 //       }
 
-//       final url = '$baseUrl/dashboard/visit-settings';
+//       final url = '${Config.apiBaseUrl}/seller/dashboard/visit-settings';
 //       log('🌐 Updating settings: $url');
 
 //       final response = await http.put(
