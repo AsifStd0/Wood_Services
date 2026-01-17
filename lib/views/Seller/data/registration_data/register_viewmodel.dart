@@ -276,14 +276,21 @@ class RegisterViewModel extends ChangeNotifier {
 
   // Validation
   bool validateForm() {
-    if (nameController.text.isEmpty) {
-      _errorMessage = 'Name is required';
+    if (nameController.text.trim().isEmpty) {
+      _errorMessage = 'Full name is required';
       notifyListeners();
       return false;
     }
 
-    if (!emailController.text.contains('@')) {
-      _errorMessage = 'Valid email is required';
+    if (emailController.text.trim().isEmpty) {
+      _errorMessage = 'Email address is required';
+      notifyListeners();
+      return false;
+    }
+
+    if (!emailController.text.trim().contains('@') ||
+        !emailController.text.trim().contains('.')) {
+      _errorMessage = 'Please enter a valid email address';
       notifyListeners();
       return false;
     }
@@ -303,13 +310,13 @@ class RegisterViewModel extends ChangeNotifier {
     // In RegisterViewModel validateForm() method
 
     // Phone validation - must be numeric
-    if (phoneController.text.isEmpty) {
-      _errorMessage = 'Phone is required';
+    if (phoneController.text.trim().isEmpty) {
+      _errorMessage = 'Contact number is required';
       notifyListeners();
       return false;
     }
 
-    // Check if phone contains only digits (after removing country code)
+    // Check if phone contains only digits (after removing non-numeric characters)
     final phoneDigits = phoneController.text.replaceAll(RegExp(r'[^0-9]'), '');
     if (phoneDigits.isEmpty) {
       _errorMessage = 'Please enter a valid phone number';
@@ -317,29 +324,88 @@ class RegisterViewModel extends ChangeNotifier {
       return false;
     }
 
-    // Check phone length (at least 10 digits including country code)
+    // Check phone length (at least 10 digits)
     if (phoneDigits.length < 10) {
-      _errorMessage = 'Phone number is too short';
+      _errorMessage = 'Phone number must be at least 10 digits';
       notifyListeners();
       return false;
     }
 
-    // Seller specific validation
-    if (_role == 'seller') {
-      if (businessNameController.text.isEmpty) {
-        _errorMessage = 'Business name is required for sellers';
+    // Buyer specific validation
+    if (_role == 'buyer') {
+      if (bankNameController.text.trim().isEmpty) {
+        _errorMessage = 'Bank name is required';
         notifyListeners();
         return false;
       }
 
-      if (shopNameController.text.isEmpty) {
-        _errorMessage = 'Shop name is required for sellers';
+      if (accountNumberController.text.trim().isEmpty) {
+        _errorMessage = 'Account number is required';
+        notifyListeners();
+        return false;
+      }
+      // Note: IBAN is optional for buyers
+      // Business Name, Address, and Description are also optional for buyers
+    }
+
+    // Seller specific validation
+    if (_role == 'seller') {
+      if (businessNameController.text.trim().isEmpty) {
+        _errorMessage = 'Business name is required';
+        notifyListeners();
+        return false;
+      }
+
+      if (shopNameController.text.trim().isEmpty) {
+        _errorMessage = 'Shop name is required';
+        notifyListeners();
+        return false;
+      }
+
+      if (businessDescriptionController.text.trim().isEmpty) {
+        _errorMessage = 'Business description is required';
+        notifyListeners();
+        return false;
+      }
+
+      if (addressController.text.trim().isEmpty) {
+        _errorMessage = 'Business address is required';
+        notifyListeners();
+        return false;
+      }
+
+      if (bankNameController.text.trim().isEmpty) {
+        _errorMessage = 'Bank name is required';
+        notifyListeners();
+        return false;
+      }
+
+      if (accountNumberController.text.trim().isEmpty) {
+        _errorMessage = 'Account number is required';
+        notifyListeners();
+        return false;
+      }
+
+      if (_categories.isEmpty) {
+        _errorMessage = 'At least one business category is required';
         notifyListeners();
         return false;
       }
 
       if (_businessLicense == null) {
-        _errorMessage = 'Business license is required for sellers';
+        _errorMessage = 'Business license document is required';
+        notifyListeners();
+        return false;
+      }
+
+      if (_taxCertificate == null) {
+        _errorMessage = 'Tax certificate document is required';
+        notifyListeners();
+        return false;
+      }
+
+      if (_identityProof == null) {
+        _errorMessage = 'Identity proof document is required';
         notifyListeners();
         return false;
       }

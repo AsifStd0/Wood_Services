@@ -5,6 +5,437 @@ import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
 
+// Common widgets used in the seller settings screen
+
+Widget buildShopHeader(SellerSettingsProvider provider) {
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 2),
+        ),
+      ],
+      border: Border.all(color: Colors.grey.withOpacity(0.1)),
+    ),
+    child: Row(
+      children: [
+        // Shop Logo
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            color: (provider.shopLogo == null && provider.shopLogoUrl == null)
+                ? const Color(0xFF667EEA)
+                : Colors.transparent,
+            shape: BoxShape.circle,
+          ),
+          child: provider.shopLogo != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(30),
+                  child: Image.file(provider.shopLogo!, fit: BoxFit.cover),
+                )
+              : provider.shopLogoUrl != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(30),
+                  child: Image.network(
+                    provider.shopLogoUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.store_rounded,
+                        color: Colors.white,
+                        size: 30,
+                      );
+                    },
+                  ),
+                )
+              : const Icon(Icons.store_rounded, color: Colors.white, size: 30),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                provider.currentUser?.shopName?.isNotEmpty == true
+                    ? provider.currentUser!.shopName!
+                    : 'Your Shop Name',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                provider.currentUser?.businessName?.isNotEmpty == true
+                    ? provider.currentUser!.businessName!
+                    : 'Business Name',
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.email_rounded, color: Colors.blue, size: 16),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      provider.currentUser?.email ?? 'email@example.com',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: provider.currentUser?.isVerified == true
+                          ? Colors.green.withOpacity(0.1)
+                          : Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          provider.currentUser?.isVerified == true
+                              ? Icons.verified_rounded
+                              : Icons.pending_rounded,
+                          size: 12,
+                          color: provider.currentUser?.isVerified == true
+                              ? Colors.green
+                              : Colors.orange,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          provider.currentUser?.isVerified == true
+                              ? 'Verified'
+                              : 'Pending',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: provider.currentUser?.isVerified == true
+                                ? Colors.green
+                                : Colors.orange,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget buildInfoField({
+  required String label,
+  required TextEditingController controller,
+  required IconData icon,
+  required bool isEditing,
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey[700],
+        ),
+      ),
+      const SizedBox(height: 8),
+      CustomTextFormField(
+        enabled: isEditing,
+        prefixIcon: Icon(icon, color: AppColors.grey),
+        controller: controller,
+      ),
+    ],
+  );
+}
+
+Widget buildInfoTextArea({
+  required String label,
+  required TextEditingController controller,
+  required IconData icon,
+  required bool isEditing,
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey[700],
+        ),
+      ),
+      const SizedBox(height: 8),
+      CustomTextFormField(
+        enabled: isEditing,
+        prefixIcon: Icon(icon, color: AppColors.grey),
+        controller: controller,
+        maxLines: 4,
+      ),
+    ],
+  );
+}
+
+Widget saveChangesButton(
+  SellerSettingsProvider provider,
+  BuildContext context,
+) {
+  return Column(
+    children: [
+      if (provider.isEditing) ...[
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: provider.isLoading
+                ? null
+                : () async {
+                    final success = await provider.saveChanges();
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Profile updated successfully!'),
+                        ),
+                      );
+                    } else if (provider.errorMessage != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(provider.errorMessage!)),
+                      );
+                    }
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.brightOrange,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: provider.isLoading
+                ? SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Colors.white,
+                      ),
+                    ),
+                  )
+                : const Text(
+                    'Save Changes',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
+    ],
+  );
+}
+
+Widget buildShopBrandingSection(SellerSettingsProvider provider) {
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 2),
+        ),
+      ],
+      border: Border.all(color: Colors.grey.withOpacity(0.1)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Shop Branding',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey[800],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildImageUploader(
+                label: 'Shop Logo',
+                image: provider.shopLogo,
+                imageUrl: provider.shopLogoUrl,
+                onTap: provider.isEditing
+                    ? () => provider.pickShopLogo()
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildImageUploader(
+                label: 'Shop Banner',
+                image: provider.shopBanner,
+                imageUrl: provider.shopBannerUrl,
+                onTap: provider.isEditing
+                    ? () => provider.pickShopBanner()
+                    : null,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildImageUploader({
+  required String label,
+  required File? image,
+  required String? imageUrl,
+  required VoidCallback? onTap,
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey[700],
+        ),
+      ),
+      const SizedBox(height: 8),
+      GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 120,
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: image != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(image, fit: BoxFit.cover),
+                )
+              : imageUrl != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return _buildPlaceholder(label);
+                    },
+                  ),
+                )
+              : _buildPlaceholder(label),
+        ),
+      ),
+    ],
+  );
+}
+
+Widget _buildPlaceholder(String label) {
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(
+        label.contains('Logo')
+            ? Icons.add_photo_alternate
+            : Icons.add_to_photos,
+        color: Colors.grey[400],
+        size: 32,
+      ),
+      const SizedBox(height: 8),
+      Text(
+        label.contains('Logo') ? 'Upload Logo' : 'Upload Banner',
+        style: const TextStyle(fontSize: 12, color: Colors.grey),
+      ),
+    ],
+  );
+}
+
+Widget buildBankDetailsSection(SellerSettingsProvider provider) {
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 2),
+        ),
+      ],
+      border: Border.all(color: Colors.grey.withOpacity(0.1)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Bank Details',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey[800],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Icon(
+              Icons.security_rounded,
+              size: 16,
+              color: AppColors.darkGrey,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Your information is encrypted and secure',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        buildInfoField(
+          label: 'IBAN',
+          controller: provider.ibanController,
+          icon: Icons.receipt_rounded,
+          isEditing: provider.isEditing,
+        ),
+      ],
+    ),
+  );
+}
+
 Widget buildImageUploader({
   required String label,
   required File? image,
@@ -62,276 +493,41 @@ Widget buildImageUploader({
 
 // Dialog methods
 void showAddCategoryDialog(
-  SelllerSettingProvider viewModel,
+  SellerSettingsProvider viewModel,
   BuildContext context,
 ) {
   final controller = TextEditingController();
   showDialog(
     context: context,
-    builder: (context) => AlertDialog(
-      title: Text('Add Category'),
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Add Category'),
       content: TextField(
         controller: controller,
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           hintText: 'Enter category name',
           border: OutlineInputBorder(),
         ),
+        autofocus: true,
+        onSubmitted: (value) {
+          if (value.trim().isNotEmpty) {
+            viewModel.addCategory(value.trim());
+            Navigator.pop(dialogContext);
+          }
+        },
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text('Cancel'),
+          onPressed: () => Navigator.pop(dialogContext),
+          child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: () {
-            if (controller.text.isNotEmpty) {
-              viewModel.addCategory(controller.text);
-              Navigator.pop(context);
+            if (controller.text.trim().isNotEmpty) {
+              viewModel.addCategory(controller.text.trim());
+              Navigator.pop(dialogContext);
             }
           },
-          child: Text('Add'),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget buildBankDetailsSection(SelllerSettingProvider viewModel) {
-  return Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.05),
-          blurRadius: 10,
-          offset: const Offset(0, 2),
-        ),
-      ],
-      border: Border.all(color: Colors.grey.withOpacity(0.1)),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Bank Details',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Colors.grey[800],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Icon(Icons.security_rounded, size: 16, color: AppColors.darkGrey),
-            const SizedBox(width: 8),
-            Text(
-              'Your information is encrypted and secure',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        buildInfoField(
-          label: 'Bank Name',
-          controller: viewModel.bankNameController,
-          icon: Icons.account_balance_rounded,
-          isEditing: viewModel.isEditing,
-          onChanged: (value) => viewModel.setBankName(value),
-        ),
-        const SizedBox(height: 16),
-        buildInfoField(
-          label: 'Account Number',
-          controller: viewModel.accountNumberController,
-          icon: Icons.credit_card_rounded,
-          isEditing: viewModel.isEditing,
-          onChanged: (value) => viewModel.setAccountNumber(value),
-          keyboardType: TextInputType.number,
-        ),
-        const SizedBox(height: 16),
-        buildInfoField(
-          label: 'IBAN',
-          controller: viewModel.ibanController,
-          icon: Icons.receipt_rounded,
-          isEditing: viewModel.isEditing,
-          onChanged: (value) => viewModel.setIban(value),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget saveChangesButton(
-  SelllerSettingProvider viewModel,
-  BuildContext context,
-) {
-  return Column(
-    children: [
-      if (viewModel.isEditing) ...[
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: viewModel.isLoading
-                ? null
-                : () async {
-                    final success = await viewModel.saveChanges();
-                    if (success) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Profile updated successfully!'),
-                        ),
-                      );
-                    } else if (viewModel.errorMessage != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(viewModel.errorMessage!)),
-                      );
-                    }
-                  },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.brightOrange,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: viewModel.isLoading
-                ? SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Text(
-                    'Save Changes',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-          ),
-        ),
-        const SizedBox(height: 12),
-      ],
-    ],
-  );
-}
-
-// Helper Widgets with controller parameter
-Widget buildInfoField({
-  required String label,
-  required TextEditingController controller,
-  required IconData icon,
-  required bool isEditing,
-  required Function(String) onChanged,
-  TextInputType keyboardType = TextInputType.text,
-}) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        label,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Colors.grey[700],
-        ),
-      ),
-      const SizedBox(height: 8),
-      CustomTextFormField(
-        enabled: isEditing,
-        prefixIcon: Icon(icon, color: AppColors.grey),
-        onChanged: onChanged,
-        controller: controller, // Use the provided controller
-        textInputType: keyboardType,
-      ),
-    ],
-  );
-}
-
-Widget buildInfoTextArea({
-  required String label,
-  required TextEditingController controller,
-  required IconData icon,
-  required bool isEditing,
-  required Function(String) onChanged,
-}) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        label,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Colors.grey[700],
-        ),
-      ),
-      const SizedBox(height: 8),
-      CustomTextFormField(
-        enabled: isEditing,
-        prefixIcon: Icon(icon, color: AppColors.grey),
-        onChanged: onChanged,
-        controller: controller,
-        textInputType: TextInputType.multiline,
-        maxLines: 4,
-      ),
-    ],
-  );
-}
-
-Widget buildShopBrandingSection(SelllerSettingProvider viewModel) {
-  return Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.05),
-          blurRadius: 10,
-          offset: const Offset(0, 2),
-        ),
-      ],
-      border: Border.all(color: Colors.grey.withOpacity(0.1)),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Shop Branding',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Colors.grey[800],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: buildImageUploader(
-                label: 'Shop Logo',
-                image: viewModel.shopLogo,
-                onTap: viewModel.isEditing
-                    ? () => viewModel.pickShopLogo()
-                    : null,
-                size: const Size(120, 120),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: buildImageUploader(
-                label: 'Shop Banner',
-                image: viewModel.shopBanner,
-                onTap: viewModel.isEditing
-                    ? () => viewModel.pickShopBanner()
-                    : null,
-                size: const Size(double.infinity, 120),
-              ),
-            ),
-          ],
+          child: const Text('Add'),
         ),
       ],
     ),
@@ -339,7 +535,7 @@ Widget buildShopBrandingSection(SelllerSettingProvider viewModel) {
 }
 
 Widget buildCategoriesSection(
-  SelllerSettingProvider viewModel,
+  SellerSettingsProvider viewModel,
   BuildContext context,
 ) {
   return Container(
@@ -435,147 +631,7 @@ Widget buildCategoriesSection(
   );
 }
 
-// Fix buildShopHeader to show both local file and URL
-Widget buildShopHeader(SelllerSettingProvider viewModel) {
-  return Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.05),
-          blurRadius: 10,
-          offset: const Offset(0, 2),
-        ),
-      ],
-      border: Border.all(color: Colors.grey.withOpacity(0.1)),
-    ),
-    child: Row(
-      children: [
-        // Shop Logo - FIXED: Check file first, then URL
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: (viewModel.shopLogo == null && viewModel.shopLogoUrl == null)
-                ? Color(0xFF667EEA)
-                : Colors.transparent,
-            shape: BoxShape.circle,
-          ),
-          child: viewModel.shopLogo != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(30),
-                  child: Image.file(viewModel.shopLogo!, fit: BoxFit.cover),
-                )
-              : viewModel.shopLogoUrl != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(30),
-                  child: Image.network(
-                    viewModel.shopLogoUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Icon(
-                        Icons.store_rounded,
-                        color: Colors.white,
-                        size: 30,
-                      );
-                    },
-                  ),
-                )
-              : Icon(Icons.store_rounded, color: Colors.white, size: 30),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                viewModel.shopName.isNotEmpty
-                    ? viewModel.shopName
-                    : 'Your Shop Name',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                viewModel.businessName.isNotEmpty
-                    ? viewModel.businessName
-                    : 'Business Name',
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.email_rounded, color: Colors.blue, size: 16),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      viewModel.email.isNotEmpty
-                          ? viewModel.email
-                          : 'email@example.com',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: viewModel.currentUser?.isVerified == true
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.orange.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          viewModel.currentUser?.isVerified == true
-                              ? Icons.verified_rounded
-                              : Icons.pending_rounded,
-                          size: 12,
-                          color: viewModel.currentUser?.isVerified == true
-                              ? Colors.green
-                              : Colors.orange,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          viewModel.currentUser?.isVerified == true
-                              ? 'Verified'
-                              : 'Pending',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: viewModel.currentUser?.isVerified == true
-                                ? Colors.green
-                                : Colors.orange,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget buildShopBanner(SelllerSettingProvider viewModel) {
+Widget buildShopBanner(SellerSettingsProvider viewModel) {
   return Container(
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(

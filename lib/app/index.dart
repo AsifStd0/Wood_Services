@@ -68,7 +68,6 @@ export 'package:wood_service/views/Seller/data/views/order_data/order_repository
 export 'package:wood_service/views/Seller/data/views/order_data/order_screen_seller.dart';
 export 'package:wood_service/views/Seller/data/views/seller_home/seller_home_screen.dart';
 export 'package:wood_service/views/Seller/data/views/seller_home/view_request_provider.dart';
-export 'package:wood_service/views/Seller/data/views/seller_home/visit_repo/visit_repository_services.dart';
 export 'package:wood_service/views/Seller/data/views/seller_prduct.dart/add_product_screen.dart';
 export 'package:wood_service/views/Seller/data/views/shop_setting/seller_settings_screen.dart';
 export 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';

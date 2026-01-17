@@ -15,8 +15,11 @@ import 'package:wood_service/views/Seller/data/registration_data/register_viewmo
 import 'package:wood_service/views/Seller/data/services/new_service/auth_service.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_services.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home/seller_stats_service.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home/seller_stats_provider.dart';
 
 final GetIt locator = GetIt.instance;
 
@@ -130,6 +133,11 @@ Future<void> setupLocator() async {
     );
   }
 
+  // Register SellerStatsService
+  if (!locator.isRegistered<SellerStatsService>()) {
+    locator.registerSingleton<SellerStatsService>(SellerStatsService());
+  }
+
   // ========== STEP 5: Register Provider Factories ==========
   // Register RegisterViewModel
   locator.registerFactory<RegisterViewModel>(
@@ -137,11 +145,8 @@ Future<void> setupLocator() async {
   );
 
   // Register SellerSettingProvider
-  locator.registerFactory<SelllerSettingProvider>(
-    () => SelllerSettingProvider(
-      storage: locator<UnifiedLocalStorageServiceImpl>(),
-      dio: locator<Dio>(),
-    ),
+  locator.registerFactory<SellerSettingsProvider>(
+    () => SellerSettingsProvider(locator<SellerSettingsRepository>()),
   );
 
   // Register SellerProductProvider ✅ CORRECT - using factory
@@ -156,6 +161,9 @@ Future<void> setupLocator() async {
   locator.registerFactory<UploadedProductProvider>(
     () => UploadedProductProvider(service: locator<UploadedProductService>()),
   );
+
+  // Register SellerStatsProvider
+  locator.registerFactory<SellerStatsProvider>(() => SellerStatsProvider());
 
   // Register BuyerProfileViewProvider
   locator.registerFactory<BuyerProfileViewProvider>(

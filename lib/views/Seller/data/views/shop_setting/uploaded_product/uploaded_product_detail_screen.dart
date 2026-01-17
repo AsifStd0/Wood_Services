@@ -1,15 +1,14 @@
 // screens/uploaded_product_detail_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_model.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 
 class UploadedProductDetailScreen extends StatelessWidget {
   final UploadedProductModel product;
 
-  const UploadedProductDetailScreen({
-    super.key,
-    required this.product,
-  });
+  const UploadedProductDetailScreen({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
@@ -73,8 +72,14 @@ class UploadedProductDetailScreen extends StatelessWidget {
             _buildInfoCard(
               title: 'Inventory',
               children: [
-                _buildInfoRow('Stock Quantity', product.stockQuantity.toString()),
-                _buildInfoRow('Low Stock Alert', product.lowStockAlert.toString()),
+                _buildInfoRow(
+                  'Stock Quantity',
+                  product.stockQuantity.toString(),
+                ),
+                _buildInfoRow(
+                  'Low Stock Alert',
+                  product.lowStockAlert.toString(),
+                ),
                 _buildInfoRow('Availability', product.availability),
               ],
             ),
@@ -103,34 +108,36 @@ class UploadedProductDetailScreen extends StatelessWidget {
               _buildInfoCard(
                 title: 'Variants (${product.variants.length})',
                 children: [
-                  ...product.variants.map((variant) => Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
+                  ...product.variants.map(
+                    (variant) => Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${variant.type}: ${variant.value}',
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          if (variant.priceAdjustment != 0)
                             Text(
-                              '${variant.type}: ${variant.value}',
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                            if (variant.priceAdjustment != 0)
-                              Text(
-                                variant.priceAdjustment > 0
-                                    ? '+\$${variant.priceAdjustment.toStringAsFixed(2)}'
-                                    : '\$${variant.priceAdjustment.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: variant.priceAdjustment > 0
-                                      ? Colors.green
-                                      : Colors.red,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              variant.priceAdjustment > 0
+                                  ? '+\$${variant.priceAdjustment.toStringAsFixed(2)}'
+                                  : '\$${variant.priceAdjustment.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: variant.priceAdjustment > 0
+                                    ? Colors.green
+                                    : Colors.red,
+                                fontWeight: FontWeight.w600,
                               ),
-                          ],
-                        ),
-                      )),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
 
@@ -183,7 +190,10 @@ class UploadedProductDetailScreen extends StatelessWidget {
                       ? '${product.ratings.average.toStringAsFixed(1)} ⭐'
                       : 'No ratings yet',
                 ),
-                _buildInfoRow('Total Reviews', product.ratings.count.toString()),
+                _buildInfoRow(
+                  'Total Reviews',
+                  product.ratings.count.toString(),
+                ),
                 _buildInfoRow(
                   'Completed Projects',
                   product.completedProjects.toString(),
@@ -197,14 +207,8 @@ class UploadedProductDetailScreen extends StatelessWidget {
             _buildInfoCard(
               title: 'Timeline',
               children: [
-                _buildInfoRow(
-                  'Created At',
-                  _formatDate(product.createdAt),
-                ),
-                _buildInfoRow(
-                  'Last Updated',
-                  _formatDate(product.updatedAt),
-                ),
+                _buildInfoRow('Created At', _formatDate(product.createdAt)),
+                _buildInfoRow('Last Updated', _formatDate(product.updatedAt)),
               ],
             ),
 
@@ -260,8 +264,11 @@ class UploadedProductDetailScreen extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.all(40),
               child: Center(
-                child: Icon(Icons.image_not_supported,
-                    size: 48, color: Colors.grey),
+                child: Icon(
+                  Icons.image_not_supported,
+                  size: 48,
+                  color: Colors.grey,
+                ),
               ),
             )
           else
@@ -322,10 +329,7 @@ class UploadedProductDetailScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Text(
               title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
           const Divider(height: 1),
@@ -345,17 +349,16 @@ class UploadedProductDetailScreen extends StatelessWidget {
             width: 120,
             child: Text(
               label,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ),
           Expanded(
             child: isStatus
                 ? Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: product.isActive
                           ? Colors.green[50]
@@ -406,46 +409,35 @@ class UploadedProductDetailScreen extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {
-              // TODO: Implement delete
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Delete Product'),
-                  content: Text('Are you sure you want to delete "${product.title}"?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.pop(context); // Go back to list
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Delete functionality coming soon'),
+          child: Consumer<UploadedProductProvider>(
+            builder: (context, provider, child) {
+              final isDeleting = provider.isLoading;
+
+              return ElevatedButton.icon(
+                onPressed: isDeleting
+                    ? null
+                    : () => _showDeleteConfirmation(context, provider),
+                icon: isDeleting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('Delete'),
-                    ),
-                  ],
+                        ),
+                      )
+                    : const Icon(Icons.delete),
+                label: Text(isDeleting ? 'Deleting...' : 'Delete'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  disabledBackgroundColor: Colors.red.withOpacity(0.6),
                 ),
               );
             },
-            icon: const Icon(Icons.delete),
-            label: const Text('Delete'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
           ),
         ),
       ],
@@ -454,5 +446,62 @@ class UploadedProductDetailScreen extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  void _showDeleteConfirmation(
+    BuildContext context,
+    UploadedProductProvider provider,
+  ) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Product'),
+        content: Text(
+          'Are you sure you want to delete "${product.title}"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext); // Close dialog
+
+              final success = await provider.deleteProduct(product.id);
+
+              if (context.mounted) {
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('"${product.title}" deleted successfully'),
+                      backgroundColor: Colors.green,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                  // Navigate back to list
+                  Navigator.pop(context);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        provider.errorMessage ?? 'Failed to delete product',
+                      ),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 }

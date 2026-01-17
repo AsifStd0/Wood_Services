@@ -147,7 +147,10 @@ class _UploadedProductsScreenState extends State<UploadedProductsScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UploadedProductDetailScreen(product: product),
+            builder: (detailContext) => ChangeNotifierProvider.value(
+              value: provider,
+              child: UploadedProductDetailScreen(product: product),
+            ),
           ),
         ).then((_) {
           // Refresh list when returning from detail screen
