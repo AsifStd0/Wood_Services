@@ -1,6 +1,7 @@
 // view_models/register_viewmodel.dart
 import 'dart:developer';
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
@@ -820,10 +821,39 @@ class RegisterViewModel extends ChangeNotifier {
 
       notifyListeners();
       return response;
+    } on DioException catch (e) {
+      log('❌ Login DioException: $e');
+      _isLoginLoading = false;
+      // Extract error message from DioException
+      String errorMsg = 'Login failed';
+      if (e.response?.data != null) {
+        final errorData = e.response!.data;
+        if (errorData is Map) {
+          errorMsg =
+              errorData['message']?.toString() ??
+              errorData['error']?.toString() ??
+              'Login failed';
+        } else if (errorData is String) {
+          errorMsg = errorData;
+        }
+      } else if (e.message != null) {
+        errorMsg = e.message!;
+      }
+      _loginErrorMessage = errorMsg;
+      log('📝 Extracted error message: $_loginErrorMessage');
+      notifyListeners();
+      return null;
     } catch (e) {
       log('❌ Login failed: $e');
       _isLoginLoading = false;
-      _loginErrorMessage = e.toString();
+      // Handle String errors or other types
+      String errorMsg = e.toString();
+      // Remove "Exception: " prefix if present
+      if (errorMsg.startsWith('Exception: ')) {
+        errorMsg = errorMsg.substring(11);
+      }
+      _loginErrorMessage = errorMsg;
+      log('📝 Error message: $_loginErrorMessage');
       notifyListeners();
       return null;
     }
@@ -831,6 +861,8 @@ class RegisterViewModel extends ChangeNotifier {
 
   // Handle login submission (similar to registration)
   Future<void> handleLogin(BuildContext context) async {
+    if (!context.mounted) return;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -840,18 +872,60 @@ class RegisterViewModel extends ChangeNotifier {
     try {
       final result = await login();
 
-      Navigator.of(context).pop(); // Close loading
+      // Wait a tiny bit to ensure state is updated
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      if (!context.mounted) return;
+
+      // Close loading dialog
+      Navigator.of(context).pop();
 
       if (result == null) {
-        // Show error
-        showDialog(
+        // Get error message after login completes
+        final errorMessage = _loginErrorMessage?.isNotEmpty == true
+            ? _loginErrorMessage!
+            : 'Unknown error occurred';
+        log('🚨 Showing error dialog: $errorMessage');
+        log('🚨 _loginErrorMessage value: $_loginErrorMessage');
+
+        if (!context.mounted) return;
+
+        // Show SnackBar for immediate feedback
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            action: SnackBarAction(
+              label: 'OK',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
+          ),
+        );
+
+        // Also show dialog for better visibility
+        await showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Login Failed'),
-            content: Text(_loginErrorMessage ?? 'Unknown error'),
+          barrierDismissible: true,
+          builder: (dialogContext) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.red, size: 24),
+                SizedBox(width: 8),
+                Text('Login Failed'),
+              ],
+            ),
+            content: Text(errorMessage, style: const TextStyle(fontSize: 16)),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => Navigator.of(dialogContext).pop(),
                 child: const Text('OK'),
               ),
             ],
@@ -861,6 +935,8 @@ class RegisterViewModel extends ChangeNotifier {
       }
 
       // ✅ SUCCESS
+      if (!context.mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Login Successful!'),
@@ -870,6 +946,8 @@ class RegisterViewModel extends ChangeNotifier {
       );
 
       await Future.delayed(const Duration(seconds: 1));
+
+      if (!context.mounted) return;
 
       // Navigate based on login role
       if (_loginRole == 'seller') {
@@ -882,15 +960,61 @@ class RegisterViewModel extends ChangeNotifier {
         ).pushReplacement(MaterialPageRoute(builder: (_) => BuyerMainScreen()));
       }
     } catch (error) {
-      Navigator.of(context).pop(); // Close loading
-      showDialog(
+      if (!context.mounted) return;
+
+      // Close loading dialog if still open
+      try {
+        Navigator.of(context).pop();
+      } catch (e) {
+        // Dialog might already be closed
+      }
+
+      String errorMessage = error.toString();
+      // Remove "Exception: " prefix if present
+      if (errorMessage.startsWith('Exception: ')) {
+        errorMessage = errorMessage.substring(11);
+      }
+
+      log('🚨 Login handleLogin catch error: $errorMessage');
+
+      if (!context.mounted) return;
+
+      // Show SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'OK',
+            textColor: Colors.white,
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            },
+          ),
+        ),
+      );
+
+      // Show dialog
+      await showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Login Error'),
-          content: Text(error.toString()),
+        barrierDismissible: true,
+        builder: (dialogContext) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.red, size: 24),
+              SizedBox(width: 8),
+              Text('Login Error'),
+            ],
+          ),
+          content: Text(errorMessage, style: const TextStyle(fontSize: 16)),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('OK'),
             ),
           ],

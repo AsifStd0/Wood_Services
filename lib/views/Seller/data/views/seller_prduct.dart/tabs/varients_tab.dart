@@ -352,12 +352,12 @@ class _VariantsTabState extends State<VariantsTab> {
 
   // Template methods - add only one variant per button click
   void _addSizeTemplate(BuildContext context, SellerProductProvider viewModel) {
-    final variant = ProductVariant(
+      final variant = ProductVariant(
       type: 'Size',
       value: 'Medium',
       priceAdjustment: 0.0,
-    );
-    viewModel.addVariant(variant);
+      );
+      viewModel.addVariant(variant);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -371,12 +371,12 @@ class _VariantsTabState extends State<VariantsTab> {
     BuildContext context,
     SellerProductProvider viewModel,
   ) {
-    final variant = ProductVariant(
+      final variant = ProductVariant(
       type: 'Color',
       value: 'Red',
-      priceAdjustment: 0.0,
-    );
-    viewModel.addVariant(variant);
+        priceAdjustment: 0.0,
+      );
+      viewModel.addVariant(variant);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -390,12 +390,12 @@ class _VariantsTabState extends State<VariantsTab> {
     BuildContext context,
     SellerProductProvider viewModel,
   ) {
-    final variant = ProductVariant(
+      final variant = ProductVariant(
       type: 'Material',
       value: 'Wood',
       priceAdjustment: 0.0,
-    );
-    viewModel.addVariant(variant);
+      );
+      viewModel.addVariant(variant);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(

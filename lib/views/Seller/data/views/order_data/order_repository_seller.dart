@@ -16,10 +16,9 @@ abstract class OrderRepository {
 
 class ApiOrderRepository implements OrderRepository {
   final Dio dio;
+  final UnifiedLocalStorageServiceImpl storageService;
 
-  ApiOrderRepository({required this.dio});
-  final UnifiedLocalStorageServiceImpl storageService =
-      UnifiedLocalStorageServiceImpl();
+  ApiOrderRepository({required this.dio, required this.storageService});
   @override
   Future<List<OrderModelSeller>> getOrders({
     String? status,
@@ -30,7 +29,7 @@ class ApiOrderRepository implements OrderRepository {
     try {
       // 1. Get Token
       log('🔑 Step 1: Getting seller token...');
-      final token = await storageService.getToken();
+      final token = storageService.getToken();
       if (token == null || token.isEmpty) {
         log('❌ ERROR: No seller token found');
         throw Exception('Please login again');
@@ -147,7 +146,7 @@ class ApiOrderRepository implements OrderRepository {
     log('📋 Parameters: orderId=$orderId, status=$status');
 
     try {
-      final token = await storageService.getToken();
+      final token = storageService.getToken();
 
       if (token == null || token.isEmpty) {
         throw Exception('Please login again');

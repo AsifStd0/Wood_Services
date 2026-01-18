@@ -3,7 +3,6 @@ import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wood_service/app/config.dart';
-import 'package:wood_service/core/services/buyer_local_storage_service_impl.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
@@ -13,9 +12,13 @@ import 'package:wood_service/views/Buyer/Buyer_home/buyer_product_service.dart';
 import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
 import 'package:wood_service/views/Seller/data/services/new_service/auth_service.dart';
+import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
+import 'package:wood_service/views/Seller/data/views/order_data/order_repository_seller.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository_impl.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_datasource.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_services.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/seller_stats_service.dart';
@@ -138,6 +141,30 @@ Future<void> setupLocator() async {
     locator.registerSingleton<SellerStatsService>(SellerStatsService());
   }
 
+  // Register SellerSettingsDataSource
+  if (!locator.isRegistered<SellerSettingsDataSource>()) {
+    locator.registerSingleton<SellerSettingsDataSource>(
+      SellerSettingsDataSource(),
+    );
+  }
+
+  // Register SellerSettingsRepository
+  if (!locator.isRegistered<SellerSettingsRepository>()) {
+    locator.registerSingleton<SellerSettingsRepository>(
+      SellerSettingsRepositoryImpl(locator<SellerSettingsDataSource>()),
+    );
+  }
+
+  // Register OrderRepository
+  if (!locator.isRegistered<OrderRepository>()) {
+    locator.registerSingleton<OrderRepository>(
+      ApiOrderRepository(
+        dio: locator<Dio>(),
+        storageService: locator<UnifiedLocalStorageServiceImpl>(),
+      ),
+    );
+  }
+
   // ========== STEP 5: Register Provider Factories ==========
   // Register RegisterViewModel
   locator.registerFactory<RegisterViewModel>(
@@ -164,6 +191,11 @@ Future<void> setupLocator() async {
 
   // Register SellerStatsProvider
   locator.registerFactory<SellerStatsProvider>(() => SellerStatsProvider());
+
+  // Register OrdersViewModel
+  locator.registerFactory<OrdersViewModel>(
+    () => OrdersViewModel(locator<OrderRepository>()),
+  );
 
   // Register BuyerProfileViewProvider
   locator.registerFactory<BuyerProfileViewProvider>(

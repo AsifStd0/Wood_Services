@@ -4,6 +4,7 @@ import 'package:wood_service/widgets/custom_appbar.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
 import 'package:wood_service/views/Seller/data/models/order_model.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home/seller_stats_provider.dart';
 
 class OrdersScreenSeller extends StatefulWidget {
   const OrdersScreenSeller({super.key});
@@ -26,8 +27,10 @@ class _OrdersScreenState extends State<OrdersScreenSeller> {
   }
 
   void _loadInitialData() {
-    final viewModel = context.read<OrdersViewModel>();
-    viewModel.loadOrders();
+    final ordersViewModel = context.read<OrdersViewModel>();
+    final statsProvider = context.read<SellerStatsProvider>();
+    ordersViewModel.loadOrders();
+    statsProvider.loadStats();
   }
 
   void _onSearchChanged() {
@@ -52,8 +55,12 @@ class _OrdersScreenState extends State<OrdersScreenSeller> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          final viewModel = context.read<OrdersViewModel>();
-          await viewModel.loadOrders();
+          final ordersViewModel = context.read<OrdersViewModel>();
+          final statsProvider = context.read<SellerStatsProvider>();
+          await Future.wait([
+            ordersViewModel.loadOrders(),
+            statsProvider.loadStats(),
+          ]);
         },
         child: Column(
           children: [
@@ -80,37 +87,56 @@ class _StatisticsBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<OrdersViewModel>(
-      builder: (context, viewModel, child) {
+    return Consumer<SellerStatsProvider>(
+      builder: (context, statsProvider, child) {
         return Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          color: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildStatItem(
                 'Total',
-                '${viewModel.totalOrders}',
-                Colors.blue,
+                '${statsProvider.totalServices}',
+                const Color(0xFF4F46E5), // Indigo
                 Icons.inventory_2_rounded,
               ),
               _buildStatItem(
-                'Pending',
-                '${viewModel.pendingOrders}',
-                Colors.orange,
-                Icons.pending_rounded,
+                'Active',
+                '${statsProvider.activeServices}',
+                const Color(0xFF10B981), // Emerald
+                Icons.check_circle_outline_rounded,
               ),
               _buildStatItem(
-                'Accepted',
-                '${viewModel.acceptedOrders}',
-                Colors.green,
-                Icons.check_circle_rounded,
+                'Pending',
+                '${statsProvider.pendingOrders}',
+                const Color(0xFFF59E0B), // Amber
+                Icons.schedule_rounded,
+              ),
+              _buildStatItem(
+                'In Progress',
+                '${statsProvider.inProgressOrders}',
+                const Color(0xFF3B82F6), // Blue
+                Icons.autorenew_rounded,
               ),
               _buildStatItem(
                 'Completed',
-                '${viewModel.completedOrders}',
-                Colors.purple,
-                Icons.verified_rounded,
+                '${statsProvider.completedOrders}',
+                const Color(0xFF8B5CF6), // Violet
+                Icons.verified_outlined,
               ),
             ],
           ),
@@ -128,23 +154,38 @@ class _StatisticsBar extends StatelessWidget {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withOpacity(0.2), width: 1),
           ),
-          child: Icon(icon, color: color, size: 20),
+          child: Icon(icon, color: color, size: 22),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.black87,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: Colors.grey[900],
+            height: 1.2,
           ),
         ),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[600],
+            letterSpacing: 0.5,
+          ),
+        ),
       ],
     );
   }
