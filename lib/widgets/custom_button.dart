@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
-import 'package:wood_service/core/theme/app_fonts.dart';
 
-enum ButtonType { primary, secondary, outline, text, danger, success, warning }
+enum ButtonType { primary, secondary, outline, textButton, buyButton }
 
 enum ButtonSize { small, medium, large, extraLarge }
 
@@ -11,7 +10,6 @@ class CustomButton extends StatelessWidget {
   const CustomButton({
     super.key,
     required this.onPressed,
-    this.onLongPress,
     required this.child,
     this.type = ButtonType.primary,
     this.size = ButtonSize.medium,
@@ -28,13 +26,10 @@ class CustomButton extends StatelessWidget {
     this.borderColor,
     this.hapticFeedback = true,
     this.elevation,
-    this.shadowColor,
-    this.gradient,
     this.borderWidth = 1.0,
   });
 
   final VoidCallback? onPressed;
-  final VoidCallback? onLongPress;
   final Widget child;
   final ButtonType type;
   final ButtonSize size;
@@ -51,8 +46,6 @@ class CustomButton extends StatelessWidget {
   final Color? borderColor;
   final bool hapticFeedback;
   final double? elevation;
-  final Color? shadowColor;
-  final Gradient? gradient;
   final double borderWidth;
 
   bool get _isEnabled => !disabled && !isLoading && onPressed != null;
@@ -67,14 +60,10 @@ class CustomButton extends StatelessWidget {
         return AppColors.secondary;
       case ButtonType.outline:
         return Colors.transparent;
-      case ButtonType.text:
+      case ButtonType.textButton:
         return Colors.transparent;
-      case ButtonType.danger:
-        return AppColors.error;
-      case ButtonType.success:
-        return AppColors.success;
-      case ButtonType.warning:
-        return AppColors.warning;
+      case ButtonType.buyButton:
+        return AppColors.yellowButton;
     }
   }
 
@@ -88,14 +77,10 @@ class CustomButton extends StatelessWidget {
         return AppColors.white;
       case ButtonType.outline:
         return Theme.of(context).primaryColor;
-      case ButtonType.text:
+      case ButtonType.textButton:
         return Theme.of(context).primaryColor;
-      case ButtonType.danger:
-        return AppColors.white;
-      case ButtonType.success:
-        return AppColors.white;
-      case ButtonType.warning:
-        return AppColors.white;
+      case ButtonType.buyButton:
+        return AppColors.black;
     }
   }
 
@@ -105,14 +90,13 @@ class CustomButton extends StatelessWidget {
     switch (type) {
       case ButtonType.primary:
       case ButtonType.secondary:
-      case ButtonType.danger:
-      case ButtonType.success:
-      case ButtonType.warning:
         return _getBackgroundColor(context);
       case ButtonType.outline:
         return Theme.of(context).primaryColor;
-      case ButtonType.text:
+      case ButtonType.textButton:
         return Colors.transparent;
+      case ButtonType.buyButton:
+        return AppColors.yellowButton;
     }
   }
 
@@ -120,13 +104,12 @@ class CustomButton extends StatelessWidget {
     switch (type) {
       case ButtonType.primary:
       case ButtonType.secondary:
-      case ButtonType.danger:
-      case ButtonType.success:
-      case ButtonType.warning:
         return AppColors.grey.withOpacity(0.5);
       case ButtonType.outline:
-      case ButtonType.text:
+      case ButtonType.textButton:
         return Colors.transparent;
+      case ButtonType.buyButton:
+        return AppColors.yellowButton.withOpacity(0.5);
     }
   }
 
@@ -134,13 +117,12 @@ class CustomButton extends StatelessWidget {
     switch (type) {
       case ButtonType.primary:
       case ButtonType.secondary:
-      case ButtonType.danger:
-      case ButtonType.success:
-      case ButtonType.warning:
         return AppColors.white.withOpacity(0.7);
       case ButtonType.outline:
-      case ButtonType.text:
+      case ButtonType.textButton:
         return AppColors.grey.withOpacity(0.7);
+      case ButtonType.buyButton:
+        return AppColors.black.withOpacity(0.7);
     }
   }
 
@@ -148,14 +130,13 @@ class CustomButton extends StatelessWidget {
     switch (type) {
       case ButtonType.primary:
       case ButtonType.secondary:
-      case ButtonType.danger:
-      case ButtonType.success:
-      case ButtonType.warning:
         return AppColors.grey.withOpacity(0.5);
       case ButtonType.outline:
         return AppColors.grey.withOpacity(0.5);
-      case ButtonType.text:
+      case ButtonType.textButton:
         return Colors.transparent;
+      case ButtonType.buyButton:
+        return AppColors.yellowButton.withOpacity(0.5);
     }
   }
 
@@ -187,35 +168,37 @@ class CustomButton extends StatelessWidget {
 
   double _getElevation() {
     return elevation ??
-        (type == ButtonType.text || type == ButtonType.outline ? 0.0 : 2.0);
+        (type == ButtonType.textButton || type == ButtonType.outline
+            ? 0.0
+            : 2.0);
   }
 
   TextStyle _getTextStyle(BuildContext context) {
     switch (size) {
       case ButtonSize.small:
         return Theme.of(context).textTheme.bodySmall!.copyWith(
-          fontWeight: AppFonts.medium,
+          fontWeight: FontWeight.w500,
           color: _isEnabled
               ? _getForegroundColor(context)
               : _getDisabledForegroundColor(context),
         );
       case ButtonSize.medium:
         return Theme.of(context).textTheme.bodyMedium!.copyWith(
-          fontWeight: AppFonts.medium,
+          fontWeight: FontWeight.w500,
           color: _isEnabled
               ? _getForegroundColor(context)
               : _getDisabledForegroundColor(context),
         );
       case ButtonSize.large:
         return Theme.of(context).textTheme.bodyLarge!.copyWith(
-          fontWeight: AppFonts.medium,
+          fontWeight: FontWeight.w500,
           color: _isEnabled
               ? _getForegroundColor(context)
               : _getDisabledForegroundColor(context),
         );
       case ButtonSize.extraLarge:
         return Theme.of(context).textTheme.titleSmall!.copyWith(
-          fontWeight: AppFonts.semiBold,
+          fontWeight: FontWeight.w600,
           color: _isEnabled
               ? _getForegroundColor(context)
               : _getDisabledForegroundColor(context),
@@ -228,13 +211,6 @@ class CustomButton extends StatelessWidget {
       HapticFeedback.lightImpact();
     }
     onPressed?.call();
-  }
-
-  void _handleLongPress() {
-    if (hapticFeedback) {
-      HapticFeedback.mediumImpact();
-    }
-    onLongPress?.call();
   }
 
   @override
@@ -257,18 +233,12 @@ class CustomButton extends StatelessWidget {
       height: height,
       child: ElevatedButton(
         onPressed: _isEnabled ? _handlePress : null,
-        onLongPress: _isEnabled && onLongPress != null
-            ? _handleLongPress
-            : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: gradient != null
-              ? Colors.transparent
-              : backgroundColor,
+          backgroundColor: backgroundColor,
           foregroundColor: foregroundColor,
           disabledBackgroundColor: _getDisabledBackgroundColor(context),
           disabledForegroundColor: _getDisabledForegroundColor(context),
           elevation: elevation,
-          shadowColor: shadowColor,
           padding: padding,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(borderRadius),
@@ -276,303 +246,239 @@ class CustomButton extends StatelessWidget {
           ),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-        child: Container(
-          decoration: gradient != null
-              ? BoxDecoration(
-                  gradient: gradient,
-                  borderRadius: BorderRadius.circular(borderRadius),
-                )
-              : null,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Content
-              Opacity(
-                opacity: isLoading ? 0.0 : 1.0,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (prefixIcon != null) ...[
-                      prefixIcon!,
-                      const SizedBox(width: 8),
-                    ],
-                    Flexible(
-                      child: DefaultTextStyle(
-                        style: _getTextStyle(context),
-                        child: child,
-                      ),
-                    ),
-                    if (suffixIcon != null) ...[
-                      const SizedBox(width: 8),
-                      suffixIcon!,
-                    ],
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Opacity(
+              opacity: isLoading ? 0.0 : 1.0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (prefixIcon != null) ...[
+                    prefixIcon!,
+                    const SizedBox(width: 8),
                   ],
-                ),
-              ),
-              // Loading indicator
-              if (isLoading)
-                Positioned.fill(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        foregroundColor,
-                      ),
+                  Flexible(
+                    child: DefaultTextStyle(
+                      style: _getTextStyle(context),
+                      child: child,
                     ),
                   ),
+                  if (suffixIcon != null) ...[
+                    const SizedBox(width: 8),
+                    suffixIcon!,
+                  ],
+                ],
+              ),
+            ),
+            if (isLoading)
+              Positioned.fill(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(foregroundColor),
+                  ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
   }
 }
 
-// Utility class with static methods for common button types
 class CustomButtonUtils {
-  static CustomButton primary({
+  static CustomButton googleSignIn({
     Key? key,
     required VoidCallback? onPressed,
-    VoidCallback? onLongPress,
-    required Widget child,
-    ButtonSize size = ButtonSize.medium,
     bool isLoading = false,
     bool disabled = false,
     double? width,
-    double? height,
-    double? borderRadius,
-    EdgeInsetsGeometry? padding,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    bool hapticFeedback = true,
-    double? elevation,
-    Color? shadowColor,
-    double borderWidth = 1.0,
-  }) {
-    return CustomButton(
-      key: key,
-      onPressed: onPressed,
-      onLongPress: onLongPress,
-      child: child,
-      type: ButtonType.primary,
-      size: size,
-      isLoading: isLoading,
-      disabled: disabled,
-      width: width,
-      height: height,
-      borderRadius: borderRadius,
-      padding: padding,
-      prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon,
-      hapticFeedback: hapticFeedback,
-      elevation: elevation,
-      shadowColor: shadowColor,
-      borderWidth: borderWidth,
-    );
-  }
-
-  // Add this new method for the sign-up button style
-  static CustomButton signUp({
-    Key? key,
-    required VoidCallback? onPressed,
-    VoidCallback? onLongPress,
-    required Widget child,
-    bool isLoading = false,
-    bool disabled = false,
-    double? width,
-    double? height,
-    EdgeInsetsGeometry? padding,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    bool hapticFeedback = true,
-    double? elevation,
-    Color? shadowColor,
-  }) {
-    return CustomButton(
-      key: key,
-      onPressed: onPressed,
-      backgroundColor: AppColors.brightOrange,
-      onLongPress: onLongPress,
-      type: ButtonType.primary,
-      size: ButtonSize.extraLarge,
-      isLoading: isLoading,
-      disabled: disabled,
-      width: width ?? double.infinity, // Full width by default
-      height: height ?? 56, // Fixed height similar to the screenshot
-      borderRadius: 12.0, // Rounded corners
-      padding: padding ?? const EdgeInsets.symmetric(vertical: 16),
-      prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon,
-      hapticFeedback: hapticFeedback,
-      elevation: elevation ?? 4.0, // Slightly more elevation
-      shadowColor: shadowColor,
-      borderWidth: 0,
-      child: child, // No border
-    );
-  }
-
-  static CustomButton text({
-    Key? key,
-    required VoidCallback? onPressed,
-    VoidCallback? onLongPress,
-    required Widget child,
-    ButtonSize size = ButtonSize.medium,
-    bool isLoading = false,
-    bool disabled = false,
-    double? width,
-    double? height,
-    EdgeInsetsGeometry? padding,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    Color? foregroundColor,
     bool hapticFeedback = true,
   }) {
     return CustomButton(
       key: key,
       onPressed: onPressed,
-      onLongPress: onLongPress,
-      child: child,
-      type: ButtonType.text,
-      size: size,
-      isLoading: isLoading,
-      disabled: disabled,
-      width: width,
-      height: height,
-      padding: padding,
-      prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon,
-      foregroundColor: foregroundColor,
-      hapticFeedback: hapticFeedback,
-      elevation: 0,
-      borderWidth: 0,
-    );
-  }
-
-  static CustomButton outline({
-    Key? key,
-    required VoidCallback? onPressed,
-    VoidCallback? onLongPress,
-    required Widget child,
-    ButtonSize size = ButtonSize.medium,
-    bool isLoading = false,
-    bool disabled = false,
-    double? width,
-    double? height,
-    double? borderRadius,
-    EdgeInsetsGeometry? padding,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    Color? foregroundColor,
-    Color? borderColor,
-    bool hapticFeedback = true,
-    double borderWidth = 1.0,
-  }) {
-    return CustomButton(
-      key: key,
-      onPressed: onPressed,
-      onLongPress: onLongPress,
-      child: child,
       type: ButtonType.outline,
+      size: ButtonSize.large,
+      isLoading: isLoading,
+      disabled: disabled,
+      width: width ?? double.infinity,
+      height: 56,
+      borderRadius: 12.0,
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      hapticFeedback: hapticFeedback,
+      borderWidth: 1.5,
+      borderColor: AppColors.greyDim,
+      backgroundColor: AppColors.white,
+      foregroundColor: Colors.black87,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.g_mobiledata, size: 24),
+          const SizedBox(width: 12),
+          Text(
+            'Google',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static CustomButton appleSignIn({
+    Key? key,
+    required VoidCallback? onPressed,
+    bool isLoading = false,
+    bool disabled = false,
+    double? width,
+    bool hapticFeedback = true,
+  }) {
+    return CustomButton(
+      key: key,
+      onPressed: onPressed,
+      type: ButtonType.primary,
+      isLoading: isLoading,
+      disabled: disabled,
+      width: width ?? double.infinity,
+      height: 56,
+      borderRadius: 12.0,
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      hapticFeedback: hapticFeedback,
+      elevation: 0,
+      borderWidth: 1.5,
+      borderColor: AppColors.greyDim,
+      backgroundColor: AppColors.white,
+      foregroundColor: AppColors.black,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.apple, size: 24),
+          const SizedBox(width: 12),
+          Text(
+            'Apple',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              color: Colors.black,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static CustomButton login({
+    Key? key,
+    String? title,
+    Color? backgroundColor,
+    required VoidCallback? onPressed,
+    bool isLoading = false,
+    bool disabled = false,
+    double? width,
+    bool hapticFeedback = true,
+    double? height,
+    Color? color,
+    double? borderRadius,
+    Widget? child,
+  }) {
+    return CustomButton(
+      key: key,
+      onPressed: onPressed,
+      type: ButtonType.primary,
+      isLoading: isLoading,
+      disabled: disabled,
+      width: width ?? double.infinity,
+      height: height ?? 50,
+      backgroundColor: backgroundColor ?? AppColors.buttonColor,
+      borderRadius: borderRadius ?? 15.0,
+      hapticFeedback: hapticFeedback,
+      elevation: 4.0,
+      borderWidth: 0,
+      child:
+          child ??
+          Text(
+            title ?? 'Login',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              color: color ?? AppColors.white,
+            ),
+          ),
+    );
+  }
+
+  static CustomButton textButton({
+    Key? key,
+    required VoidCallback? onPressed,
+    required Widget child,
+    ButtonSize size = ButtonSize.medium,
+    bool isLoading = false,
+    bool disabled = false,
+    double? width,
+    double? height,
+    EdgeInsetsGeometry? padding,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+    Color? foregroundColor,
+    bool hapticFeedback = true,
+  }) {
+    return CustomButton(
+      key: key,
+      onPressed: onPressed,
+      type: ButtonType.textButton,
       size: size,
       isLoading: isLoading,
       disabled: disabled,
       width: width,
       height: height,
-      borderRadius: borderRadius,
       padding: padding,
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       foregroundColor: foregroundColor,
-      borderColor: borderColor,
       hapticFeedback: hapticFeedback,
       elevation: 0,
-      borderWidth: borderWidth,
+      borderWidth: 0,
+      child: child,
     );
   }
+}
 
-  static CustomButton danger({
-    Key? key,
-    required VoidCallback? onPressed,
-    VoidCallback? onLongPress,
-    required Widget child,
-    ButtonSize size = ButtonSize.medium,
-    bool isLoading = false,
-    bool disabled = false,
-    double? width,
-    double? height,
-    double? borderRadius,
-    EdgeInsetsGeometry? padding,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    bool hapticFeedback = true,
-    double? elevation,
-    Color? shadowColor,
-    double borderWidth = 1.0,
-  }) {
-    return CustomButton(
-      key: key,
-      onPressed: onPressed,
-      onLongPress: onLongPress,
-      child: child,
-      type: ButtonType.danger,
-      size: size,
-      isLoading: isLoading,
-      disabled: disabled,
-      width: width,
-      height: height,
-      borderRadius: borderRadius,
-      padding: padding,
-      prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon,
-      hapticFeedback: hapticFeedback,
-      elevation: elevation,
-      shadowColor: shadowColor,
-      borderWidth: borderWidth,
-    );
-  }
+class AuthBottomText extends StatelessWidget {
+  final String questionText; // e.g. "Don't have an account?"
+  final String actionText; // e.g. "Sign Up"
+  final VoidCallback onPressed; // action when clicked
+  // final Color questionColor;
+  // final Color actionColor;
 
-  static CustomButton success({
-    Key? key,
-    required VoidCallback? onPressed,
-    VoidCallback? onLongPress,
-    required Widget child,
-    ButtonSize size = ButtonSize.medium,
-    bool isLoading = false,
-    bool disabled = false,
-    double? width,
-    double? height,
-    double? borderRadius,
-    EdgeInsetsGeometry? padding,
-    Widget? prefixIcon,
-    Widget? suffixIcon,
-    bool hapticFeedback = true,
-    double? elevation,
-    Color? shadowColor,
-    double borderWidth = 1.0,
-  }) {
-    return CustomButton(
-      key: key,
-      onPressed: onPressed,
-      onLongPress: onLongPress,
-      child: child,
-      type: ButtonType.success,
-      size: size,
-      isLoading: isLoading,
-      disabled: disabled,
-      width: width,
-      height: height,
-      borderRadius: borderRadius,
-      padding: padding,
-      prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon,
-      hapticFeedback: hapticFeedback,
-      elevation: elevation,
-      shadowColor: shadowColor,
-      borderWidth: borderWidth,
+  const AuthBottomText({
+    super.key,
+    required this.questionText,
+    required this.actionText,
+    required this.onPressed,
+    // this.questionColor = Colors.grey,
+    // this.actionColor = Colors.blue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(questionText, style: TextStyle(color: AppColors.brightOrange)),
+          TextButton(
+            onPressed: onPressed,
+            child: Text(
+              actionText,
+              style: TextStyle(color: AppColors.brightOrange),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

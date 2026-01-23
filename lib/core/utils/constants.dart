@@ -1,6 +1,7 @@
 class AppConstants {
   static const String appName = 'Wood Service';
-  static const String apiBaseUrl = 'https://api.woodservice.com';
+  // NOTE: API URLs are now centralized in Config class
+  // Use Config.baseUrl and Config.apiBaseUrl instead
   static const String userTokenKey = 'user_token';
   static const String userIdKey = 'user_id';
   static const String userEmailKey = 'user_email';
