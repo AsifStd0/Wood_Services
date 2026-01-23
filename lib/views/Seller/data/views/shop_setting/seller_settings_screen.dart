@@ -67,68 +67,68 @@ class _SellerSettingsScreenContent extends StatelessWidget {
         actions: [
           Consumer<SellerSettingsProvider>(
             builder: (context, provider, _) => IconButton(
-              icon: Icon(
+                icon: Icon(
                 provider.isEditing ? Icons.close_rounded : Icons.edit_rounded,
-                color: Colors.grey[700],
-              ),
+                  color: Colors.grey[700],
+                ),
               onPressed: () => provider.setEditing(!provider.isEditing),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: Colors.red),
-            onPressed: () => _showLogoutDialog(context),
+                onPressed: () => _showLogoutDialog(context),
           ),
         ],
       ),
       body: Consumer<SellerSettingsProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading && !provider.hasData) {
-            return _buildLoadingState();
-          }
+          return _buildLoadingState();
+        }
 
           if (!provider.hasData) {
             return const Center(child: CircularProgressIndicator());
-          }
+        }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Shop Header
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Shop Header
                 buildShopHeader(provider),
                 const SizedBox(height: 14),
 
                 // Uploaded Products Button
                 _buildUploadedProductsButton(context),
-                const SizedBox(height: 14),
+              const SizedBox(height: 14),
 
-                // Shop Banner
+              // Shop Banner
                 buildShopBanner(provider),
-                const SizedBox(height: 14),
+              const SizedBox(height: 14),
 
-                // Personal Information
+              // Personal Information
                 _buildPersonalInfoSection(provider),
-                const SizedBox(height: 14),
+              const SizedBox(height: 14),
 
-                // Business Information
+              // Business Information
                 _buildBusinessInfoSection(provider),
-                const SizedBox(height: 14),
+              const SizedBox(height: 14),
 
-                // Shop Branding
+              // Shop Branding
                 buildShopBrandingSection(provider),
-                const SizedBox(height: 14),
+              const SizedBox(height: 14),
 
-                // Bank Details
+              // Bank Details
                 buildBankDetailsSection(provider),
-                const SizedBox(height: 14),
+              const SizedBox(height: 14),
 
-                // Action Buttons
+              // Action Buttons
                 saveChangesButton(provider, context),
-              ],
-            ),
-          );
-        },
+            ],
+          ),
+        );
+      },
       ),
     );
   }

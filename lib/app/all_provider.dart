@@ -8,6 +8,7 @@ import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_provider.dart';
 import 'package:wood_service/views/Buyer/buyer_main/buyer_main_provider.dart';
+import 'package:wood_service/views/Buyer/payment/rating/review_provider.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
 import 'package:wood_service/views/Seller/data/services/new_service/auth_service.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
@@ -55,5 +56,6 @@ List<SingleChildWidget> appProviders = [
   ChangeNotifierProvider<OrdersViewModel>(
     create: (context) => locator<OrdersViewModel>(),
   ),
+  ChangeNotifierProvider(create: (_) => ReviewProvider()), // Add this
   // OrdersViewModel
 ];

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:dio/dio.dart';
+import 'package:wood_service/app/config.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_model.dart';
@@ -10,6 +11,99 @@ class BuyerCartService {
   final UnifiedLocalStorageServiceImpl storage =
       locator<UnifiedLocalStorageServiceImpl>();
   String? get token => storage.getToken();
+
+  // Add these methods to your BuyerCartService class
+
+  // Direct order placement with endpoint parameter
+  Future<Map<String, dynamic>> placeOrderDirect({
+    required String endpoint,
+    required Map<String, dynamic> body,
+    required String token,
+  }) async {
+    try {
+      final response = await _dio.post(
+        endpoint,
+        data: body,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      log('📡 Response from $endpoint: ${response.statusCode}');
+      log('📡 Response body: ${response.data}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = response.data;
+        return {
+          'success': true,
+          'message': responseData['message'] ?? 'Order placed successfully',
+          'data': responseData['data'] ?? responseData,
+          'order': responseData['data']?['order'] ?? responseData['order'],
+          'statusCode': response.statusCode,
+        };
+      } else if (response.statusCode == 404) {
+        return {
+          'success': false,
+          'message': 'Endpoint not found',
+          'statusCode': response.statusCode,
+        };
+      } else {
+        final errorData = response.data;
+        return {
+          'success': false,
+          'message': errorData['message'] ?? 'Failed to place order',
+          'statusCode': response.statusCode,
+        };
+      }
+    } catch (error) {
+      log('❌ Place order direct error: $error');
+      return {
+        'success': false,
+        'message': 'Network error: $error',
+        'statusCode': 0,
+      };
+    }
+  }
+
+  // Check if endpoint exists
+  Future<Map<String, dynamic>> checkEndpoint(String endpoint) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'exists': false, 'statusCode': 401};
+      }
+
+      final response = await _dio.head(
+        endpoint,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+      return {
+        'exists': response.statusCode != 404,
+        'statusCode': response.statusCode,
+      };
+    } catch (e) {
+      return {'exists': false, 'statusCode': 0};
+    }
+  }
+
+  // Get token method
+  Future<String?> getToken() async {
+    // Implement your token retrieval logic
+    // Example:
+    final storage = locator<UnifiedLocalStorageServiceImpl>();
+    await storage.initialize();
+    return storage.getToken();
+  }
 
   /// GET /api/cart
   Future<BuyerCartModel?> getCart() async {
@@ -67,11 +161,42 @@ class BuyerCartService {
               );
             }
 
-            return BuyerCartModel.fromJson(
-              cartData is Map<String, dynamic>
-                  ? cartData
-                  : Map<String, dynamic>.from(cartData is Map ? cartData : {}),
-            );
+            // Handle new API structure: data.cart.items and data.cart.summary
+            Map<String, dynamic> parsedCartData;
+            if (cartData is Map) {
+              parsedCartData = Map<String, dynamic>.from(cartData);
+
+              // If summary exists, extract values from it
+              if (parsedCartData.containsKey('summary') &&
+                  parsedCartData['summary'] is Map) {
+                final summary = parsedCartData['summary'] as Map;
+                parsedCartData['totalQuantity'] =
+                    summary['totalItems'] ??
+                    parsedCartData['totalQuantity'] ??
+                    0;
+                parsedCartData['subtotal'] =
+                    summary['subtotal'] ?? parsedCartData['subtotal'] ?? 0;
+                // Calculate total if not provided
+                if (!parsedCartData.containsKey('total')) {
+                  final subtotal = (summary['subtotal'] ?? 0).toDouble();
+                  final shipping = (parsedCartData['shippingFee'] ?? 0)
+                      .toDouble();
+                  final tax = (parsedCartData['tax'] ?? 0).toDouble();
+                  parsedCartData['total'] = subtotal + shipping + tax;
+                }
+              }
+
+              // Ensure items array exists
+              if (!parsedCartData.containsKey('items')) {
+                parsedCartData['items'] = [];
+              }
+            } else {
+              parsedCartData = {};
+            }
+
+            log('🔍 Parsed cart data keys: ${parsedCartData.keys.toList()}');
+
+            return BuyerCartModel.fromJson(parsedCartData);
           } else {
             log('❌ API returned success: false');
             log('   Message: ${responseData['message']}');
@@ -359,7 +484,7 @@ class BuyerCartService {
 
       final response = await _dio.post(
         // Changed from PUT to POST
-        '/cart/update/$itemId',
+        '/cart/$itemId/update',
         data: {'quantity': quantity},
         options: Options(
           headers: {
@@ -503,42 +628,85 @@ class BuyerCartService {
     }
   }
 
-  /// POST /api/buyer/orders
-  /// Body: { serviceId, quantity, requirements }
+  /// POST /api/orders
+  /// Body: { serviceId, quantity, useSalePrice, paymentMethod, selectedVariants, orderDetails }
   Future<Map<String, dynamic>> placeOrder({
     required String serviceId,
     required int quantity,
-    String? requirements,
+    bool useSalePrice = false,
+    String paymentMethod = 'card',
+    List<Map<String, String>>? selectedVariants,
+    Map<String, dynamic>? orderDetails,
+    String? requirements, // For backward compatibility
   }) async {
     try {
-      log('🛒 Placing order...');
-      log('   Service ID: $serviceId');
-      log('   Quantity: $quantity');
-      log('   Requirements: $requirements');
+      log(
+        '🛒 Placing order...$serviceId $quantity $useSalePrice $paymentMethod  $selectedVariants   $orderDetails',
+      );
 
       final token = storage.getToken();
       if (token == null) throw Exception('Please login again');
 
+      // Build selectedVariants from legacy fields if needed
+      List<Map<String, String>> variants = selectedVariants ?? [];
+
       final body = {
         'serviceId': serviceId,
         'quantity': quantity,
-        if (requirements != null && requirements.isNotEmpty)
-          'requirements': requirements,
+        'useSalePrice': useSalePrice,
+        'paymentMethod': paymentMethod,
+        if (variants.isNotEmpty) 'selectedVariants': variants,
+        if (orderDetails != null && orderDetails.isNotEmpty)
+          'orderDetails': orderDetails,
+        // Backward compatibility: convert requirements to orderDetails.description
+        if (requirements != null &&
+            requirements.isNotEmpty &&
+            orderDetails == null)
+          'orderDetails': {'description': requirements},
       };
 
       log('📦 Request Body: $body');
-      log('📤 Endpoint: /api/buyer/orders');
+      // Prefer the newer buyer endpoint, but fallback to legacy if backend still uses it.
+      final endpointsToTry = <String>['/buyer/orders', '/orders'];
+      Response? response;
+      DioException? lastDioError;
 
-      final response = await _dio.post(
-        '/buyer/orders',
-        data: body,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          },
-        ),
-      );
+      for (final endpoint in endpointsToTry) {
+        try {
+          log('📤 Endpoint: ${Config.apiBaseUrl}$endpoint');
+          response = await _dio.post(
+            endpoint,
+            data: body,
+            options: Options(
+              headers: {
+                'Authorization': 'Bearer $token',
+                'Content-Type': 'application/json',
+              },
+            ),
+          );
+          break;
+        } on DioException catch (e) {
+          lastDioError = e;
+          final status = e.response?.statusCode;
+          log(
+            '❌ Place order Dio error (${status ?? "no-status"}): ${e.message}',
+          );
+          log(' 1111111 -----  Endpoint tried: $endpoint');
+          log(' 2222222 ----  Response: ${e.response?.data}');
+
+          // If endpoint is missing, try the next fallback endpoint.
+          if (status == 404) continue;
+          rethrow;
+        }
+      }
+
+      if (response == null) {
+        throw Exception(
+          lastDioError?.response?.data['message'] ??
+              lastDioError?.message ??
+              'Failed to place order',
+        );
+      }
 
       log('📥 Response Status: ${response.statusCode}');
       log('📥 Response Data: ${response.data}');
@@ -559,19 +727,13 @@ class BuyerCartService {
         log('❌ HTTP ${response.statusCode}: ${response.data}');
         throw Exception('Server error: ${response.statusCode}');
       }
-    } on DioException catch (e) {
-      log('❌ Place order Dio error: ${e.message}');
-      log('   Response: ${e.response?.data}');
-      throw Exception(
-        e.response?.data['message'] ?? e.message ?? 'Failed to place order',
-      );
     } catch (e) {
       log('❌ Place order error: $e');
       rethrow;
     }
   }
 
-  /// PUT /api/buyer/orders/:id
+  /// PUT /api/orders/:id
   /// Body: { status: "cancelled" }
   Future<Map<String, dynamic>> cancelOrder({
     required String orderId,
@@ -590,10 +752,10 @@ class BuyerCartService {
       };
 
       log('📦 Request Body: $body');
-      log('📤 Endpoint: /api/buyer/orders/$orderId');
+      log('📤 Endpoint: /api/orders/$orderId');
 
       final response = await _dio.put(
-        '/buyer/orders/$orderId',
+        '/orders/$orderId',
         data: body,
         options: Options(
           headers: {

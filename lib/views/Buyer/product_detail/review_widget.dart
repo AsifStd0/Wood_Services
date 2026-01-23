@@ -333,7 +333,10 @@ class ProductReviewWidget extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.grey[300]!),
                 ),
-                child: ClipOval(child: _buildAvatar(fullImageUrl, buyerName)),
+                child: ClipOval(
+                  // child: _buildAvatar(fullImageUrl, buyerName)),
+                  child: Icon(Icons.person, color: Colors.grey[300]),
+                ),
               ),
 
               const SizedBox(width: 12),
@@ -488,54 +491,72 @@ class ProductReviewWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar(String? imageUrl, String buyerName) {
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      return CircleAvatar(radius: 60);
-      // CachedNetworkImage(
-      //   imageUrl: imageUrl,
-      //   fit: BoxFit.cover,
-      //   placeholder: (context, url) => Container(
-      //     color: Colors.grey[200],
-      //     child: Center(
-      //       child: Text(
-      //         buyerName.isNotEmpty ? buyerName[0].toUpperCase() : '?',
-      //         style: const TextStyle(
-      //           color: Colors.grey,
-      //           fontWeight: FontWeight.bold,
-      //         ),
-      //       ),
-      //     ),
-      //   ),
-      //   errorWidget: (context, url, error) => Container(
-      //     color: Colors.grey[200],
-      //     child: Center(
-      //       child: Text(
-      //         buyerName.isNotEmpty ? buyerName[0].toUpperCase() : '?',
-      //         style: const TextStyle(
-      //           color: Colors.grey,
-      //           fontWeight: FontWeight.bold,
-      //         ),
-      //       ),
-      //     ),
-      //   ),
-      // );
-    } else {
-      return Container(
-        color: Colors.blue[100],
-        child: Center(
-          child: Text(
-            buyerName.isNotEmpty ? buyerName[0].toUpperCase() : '?',
-            style: TextStyle(
-              color: Colors.blue[700],
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-        ),
-      );
-    }
-  }
+  // ! ******
+  // Widget _buildAvatar(String? imageUrl, String buyerName) {
+  //   if (imageUrl != null && imageUrl.isNotEmpty) {
+  //     // Validate and fix the image URL
+  //     final String fixedImageUrl = _fixImageUrl(imageUrl);
 
+  //     return Image.network(
+  //       fixedImageUrl,
+  //       fit: BoxFit.cover,
+  //       errorBuilder: (context, error, stackTrace) {
+  //         return _buildInitialsAvatar(buyerName);
+  //       },
+  //       loadingBuilder: (context, child, loadingProgress) {
+  //         if (loadingProgress == null) return child;
+  //         return Center(
+  //           child: CircularProgressIndicator(
+  //             value: loadingProgress.expectedTotalBytes != null
+  //                 ? loadingProgress.cumulativeBytesLoaded /
+  //                       loadingProgress.expectedTotalBytes!
+  //                 : null,
+  //           ),
+  //         );
+  //       },
+  //     );
+  //   } else {
+  //     return _buildInitialsAvatar(buyerName);
+  //   }
+  // }
+
+  // Widget _buildInitialsAvatar(String buyerName) {
+  //   return Container(
+  //     color: Colors.blue[100],
+  //     child: Center(
+  //       child: Text(
+  //         buyerName.isNotEmpty ? buyerName[0].toUpperCase() : '?',
+  //         style: TextStyle(
+  //           color: Colors.blue[700],
+  //           fontWeight: FontWeight.bold,
+  //           fontSize: 16,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  // String _fixImageUrl(String url) {
+  //   // If URL contains localhost with wrong port, replace with your API base URL
+  //   if (url.contains('localhost:')) {
+  //     // Extract the path from the URL
+  //     final uri = Uri.tryParse(url);
+  //     if (uri != null) {
+  //       // Replace localhost with your actual backend domain
+  //       return '${Config.apiBaseUrl}${uri.path}';
+  //     }
+  //   }
+
+  //   // If URL starts with /uploads/, prepend base URL
+  //   if (url.startsWith('/uploads/') || url.startsWith('/')) {
+  //     return '${Config.apiBaseUrl}$url';
+  //   }
+
+  //   // Return as-is if it's already a valid URL
+  //   return url;
+  // }
+
+  // ! *******
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);

@@ -5,6 +5,8 @@ import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_p
 import 'package:wood_service/widgets/custom_textfield.dart';
 
 class BasicTab extends StatelessWidget {
+  String readyProduct = 'Ready Product';
+  String customizeProduct = 'Customize Product';
   @override
   Widget build(BuildContext context) {
     final productProvider = context.watch<SellerProductProvider>();
@@ -60,8 +62,59 @@ class BasicTab extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Category
+          Text('Product Type *', style: _buildLabelStyle()),
+          // Define constants somewhere in your code
+
+          // Then use them consistently
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey.withOpacity(0.5)),
+            ),
+            child: DropdownButtonFormField<String>(
+              value:
+                  product.productType.isNotEmpty &&
+                      (product.productType == readyProduct ||
+                          product.productType == customizeProduct)
+                  ? product.productType
+                  : null,
+              decoration: InputDecoration(
+                hintText: 'Select a ProductType',
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 16,
+                ),
+              ),
+              items: [
+                DropdownMenuItem(
+                  value: readyProduct,
+                  child: Text('Ready Product'),
+                ),
+                DropdownMenuItem(
+                  value: customizeProduct,
+                  child: Text('Customize Product'),
+                ),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  // CORRECT THIS LINE - use updateProductType instead of updateCategory
+                  productProvider.updateProductType(
+                    value,
+                  ); // Changed from updateCategory
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: 15),
+
           Text('Category *', style: _buildLabelStyle()),
-          const SizedBox(height: 8),
+          const SizedBox(height: 5),
+
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),

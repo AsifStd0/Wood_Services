@@ -31,19 +31,11 @@ class ProductDetailScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 /// Images
-                const ProductImageGallery(),
+                ProductImageGallery(product: product),
                 const SizedBox(height: 14),
 
                 /// Basic Info
                 ProductBasicInfo(product: product),
-                // const SizedBox(height: 16),
-
-                // /// Size - Use Provider to update
-                // SizeSelectionWidget(
-                //   onSizeSelected: (size) {
-                //     cartViewModel.updateSize(size);
-                //   },
-                // ),
                 const SizedBox(height: 16),
 
                 MinimalQuantityStockWidget(

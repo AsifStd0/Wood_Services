@@ -8,6 +8,8 @@ class BuyerProductModel {
   final String shortDescription;
   final String longDescription;
   final String category;
+  final String?
+  productType; // NEW: Product type (Ready Product, Customize Product) - nullable for backward compatibility
   final List<String> tags;
   final double basePrice;
   final double? salePrice;
@@ -60,6 +62,7 @@ class BuyerProductModel {
     required this.shortDescription,
     required this.longDescription,
     required this.category,
+    this.productType, // Make nullable
     required this.tags,
     required this.basePrice,
     this.salePrice,
@@ -103,6 +106,7 @@ class BuyerProductModel {
     String? shortDescription,
     String? longDescription,
     String? category,
+    String? productType,
     List<String>? tags,
     double? basePrice,
     double? salePrice,
@@ -144,6 +148,7 @@ class BuyerProductModel {
       shortDescription: shortDescription ?? this.shortDescription,
       longDescription: longDescription ?? this.longDescription,
       category: category ?? this.category,
+      productType: productType ?? this.productType,
       tags: tags ?? this.tags,
       basePrice: basePrice ?? this.basePrice,
       salePrice: salePrice ?? this.salePrice,
@@ -263,6 +268,9 @@ class BuyerProductModel {
           json['longDescription']?.toString() ??
           '',
       category: json['category']?.toString() ?? 'Uncategorized',
+      productType:
+          json['productType']?.toString() ??
+          'Ready Product', // Default to Ready Product
       tags: _parseStringList(json['tags']),
 
       // Pricing - API uses 'price' not 'basePrice'

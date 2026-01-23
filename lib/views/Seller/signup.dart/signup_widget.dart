@@ -143,8 +143,8 @@ Widget buildImageUploader({
               ? Stack(
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.file(image, fit: BoxFit.cover),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(image, fit: BoxFit.cover),
                     ),
                     Positioned(
                       top: 4,
@@ -450,8 +450,8 @@ Widget buildDocumentUploader(
               ? Stack(
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.file(file, fit: BoxFit.cover),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(file, fit: BoxFit.cover),
                     ),
                     Positioned(
                       top: 4,

@@ -65,12 +65,10 @@ class _SellerLoginState extends State<SellerLogin>
     // Set login role to seller
     viewModel.loginRole = 'seller';
 
-    // Call handleLogin which handles everything
+    // Call handleLogin which handles everything (loading, errors, navigation)
     try {
-      log('Login error: 22222 ');
       await viewModel.handleLogin(context);
     } catch (e) {
-      log('Login error: 1111 $e');
       // Fallback error handling if handleLogin fails
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -349,8 +347,8 @@ class _SellerLoginState extends State<SellerLogin>
                               fontSize: 14,
                             ),
                             textAlign: TextAlign.center,
-                          ),
                         ),
+                      ),
 
                       const SizedBox(height: 18),
 

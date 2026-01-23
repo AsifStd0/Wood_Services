@@ -91,31 +91,39 @@ class BuyerCartViewModel with ChangeNotifier {
     }
   }
 
+  // In your ViewModel or ProductRepository
   Future<Map<String, dynamic>?> addToCart({
-    required String serviceId, // Changed from productId to serviceId
+    required String serviceId,
     int? quantity,
     String? selectedVariant,
     String? selectedSize,
+    required String productType, // Add productType parameter
   }) async {
     try {
+      // Check product type before proceeding (handle both singular and plural)
+      final normalizedProductType = productType.toLowerCase();
+      if (normalizedProductType.contains('customize')) {
+        throw Exception(
+          'Customize Products require a visit request. Please use the "Request Visit" button.',
+        );
+      }
+
       final finalQuantity = quantity ?? _selectedQuantity;
       final finalVariant = selectedVariant ?? _selectedVariant;
       final finalSize = selectedSize ?? _selectedSize;
 
       log('🛒 Adding to cart:');
       log('   Service ID: $serviceId');
+      log('   Product Type: $productType');
       log('   Quantity: $finalQuantity');
-      log('   Size: $finalSize');
-      log('   Variant: $finalVariant');
 
       final result = await _cartService.addToCartService(
-        serviceId: serviceId, // Changed parameter name
+        serviceId: serviceId,
         quantity: finalQuantity,
         selectedVariant: finalVariant,
         selectedSize: finalSize,
       );
 
-      // Check if the result indicates failure
       if (result['success'] == false) {
         final errorMessage = result['message'] ?? 'Failed to add to cart';
         log('❌ Add to cart failed: $errorMessage');
@@ -125,7 +133,7 @@ class BuyerCartViewModel with ChangeNotifier {
       await loadCart();
       resetSelection();
 
-      return result; // Can return null
+      return result;
     } catch (error) {
       log('❌ Add to cart error in VM: $error');
       rethrow;
@@ -144,35 +152,160 @@ class BuyerCartViewModel with ChangeNotifier {
     }
   }
 
-  // Future<void> removeFromCart(String itemId) async {
-  //   try {
-  //     await _cartService.removeFromCart(itemId);
+  Future<void> removeFromCart(String itemId) async {
+    try {
+      await _cartService.removeFromCart(itemId);
 
-  //     // Reload cart
-  //     await loadCart();
-  //   } catch (error) {
-  //     log('❌ Remove from cart error: $error');
-  //     rethrow;
-  //   }
-  // }
+      // Reload cart
+      await loadCart();
+    } catch (error) {
+      log('❌ Remove from cart error: $error');
+      rethrow;
+    }
+  }
 
-  // Future<void> clearCart() async {
-  //   try {
-  //     await _cartService.clearCart();
+  Future<void> clearCart() async {
+    try {
+      await _cartService.clearCart();
 
-  //     // Clear local cart
-  //     _cart = null;
-  //     _cartStreamController.add(null);
-  //     notifyListeners();
-  //   } catch (error) {
-  //     log('❌ Clear cart error: $error');
-  //     rethrow;
-  //   }
-  // }
+      // Clear local cart
+      _cart = null;
+      _cartStreamController.add(null);
+      notifyListeners();
+    } catch (error) {
+      log('❌ Clear cart error: $error');
+      rethrow;
+    }
+  }
 
-  // Future<void> refreshCart() async {
-  //   await loadCart();
-  // }
+  Future<void> refreshCart() async {
+    await loadCart();
+  }
+
+  // Buy Now - Direct purchase without adding to cart
+  Future<Map<String, dynamic>> buyNow({
+    required String serviceId,
+    required int quantity,
+    bool useSalePrice = false,
+    String paymentMethod = 'card',
+    List<Map<String, String>>? selectedVariants,
+    Map<String, dynamic>? orderDetails,
+    String? requirements, // For backward compatibility
+  }) async {
+    try {
+      log('🛒 Buy Now: $serviceId, quantity: $quantity');
+      final result = await _cartService.placeOrder(
+        serviceId: serviceId,
+        quantity: quantity,
+        useSalePrice: useSalePrice,
+        paymentMethod: paymentMethod,
+        selectedVariants: selectedVariants,
+        orderDetails: orderDetails,
+        requirements: requirements,
+      );
+      return result;
+    } catch (error) {
+      log('❌ Buy Now error: $error');
+      rethrow;
+    }
+  }
+
+  List<Map<String, String>> _buildVariantsForCartItem(BuyerCartItem item) {
+    // Prefer API-native selectedVariants if present
+    final existing = item.selectedVariants ?? const <Map<String, String>>[];
+    final cleaned = existing
+        .where(
+          (v) =>
+              (v['type'] ?? '').trim().isNotEmpty &&
+              (v['value'] ?? '').trim().isNotEmpty,
+        )
+        .map((v) => {'type': v['type']!.trim(), 'value': v['value']!.trim()})
+        .toList();
+    if (cleaned.isNotEmpty) return cleaned;
+
+    // Backward compatibility: build from old single fields
+    final variants = <Map<String, String>>[];
+    if (item.selectedSize != null && item.selectedSize!.trim().isNotEmpty) {
+      variants.add({'type': 'size', 'value': item.selectedSize!.trim()});
+    }
+    if (item.selectedVariant != null &&
+        item.selectedVariant!.trim().isNotEmpty) {
+      // If backend expects different types (finish/material/color), prefer sending "finish"
+      // since that's what your Postman example uses.
+      variants.add({'type': 'finish', 'value': item.selectedVariant!.trim()});
+    }
+    return variants;
+  }
+
+  /// Checkout Cart - place orders for ALL cart items (multi-product)
+  ///
+  /// This will call POST /api/buyer/orders (fallback to /api/orders) once per cart item.
+  /// If all succeed, it clears the cart.
+  Future<Map<String, dynamic>> checkoutCart({
+    bool useSalePrice = false,
+    String paymentMethod = 'card',
+    Map<String, dynamic>? orderDetails,
+  }) async {
+    if (cartItems.isEmpty) {
+      return {'success': false, 'message': 'Your cart is empty'};
+    }
+
+    // Validate stock again just in case
+    final outOfStock = outOfStockItems;
+    if (outOfStock.isNotEmpty) {
+      return {
+        'success': false,
+        'message': 'Some items are out of stock',
+        'outOfStockCount': outOfStock.length,
+      };
+    }
+
+    final results = <Map<String, dynamic>>[];
+    int successCount = 0;
+    final totalCount = cartItems.length;
+
+    for (final item in cartItems) {
+      final sid = (item.serviceId ?? item.productId).toString();
+      final variants = _buildVariantsForCartItem(item);
+
+      try {
+        final res = await _cartService.placeOrder(
+          serviceId: sid,
+          quantity: item.quantity,
+          useSalePrice: useSalePrice,
+          paymentMethod: paymentMethod,
+          selectedVariants: variants.isEmpty ? null : variants,
+          orderDetails: orderDetails,
+        );
+        results.add(res);
+        if (res['success'] == true) successCount++;
+      } catch (e) {
+        results.add({
+          'success': false,
+          'message': e.toString(),
+          'serviceId': sid,
+        });
+      }
+    }
+
+    final allSucceeded = successCount == totalCount;
+    if (allSucceeded) {
+      await clearCart();
+    } else {
+      // Keep cart items so user can retry; refresh local cart state.
+      await loadCart();
+    }
+
+    return {
+      'success': allSucceeded,
+      'successCount': successCount,
+      'totalCount': totalCount,
+      'results': results,
+      'message': allSucceeded
+          ? 'Order placed for all items'
+          : 'Order placed for $successCount of $totalCount items',
+    };
+  }
 
   void clearError() {
     _hasError = false;
@@ -182,6 +315,8 @@ class BuyerCartViewModel with ChangeNotifier {
 
   bool isProductInCart(String serviceId) {
     // Changed from productId to serviceId
+    log('Checking if product is in cart: $serviceId');
+    log('Cart items: ${cartItems.map((item) => item.serviceId).toList()}');
     return cartItems.any(
       (item) => item.serviceId == serviceId || item.productId == serviceId,
     );

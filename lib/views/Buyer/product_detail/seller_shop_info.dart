@@ -47,25 +47,62 @@ class ShopPreviewCard extends StatelessWidget {
             // Shop Logo with verification badge
             Stack(
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade300),
-                    image: shopLogo != null
-                        ? DecorationImage(
-                            image: NetworkImage(
-                              product.sellerInfo?['profileImage'] ?? '',
+                Stack(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: shopLogo != null && shopLogo.isNotEmpty
+                          ? ClipOval(
+                              child: Image.network(
+                                shopLogo,
+                                fit: BoxFit.cover,
+                                width: 40,
+                                height: 40,
+                                errorBuilder: (context, error, stackTrace) {
+                                  // Show person icon when image fails to load
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade200,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.person,
+                                      color: Colors.grey,
+                                      size: 20,
+                                    ),
+                                  );
+                                },
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return const CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.grey,
+                                            ),
+                                      );
+                                    },
+                              ),
+                            )
+                          : Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade200,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.person,
+                                color: Colors.grey,
+                                size: 20,
+                              ),
                             ),
-
-                            fit: BoxFit.cover,
-                          )
-                        : DecorationImage(
-                            image: AssetImage('assets/images/logo.png'),
-                            fit: BoxFit.cover,
-                          ),
-                  ),
+                    ),
+                  ],
                 ),
                 if (verificationStatus == 'verified')
                   Positioned(

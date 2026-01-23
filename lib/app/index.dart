@@ -71,7 +71,6 @@ export 'package:wood_service/views/Seller/data/views/seller_home/view_request_pr
 export 'package:wood_service/views/Seller/data/views/seller_prduct.dart/add_product_screen.dart';
 export 'package:wood_service/views/Seller/data/views/shop_setting/seller_settings_screen.dart';
 export 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
-export 'package:wood_service/views/Seller/main_seller_screen.dart';
 export 'package:wood_service/views/Seller/seller_login.dart/seller_login.dart';
 export 'package:wood_service/views/Seller/seller_login.dart/seller_login_provider.dart';
 export 'package:wood_service/views/Seller/signup.dart/seller_signup.dart';

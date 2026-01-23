@@ -83,11 +83,11 @@ Future<void> setupLocator() async {
         onRequest: (options, handler) async {
           try {
             // Get storage from locator
-            final storage = locator<UnifiedLocalStorageServiceImpl>();
-            final token = storage.getToken();
+          final storage = locator<UnifiedLocalStorageServiceImpl>();
+          final token = storage.getToken();
 
-            if (token != null && token.isNotEmpty) {
-              options.headers['Authorization'] = 'Bearer $token';
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
               print('🔑 Token added to request');
             }
           } catch (e) {

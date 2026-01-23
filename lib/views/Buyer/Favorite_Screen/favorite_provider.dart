@@ -60,8 +60,8 @@ class FavoriteProvider extends ChangeNotifier {
   // ========== CORE METHODS ==========
 
   // ✅ TOGGLE FAVORITE (Add/Remove)
-  /// POST /api/buyer/favorites (add)
-  /// DELETE /api/buyer/favorites/:id (remove)
+  /// POST /api/favorites (add)
+  /// DELETE /api/favorites/:id (remove)
   /// Body: { serviceId } for POST
   Future<void> toggleFavorite(String serviceId) async {
     // Check if this specific product is already loading
@@ -75,7 +75,8 @@ class FavoriteProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final token = await _storage.getToken();
+      final token = _storage
+          .getToken(); // getToken() is synchronous, no await needed
 
       if (token == null || token.isEmpty) {
         throw Exception('Please login to add favorites');
@@ -85,12 +86,13 @@ class FavoriteProvider extends ChangeNotifier {
       final favoriteId = _favoriteIds[serviceId];
 
       // If already favorited, remove it (DELETE)
-      if (isCurrentlyFavorited && favoriteId != null) {
+      // API uses serviceId for both POST and DELETE, so we only need to check isCurrentlyFavorited
+      if (isCurrentlyFavorited) {
         log(
           '🗑️ Removing favorite for service: $serviceId (favoriteId: $favoriteId)',
         );
 
-        final url = Uri.parse('$_baseUrl/api/buyer/favorites/$favoriteId');
+        final url = Uri.parse('$_baseUrl/api/favorites/$serviceId');
         final client = http.Client();
         try {
           final response = await client
@@ -120,10 +122,14 @@ class FavoriteProvider extends ChangeNotifier {
               _favoriteIds.remove(serviceId);
               _cachedFavorites.removeWhere((fav) => fav.productId == serviceId);
               _totalFavorites =
-                  jsonData['data']?['favoriteCount'] ??
+                  jsonData['data']?['favoriteCount']?.toInt() ??
+                  jsonData['data']?['total']?.toInt() ??
                   (_totalFavorites > 0 ? _totalFavorites - 1 : 0);
 
               log('✅ Favorite removed. Total: $_totalFavorites');
+              log(
+                '📋 Cached favorites after remove: ${_cachedFavorites.length}',
+              );
               notifyListeners();
             } else {
               throw Exception(
@@ -142,7 +148,7 @@ class FavoriteProvider extends ChangeNotifier {
         // Add favorite (POST)
         log('❤️ Adding favorite for service: $serviceId');
 
-        final url = Uri.parse('$_baseUrl/api/buyer/favorites');
+        final url = Uri.parse('$_baseUrl/api/favorites/$serviceId');
         final body = json.encode({'serviceId': serviceId});
 
         final client = http.Client();
@@ -212,7 +218,7 @@ class FavoriteProvider extends ChangeNotifier {
   // ✅ LOAD FAVORITE STATUS FOR MULTIPLE PRODUCTS
   Future<void> loadFavoriteStatusForProducts(List<String> productIds) async {
     try {
-      final token = await _storage.getToken();
+      final token = _storage.getToken(); // getToken() is synchronous
 
       if (token == null || token.isEmpty) {
         log('⚠️ Skipping favorite status load - no token');
@@ -223,9 +229,7 @@ class FavoriteProvider extends ChangeNotifier {
 
       for (var productId in productIds) {
         try {
-          final url = Uri.parse(
-            '$_baseUrl/api/buyer/favorites/check/$productId',
-          );
+          final url = Uri.parse('$_baseUrl/api/favorites/check/$productId');
 
           final response = await http.get(
             url,
@@ -272,15 +276,13 @@ class FavoriteProvider extends ChangeNotifier {
     }
 
     try {
-      final token = await _storage.getToken();
+      final token = _storage.getToken(); // getToken() is synchronous
 
       if (token == null || token.isEmpty) {
         throw Exception('Please login to view favorites');
       }
 
-      final url = Uri.parse(
-        '$_baseUrl/api/buyer/favorites?page=$page&limit=$limit',
-      );
+      final url = Uri.parse('$_baseUrl/api/favorites?page=$page&limit=$limit');
 
       final response = await http.get(
         url,
@@ -294,14 +296,42 @@ class FavoriteProvider extends ChangeNotifier {
         final jsonData = json.decode(response.body);
 
         if (jsonData['success'] == true) {
-          final favorites = jsonData['favorites'] as List<dynamic>;
-          final pagination = jsonData['pagination'] ?? {};
+          // API response structure: data.favorites
+          final data = jsonData['data'] ?? {};
+          final favorites = data['favorites'] as List<dynamic>? ?? [];
+          final pagination = data['pagination'] ?? jsonData['pagination'] ?? {};
 
-          _totalFavorites = pagination['total'] ?? 0;
+          _totalFavorites = pagination['total']?.toInt() ?? favorites.length;
 
-          // Parse favorites
+          log('📊 Parsing ${favorites.length} favorites from API response');
+
+          // Parse favorites - each favorite has serviceId object containing product data
           final newFavorites = favorites
-              .map((fav) => FavoriteProduct.fromJson(fav))
+              .map((fav) {
+                try {
+                  // Handle nested structure: fav has _id, userId, serviceId (object), createdAt
+                  // The serviceId contains the actual product data
+                  if (fav is Map<String, dynamic>) {
+                    final serviceIdData = fav['serviceId'];
+                    if (serviceIdData is Map<String, dynamic>) {
+                      // Merge favorite metadata with product data
+                      final favoriteData = {
+                        ...serviceIdData,
+                        '_favoriteId': fav['_id']?.toString() ?? '',
+                        '_userId': fav['userId']?.toString() ?? '',
+                        '_createdAt': fav['createdAt']?.toString() ?? '',
+                      };
+                      return FavoriteProduct.fromJson(favoriteData);
+                    }
+                  }
+                  // Fallback to direct parsing
+                  return FavoriteProduct.fromJson(fav);
+                } catch (e) {
+                  log('❌ Error parsing favorite: $e');
+                  return null;
+                }
+              })
+              .whereType<FavoriteProduct>()
               .toList();
 
           if (page == 1) {
@@ -334,11 +364,12 @@ class FavoriteProvider extends ChangeNotifier {
   }
 
   // ✅ REMOVE FROM FAVORITES
-  /// DELETE /api/buyer/favorites/:id
+  /// DELETE /api/favorites/:id
   /// Where :id is the favoriteId (not serviceId)
   Future<void> removeFromFavorites(String favoriteId) async {
+    log('removeFromFavorites: -------- $favoriteId');
     try {
-      final token = await _storage.getToken();
+      final token = _storage.getToken(); // getToken() is synchronous
 
       if (token == null || token.isEmpty) {
         throw Exception('Please login to remove favorites');
@@ -346,7 +377,7 @@ class FavoriteProvider extends ChangeNotifier {
 
       log('🗑️ Removing favorite with ID: $favoriteId');
 
-      final url = Uri.parse('$_baseUrl/api/buyer/favorites/$favoriteId');
+      final url = Uri.parse('$_baseUrl/api/favorites/$favoriteId');
 
       final response = await http.delete(
         url,
@@ -417,13 +448,13 @@ class FavoriteProvider extends ChangeNotifier {
   // ✅ CLEAR ALL FAVORITES
   Future<void> clearAllFavorites() async {
     try {
-      final token = await _storage.getToken();
+      final token = _storage.getToken(); // getToken() is synchronous
 
       if (token == null || token.isEmpty) {
         throw Exception('Please login to clear favorites');
       }
 
-      final url = Uri.parse('$_baseUrl/api/buyer/favorites/clear');
+      final url = Uri.parse('$_baseUrl/api/favorites/clear');
 
       final response = await http.delete(
         url,
@@ -460,14 +491,14 @@ class FavoriteProvider extends ChangeNotifier {
   // ✅ LOAD FAVORITE COUNT
   Future<void> loadFavoriteCount() async {
     try {
-      final token = await _storage.getToken();
+      final token = _storage.getToken(); // getToken() is synchronous
 
       if (token == null || token.isEmpty) {
         _totalFavorites = 0;
         return;
       }
 
-      final url = Uri.parse('$_baseUrl/api/buyer/favorites/count');
+      final url = Uri.parse('$_baseUrl/api/favorites/count');
 
       final response = await http.get(
         url,

@@ -41,30 +41,70 @@ class FavoriteProduct {
   });
 
   factory FavoriteProduct.fromJson(Map<String, dynamic> json) {
+    // Extract serviceId (product) _id as productId
+    final serviceId = json['_id']?.toString() ?? json['id']?.toString() ?? '';
+
+    // Calculate finalPrice and discount
+    final basePrice = (json['price'] ?? json['basePrice'] ?? 0).toDouble();
+    final salePrice = (json['salePrice'] ?? json['price'] ?? basePrice)
+        .toDouble();
+    final finalPrice = salePrice < basePrice ? salePrice : basePrice;
+    final discountPercentage = basePrice > 0 && salePrice < basePrice
+        ? ((basePrice - salePrice) / basePrice * 100)
+        : 0.0;
+
+    // Extract rating from nested ratings object or direct field
+    final ratingData = json['ratings'];
+    final rating = ratingData is Map
+        ? (ratingData['average'] ?? 0).toDouble()
+        : (json['rating'] ?? 0).toDouble();
+
+    // Extract images - can be 'images' array or 'imageGallery'
+    final images = json['images'] ?? json['imageGallery'];
+    final imageList = images is List
+        ? images.map((item) => item.toString()).toList()
+        : <String>[];
+
+    // Determine stock status
+    final availability = json['availability']?.toString() ?? 'available';
+    final stockQty = json['stockQuantity']?.toInt() ?? 0;
+    final inStock =
+        (availability == 'available' || availability == 'inStock') &&
+        stockQty > 0;
+
     return FavoriteProduct(
-      id: json['id']?.toString() ?? '',
-      productId: json['productId']?.toString() ?? '',
+      id:
+          json['_favoriteId']?.toString() ??
+          serviceId, // Use favorite _id if available
+      productId: serviceId,
       title: json['title']?.toString() ?? 'No Title',
-      shortDescription: json['shortDescription']?.toString() ?? '',
-      longDescription: json['longDescription']?.toString(),
+      shortDescription:
+          json['shortDescription']?.toString() ??
+          json['description']?.toString() ??
+          '',
+      longDescription:
+          json['description']?.toString() ??
+          json['longDescription']?.toString(),
       category: json['category']?.toString() ?? 'Uncategorized',
-      basePrice: (json['basePrice'] ?? 0).toDouble(),
-      salePrice: (json['salePrice'] ?? 0).toDouble(),
-      finalPrice: (json['finalPrice'] ?? 0).toDouble(),
-      discountPercentage: (json['discountPercentage'] ?? 0).toDouble(),
+      basePrice: basePrice,
+      salePrice: salePrice < basePrice ? salePrice : null,
+      finalPrice: finalPrice,
+      discountPercentage: discountPercentage,
       featuredImage: json['featuredImage']?.toString(),
-      imageGallery:
-          (json['imageGallery'] as List<dynamic>?)
-              ?.map((item) => item.toString())
-              .toList() ??
-          [],
-      inStock: json['inStock'] ?? false,
-      stockQuantity: json['stockQuantity'] ?? 0,
-      salesCount: json['salesCount'] ?? 0,
-      rating: (json['rating'] ?? 0).toDouble(),
-      views: json['views'] ?? 0,
+      imageGallery: imageList,
+      inStock: inStock,
+      stockQuantity: stockQty,
+      salesCount:
+          json['salesCount']?.toInt() ??
+          json['completedProjects']?.toInt() ??
+          0,
+      rating: rating,
+      views: json['views']?.toInt() ?? 0,
       addedDate: DateTime.parse(
-        json['addedDate']?.toString() ?? DateTime.now().toIso8601String(),
+        json['_createdAt']?.toString() ??
+            json['createdAt']?.toString() ??
+            json['addedDate']?.toString() ??
+            DateTime.now().toIso8601String(),
       ),
     );
   }

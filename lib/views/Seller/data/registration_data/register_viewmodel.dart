@@ -13,7 +13,7 @@ import 'package:wood_service/core/services/new_storage/unified_local_storage_ser
 import 'package:wood_service/views/Buyer/buyer_main/buyer_main.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';
 import 'package:wood_service/views/Seller/data/services/new_service/auth_service.dart';
-import 'package:wood_service/views/Seller/main_seller_screen.dart';
+import 'package:wood_service/views/Seller/signup.dart/main_se.dart';
 
 class RegisterViewModel extends ChangeNotifier {
   final AuthService _authService;

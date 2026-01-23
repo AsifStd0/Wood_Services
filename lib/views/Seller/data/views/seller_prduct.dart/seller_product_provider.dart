@@ -109,22 +109,6 @@ class SellerProductProvider extends ChangeNotifier {
   }
 
   // In your updateCategory method
-  void updateCategory(String category) {
-    log('📝 Updating category to: "$category"');
-    log('📝 Category length: ${category.length}');
-    log('📝 Category characters: ${category.codeUnits}');
-
-    // Trim any whitespace or commas
-    final trimmedCategory = category.trim();
-    if (trimmedCategory != category) {
-      log('⚠️ Category was trimmed from "$category" to "$trimmedCategory"');
-    }
-
-    _product = _product.copyWith(category: trimmedCategory);
-    notifyListeners();
-  }
-
-  // Add debugging for productType
   void updateProductType(String type) {
     log('📝 Updating productType to: "$type"');
     log('📝 productType length: ${type.length}');
@@ -136,6 +120,21 @@ class SellerProductProvider extends ChangeNotifier {
     }
 
     _product = _product.copyWith(productType: trimmedType);
+    notifyListeners();
+  }
+
+  // This updates the category field (different from productType)
+  void updateCategory(String category) {
+    log('📝 Updating category to: "$category"');
+    log('📝 Category length: ${category.length}');
+
+    // Trim any whitespace or commas
+    final trimmedCategory = category.trim();
+    if (trimmedCategory != category) {
+      log('⚠️ Category was trimmed from "$category" to "$trimmedCategory"');
+    }
+
+    _product = _product.copyWith(category: trimmedCategory); // This is correct
     notifyListeners();
   }
 

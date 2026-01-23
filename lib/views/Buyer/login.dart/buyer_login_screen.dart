@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_text_style.dart';
-import 'package:wood_service/views/Buyer/buyer_main/buyer_main.dart';
 import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_signup.dart';
 import 'package:wood_service/views/Buyer/forgot_password/forgot_password.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
-import 'package:wood_service/views/Seller/main_seller_screen.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 import 'package:wood_service/widgets/custom_text_style.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
@@ -30,7 +28,23 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
   @override
   void initState() {
     super.initState();
+    _initializeAnimations();
+    _initializeViewModel();
+  }
 
+  void _initializeViewModel() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final viewModel = context.read<RegisterViewModel>();
+        // Set login role to buyer
+        if (viewModel.loginRole != widget.role) {
+          viewModel.loginRole = widget.role; // Sets to 'buyer'
+        }
+      }
+    });
+  }
+
+  void _initializeAnimations() {
     // Initialize animations
     _animController = AnimationController(
       vsync: this,
@@ -138,9 +152,9 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
   Widget _buildLoginCard() {
     return Consumer<RegisterViewModel>(
       builder: (context, viewModel, child) {
-        // Set the login role
+        // Set the login role to buyer
         if (viewModel.loginRole != widget.role) {
-          viewModel.loginRole = widget.role;
+          viewModel.loginRole = widget.role; // Sets to 'buyer'
         }
 
         return Card(
@@ -370,61 +384,21 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
     // Close keyboard
     FocusScope.of(context).unfocus();
 
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
+    // Set login role to buyer
+    viewModel.loginRole = 'buyer';
 
+    // Call handleLogin which handles everything (loading, errors, navigation)
     try {
-      // Call login
-      final result = await viewModel.login();
-
-      // Close loading
-      if (context.mounted) {
-        Navigator.of(context).pop();
-      }
-
-      if (result == null) {
-        // Login failed - error is already shown in viewModel
-        return;
-      }
-
-      // Login successful
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login Successful!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-
-        await Future.delayed(const Duration(seconds: 1));
-
-        // Navigate based on role
-        if (widget.role == 'seller') {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => MainSellerScreen()),
-          );
-        } else {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const BuyerMainScreen()),
-          );
-        }
-      }
-    } catch (error) {
-      // Close loading
-      if (context.mounted) {
-        Navigator.of(context).pop();
-      }
-
+      await viewModel.handleLogin(context);
+    } catch (e) {
+      // Fallback error handling if handleLogin fails
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Login error: $error'),
+            content: Text('Login error: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }

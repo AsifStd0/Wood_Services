@@ -1,5 +1,6 @@
 // lib/providers/review_provider.dart
 import 'dart:convert';
+import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:wood_service/app/config.dart';
@@ -17,9 +18,14 @@ class ReviewProvider with ChangeNotifier {
   List<dynamic> get myReviews => _myReviews;
 
   String? _cachedToken;
-  // final BuyerLocalStorageServiceImpl _storage = BuyerLocalStorageServiceImpl();
   final UnifiedLocalStorageServiceImpl _storage =
       UnifiedLocalStorageServiceImpl();
+  ReviewProvider() {
+    _initStorage();
+  }
+  void _initStorage() {
+    _storage.initialize();
+  }
 
   Future<void> initialize() async {
     await _storage.initialize();
@@ -48,7 +54,7 @@ class ReviewProvider with ChangeNotifier {
 
       final headers = await _getHeaders();
       final response = await http.get(
-        Uri.parse('${Config.apiBaseUrl}/buyer/reviews/orders'),
+        Uri.parse('${Config.apiBaseUrl}/reviews/orders'),
         headers: headers,
       );
 
@@ -72,9 +78,112 @@ class ReviewProvider with ChangeNotifier {
     }
   }
 
+  // ========== SUBMIT REVIEW BY ORDER ID ==========
+  /// POST /api/orders/:orderId/review
+  /// Body: multipart/form-data with rating (1-5, required), comment (required), images (optional, up to 5)
+  Future<Map<String, dynamic>> submitOrderReview({
+    required String orderId,
+    required int rating, // 1-5
+    required String comment,
+    List<String>? images, // Optional: File paths (up to 5 images)
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      print('📝 Submitting review for order: $orderId');
+      print('• Rating: $rating');
+      print('• Comment: $comment');
+      print('• Images: ${images?.length ?? 0}');
+
+      final token = await _getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'Please login to submit review'};
+      }
+
+      // Create multipart request for images
+      final uri = Uri.parse('${Config.baseUrl}/api/orders/$orderId/review');
+      final request = http.MultipartRequest('POST', uri);
+
+      // Add headers
+      request.headers.addAll({
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      });
+
+      // Add rating (required)
+      request.fields['rating'] = rating.toString();
+
+      // Add comment (required)
+      request.fields['comment'] = comment;
+
+      // Add images if provided (optional, up to 5)
+      if (images != null && images.isNotEmpty) {
+        for (int i = 0; i < images.length && i < 5; i++) {
+          try {
+            // images[i] is a File path, read the file
+            final imageFile = io.File(images[i]);
+            if (await imageFile.exists()) {
+              final fileBytes = await imageFile.readAsBytes();
+              final fileName = imageFile.path.split('/').last;
+
+              request.files.add(
+                http.MultipartFile.fromBytes(
+                  'images', // API expects 'images' field for array
+                  fileBytes,
+                  filename: fileName,
+                ),
+              );
+              print('✅ Added image $i: $fileName');
+            }
+          } catch (e) {
+            print('⚠️ Error loading image ${images[i]}: $e');
+          }
+        }
+      }
+
+      print('📤 Sending request to: ${request.url}');
+      print('📤 Files: ${request.files.length}');
+      print('📤 Fields: ${request.fields}');
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print('📡 Response Status: ${response.statusCode}');
+      print('📡 Response Body: ${response.body}');
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (data['success'] == true) {
+          // Refresh reviewable orders after submission
+          await fetchReviewableOrders();
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Review submitted successfully!',
+            'review': data['review'] ?? data['data'],
+          };
+        }
+      }
+
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to submit review',
+        'statusCode': response.statusCode,
+      };
+    } catch (e) {
+      print('❌ Error submitting order review: $e');
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   // ========== SUBMIT REVIEW ==========
-  /// POST /api/buyer/reviews
+  /// POST /api/reviews
   /// Body: { serviceId, sellerId, rating, comment }
+  /// @deprecated Use submitOrderReview instead
   Future<Map<String, dynamic>> submitReview({
     required String serviceId, // Changed from productId to serviceId
     required String sellerId, // NEW: Required field
@@ -98,7 +207,7 @@ class ReviewProvider with ChangeNotifier {
 
       final headers = await _getHeaders();
       final response = await http.post(
-        Uri.parse('${Config.apiBaseUrl}/api/buyer/reviews'),
+        Uri.parse('${Config.apiBaseUrl}/api/reviews'),
         headers: headers,
         body: json.encode({
           'serviceId': serviceId,
@@ -149,8 +258,7 @@ class ReviewProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      String url =
-          '${Config.apiBaseUrl}/buyer/reviews/my?page=$page&limit=$limit';
+      String url = '${Config.apiBaseUrl}/reviews/my?page=$page&limit=$limit';
       if (rating != null) url += '&rating=$rating';
 
       final headers = await _getHeaders();
@@ -191,11 +299,6 @@ class ReviewProvider with ChangeNotifier {
     );
   }
 
-  //!  ******
-  // In ReviewProvider class
-  // ========== GET REVIEWS FOR PRODUCT ==========
-  // In ReviewProvider class, replace the old getProductReviews method with:
-
   // ! ========== GET PRODUCT REVIEWS WITH STATS ==========
   Future<Map<String, dynamic>> getProductReviewsWithStats({
     required String productId,
@@ -209,7 +312,7 @@ class ReviewProvider with ChangeNotifier {
       // Call your existing API endpoint
       final response = await http.get(
         Uri.parse(
-          '${Config.apiBaseUrl}/buyer/reviews/product/$productId?limit=$limit',
+          '${Config.apiBaseUrl}/reviews/product/$productId?limit=$limit',
         ),
         headers: headers,
       );
@@ -262,9 +365,7 @@ class ReviewProvider with ChangeNotifier {
     try {
       final headers = await _getHeaders();
       final response = await http.get(
-        Uri.parse(
-          '${Config.apiBaseUrl}/buyer/products/$productId/reviews/stats',
-        ),
+        Uri.parse('${Config.apiBaseUrl}/products/$productId/reviews/stats'),
         headers: headers,
       );
 
