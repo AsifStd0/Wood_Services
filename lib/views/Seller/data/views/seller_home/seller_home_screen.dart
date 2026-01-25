@@ -1,8 +1,7 @@
 // screens/seller/seller_home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/app/locator.dart';
-import 'package:wood_service/views/Seller/data/views/seller_home/seller_stats_provider.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home/visit_requests_provider.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 
 class SellerHomeScreen extends StatefulWidget {
@@ -13,13 +12,19 @@ class SellerHomeScreen extends StatefulWidget {
 }
 
 class _SellerHomeScreenState extends State<SellerHomeScreen> {
+  String _selectedStatus = 'all';
+  late VisitRequestsProvider _visitProvider;
+
   @override
   void initState() {
     super.initState();
+    // Get provider instance from locator
+    _visitProvider = locator<VisitRequestsProvider>();
+
+    // Load data immediately
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final statsProvider = context.read<SellerStatsProvider>();
-      if (statsProvider.stats.isEmpty && !statsProvider.isLoading) {
-        statsProvider.loadStats();
+      if (_visitProvider.visitRequests.isEmpty && !_visitProvider.isLoading) {
+        _visitProvider.loadVisitRequests();
       }
     });
   }
@@ -35,44 +40,19 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
           IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
         ],
       ),
-      body: ChangeNotifierProvider(
-        create: (_) => locator<SellerStatsProvider>(),
-        child: Consumer<SellerStatsProvider>(
-          builder: (context, statsProvider, child) {
-            if (statsProvider.isLoading && statsProvider.stats.isEmpty) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (statsProvider.hasError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Error: ${statsProvider.errorMessage}',
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => statsProvider.loadStats(),
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              );
-            }
-
+      body: ListenableProvider.value(
+        value: _visitProvider, // Use existing instance
+        child: Consumer<VisitRequestsProvider>(
+          builder: (context, visitProvider, child) {
             return Column(
               children: [
                 // Header with Stats
-                buildHeaderStats(statsProvider),
-
-                // ! seller_home_screen_widget.dart
+                buildHeaderStats(visitProvider),
                 // Filter Tabs
-                // _buildFilterTabs(viewModel),
+                _buildFilterTabs(visitProvider),
 
-                // // Visit Requests List
-                // Expanded(child: _buildVisitList(viewModel)),
+                // Visit Requests List
+                Expanded(child: _buildVisitList(visitProvider)),
               ],
             );
           },
@@ -81,10 +61,13 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
     );
   }
 
-  Widget buildHeaderStats(SellerStatsProvider statsProvider) {
+  Widget buildHeaderStats(
+    // SellerStatsProvider statsProvider,
+    VisitRequestsProvider visitProvider,
+  ) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(bottom: 20, top: 10),
+      padding: const EdgeInsets.only(bottom: 15, top: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -98,80 +81,52 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
       ),
       child: Column(
         children: [
-          Text(
-            '${statsProvider.totalServices}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 42,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const Text(
-            'Total Services',
-            style: TextStyle(color: Colors.white, fontSize: 14),
-          ),
+          // Text(
+          //   '${statsProvider.totalServices}',
+          //   style: const TextStyle(
+          //     color: Colors.white,
+          //     fontSize: 35,
+          //     fontWeight: FontWeight.bold,
+          //   ),
+          // ),
+          // const Text(
+          //   'Total Services',
+          //   style: TextStyle(color: Colors.white, fontSize: 14),
+          // ),
           const SizedBox(height: 20),
-
-          // Stats row
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildStatChip(
-                  'Active',
-                  statsProvider.activeServices,
+                  'Total Visit',
+                  visitProvider.totalRequests,
+                  Icons.event,
+                  Colors.purple,
+                ),
+                _buildStatChip(
+                  'Pending',
+                  visitProvider.pendingCount,
                   Icons.check_circle,
                   Colors.green,
                 ),
                 _buildStatChip(
-                  'Orders',
-                  statsProvider.totalOrders,
-                  Icons.shopping_bag,
-                  Colors.orange,
+                  'Accepted',
+                  visitProvider.acceptedCount,
+                  Icons.check_circle,
+                  Colors.green,
                 ),
                 _buildStatChip(
-                  'Revenue',
-                  statsProvider.totalRevenue.toInt(),
-                  Icons.attach_money,
-                  Colors.amber,
-                ),
-                _buildStatChip(
-                  'Rating',
-                  statsProvider.averageRating.toStringAsFixed(1),
-                  Icons.star,
-                  Colors.yellow,
+                  'Rejected',
+                  visitProvider.rejectedCount,
+                  Icons.check_circle,
+                  Colors.green,
                 ),
               ],
             ),
           ),
           const SizedBox(height: 10),
-
-          // Orders breakdown
-          if (statsProvider.totalOrders > 0)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildMiniStat(
-                    'Pending',
-                    statsProvider.pendingOrders,
-                    Colors.orange,
-                  ),
-                  _buildMiniStat(
-                    'In Progress',
-                    statsProvider.inProgressOrders,
-                    Colors.blue,
-                  ),
-                  _buildMiniStat(
-                    'Completed',
-                    statsProvider.completedOrders,
-                    Colors.green,
-                  ),
-                ],
-              ),
-            ),
         ],
       ),
     );
@@ -211,31 +166,402 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
     );
   }
 
-  Widget _buildMiniStat(String label, int value, Color color) {
-    return Column(
-      children: [
-        Text(
-          value.toString(),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 9),
-        ),
-      ],
+  Widget _buildFilterTabs(VisitRequestsProvider visitProvider) {
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          _buildFilterChip('All', 'all', visitProvider),
+          _buildFilterChip('Pending', 'pending', visitProvider),
+          _buildFilterChip('Accepted', 'accepted', visitProvider),
+          _buildFilterChip('Rejected', 'rejected', visitProvider),
+          _buildFilterChip('Completed', 'completed', visitProvider),
+        ],
+      ),
     );
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     final viewModel = context.read<VisitRequestsViewModel>();
-  //     viewModel.loadVisitRequests();
-  //   });
-  // }
+  Widget _buildFilterChip(
+    String label,
+    String status,
+    VisitRequestsProvider visitProvider,
+  ) {
+    final isSelected = _selectedStatus == status;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: FilterChip(
+        label: Text(label),
+        selected: isSelected,
+        onSelected: (selected) {
+          setState(() {
+            _selectedStatus = status;
+          });
+          visitProvider.loadVisitRequests(
+            status: status == 'all' ? null : status,
+            refresh: true,
+          );
+        },
+        selectedColor: AppColors.brightOrange,
+        checkmarkColor: Colors.white,
+        labelStyle: TextStyle(
+          color: isSelected ? Colors.white : Colors.black87,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVisitList(VisitRequestsProvider visitProvider) {
+    if (visitProvider.isLoading && visitProvider.visitRequests.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (visitProvider.hasError) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Error: ${visitProvider.errorMessage}',
+              style: const TextStyle(color: Colors.red),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => visitProvider.loadVisitRequests(
+                status: _selectedStatus == 'all' ? null : _selectedStatus,
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final requests = _selectedStatus == 'all'
+        ? visitProvider.visitRequests
+        : _selectedStatus == 'pending'
+        ? visitProvider.pendingRequests
+        : _selectedStatus == 'accepted'
+        ? visitProvider.acceptedRequests
+        : _selectedStatus == 'rejected'
+        ? visitProvider.rejectedRequests
+        : visitProvider.completedRequests;
+
+    if (requests.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'No visit requests found',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Visit requests will appear here',
+              style: TextStyle(color: Colors.grey[500]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => visitProvider.refresh(),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: requests.length,
+        itemBuilder: (context, index) {
+          final request = requests[index];
+          return _buildVisitRequestCard(request, visitProvider);
+        },
+      ),
+    );
+  }
+
+  Widget _buildVisitRequestCard(
+    Map<String, dynamic> request,
+    VisitRequestsProvider visitProvider,
+  ) {
+    final requestDetails = request['requestDetails'] ?? {};
+    final address = requestDetails['address'] ?? {};
+    final buyerId = request['buyerId'] ?? {};
+    final serviceId = request['serviceId'] ?? {};
+    final status = request['status']?.toString().toLowerCase() ?? 'pending';
+
+    Color statusColor;
+    switch (status) {
+      case 'pending':
+        statusColor = Colors.orange;
+        break;
+      case 'accepted':
+        statusColor = Colors.green;
+        break;
+      case 'rejected':
+      case 'declined':
+        statusColor = Colors.red;
+        break;
+      case 'completed':
+        statusColor = Colors.blue;
+        break;
+      default:
+        statusColor = Colors.grey;
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with status
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    serviceId['title'] ?? 'Customize Product',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: statusColor),
+                  ),
+                  child: Text(
+                    status.toUpperCase(),
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Buyer Info
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.blue.shade100,
+                  child: Text(
+                    (buyerId['name'] ?? 'B')[0].toUpperCase(),
+                    style: TextStyle(
+                      color: Colors.blue.shade800,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        buyerId['name'] ?? 'Unknown Buyer',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (buyerId['email'] != null)
+                        Text(
+                          buyerId['email'],
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      if (buyerId['phone'] != null)
+                        Text(
+                          buyerId['phone'],
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Description
+            if (requestDetails['description'] != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  requestDetails['description'],
+                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                ),
+              ),
+
+            // Address
+            if (address['street'] != null || address['city'] != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        '${address['street'] ?? ''}, ${address['city'] ?? ''}'
+                            .replaceAll(RegExp(r'^,\s*|,\s*$'), ''),
+                        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Preferred Date & Time
+            if (requestDetails['preferredDate'] != null)
+              Row(
+                children: [
+                  Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                  const SizedBox(width: 4),
+                  Text(
+                    _formatDate(requestDetails['preferredDate']),
+                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  ),
+                  if (requestDetails['preferredTime'] != null) ...[
+                    const SizedBox(width: 12),
+                    Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      requestDetails['preferredTime'],
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    ),
+                  ],
+                ],
+              ),
+            const SizedBox(height: 12),
+
+            // Action Buttons
+            if (status == 'pending')
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _acceptRequest(
+                        request['_id']?.toString() ?? '',
+                        visitProvider,
+                      ),
+                      icon: const Icon(Icons.check, size: 18),
+                      label: const Text('Accept'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _rejectRequest(
+                        request['_id']?.toString() ?? '',
+                        visitProvider,
+                      ),
+                      icon: const Icon(Icons.close, size: 18),
+                      label: const Text('Reject'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: const BorderSide(color: Colors.red),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(dynamic date) {
+    try {
+      if (date is String) {
+        final parsed = DateTime.parse(date);
+        return '${parsed.day}/${parsed.month}/${parsed.year}';
+      }
+      return date.toString();
+    } catch (e) {
+      return date.toString();
+    }
+  }
+
+  Future<void> _acceptRequest(
+    String requestId,
+    VisitRequestsProvider visitProvider,
+  ) async {
+    final result = await visitProvider.acceptRequest(requestId);
+    if (result && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Visit request accepted'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            visitProvider.errorMessage ?? 'Failed to accept request',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _rejectRequest(
+    String requestId,
+    VisitRequestsProvider visitProvider,
+  ) async {
+    final result = await visitProvider.rejectRequest(requestId);
+    if (result && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Visit request rejected'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            visitProvider.errorMessage ?? 'Failed to reject request',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 }

@@ -104,21 +104,17 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
               // Compact price row
               Row(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        buildSummaryLine('Subtotal', cartViewModel.subtotal),
-                        const SizedBox(height: 4),
-                        buildSummaryLine('Shipping', cartViewModel.shipping),
-                        const SizedBox(height: 4),
-                        buildSummaryLine('Tax', cartViewModel.tax),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      Text(
+                        'Total :  ',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       Text(
                         '\$${cartViewModel.total.toStringAsFixed(2)}',
                         style: const TextStyle(
@@ -127,14 +123,7 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
                           color: Colors.brown,
                         ),
                       ),
-                      Text(
-                        'Total',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
+                      const SizedBox(width: 10),
                       SizedBox(
                         width: 160,
                         child: ElevatedButton(

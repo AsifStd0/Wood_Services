@@ -4,13 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 enum OrderStatus {
-  requested('requested'),
   pending('pending'),
   accepted('accepted'),
-  processing('processing'),
-  shipped('shipped'),
-  delivered('delivered'),
-  cancelled('cancelled'),
+  // shipped('shipped'),
+  // delivered('delivered'),
   rejected('rejected');
 
   final String value;
@@ -19,26 +16,21 @@ enum OrderStatus {
   factory OrderStatus.fromString(String value) {
     return OrderStatus.values.firstWhere(
       (e) => e.value == value,
-      orElse: () => OrderStatus.requested,
+      // orElse: () => OrderStatus.requested,
+      orElse: () => OrderStatus.pending,
     );
   }
 
   String get displayName {
     switch (this) {
-      case OrderStatus.requested:
-        return 'Requested';
       case OrderStatus.pending:
         return 'Pending';
       case OrderStatus.accepted:
         return 'Accepted';
-      case OrderStatus.processing:
-        return 'Processing';
-      case OrderStatus.shipped:
-        return 'Shipped';
-      case OrderStatus.delivered:
-        return 'Delivered';
-      case OrderStatus.cancelled:
-        return 'Cancelled';
+      // case OrderStatus.shipped:
+      //   return 'Shipped';
+      // case OrderStatus.delivered:
+      // return 'Delivered';
       case OrderStatus.rejected:
         return 'Rejected';
     }
@@ -46,17 +38,13 @@ enum OrderStatus {
 
   Color get color {
     switch (this) {
-      case OrderStatus.requested:
       case OrderStatus.pending:
         return const Color(0xFFFFA726);
       case OrderStatus.accepted:
-      case OrderStatus.processing:
-        return const Color(0xFF29B6F6);
-      case OrderStatus.shipped:
-        return const Color(0xFF7E57C2);
-      case OrderStatus.delivered:
+        // case OrderStatus.shipped:
+        //   return const Color(0xFF7E57C2);
+        // case OrderStatus.delivered:
         return const Color(0xFF66BB6A);
-      case OrderStatus.cancelled:
       case OrderStatus.rejected:
         return const Color(0xFFEF5350);
     }
@@ -93,6 +81,13 @@ class OrderModelSeller {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // New fields from API
+  final Map<String, dynamic>?
+  orderDetails; // description, location, preferredDate, etc.
+  final Map<String, dynamic>?
+  pricing; // unitPrice, taxAmount, finalAmount, etc.
+  final String? currency;
+
   OrderModelSeller({
     required this.id,
     required this.orderId,
@@ -122,52 +117,37 @@ class OrderModelSeller {
     this.rejectedAt,
     required this.createdAt,
     required this.updatedAt,
+    this.orderDetails,
+    this.pricing,
+    this.currency,
   });
   factory OrderModelSeller.fromJson(Map<String, dynamic> json) {
-    log('📦 Parsing order JSON: ${json['orderId']}');
+    log('📦 Parsing order JSON: ${json['_id']}');
 
     try {
-      // Parse buyer info carefully
+      // Parse buyer info - new structure has buyerId as object
       dynamic buyerData = json['buyerId'];
       String buyerId = '';
       String buyerName = '';
       String buyerEmail = '';
+      String? buyerPhone;
 
       if (buyerData is Map<String, dynamic>) {
         buyerId = buyerData['_id']?.toString() ?? '';
-        buyerName = buyerData['fullName']?.toString() ?? 'Unknown Buyer';
+        buyerName =
+            buyerData['name']?.toString() ??
+            buyerData['fullName']?.toString() ??
+            'Unknown Buyer';
         buyerEmail = buyerData['email']?.toString() ?? 'No Email';
+        buyerPhone = buyerData['phone']?.toString();
       } else if (buyerData is String) {
         buyerId = buyerData;
         buyerName = json['buyerName']?.toString() ?? 'Unknown Buyer';
         buyerEmail = json['buyerEmail']?.toString() ?? 'No Email';
+        buyerPhone = json['buyerPhone']?.toString();
       }
 
-      // Parse items
-      List<OrderItem> items = [];
-      if (json['items'] is List) {
-        items = (json['items'] as List)
-            .whereType<Map<String, dynamic>>()
-            .map<OrderItem>((item) {
-              try {
-                return OrderItem.fromJson(Map<String, dynamic>.from(item));
-              } catch (e) {
-                log('❌ Error parsing item: $e');
-                return OrderItem(
-                  productId: '',
-                  productName: 'Unknown Product',
-                  sellerId: '',
-                  sellerName: 'Unknown Seller',
-                  quantity: 1,
-                  unitPrice: 0,
-                  subtotal: 0,
-                );
-              }
-            })
-            .toList();
-      }
-
-      // Parse numeric fields safely
+      // Parse numeric fields safely - define first
       double parseDouble(dynamic value) {
         if (value == null) return 0.0;
         if (value is int) return value.toDouble();
@@ -210,31 +190,116 @@ class OrderModelSeller {
         return DateTime.now();
       }
 
+      // Parse pricing and order details from new structure
+      final pricing = json['pricing'] ?? {};
+      final orderDetails = json['orderDetails'] ?? {};
+      final timeline = json['timeline'] ?? {};
+
+      // Parse serviceId to create order item - new structure
+      List<OrderItem> items = [];
+      final serviceId = json['serviceId'];
+      final quantity = parseInt(json['quantity'] ?? 1);
+
+      if (serviceId is Map<String, dynamic>) {
+        final productId = serviceId['_id']?.toString() ?? '';
+        final productName = serviceId['title']?.toString() ?? 'Unknown Product';
+        final productImages = serviceId['images'] as List? ?? [];
+        final productImage = productImages.isNotEmpty
+            ? productImages[0].toString()
+            : null;
+
+        final unitPrice = parseDouble(
+          pricing['unitPrice'] ?? pricing['salePrice'] ?? 0,
+        );
+        final subtotal = parseDouble(
+          pricing['finalAmount'] ?? (unitPrice * quantity),
+        );
+
+        items.add(
+          OrderItem(
+            productId: productId,
+            productName: productName,
+            productImage: productImage,
+            sellerId: json['sellerId']?.toString() ?? '',
+            sellerName: 'Current Seller',
+            quantity: quantity,
+            unitPrice: unitPrice,
+            subtotal: subtotal,
+          ),
+        );
+      } else if (json['items'] is List) {
+        // Fallback to old structure
+        items = (json['items'] as List)
+            .whereType<Map<String, dynamic>>()
+            .map<OrderItem>((item) {
+              try {
+                return OrderItem.fromJson(Map<String, dynamic>.from(item));
+              } catch (e) {
+                log('❌ Error parsing item: $e');
+                return OrderItem(
+                  productId: '',
+                  productName: 'Unknown Product',
+                  sellerId: '',
+                  sellerName: 'Unknown Seller',
+                  quantity: 1,
+                  unitPrice: 0,
+                  subtotal: 0,
+                );
+              }
+            })
+            .toList();
+      }
+
+      final subtotal = parseDouble(
+        pricing['basePrice'] ?? pricing['subtotal'] ?? 0,
+      );
+      final taxAmount = parseDouble(pricing['taxAmount'] ?? 0);
+      final totalAmount = parseDouble(
+        pricing['finalAmount'] ??
+            pricing['totalAmount'] ??
+            subtotal + taxAmount,
+      );
+      final paymentMethod =
+          pricing['paymentMethod']?.toString() ??
+          json['paymentMethod']?.toString() ??
+          'card';
+
+      // Parse orderId - generate from _id if not present
+      String orderId =
+          json['orderId']?.toString() ?? json['_id']?.toString() ?? 'N/A';
+      if (orderId.length > 12) {
+        // MongoDB _id, use last 8 chars
+        orderId = 'ORD-${orderId.substring(orderId.length - 8).toUpperCase()}';
+      }
+
       return OrderModelSeller(
         id: json['_id']?.toString() ?? '',
-        orderId: json['orderId']?.toString() ?? 'N/A',
+        orderId: orderId,
         buyerId: buyerId,
         buyerName: buyerName,
         buyerEmail: buyerEmail,
-        buyerPhone: json['buyerPhone']?.toString(),
+        buyerPhone: buyerPhone,
         buyerAddress:
+            orderDetails['location']?.toString() ??
             json['buyerAddress']?.toString() ??
             json['deliveryAddress']?.toString(),
         items: items,
-        itemsCount: parseInt(json['itemsCount']),
-        subtotal: parseDouble(json['subtotal']),
-        shippingFee: parseDouble(json['shippingFee']),
-        taxAmount: parseDouble(json['taxAmount']),
-        totalAmount: parseDouble(json['totalAmount']),
-        paymentMethod: json['paymentMethod']?.toString() ?? 'cod',
+        itemsCount: items.length > 0
+            ? items.length
+            : parseInt(json['quantity'] ?? 1),
+        subtotal: subtotal,
+        shippingFee: parseDouble(json['shippingFee'] ?? 0),
+        taxAmount: taxAmount,
+        totalAmount: totalAmount,
+        paymentMethod: paymentMethod,
         paymentStatus: json['paymentStatus']?.toString() ?? 'pending',
-        status: OrderStatus.fromString(
-          json['status']?.toString() ?? 'requested',
-        ),
+        status: OrderStatus.fromString(json['status']?.toString() ?? 'pending'),
         requestType: json['requestType']?.toString() ?? 'buy_now',
         isVisitRequest: json['isVisitRequest'] == true,
         isQuotationRequest: json['isQuotationRequest'] == true,
-        requestedAt: parseDate(json['requestedAt'] ?? json['createdAt']),
+        requestedAt: parseDate(
+          timeline['orderedAt'] ?? json['requestedAt'] ?? json['createdAt'],
+        ),
         acceptedAt: json['acceptedAt'] != null
             ? parseDate(json['acceptedAt'])
             : null,
@@ -255,6 +320,12 @@ class OrderModelSeller {
             : null,
         createdAt: parseDate(json['createdAt']),
         updatedAt: parseDate(json['updatedAt'] ?? json['createdAt']),
+        orderDetails: orderDetails.isNotEmpty ? orderDetails : null,
+        pricing: pricing.isNotEmpty ? pricing : null,
+        currency:
+            pricing['currency']?.toString() ??
+            json['currency']?.toString() ??
+            'USD',
       );
     } catch (e, stackTrace) {
       log('❌ Error parsing OrderModelSeller: $e');
@@ -276,13 +347,16 @@ class OrderModelSeller {
         totalAmount: 0,
         paymentMethod: 'cod',
         paymentStatus: 'error',
-        status: OrderStatus.requested,
+        status: OrderStatus.pending,
         requestType: 'buy_now',
         isVisitRequest: false,
         isQuotationRequest: false,
         requestedAt: DateTime.now(),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        orderDetails: null,
+        pricing: null,
+        currency: 'USD',
       );
     }
   }
@@ -291,7 +365,8 @@ class OrderModelSeller {
   }
 
   String get formattedAmount {
-    return '₹${totalAmount.toStringAsFixed(2)}';
+    final currencySymbol = currency == 'USD' ? '\$' : '₹';
+    return '$currencySymbol${totalAmount.toStringAsFixed(2)}';
   }
 
   String get itemCountText {
@@ -336,7 +411,40 @@ class OrderModelSeller {
       rejectedAt: rejectedAt ?? this.rejectedAt,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      orderDetails: orderDetails ?? this.orderDetails,
+      pricing: pricing ?? this.pricing,
+      currency: currency ?? this.currency,
     );
+  }
+
+  // Helper getters for orderDetails
+  String? get orderDescription => orderDetails?['description']?.toString();
+  String? get orderLocation => orderDetails?['location']?.toString();
+  String? get preferredDate => orderDetails?['preferredDate']?.toString();
+  String? get estimatedDuration =>
+      orderDetails?['estimatedDuration']?.toString();
+  String? get specialRequirements =>
+      orderDetails?['specialRequirements']?.toString();
+
+  // Helper getters for pricing
+  double? get unitPrice =>
+      pricing?['unitPrice'] != null ? parseDouble(pricing!['unitPrice']) : null;
+  double? get salePrice =>
+      pricing?['salePrice'] != null ? parseDouble(pricing!['salePrice']) : null;
+  bool get useSalePrice => pricing?['useSalePrice'] == true;
+
+  double parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is int) return value.toDouble();
+    if (value is double) return value;
+    if (value is String) {
+      try {
+        return double.parse(value);
+      } catch (e) {
+        return 0.0;
+      }
+    }
+    return 0.0;
   }
 }
 

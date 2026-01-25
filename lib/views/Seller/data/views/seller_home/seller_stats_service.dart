@@ -22,11 +22,7 @@ class SellerStatsService {
 
       final response = await _dio.get(
         '/seller/stats',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
       log('📥 Response Status: ${response.statusCode}');
@@ -44,7 +40,8 @@ class SellerStatsService {
       if (e.response != null) {
         log('Response: ${e.response?.data}');
         throw Exception(
-            e.response?.data['message'] ?? 'Failed to get statistics');
+          e.response?.data['message'] ?? 'Failed to get statistics',
+        );
       }
       throw Exception('Network error: ${e.message}');
     } catch (e) {

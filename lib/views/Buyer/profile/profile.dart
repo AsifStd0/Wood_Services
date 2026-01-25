@@ -99,9 +99,9 @@ class _ProfileScreenState extends State<ProfileScreen>
               _buildUserHeader(user, provider),
               const SizedBox(height: 20),
 
-              // Stats Section
-              _buildStatsSection(provider),
-              const SizedBox(height: 20),
+              // // Stats Section
+              // _buildStatsSection(provider),
+              // const SizedBox(height: 20),
 
               // Main Menu Section
               _buildMenuSection(context, provider),
@@ -275,43 +275,43 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // Enhanced Stats Section
-  Widget _buildStatsSection(BuyerProfileViewProvider provider) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              CustomText('Activity ', type: CustomTextType.activityHeading),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              buildStatItem('12', 'Orders', Icons.shopping_bag),
-              buildStatItem('8', 'Favorites', Icons.favorite),
-              buildStatItem('4', 'Reviews', Icons.star),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  // // Enhanced Stats Section
+  // Widget _buildStatsSection(BuyerProfileViewProvider provider) {
+  //   return Container(
+  //     width: double.infinity,
+  //     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(20),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.grey.withOpacity(0.1),
+  //           blurRadius: 15,
+  //           offset: const Offset(0, 5),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       children: [
+  //         const Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //           children: [
+  //             CustomText('Activity ', type: CustomTextType.activityHeading),
+  //           ],
+  //         ),
+  //         const SizedBox(height: 16),
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceAround,
+  //           children: [
+  //             buildStatItem('12', 'Orders', Icons.shopping_bag),
+  //             buildStatItem('8', 'Favorites', Icons.favorite),
+  //             buildStatItem('4', 'Reviews', Icons.star),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   // Enhanced Main Menu Section
   Widget _buildMenuSection(

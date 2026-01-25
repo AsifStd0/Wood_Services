@@ -7,7 +7,6 @@ enum VisitStatus {
   accepted,
   rejected,
   declined, // Add this
-  cancelled,
   completed,
   noshow,
   active,
@@ -123,8 +122,8 @@ class VisitRequest {
         return VisitStatus.rejected;
       case 'declined':
         return VisitStatus.declined; // Add this case
-      case 'cancelled':
-        return VisitStatus.cancelled;
+      // case 'cancelled':
+      //   return VisitStatus.cancelled;
       case 'completed':
         return VisitStatus.completed;
       case 'noshow':
@@ -193,7 +192,7 @@ class VisitRequest {
   bool get isPending => status == VisitStatus.pending;
   bool get isAccepted => status == VisitStatus.accepted;
   bool get isRejected => status == VisitStatus.rejected;
-  bool get isCancelled => status == VisitStatus.cancelled;
+  // bool get isCancelled => status == VisitStatus.cancelled;
   bool get isCompleted => status == VisitStatus.completed;
 
   String get formattedRequestDate {
@@ -226,8 +225,8 @@ class VisitRequest {
       case VisitStatus.rejected:
       case VisitStatus.declined:
         return Colors.red;
-      case VisitStatus.cancelled:
-        return Colors.grey;
+      // case VisitStatus.cancelled:
+      // return Colors.grey;
       case VisitStatus.completed:
         return Colors.blue;
       case VisitStatus.noshow:
@@ -246,8 +245,8 @@ class VisitRequest {
       case VisitStatus.rejected:
       case VisitStatus.declined:
         return Icons.cancel;
-      case VisitStatus.cancelled:
-        return Icons.block;
+      // case VisitStatus.cancelled:
+      // return Icons.block;
       case VisitStatus.completed:
         return Icons.done_all;
       case VisitStatus.noshow:
@@ -267,8 +266,8 @@ class VisitRequest {
         return 'Rejected';
       case VisitStatus.declined:
         return 'Declined';
-      case VisitStatus.cancelled:
-        return 'Cancelled';
+      // case VisitStatus.cancelled:
+      // return 'Cancelled';
       case VisitStatus.completed:
         return 'Completed';
       case VisitStatus.noshow:

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:wood_service/chats/Buyer/buyer_chating.dart';
+import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/favorite_button.dart';
 import 'package:wood_service/views/Buyer/product_detail/product_detail.dart';
@@ -245,7 +247,7 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
                       initialIsFavorited: product.isFavorited,
                     ),
                     const SizedBox(height: 8),
-                    _buildChatButton(product, context),
+                    // _buildChatButton(product, context),
                   ],
                 ),
               ),
@@ -401,6 +403,7 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
                     height: 32,
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     onPressed: () {
+                      log('🔍 Debug: Order ID: ${product.toJson()}');
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => ProductDetailScreen(product: product),
@@ -424,84 +427,4 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
       ],
     ),
   );
-}
-
-// 🔥 CHAT BUTTON WIDGET
-Widget _buildChatButton(BuyerProductModel product, BuildContext context) {
-  return GestureDetector(
-    onTap: () {
-      _startChatWithSeller(product, context);
-    },
-    child: Container(
-      width: 22,
-      height: 22,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: const Center(
-        child: Icon(Icons.chat_outlined, size: 16, color: Colors.blue),
-      ),
-    ),
-  );
-}
-
-// 🔥 START CHAT FUNCTION
-void _startChatWithSeller(BuyerProductModel product, BuildContext context) {
-  // Check if seller info is available
-  if (product.sellerId == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Seller information not available'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    return;
-  }
-
-  // In your current onTap function
-  print('🔍 Debug:');
-  print('SellerId: ${product.sellerId}');
-  print('SellerId type: ${product.sellerId.runtimeType}');
-
-  String sellerIdString;
-  String sellerNameString;
-
-  // Handle the Map case
-  if (product.sellerId is Map) {
-    final sellerMap = product.sellerId as Map;
-    sellerIdString = sellerMap['id']?.toString() ?? 'unknown';
-    sellerNameString =
-        sellerMap['businessName']?.toString() ??
-        sellerMap['shopName']?.toString() ??
-        'Unknown Seller';
-  } else {
-    sellerIdString = product.sellerId.toString();
-    sellerNameString = product.sellerName;
-  }
-
-  print('✅ Extracted:');
-  print('   Seller ID: $sellerIdString');
-  print('   Seller Name: $sellerNameString');
-
-  // Navigator.push(
-  //   context,
-  //   MaterialPageRoute(
-  //     builder: (context) => BuyerChatScreen(
-  //       sellerId: sellerIdString,
-  //       sellerName: sellerNameString,
-  //       productId: product.id,
-  //       productName: product.title,
-  //       // ✅ Remove orderId or set it to null
-  //       // orderId: null, // Or don't pass this parameter at all
-  //     ),
-  //   ),
-  // );
 }
