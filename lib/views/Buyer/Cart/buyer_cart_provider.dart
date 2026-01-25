@@ -48,6 +48,50 @@ class BuyerCartViewModel with ChangeNotifier {
     notifyListeners();
   }
 
+  // ! **********
+  // ! **********
+  // ! **********
+  // ! **********
+  // ! **********
+  // Store latest orderId by serviceId (for chat access)
+  // final Map<String, String> _latestOrderIds = {};
+
+  /// Get the latest orderId for a service/product
+  // String? getLatestOrderId(String serviceId) {
+  //   return _latestOrderIds[serviceId];
+  // }
+
+  // /// Store orderId after order placement
+  // void storeOrderId(String serviceId, String orderId) {
+  //   _latestOrderIds[serviceId] = orderId;
+  //   notifyListeners();
+  // }
+
+  // try {
+  //     final res = await _cartService.placeOrder(
+  //       serviceId: sid,
+  //       quantity: item.quantity,
+  //       useSalePrice: useSalePrice,
+  //       paymentMethod: paymentMethod,
+  //       selectedVariants: variants.isEmpty ? null : variants,
+  //       orderDetails: orderDetails,
+  //     );
+  //     results.add(res);
+  //     if (res['success'] == true) {
+  //       successCount++;
+  //       // Store orderId for this serviceId
+  //       final orderId = res['orderId']?.toString();
+  //       if (orderId != null) {
+  //         storeOrderId(sid, orderId);
+  //       }
+  //     }
+  //   }
+
+  // ! **********
+  // ! **********
+  // ! **********
+  // ! **********
+
   void updateSize(String? size) {
     _selectedSize = size;
     log('📏 Size updated to: $_selectedSize');

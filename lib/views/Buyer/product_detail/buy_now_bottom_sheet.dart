@@ -1,10 +1,6 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
-import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/payment/rating/order_rating_screen.dart';
 
 class BuyNowBottomSheet extends StatefulWidget {
@@ -157,18 +153,16 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
         setState(() {
           _isLoading = false;
         });
-
+        log('asif khan afridi');
         if (result['success'] == true) {
-          Navigator.pop(context); // Close bottom sheet
-
           // Extract order ID from response
-          final orderData = result['order'] ?? result['data']?['order'];
-          final orderId =
-              orderData?['_id']?.toString() ??
-              orderData?['id']?.toString() ??
-              result['data']?['orderId']?.toString();
+          final orderId = result['orderId'] ?? result['order']['_id'];
+          log('✅ Order placed! ID: $orderId');
+          log('message');
+          log(' ---------- 1111111$orderId');
 
           if (orderId != null) {
+            log(' ---------- $orderId');
             // Navigate to review screen
             Navigator.push(
               context,
@@ -178,8 +172,7 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
                   orderItemId: orderId, // Using orderId as fallback
                   items: [widget.product.title],
                   buyerProduct: widget.product,
-                  cartItemId:
-                      'BUY_NOW_${DateTime.now().millisecondsSinceEpoch}',
+                  cartItemId: orderId,
                   productId: widget.product.id,
                   quantity: widget.quantity,
                   totalPrice: total.toDouble(),

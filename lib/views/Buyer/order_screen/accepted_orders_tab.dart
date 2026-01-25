@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:wood_service/views/Buyer/order_screen/buyer_order_model.dart';
+import 'package:wood_service/views/Buyer/Model/buyer_order_model.dart';
 
 class AcceptedOrdersTab extends StatelessWidget {
   final List<BuyerOrder> orders;

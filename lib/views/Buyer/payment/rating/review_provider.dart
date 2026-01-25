@@ -1,5 +1,6 @@
 // lib/providers/review_provider.dart
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -78,85 +79,98 @@ class ReviewProvider with ChangeNotifier {
     }
   }
 
-  // ========== SUBMIT REVIEW BY ORDER ID ==========
-  /// POST /api/orders/:orderId/review
-  /// Body: multipart/form-data with rating (1-5, required), comment (required), images (optional, up to 5)
+  //! ========== SUBMIT REVIEW BY ORDER ID ==========
   Future<Map<String, dynamic>> submitOrderReview({
     required String orderId,
-    required int rating, // 1-5
+    required int rating,
     required String comment,
-    List<String>? images, // Optional: File paths (up to 5 images)
+    List<String>? images,
   }) async {
+    log('📝 Starting review submission...');
+    log('   Order ID: $orderId');
+    log('   Rating: $rating');
+    log('   Comment: $comment');
+    log('   Images count: ${images?.length ?? 0}');
+
     try {
       _isLoading = true;
       notifyListeners();
 
-      print('📝 Submitting review for order: $orderId');
-      print('• Rating: $rating');
-      print('• Comment: $comment');
-      print('• Images: ${images?.length ?? 0}');
-
       final token = await _getToken();
       if (token == null) {
+        log('❌ No token found');
         return {'success': false, 'message': 'Please login to submit review'};
       }
 
-      // Create multipart request for images
-      final uri = Uri.parse('${Config.baseUrl}/api/orders/$orderId/review');
-      final request = http.MultipartRequest('POST', uri);
+      log('✅ Token obtained');
 
-      // Add headers
-      request.headers.addAll({
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-      });
+      // Check Config.baseUrl
+      log('🔧 Config.baseUrl: ${Config.baseUrl}');
 
-      // Add rating (required)
-      request.fields['rating'] = rating.toString();
-
-      // Add comment (required)
-      request.fields['comment'] = comment;
-
-      // Add images if provided (optional, up to 5)
-      if (images != null && images.isNotEmpty) {
-        for (int i = 0; i < images.length && i < 5; i++) {
-          try {
-            // images[i] is a File path, read the file
-            final imageFile = io.File(images[i]);
-            if (await imageFile.exists()) {
-              final fileBytes = await imageFile.readAsBytes();
-              final fileName = imageFile.path.split('/').last;
-
-              request.files.add(
-                http.MultipartFile.fromBytes(
-                  'images', // API expects 'images' field for array
-                  fileBytes,
-                  filename: fileName,
-                ),
-              );
-              print('✅ Added image $i: $fileName');
-            }
-          } catch (e) {
-            print('⚠️ Error loading image ${images[i]}: $e');
-          }
-        }
+      // Build URL correctly
+      String url;
+      if (Config.baseUrl.endsWith('/api')) {
+        url = '${Config.baseUrl}/buyer/orders/$orderId/review';
+      } else {
+        url = '${Config.baseUrl}/api/buyer/orders/$orderId/review';
       }
 
-      print('📤 Sending request to: ${request.url}');
-      print('📤 Files: ${request.files.length}');
-      print('📤 Fields: ${request.fields}');
+      log('🌐 Final URL: $url');
+      final uri = Uri.parse(url);
 
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
+      // Decide: Use multipart (with images) or JSON (without images)
+      final hasImages = images != null && images.isNotEmpty;
 
-      print('📡 Response Status: ${response.statusCode}');
-      print('📡 Response Body: ${response.body}');
+      if (hasImages) {
+        log('📤 Using multipart/form-data (has images)');
+        return await _submitMultipartReview(
+          uri,
+          token,
+          rating,
+          comment,
+          images!,
+        );
+      } else {
+        log('📤 Using application/json (no images)');
+        return await _submitJsonReview(uri, token, rating, comment);
+      }
+    } catch (e, stackTrace) {
+      log('❌ Error in submitOrderReview: $e');
+      log('Stack trace: $stackTrace');
+      return {'success': false, 'message': 'Error: ${e.toString()}'};
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<Map<String, dynamic>> _submitJsonReview(
+    Uri uri,
+    String token,
+    int rating,
+    String comment,
+  ) async {
+    try {
+      log('📤 Sending JSON review request');
+
+      final response = await http.post(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({'rating': rating, 'comment': comment}),
+      );
+
+      log('📥 Response Status: ${response.statusCode}');
+      log('📥 Response Body: ${response.body}');
 
       final data = json.decode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (data['success'] == true) {
-          // Refresh reviewable orders after submission
+          log('✅ Review submitted successfully (JSON)');
           await fetchReviewableOrders();
           return {
             'success': true,
@@ -166,87 +180,100 @@ class ReviewProvider with ChangeNotifier {
         }
       }
 
+      log('❌ Review submission failed (JSON)');
       return {
         'success': false,
         'message': data['message'] ?? 'Failed to submit review',
         'statusCode': response.statusCode,
       };
     } catch (e) {
-      print('❌ Error submitting order review: $e');
-      return {'success': false, 'message': 'Network error: ${e.toString()}'};
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      log('❌ Error in _submitJsonReview: $e');
+      rethrow;
     }
   }
 
-  // ========== SUBMIT REVIEW ==========
-  /// POST /api/reviews
-  /// Body: { serviceId, sellerId, rating, comment }
-  /// @deprecated Use submitOrderReview instead
-  Future<Map<String, dynamic>> submitReview({
-    required String serviceId, // Changed from productId to serviceId
-    required String sellerId, // NEW: Required field
-    required int rating,
-    String? comment,
-    String? orderId, // Optional: for backward compatibility
-    String? orderItemId, // Optional: for backward compatibility
-    String? productId, // Optional: for backward compatibility (legacy)
-    String? title, // Optional: not in new API
-    List<Map<String, String>> images = const [], // Optional: not in new API
-  }) async {
+  Future<Map<String, dynamic>> _submitMultipartReview(
+    Uri uri,
+    String token,
+    int rating,
+    String comment,
+    List<String> images,
+  ) async {
     try {
-      _isLoading = true;
-      notifyListeners();
+      log('📤 Sending multipart review request');
 
-      print('📝 Submitting review...');
-      print('• Service ID: $serviceId');
-      print('• Seller ID: $sellerId');
-      print('• Rating: $rating');
-      print('• Comment: $comment');
+      final request = http.MultipartRequest('POST', uri);
 
-      final headers = await _getHeaders();
-      final response = await http.post(
-        Uri.parse('${Config.apiBaseUrl}/api/reviews'),
-        headers: headers,
-        body: json.encode({
-          'serviceId': serviceId,
-          'sellerId': sellerId,
-          'rating': rating,
-          'comment': comment ?? '',
-        }),
-      );
+      // Add headers
+      request.headers.addAll({
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      });
 
-      print('📡 Response Status: ${response.statusCode}');
-      print('📡 Response Body: ${response.body}');
+      // Add fields
+      request.fields['rating'] = rating.toString();
+      request.fields['comment'] = comment;
+
+      // Add images
+      for (int i = 0; i < images.length && i < 5; i++) {
+        try {
+          final imageFile = io.File(images[i]);
+          if (await imageFile.exists()) {
+            final fileBytes = await imageFile.readAsBytes();
+            final fileName = imageFile.path.split('/').last;
+
+            request.files.add(
+              http.MultipartFile.fromBytes(
+                'images',
+                fileBytes,
+                filename: fileName,
+              ),
+            );
+            log('✅ Added image $i: $fileName');
+          }
+        } catch (e) {
+          log('⚠️ Error loading image ${images[i]}: $e');
+        }
+      }
+
+      log('📤 Files count: ${request.files.length}');
+      log('📤 Fields: ${request.fields}');
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      log('📥 Response Status: ${response.statusCode}');
+      log('📥 Response Body: ${response.body}');
 
       final data = json.decode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (data['success'] == true) {
-          // Refresh reviewable orders after submission
+          log('✅ Review submitted successfully (Multipart)');
           await fetchReviewableOrders();
           return {
             'success': true,
             'message': data['message'] ?? 'Review submitted successfully!',
-            'review': data['review'],
+            'review': data['review'] ?? data['data'],
           };
         }
       }
 
+      log('❌ Review submission failed (Multipart)');
       return {
         'success': false,
         'message': data['message'] ?? 'Failed to submit review',
         'statusCode': response.statusCode,
       };
     } catch (e) {
-      print('❌ Error submitting review: $e');
-      return {'success': false, 'message': 'Network error: ${e.toString()}'};
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      log('❌ Error in _submitMultipartReview: $e');
+      rethrow;
     }
   }
+
+  // ========== SUBMIT REVIEW ==========
+  /// POST /reviews
+  /// Body: { serviceId, sellerId, rating, comment }
 
   // ========== GET MY REVIEWS ==========
   Future<void> fetchMyReviews({

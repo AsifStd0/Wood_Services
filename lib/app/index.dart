@@ -15,7 +15,6 @@ export 'package:wood_service/app/config.dart';
 export 'package:wood_service/app/locator.dart';
 export 'package:wood_service/chats/Buyer/buyer_chat_provider.dart';
 export 'package:wood_service/chats/Buyer/buyer_chat_service.dart';
-export 'package:wood_service/chats/Buyer/buyer_socket_service.dart';
 export 'package:wood_service/chats/Seller/seller_chat_provider.dart';
 export 'package:wood_service/chats/Seller/seller_chat_service.dart';
 export 'package:wood_service/chats/Seller/seller_socket_service.dart';
@@ -67,7 +66,6 @@ export 'package:wood_service/views/Seller/data/views/order_data/order_provider.d
 export 'package:wood_service/views/Seller/data/views/order_data/order_repository_seller.dart';
 export 'package:wood_service/views/Seller/data/views/order_data/order_screen_seller.dart';
 export 'package:wood_service/views/Seller/data/views/seller_home/seller_home_screen.dart';
-export 'package:wood_service/views/Seller/data/views/seller_home/view_request_provider.dart';
 export 'package:wood_service/views/Seller/data/views/seller_prduct.dart/add_product_screen.dart';
 export 'package:wood_service/views/Seller/data/views/shop_setting/seller_settings_screen.dart';
 export 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';

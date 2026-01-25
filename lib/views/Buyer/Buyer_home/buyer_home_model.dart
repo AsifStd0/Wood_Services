@@ -349,6 +349,14 @@ class BuyerProductModel {
 
       // Creator
       createdBy: json['createdBy']?.toString(),
+      //!  (*******)
+      //     // Add other fields as needed
+      // sellerName: json['sellerId'] is Map
+      //     ? json['sellerId']['name']?.toString() ?? ''
+      //     : '',
+      // shopName: json['sellerId'] is Map
+      //     ? json['sellerId']['shopName']?.toString() ?? ''
+      //     : '',
     );
   }
 

@@ -3,17 +3,23 @@ import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wood_service/app/config.dart';
+import 'package:wood_service/chats/Buyer/buyer_chat_provider.dart';
+import 'package:wood_service/chats/Buyer/buyer_chat_service.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_provider.dart';
 import 'package:wood_service/views/Buyer/buyer_main/buyer_main_provider.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_product_service.dart';
+import 'package:wood_service/views/Buyer/order_screen/buyer_order_provider.dart';
+import 'package:wood_service/views/Buyer/order_screen/buyer_order_repository.dart';
 import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
 import 'package:wood_service/views/Seller/data/services/new_service/auth_service.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_repository_seller.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home/visit_requests_provider.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home/visit_requests_service.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository.dart';
@@ -22,7 +28,6 @@ import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/s
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_services.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/seller_stats_service.dart';
-import 'package:wood_service/views/Seller/data/views/seller_home/seller_stats_provider.dart';
 
 final GetIt locator = GetIt.instance;
 
@@ -83,11 +88,12 @@ Future<void> setupLocator() async {
         onRequest: (options, handler) async {
           try {
             // Get storage from locator
-          final storage = locator<UnifiedLocalStorageServiceImpl>();
-          final token = storage.getToken();
+            final storage = locator<UnifiedLocalStorageServiceImpl>();
+            final token = storage.getToken();
 
-          if (token != null && token.isNotEmpty) {
-            options.headers['Authorization'] = 'Bearer $token';
+            if (token != null && token.isNotEmpty) {
+              options.headers['Authorization'] = 'Bearer $token';
+              // when dio call it auto get this id
               print('🔑 Token added to request');
             }
           } catch (e) {
@@ -189,8 +195,8 @@ Future<void> setupLocator() async {
     () => UploadedProductProvider(service: locator<UploadedProductService>()),
   );
 
-  // Register SellerStatsProvider
-  locator.registerFactory<SellerStatsProvider>(() => SellerStatsProvider());
+  // // Register SellerStatsProvider
+  // locator.registerFactory<SellerStatsProvider>(() => SellerStatsProvider());
 
   // Register OrdersViewModel
   locator.registerFactory<OrdersViewModel>(
@@ -226,6 +232,38 @@ Future<void> setupLocator() async {
   if (!locator.isRegistered<BuyerCartViewModel>()) {
     locator.registerSingleton<BuyerCartViewModel>(BuyerCartViewModel());
   }
+
+  // Register BuyerChatService
+  if (!locator.isRegistered<BuyerChatService>()) {
+    locator.registerSingleton<BuyerChatService>(BuyerChatService());
+  }
+
+  // Then register BuyerChatProvider
+  locator.registerFactory<BuyerChatProvider>(
+    () => BuyerChatProvider(chatService: locator<BuyerChatService>()),
+  );
+  // BuyerOrderProviderx
+  // ✅ FIRST: Register the repository interface with its implementation
+  locator.registerLazySingleton<BuyerOrderRepository>(
+    () => ApiBuyerOrderRepository(
+      storageService: locator<UnifiedLocalStorageServiceImpl>(),
+      // Add other dependencies if needed, e.g., Dio
+      // locator<Dio>(),
+    ),
+  );
+  // Register VisitRequestsService
+  if (!locator.isRegistered<VisitRequestsService>()) {
+    locator.registerLazySingleton<VisitRequestsService>(
+      () => VisitRequestsService(),
+    );
+  }
+  // Register VisitRequestsProvider
+  locator.registerFactory<VisitRequestsProvider>(() => VisitRequestsProvider());
+
+  // ✅ THEN: Register the provider that depends on the repository
+  locator.registerFactory<BuyerOrderProvider>(
+    () => BuyerOrderProvider(locator<BuyerOrderRepository>()),
+  );
 
   print('✅ Locator setup completed successfully!');
 }

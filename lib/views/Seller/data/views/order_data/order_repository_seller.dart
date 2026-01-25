@@ -12,6 +12,7 @@ abstract class OrderRepository {
   Future<void> updateOrderStatus(String orderId, String status);
   Future<OrderModelSeller> getOrderDetails(String orderId);
   Future<Map<String, dynamic>> getOrderStatistics();
+  Future<void> addOrderNote(String orderId, String message);
 }
 
 class ApiOrderRepository implements OrderRepository {
@@ -76,11 +77,13 @@ class ApiOrderRepository implements OrderRepository {
         log('📦 Response Body Length: ${response.body.length} bytes');
 
         if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          log('🎯 Success flag: ${data['success']}');
-          log('📄 Message: ${data['message'] ?? 'No message'}');
+          final responseData = jsonDecode(response.body);
+          log('🎯 Success flag: ${responseData['success']}');
+          log('📄 Message: ${responseData['message'] ?? 'No message'}');
 
-          if (data['success'] == true) {
+          if (responseData['success'] == true) {
+            // New API structure: data.orders
+            final data = responseData['data'] ?? responseData;
             final List<dynamic> orders = data['orders'] ?? [];
             log('📊 Found ${orders.length} orders');
 
@@ -111,8 +114,8 @@ class ApiOrderRepository implements OrderRepository {
 
             return parsedOrders;
           } else {
-            log('❌ API Error: ${data['message']}');
-            throw Exception(data['message'] ?? 'Failed to load orders');
+            log('❌ API Error: ${responseData['message']}');
+            throw Exception(responseData['message'] ?? 'Failed to load orders');
           }
         } else {
           log('❌ HTTP Error: ${response.statusCode}');
@@ -152,16 +155,82 @@ class ApiOrderRepository implements OrderRepository {
         throw Exception('Please login again');
       }
 
-      // Check if orderId is MongoDB _id or custom orderId
-      final bool isMongoId = RegExp(r'^[0-9a-fA-F]{24}$').hasMatch(orderId);
+      // Map status to endpoint
+      String endpoint;
+      switch (status.toLowerCase()) {
+        case 'accepted':
+          endpoint = '/seller/orders/$orderId/accept';
+          break;
+        case 'rejected':
+          endpoint = '/seller/orders/$orderId/reject';
+          break;
+        case 'processing':
+        case 'started':
+          endpoint = '/seller/orders/$orderId/start';
+          break;
+        case 'delivered':
+        case 'completed':
+          endpoint = '/seller/orders/$orderId/complete';
+          break;
+        default:
+          // Fallback to old endpoint
+          endpoint = '/seller/orders/$orderId/status';
+      }
 
-      if (isMongoId) {
-        log('⚠️ Warning: Using MongoDB _id instead of orderId');
-        log('💡 Suggestion: Use the custom orderId (ORD-...)');
+      final uri = Uri.parse('${Config.apiBaseUrl}$endpoint');
+      log('🌐 URL: $uri');
+
+      final response = await http
+          .put(
+            uri,
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+            body: endpoint.contains('/status')
+                ? jsonEncode({'status': status})
+                : jsonEncode({}),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      log('📡 Response: ${response.statusCode}');
+      log('📦 Response Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          log('✅ Status updated successfully');
+          log('✅ ========== updateOrderStatus COMPLETE ==========');
+          return;
+        } else {
+          throw Exception(data['message'] ?? 'Failed to update status');
+        }
+      } else if (response.statusCode == 404) {
+        log('❌ Order not found: $orderId');
+        throw Exception('Order not found');
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      log('❌ Error: $e');
+      log('❌ ========== updateOrderStatus FAILED ==========');
+      rethrow;
+    }
+  }
+
+  /// Add note to order
+  /// PUT /api/seller/orders/:orderId/notes
+  Future<void> addOrderNote(String orderId, String message) async {
+    log('📝 Adding note to order: $orderId');
+
+    try {
+      final token = storageService.getToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('Please login again');
       }
 
       final uri = Uri.parse(
-        '${Config.apiBaseUrl}/seller/orders/$orderId/status',
+        '${Config.apiBaseUrl}/seller/orders/$orderId/notes',
       );
       log('🌐 URL: $uri');
 
@@ -172,37 +241,26 @@ class ApiOrderRepository implements OrderRepository {
               'Authorization': 'Bearer $token',
               'Content-Type': 'application/json',
             },
-            body: jsonEncode({'status': status}),
+            body: jsonEncode({'message': message}),
           )
           .timeout(const Duration(seconds: 30));
 
       log('📡 Response: ${response.statusCode}');
       log('📦 Response Body: ${response.body}');
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
-          log('✅ Status updated successfully');
-          log('✅ ========== updateOrderStatus COMPLETE ==========');
+          log('✅ Note added successfully');
           return;
         } else {
-          if (isMongoId && data['message']?.contains('not found')) {
-            log('❌ API Error: Order not found with MongoDB _id');
-            log('💡 Try: Use orderId (ORD-...) instead of _id');
-            throw Exception('Use order ID (ORD-...) instead of internal ID');
-          }
-          throw Exception(data['message'] ?? 'Failed to update status');
+          throw Exception(data['message'] ?? 'Failed to add note');
         }
-      } else if (response.statusCode == 404) {
-        log('❌ Order not found: $orderId');
-        log('💡 The API expects orderId (ORD-...), not MongoDB _id');
-        throw Exception('Order not found. Use order ID (ORD-...)');
       } else {
         throw Exception('Server error: ${response.statusCode}');
       }
     } catch (e) {
-      log('❌ Error: $e');
-      log('❌ ========== updateOrderStatus FAILED ==========');
+      log('❌ Error adding note: $e');
       rethrow;
     }
   }

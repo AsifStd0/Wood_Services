@@ -124,13 +124,13 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
               ),
             )
           : CustomButtonUtils.login(
-              backgroundColor: (_selectedRating > 0 &&
-                      _reviewController.text.isNotEmpty)
+              backgroundColor:
+                  (_selectedRating > 0 && _reviewController.text.isNotEmpty)
                   ? AppColors.brightOrange
                   : Colors.grey.shade400,
               title: 'Submit Review',
-              onPressed: (_selectedRating > 0 &&
-                      _reviewController.text.isNotEmpty)
+              onPressed:
+                  (_selectedRating > 0 && _reviewController.text.isNotEmpty)
                   ? _submitReview
                   : null,
             ),
@@ -166,19 +166,18 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
         listen: false,
       );
 
-      // Convert File images to String paths for API
-      final imagePaths = _selectedImages.map((file) => file.path).toList();
-
-      developer.log('📝 Submitting review for order: ${widget.orderId}');
+      developer.log(
+        '📝 --------Submitting review for product: ${widget.buyerProduct.id}',
+      );
       developer.log('   Rating: $_selectedRating');
       developer.log('   Comment: ${_reviewController.text}');
-      developer.log('   Images: ${imagePaths.length}');
 
+      // ✅ USE THE CORRECT METHOD WITH SERVICE ID AND SELLER ID
       final result = await reviewProvider.submitOrderReview(
         orderId: widget.orderId,
         rating: _selectedRating,
         comment: _reviewController.text.trim(),
-        images: imagePaths.isEmpty ? null : imagePaths,
+        images: _selectedImages.map((image) => image.path).toList(),
       );
 
       setState(() => _isLoading = false);
@@ -231,9 +230,7 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
         final filesToAdd = pickedFiles.take(remainingSlots).toList();
 
         setState(() {
-          _selectedImages.addAll(
-            filesToAdd.map((xFile) => File(xFile.path)),
-          );
+          _selectedImages.addAll(filesToAdd.map((xFile) => File(xFile.path)));
         });
 
         if (pickedFiles.length > remainingSlots) {
@@ -270,10 +267,7 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
       children: [
         const Text(
           'Upload Images (Optional)',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 6),
         Text(
@@ -337,9 +331,7 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
           ElevatedButton.icon(
             onPressed: _pickImages,
             icon: const Icon(Icons.add_photo_alternate),
-            label: Text(
-              'Add Images (${_selectedImages.length}/5)',
-            ),
+            label: Text('Add Images (${_selectedImages.length}/5)'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey.shade200,
               foregroundColor: Colors.black87,

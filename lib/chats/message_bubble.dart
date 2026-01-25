@@ -4,21 +4,21 @@ import 'package:intl/intl.dart';
 
 class MessageBubble extends StatelessWidget {
   final BuyerChatModel message;
-  final bool isMe;
+  final bool isSentByMe;
 
-  const MessageBubble({super.key, required this.message, required this.isMe});
+  const MessageBubble({super.key, required this.message, required this.isSentByMe});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: isMe
+        mainAxisAlignment: isSentByMe
             ? MainAxisAlignment.end
             : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (!isMe) ...[
+          if (!isSentByMe) ...[
             Container(
               width: 28,
               height: 28,
@@ -41,14 +41,14 @@ class MessageBubble extends StatelessWidget {
               ),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isMe ? const Color(0xFF667EEA) : Colors.grey[100],
+                color: isSentByMe ? const Color(0xFF667EEA) : Colors.grey[100],
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(20),
                   topRight: const Radius.circular(20),
-                  bottomLeft: isMe
+                  bottomLeft: isSentByMe
                       ? const Radius.circular(20)
                       : const Radius.circular(4),
-                  bottomRight: isMe
+                  bottomRight: isSentByMe
                       ? const Radius.circular(4)
                       : const Radius.circular(20),
                 ),
@@ -63,7 +63,7 @@ class MessageBubble extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (!isMe)
+                  if (!isSentByMe)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
@@ -78,7 +78,7 @@ class MessageBubble extends StatelessWidget {
                   Text(
                     message.message,
                     style: TextStyle(
-                      color: isMe ? Colors.white : Colors.black87,
+                      color: isSentByMe ? Colors.white : Colors.black87,
                       fontSize: 14,
                     ),
                   ),
@@ -89,16 +89,16 @@ class MessageBubble extends StatelessWidget {
                       Text(
                         _formatTime(message.createdAt),
                         style: TextStyle(
-                          color: isMe ? Colors.white70 : Colors.grey,
+                          color: isSentByMe ? Colors.white70 : Colors.grey,
                           fontSize: 10,
                         ),
                       ),
-                      if (isMe) ...[
+                      if (isSentByMe) ...[
                         const SizedBox(width: 4),
                         Icon(
                           message.isRead ? Icons.done_all : Icons.done,
                           size: 12,
-                          color: isMe
+                          color: isSentByMe
                               ? (message.isRead
                                     ? Colors.blue[100]
                                     : Colors.white70)
@@ -111,7 +111,7 @@ class MessageBubble extends StatelessWidget {
               ),
             ),
           ),
-          if (isMe) const SizedBox(width: 8),
+          if (isSentByMe) const SizedBox(width: 8),
         ],
       ),
     );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:wood_service/buyer_seller_chat.dart';
+import 'package:wood_service/chats/Buyer/buyer_outer_messages_screen.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/home_screen.dart';
 import 'package:wood_service/views/Buyer/Cart/cart_screen.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_screen.dart';
@@ -11,7 +11,7 @@ class MainScreenProvider extends ChangeNotifier {
     BuyerHomeScreen(),
     const FavoritesScreen(),
     const BuyerCartScreen(),
-    const ChatBuyer(),
+    const BuyerOuterMessagesScreen(),
     const ProfileScreen(),
   ];
 

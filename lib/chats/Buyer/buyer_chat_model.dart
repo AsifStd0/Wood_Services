@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 class BuyerChatModel {
   String id;
   String chatId;
@@ -15,6 +17,7 @@ class BuyerChatModel {
   String? productId;
   String? orderId;
   List<ChatAttachment> attachments;
+  bool isSentByMe; // Add this field
 
   BuyerChatModel({
     required this.id,
@@ -33,30 +36,53 @@ class BuyerChatModel {
     this.productId,
     this.orderId,
     this.attachments = const [],
+    this.isSentByMe = false, // Add this
   });
 
-  factory BuyerChatModel.fromJson(Map<String, dynamic> json) {
+  factory BuyerChatModel.fromJson(
+    Map<String, dynamic> json, {
+    String? currentUserId,
+  }) {
+    // Extract sender info from the API response structure
+    final senderId = json['senderId']?.toString() ?? '';
+    final senderName = json['senderName']?.toString() ?? '';
+
+    // Determine if sent by current user using isSentByMe from API or by comparing IDs
+    final isSentByMe =
+        json['isSentByMe'] ??
+        (currentUserId != null && senderId == currentUserId);
+
+    // Determine sender/receiver types based on isSentByMe
+    // If isSentByMe is true, sender is Buyer, receiver is Seller
+    // If isSentByMe is false, sender is Seller, receiver is Buyer
+    final senderType =
+        json['senderType']?.toString() ?? (isSentByMe ? 'Buyer' : 'Seller');
+    final receiverType =
+        json['receiverType']?.toString() ?? (isSentByMe ? 'Seller' : 'Buyer');
+
     return BuyerChatModel(
-      id: json['_id'] ?? json['id'] ?? '',
-      chatId: json['chatId'] ?? '',
-      senderId: json['senderId'] ?? '',
-      senderName: json['senderName'] ?? '',
-      senderType: json['senderType'] ?? json['senderModel'] ?? '',
-      receiverId: json['receiverId'] ?? '',
-      receiverName: json['receiverName'] ?? '',
-      receiverType: json['receiverType'] ?? json['receiverModel'] ?? '',
-      message: json['message'] ?? '',
+      id: json['_id']?.toString() ?? '',
+      chatId: json['chatId']?.toString() ?? json['_id']?.toString() ?? '',
+      senderId: senderId,
+      senderName: senderName,
+      senderType: senderType,
+      receiverId: json['receiverId']?.toString() ?? '',
+      receiverName: json['receiverName']?.toString() ?? '',
+      receiverType: receiverType,
+      message: json['message']?.toString() ?? '',
       messageType: json['messageType'] ?? 'text',
       isRead: json['isRead'] ?? false,
+      isSentByMe: isSentByMe,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
       readAt: json['readAt'] != null ? DateTime.parse(json['readAt']) : null,
-      productId: json['productId'],
-      orderId: json['orderId'],
-      attachments: json['attachments'] != null
+      orderId: json['orderId']?.toString(),
+      attachments: json['attachments'] != null && json['attachments'] is List
           ? List<ChatAttachment>.from(
-              json['attachments'].map((x) => ChatAttachment.fromJson(x)),
+              (json['attachments'] as List).map(
+                (x) => ChatAttachment.fromJson(x),
+              ),
             )
           : [],
     );
@@ -76,7 +102,7 @@ class BuyerChatModel {
     };
   }
 
-  bool get isSentByMe => senderType == 'Buyer'; // Adjust based on user role
+  // bool get isSentByMe => senderType == 'Buyer'; // Adjust based on user role
 
   // ✅ ADDED: copyWith method
   BuyerChatModel copyWith({
@@ -91,6 +117,7 @@ class BuyerChatModel {
     String? message,
     String? messageType,
     bool? isRead,
+    bool? isSentByMe,
     DateTime? createdAt,
     DateTime? readAt,
     String? productId,
@@ -109,6 +136,7 @@ class BuyerChatModel {
       message: message ?? this.message,
       messageType: messageType ?? this.messageType,
       isRead: isRead ?? this.isRead,
+      isSentByMe: isSentByMe ?? this.isSentByMe,
       createdAt: createdAt ?? this.createdAt,
       readAt: readAt ?? this.readAt,
       productId: productId ?? this.productId,
@@ -170,6 +198,7 @@ class ChatRoom {
   String? productId;
   String? orderId;
   Map<String, dynamic>? otherParticipant;
+  String? _currentUserId; // Add this
 
   ChatRoom({
     required this.id,
@@ -181,70 +210,161 @@ class ChatRoom {
     this.productId,
     this.orderId,
     this.otherParticipant,
-  });
+    String? currentUserId, // Add this parameter
+  }) : _currentUserId = currentUserId;
 
-  // In chat_messages.dart - Update the ChatRoom.fromJson factory
-  factory ChatRoom.fromJson(Map<String, dynamic> json) {
-    // Handle productId - it could be String or Map
-    String? productIdString;
-    if (json['productId'] != null) {
-      if (json['productId'] is String) {
-        productIdString = json['productId'];
-      } else if (json['productId'] is Map) {
-        // Extract the ID from the product object
-        productIdString =
-            json['productId']['_id']?.toString() ??
-            json['productId']['id']?.toString();
+  // Updated ChatRoom.fromJson with more logging
+  factory ChatRoom.fromJson(
+    Map<String, dynamic> json, {
+    String? currentUserId,
+  }) {
+    log('🔄 Parsing ChatRoom from JSON');
+    log('JSON keys: ${json.keys}');
+
+    // Extract basic info
+    final chatId = json['_id']?.toString() ?? '';
+    log('Chat ID: $chatId');
+
+    // Handle orderId
+    String? orderIdString;
+    if (json['orderId'] != null) {
+      log('orderId type: ${json['orderId'].runtimeType}');
+      log('orderId value: ${json['orderId']}');
+
+      if (json['orderId'] is String) {
+        orderIdString = json['orderId'];
+      } else if (json['orderId'] is Map) {
+        orderIdString = json['orderId']['_id']?.toString();
+      }
+      log('Parsed orderId: $orderIdString');
+    }
+
+    // Handle lastMessage from messages array
+    String? lastMessageText = '';
+    DateTime updatedAt = DateTime.now();
+
+    if (json['messages'] != null && json['messages'] is List) {
+      final messages = json['messages'] as List;
+      log('Found ${messages.length} messages in chat');
+
+      if (messages.isNotEmpty) {
+        final lastMessage = messages.last;
+        log('Last message: $lastMessage');
+
+        if (lastMessage is Map) {
+          lastMessageText = lastMessage['message']?.toString() ?? '';
+          final createdAt = lastMessage['createdAt']?.toString();
+          if (createdAt != null) {
+            try {
+              updatedAt = DateTime.parse(createdAt);
+            } catch (e) {
+              log('Error parsing createdAt: $e');
+            }
+          }
+        }
       }
     }
 
-    // Handle lastMessage similarly
-    String? lastMessageString;
-    if (json['lastMessage'] != null) {
-      if (json['lastMessage'] is String) {
-        lastMessageString = json['lastMessage'];
-      } else if (json['lastMessage'] is Map) {
-        lastMessageString = json['lastMessage']['_id']?.toString();
-      }
+    log('Last message text: $lastMessageText');
+    log('Updated at: $updatedAt');
+
+    // Build participants
+    List<ChatParticipant> participants = [];
+
+    // Add buyer participant
+    if (json['buyerId'] != null) {
+      log('BuyerId found: ${json['buyerId']}');
+      final buyer = json['buyerId'] is Map
+          ? json['buyerId']
+          : {'_id': json['buyerId']};
+      participants.add(
+        ChatParticipant(
+          userId: buyer['_id']?.toString() ?? '',
+          userType: 'Buyer',
+          name: buyer['name']?.toString() ?? 'Unknown Buyer',
+          profileImage: buyer['profileImage']?.toString(),
+          lastSeen: updatedAt,
+        ),
+      );
     }
+
+    // Add seller participant
+    if (json['sellerId'] != null) {
+      log('SellerId found: ${json['sellerId']}');
+      final seller = json['sellerId'] is Map
+          ? json['sellerId']
+          : {'_id': json['sellerId']};
+      participants.add(
+        ChatParticipant(
+          userId: seller['_id']?.toString() ?? '',
+          userType: 'Seller',
+          name: seller['name']?.toString() ?? 'Unknown Seller',
+          profileImage: seller['profileImage']?.toString(),
+          lastSeen: updatedAt,
+        ),
+      );
+    }
+
+    log('Created ${participants.length} participants');
 
     return ChatRoom(
-      id: json['_id'] ?? json['id'] ?? '',
-      participants: json['participants'] != null
-          ? List<ChatParticipant>.from(
-              json['participants'].map((x) => ChatParticipant.fromJson(x)),
-            )
-          : [],
-      lastMessage: lastMessageString, // Use the extracted string
-      lastMessageText: json['lastMessageText'] ?? '',
-      unreadCount: json['myUnreadCount'] ?? json['unreadCount'] ?? 0,
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
-          : DateTime.now(),
-      productId: productIdString, // Use the extracted string
-      orderId: json['orderId'],
-      otherParticipant: json['otherParticipant'],
+      id: chatId,
+      participants: participants,
+      lastMessage: lastMessageText,
+      lastMessageText: lastMessageText,
+      unreadCount: json['unreadCount'] ?? 0,
+      updatedAt: updatedAt,
+      productId: json['productId']?.toString(),
+      orderId: orderIdString,
+      currentUserId: currentUserId, // Pass current user ID
     );
   }
 
   String get otherUserName {
-    if (otherParticipant != null) {
-      return otherParticipant!['details']['fullName'] ??
-          otherParticipant!['details']['shopName'] ??
-          otherParticipant!['details']['businessName'] ??
-          'Unknown';
+    log('🔄 Getting otherUserName for chat $id');
+    log('  _currentUserId: $_currentUserId');
+    log('  participants: ${participants.length}');
+
+    for (var p in participants) {
+      log('    - ${p.name} (${p.userType}) ID: ${p.userId}');
     }
+
+    if (otherParticipant != null) {
+      final name =
+          otherParticipant!['details']?['fullName'] ??
+          otherParticipant!['details']?['shopName'] ??
+          otherParticipant!['details']?['businessName'] ??
+          'Unknown';
+      log('  Using otherParticipant: $name');
+      return name;
+    }
+
+    // If we have currentUserId, find the other participant
+    if (_currentUserId != null && participants.isNotEmpty) {
+      try {
+        final other = participants.firstWhere(
+          (p) => p.userId != _currentUserId,
+          orElse: () => participants.first,
+        );
+        log('  Found other by ID: ${other.name}');
+        return other.name;
+      } catch (e) {
+        log('  Error finding by ID: $e');
+      }
+    }
+
+    // Fallback: return the participant that's not the current user
     if (participants.length > 1) {
+      log('  Using participant[1]: ${participants[1].name}');
       return participants[1].name;
     }
-    return 'Unknown';
-  }
-
-  String? get otherUserImage {
-    if (otherParticipant != null) {
-      return otherParticipant!['details']['profileImage']?['url'];
+    if (participants.isNotEmpty) {
+      log('  Using first participant: ${participants.first.name}');
+      return participants.first.name;
     }
-    return null;
+
+    log('  No participants found, returning Unknown');
+    return 'Unknown';
   }
 
   bool get otherUserIsOnline {
@@ -300,11 +420,14 @@ class ChatParticipant {
   });
 
   factory ChatParticipant.fromJson(Map<String, dynamic> json) {
+    log('🎭 Parsing ChatParticipant');
+    log('Participant JSON: $json');
+
     return ChatParticipant(
-      userId: json['userId'] ?? '',
-      userType: json['userType'] ?? '',
-      name: json['name'] ?? '',
-      profileImage: json['profileImage'],
+      userId: json['userId']?.toString() ?? json['_id']?.toString() ?? '',
+      userType: json['userType'] ?? 'Unknown',
+      name: json['name']?.toString() ?? 'Unknown User',
+      profileImage: json['profileImage']?.toString(),
       lastSeen: json['lastSeen'] != null
           ? DateTime.parse(json['lastSeen'])
           : DateTime.now(),

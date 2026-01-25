@@ -130,8 +130,8 @@ class AppColors {
         return Colors.red;
       case VisitStatus.declined:
         return Colors.red; // Same as rejected
-      case VisitStatus.cancelled:
-        return Colors.grey;
+      // case VisitStatus.cancelled:
+      //   return Colors.grey;
       case VisitStatus.completed:
         return Colors.blue;
       case VisitStatus.noshow:
