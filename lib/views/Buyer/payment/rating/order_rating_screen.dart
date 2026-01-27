@@ -167,10 +167,8 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
       );
 
       developer.log(
-        '📝 --------Submitting review for product: ${widget.buyerProduct.id}',
+        '📝 --------Submitting review for product: ${widget.buyerProduct.id} -----  Rating: $_selectedRating  Comment: ${_reviewController.text}',
       );
-      developer.log('   Rating: $_selectedRating');
-      developer.log('   Comment: ${_reviewController.text}');
 
       // ✅ USE THE CORRECT METHOD WITH SERVICE ID AND SELLER ID
       final result = await reviewProvider.submitOrderReview(

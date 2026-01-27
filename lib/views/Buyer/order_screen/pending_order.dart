@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/views/Buyer/Model/buyer_order_model.dart';
 import 'package:wood_service/views/Buyer/order_screen/buyer_order_provider.dart';
+import 'package:wood_service/widgets/custom_button.dart';
 
 class PendingOrdersTab extends StatelessWidget {
   final List<BuyerOrder> orders;
@@ -107,6 +110,7 @@ class PendingOrdersTab extends StatelessWidget {
             const SizedBox(height: 8),
 
             // Order Details
+            // In your _buildOrderCard method - Row with calendar and chat icon
             Row(
               children: [
                 Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
@@ -115,20 +119,12 @@ class PendingOrdersTab extends StatelessWidget {
                   'Ordered: ${order.formattedDate}',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
-                // GestureDetector(onTap: (){
-                //   provider.startChat(context, order);
-                // }, child: Icon(Icons.chat, size: 16, color: Colors.grey[600])),
-                IconButton(
-                  onPressed: () {
-                    provider.startChat(context, order);
-                  },
-                  icon: Icon(Icons.chat, size: 16, color: Colors.grey[600]),
-                ),
               ],
             ),
             const SizedBox(height: 12),
 
             // Price and Actions
+            // Price and Actions Row - Add chat button here
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -142,21 +138,27 @@ class PendingOrdersTab extends StatelessWidget {
                 ),
                 Row(
                   children: [
-                    ElevatedButton(
+                    // Chat Button
+                    IconButton(
+                      onPressed: () => provider.startChat(context, order),
+                      icon: Icon(Icons.chat, color: Colors.blue),
+                      tooltip: 'Chat with seller',
+                    ),
+                    const SizedBox(width: 8),
+                    CustomButtonUtils.login(
+                      width: 80,
+                      height: 40,
                       onPressed: () => _cancelOrder(context, order),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      child: const Text(
+                      child: Text(
                         'Cancel',
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
+
                     const SizedBox(width: 8),
                     OutlinedButton(
                       onPressed: () => _viewDetails(context, order),
-                      child: const Text('View Details'),
+                      child: const Text('Details'),
                     ),
                   ],
                 ),
@@ -180,8 +182,6 @@ class PendingOrdersTab extends StatelessWidget {
       return;
     }
 
-    String? cancelReason = 'Changed my mind'; // Default reason
-
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -191,49 +191,8 @@ class PendingOrdersTab extends StatelessWidget {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Why are you cancelling this order?'),
+                const Text('Are you Want to cancelling this order?'),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: cancelReason,
-                  hint: const Text('Select reason'),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'Changed my mind',
-                      child: Text('Changed my mind'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Found better price',
-                      child: Text('Found better price'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Order placed by mistake',
-                      child: Text('Order placed by mistake'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Shipping takes too long',
-                      child: Text('Shipping takes too long'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Other',
-                      child: Text('Other reason'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      cancelReason = value;
-                    });
-                  },
-                ),
-                if (cancelReason == 'Other') const SizedBox(height: 8),
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Please specify',
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (value) {
-                    cancelReason = value;
-                  },
-                ),
               ],
             ),
             actions: [
@@ -242,9 +201,7 @@ class PendingOrdersTab extends StatelessWidget {
                 child: const Text('Keep Order'),
               ),
               ElevatedButton(
-                onPressed: cancelReason != null && cancelReason!.isNotEmpty
-                    ? () => _confirmCancelOrder(context, order, cancelReason!)
-                    : null,
+                onPressed: () => _confirmCancelOrder(context, order),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 child: const Text('Cancel Order'),
               ),
@@ -255,11 +212,7 @@ class PendingOrdersTab extends StatelessWidget {
     );
   }
 
-  void _confirmCancelOrder(
-    BuildContext context,
-    BuyerOrder order,
-    String reason,
-  ) async {
+  void _confirmCancelOrder(BuildContext context, BuyerOrder order) async {
     Navigator.pop(context); // Close dialog
 
     final provider = context.read<BuyerOrderProvider>();
@@ -288,7 +241,7 @@ class PendingOrdersTab extends StatelessWidget {
       );
 
       // Call API to cancel order
-      final success = await provider.cancelOrder(order.orderId, reason);
+      final success = await provider.cancelOrder(order.orderId);
 
       // Remove loading snackbar
       ScaffoldMessenger.of(context).hideCurrentSnackBar();

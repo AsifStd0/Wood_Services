@@ -8,9 +8,9 @@ import 'package:wood_service/views/Buyer/Model/buyer_order_model.dart';
 
 abstract class BuyerOrderRepository {
   Future<List<BuyerOrder>> getOrders({String? status});
-  Future<BuyerOrder> getOrderDetails(String orderId);
+  // Future<BuyerOrder> getOrderDetails(String orderId);
   Future<Map<String, int>> getOrderSummary();
-  Future<void> cancelOrder(String orderId, String reason);
+  Future<void> cancelOrder(String orderId);
   Future<void> markAsReceived(String orderId);
   Future<void> submitReview(
     String orderId, {
@@ -35,8 +35,8 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
     try {
       final token = storageService.getToken();
       if (token == null) throw Exception('Please login again');
-
-      final uri = Uri.parse('$baseUrl/buyer/orders');
+      // ! ****** Seller
+      final uri = Uri.parse('$baseUrl/seller/orders');
 
       log('📤 Fetching orders from: $uri');
 
@@ -138,46 +138,45 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
     }
   }
 
+  // @override
+  // Future<BuyerOrder> getOrderDetails(String orderId) async {
+  //   try {
+  //     final token = storageService.getToken();
+  //     if (token == null) throw Exception('Please login again');
+
+  //     final response = await http
+  //         .get(
+  //           Uri.parse('$baseUrl/buyer/orders/$orderId'),
+  //           headers: {'Authorization': 'Bearer $token'},
+  //         )
+  //         .timeout(const Duration(seconds: 30));
+
+  //     if (response.statusCode == 200) {
+  //       final data = jsonDecode(response.body);
+  //       if (data['success'] == true) {
+  //         // New API structure: data.data.order or data.order
+  //         final orderData =
+  //             data['data']?['order'] ?? data['order'] ?? data['data'];
+  //         return BuyerOrder.fromJson(orderData);
+  //       } else {
+  //         throw Exception(data['message'] ?? 'Failed to fetch order details');
+  //       }
+  //     } else {
+  //       throw Exception('Server error: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     log('❌ Error fetching order details: $e');
+  //     rethrow;
+  //   }
+  // }
+
   @override
-  Future<BuyerOrder> getOrderDetails(String orderId) async {
-    try {
-      final token = storageService.getToken();
-      if (token == null) throw Exception('Please login again');
-
-      final response = await http
-          .get(
-            Uri.parse('$baseUrl/buyer/orders/$orderId'),
-            headers: {'Authorization': 'Bearer $token'},
-          )
-          .timeout(const Duration(seconds: 30));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          // New API structure: data.data.order or data.order
-          final orderData =
-              data['data']?['order'] ?? data['order'] ?? data['data'];
-          return BuyerOrder.fromJson(orderData);
-        } else {
-          throw Exception(data['message'] ?? 'Failed to fetch order details');
-        }
-      } else {
-        throw Exception('Server error: ${response.statusCode}');
-      }
-    } catch (e) {
-      log('❌ Error fetching order details: $e');
-      rethrow;
-    }
-  }
-
-  @override
-  Future<void> cancelOrder(String orderId, String reason) async {
+  Future<void> cancelOrder(String orderId) async {
     try {
       final token = storageService.getToken();
       if (token == null) throw Exception('Please login again');
 
       log('❌ Cancelling order: $orderId');
-      log('   Reason: $reason');
 
       final url = '$baseUrl/buyer/orders/$orderId';
       log('📤 Sending PUT request to: $url');
@@ -189,7 +188,7 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
               'Authorization': 'Bearer $token',
               'Content-Type': 'application/json',
             },
-            body: jsonEncode({'status': 'cancelled', 'reason': reason}),
+            body: jsonEncode({'status': 'cancelled'}),
           )
           .timeout(const Duration(seconds: 30));
 

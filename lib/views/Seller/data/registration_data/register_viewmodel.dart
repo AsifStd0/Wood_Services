@@ -431,6 +431,7 @@ class RegisterViewModel extends ChangeNotifier {
       password: passwordController.text,
       phone: phoneNumber, // Now int
       role: role,
+
       address: addressController.text.trim().isNotEmpty
           ? addressController.text.trim()
           : null,
@@ -505,6 +506,7 @@ class RegisterViewModel extends ChangeNotifier {
       log('   ID: ${user.id}');
       log('   Name: ${user.name}');
       log('   Email: ${user.email}');
+      log('   Address --------------------------------------: ${user.address}');
       log(
         '   Phone: ${user.phone} (Type: ${user.phone.runtimeType})',
       ); // Should show int
@@ -580,10 +582,6 @@ class RegisterViewModel extends ChangeNotifier {
         log('   $key: $value (Type: ${value.runtimeType})');
       });
 
-      log(
-        '🔑 Token extracted (first 20 chars): ${token.substring(0, min(token.length, 20))}...',
-      );
-
       // Create UserModel from API response
       log('🔄 Creating UserModel...');
       final user = UserModel.fromJson(userData);
@@ -646,7 +644,6 @@ class RegisterViewModel extends ChangeNotifier {
   }
 
   // Helper function
-  int min(int a, int b) => a < b ? a : b;
   Future<void> handleSubmission(BuildContext context, String role) async {
     final viewModel = context.read<RegisterViewModel>();
 
@@ -701,6 +698,7 @@ class RegisterViewModel extends ChangeNotifier {
         );
       } else if (role == 'buyer') {
         Navigator.of(
+          // ignore: use_build_context_synchronously
           context,
         ).pushReplacement(MaterialPageRoute(builder: (_) => BuyerMainScreen()));
       } else {

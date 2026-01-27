@@ -9,16 +9,8 @@ import 'package:wood_service/core/services/new_storage/unified_local_storage_ser
 
 class BuyerChatProvider extends ChangeNotifier {
   final BuyerChatService _chatService;
-
-  BuyerChatProvider({required BuyerChatService chatService})
-    : _chatService = chatService;
-
-  // final BuyerChatService _chatService = locator<BuyerChatService>();
   final UnifiedLocalStorageServiceImpl _storage =
       locator<UnifiedLocalStorageServiceImpl>();
-
-  // Socket service is optional - comment out if not available
-  // final BuyerSocketService? _socketService;
 
   List<ChatRoom> _chats = [];
   List<BuyerChatModel> _currentMessages = [];
@@ -26,9 +18,8 @@ class BuyerChatProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool _isSending = false;
   String? _error;
-  int _unreadCount = 0;
 
-  // Store current user info
+  // Current user info
   Map<String, dynamic>? _currentUser;
 
   // Getters
@@ -38,35 +29,35 @@ class BuyerChatProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isSending => _isSending;
   String? get error => _error;
-  int get unreadCount => _unreadCount;
+
+  BuyerChatProvider({required BuyerChatService chatService})
+    : _chatService = chatService;
 
   Future<void> initialize() async {
     try {
-      // Get and store current user info from storage
       await _loadCurrentUser();
-
       await loadChats();
     } catch (e) {
-      _error = 'Failed to initialize chat: $e';
+      _error = 'Failed to initialize: $e';
+      log('Error initializing chat: $e');
       notifyListeners();
     }
   }
 
   Future<void> _loadCurrentUser() async {
     try {
-      final token = _storage.getToken();
       final userData = _storage.getUserData();
-
       _currentUser = {
-        'userId': userData?['_id']?.toString() ?? userData?['id']?.toString(),
-        'userType': userData?['userType'] ?? 'Buyer',
-        'token': token ?? '',
+        'userId':
+            userData?['_id']?.toString() ?? userData?['id']?.toString() ?? '',
+        'userType': userData?['userType']?.toString() ?? 'Buyer',
         'userName':
-            userData?['fullName'] ??
-            userData?['businessName'] ??
-            userData?['name'] ??
+            userData?['fullName']?.toString() ??
+            userData?['businessName']?.toString() ??
+            userData?['name']?.toString() ??
             'User',
       };
+      log('Current user loaded: ${_currentUser?['userId']}');
     } catch (e) {
       log('Error loading current user: $e');
     }
@@ -79,8 +70,10 @@ class BuyerChatProvider extends ChangeNotifier {
     try {
       _chats = await _chatService.getChats();
       _chats.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      log('Loaded ${_chats.length} chats');
     } catch (e) {
-      _error = 'Failed to load chats';
+      _error = 'Failed to load chats: $e';
+      log('Error loading chats: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -89,31 +82,25 @@ class BuyerChatProvider extends ChangeNotifier {
 
   Future<void> openChat({
     required String sellerId,
-    required String buyerId,
-    String? productId,
-    String? orderId,
+    required String orderId,
   }) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final session = await _chatService.startChat(
+      log('🔄 Opening chat - Seller: $sellerId, Order: $orderId');
+
+      final session = await _chatService.openChat(
         sellerId: sellerId,
-        buyerId: buyerId,
-        productId: productId,
         orderId: orderId,
       );
 
       _currentChat = session.chat;
       _currentMessages = session.messages;
 
-      if (_currentChat != null) {
-        // Socket join is optional
-        // _socketService?.joinChat(_currentChat!.id);
-        await _chatService.markAsRead(_currentChat!.id);
-      }
-
-      await _updateUnreadCount();
+      log(
+        '✅ Opened chat ${_currentChat?.id} with ${_currentMessages.length} messages',
+      );
     } catch (e) {
       _error = 'Failed to open chat: $e';
       log('❌ Error opening chat: $e');
@@ -123,57 +110,49 @@ class BuyerChatProvider extends ChangeNotifier {
     }
   }
 
-  // ✅ Get current user info
-  Future<Map<String, dynamic>> getCurrentUserInfo() async {
-    if (_currentUser != null) return _currentUser!;
-
-    await _loadCurrentUser();
-    return _currentUser ?? {};
-  }
-
-  // ✅ Get current user ID
-  Future<String?> getCurrentUserId() async {
-    final user = await getCurrentUserInfo();
-    return user['userId'];
-  }
-
-  // ✅ Get current user type
-  Future<String> getCurrentUserType() async {
-    final user = await getCurrentUserInfo();
-    return user['userType'];
-  }
-
-  // ✅ Get current user name
-  Future<String?> getCurrentUserName() async {
-    final user = await getCurrentUserInfo();
-    return user['userName'];
-  }
-
   Future<void> sendMessage(
-    String text, {
-    List<Map<String, dynamic>>? attachments,
+    String message, {
     String? orderId,
+    String? sellerId, // Add sellerId parameter
+    List<Map<String, dynamic>>? attachments,
   }) async {
-    log('111 2222 orderId: ${_currentChat!.id}');
-    if (text.trim().isEmpty || _currentChat == null) return;
+    if (message.trim().isEmpty &&
+        (attachments == null || attachments.isEmpty)) {
+      return;
+    }
+    // Use current chat's orderId or provided orderId
+    final targetOrderId = _currentChat?.orderId ?? orderId;
+    if (targetOrderId == null) {
+      _error = 'No orderId available for sending message';
+      notifyListeners();
+      return;
+    }
+
+    // Get sellerId from current chat or parameter
+    final targetSellerId = _getSellerIdFromChat() ?? sellerId;
+    if (targetSellerId == null) {
+      _error = 'No sellerId available for sending message';
+      notifyListeners();
+      return;
+    }
 
     _isSending = true;
     notifyListeners();
 
     try {
-      log('111 2222 orderId: ${_currentChat!.id}');
-      final message = await _chatService.sendMessage(
-        // ! *****
-        orderId: orderId.toString(),
-        message: text.trim(),
+      final sentMessage = await _chatService.sendMessage(
+        orderId: targetOrderId,
+        sellerId: targetSellerId, // Pass sellerId
+        message: message.trim(),
         attachments: attachments,
       );
 
-      _currentMessages.add(message);
-      // Update chat list
-      _updateChatList(text.trim());
+      _currentMessages.add(sentMessage);
 
-      notifyListeners();
+      // Update chat list
+      _updateChatList(message.trim());
+
+      log('✅ Message sent successfully');
     } catch (e) {
       _error = 'Failed to send message: $e';
       log('❌ Error sending message: $e');
@@ -183,76 +162,19 @@ class BuyerChatProvider extends ChangeNotifier {
     }
   }
 
-  // ✅ Send typing indicator (optional - requires socket)
-  Future<void> sendTypingIndicator(bool isTyping) async {
-    if (_currentChat == null) return;
-
-    // Socket typing indicator is optional
-    // try {
-    //   final currentUserId = await getCurrentUserId();
-    //   if (currentUserId == null) return;
-    //
-    //   final otherParticipant = _currentChat!.participants.firstWhere(
-    //     (p) => p.userId != currentUserId,
-    //     orElse: () => _currentChat!.participants.first,
-    //   );
-    //
-    //   _socketService?.sendTypingIndicator(
-    //     chatId: _currentChat!.id,
-    //     receiverId: otherParticipant.userId,
-    //     isTyping: isTyping,
-    //   );
-    // } catch (e) {
-    //   log('Error sending typing indicator: $e');
-    // }
-  }
-
-  // ✅ Get other participant
-  ChatParticipant _getOtherParticipant() {
+  // Helper method to extract sellerId from current chat
+  String? _getSellerIdFromChat() {
     if (_currentChat == null || _currentChat!.participants.isEmpty) {
-      throw Exception('No chat or participants found');
+      return null;
     }
 
-    final currentUserId = _currentUser?['userId'];
-    if (currentUserId == null) {
-      return _currentChat!.participants.first;
-    }
-
-    return _currentChat!.participants.firstWhere(
-      (p) => p.userId != currentUserId,
+    // Find seller participant
+    final seller = _currentChat!.participants.firstWhere(
+      (p) => p.userType == 'Seller',
       orElse: () => _currentChat!.participants.first,
     );
-  }
 
-  // ✅ Handle new message
-  Future<void> _handleNewMessage(BuyerChatModel message) async {
-    if (_currentChat?.id == message.chatId) {
-      _currentMessages.add(message);
-
-      // Mark as read if it's for current user
-      final currentUserId = await getCurrentUserId();
-      if (message.receiverId == currentUserId) {
-        await _chatService.markAsRead(message.chatId);
-      }
-
-      notifyListeners();
-    }
-
-    await _updateUnreadCount();
-  }
-
-  void _handleTyping(Map<String, dynamic> data) {
-    // Handle typing indicator
-    notifyListeners();
-  }
-
-  Future<void> _updateUnreadCount() async {
-    try {
-      _unreadCount = await _chatService.getUnreadCount();
-      notifyListeners();
-    } catch (e) {
-      log('Failed to update unread count: $e');
-    }
+    return seller.userId;
   }
 
   void _updateChatList(String lastMessage) {
@@ -261,19 +183,49 @@ class BuyerChatProvider extends ChangeNotifier {
     final index = _chats.indexWhere((c) => c.id == _currentChat!.id);
 
     if (index != -1) {
+      String displayText = lastMessage;
+      if (lastMessage.isEmpty) {
+        displayText = '📷 Image'; // or '📎 Attachment' for files
+      }
+
       _chats[index] = _chats[index].copyWith(
-        lastMessageText: lastMessage,
+        lastMessageText: displayText,
         updatedAt: DateTime.now(),
       );
       _chats.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     }
   }
+  // void _updateChatList(String lastMessage) {
+  //   if (_currentChat == null) return;
+
+  //   final index = _chats.indexWhere((c) => c.id == _currentChat!.id);
+
+  //   if (index != -1) {
+  //     _chats[index] = _chats[index].copyWith(
+  //       lastMessageText: lastMessage,
+  //       updatedAt: DateTime.now(),
+  //     );
+  //     _chats.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+  //   }
+  // }
+
+  Future<Map<String, dynamic>> getCurrentUserInfo() async {
+    if (_currentUser != null) return _currentUser!;
+    await _loadCurrentUser();
+    return _currentUser ?? {};
+  }
+
+  Future<String?> getCurrentUserId() async {
+    final user = await getCurrentUserInfo();
+    return user['userId'];
+  }
+
+  Future<String?> getCurrentUserName() async {
+    final user = await getCurrentUserInfo();
+    return user['userName'];
+  }
 
   void clearCurrentChat() {
-    if (_currentChat != null) {
-      // Socket leave is optional
-      // _socketService?.leaveChat(_currentChat!.id);
-    }
     _currentChat = null;
     _currentMessages.clear();
     notifyListeners();
@@ -282,12 +234,5 @@ class BuyerChatProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    // Socket dispose is optional
-    // _socketService?.dispose();
-    super.dispose();
   }
 }

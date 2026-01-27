@@ -1,9 +1,7 @@
-import 'dart:developer';
-
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_model.dart';
-import 'package:wood_service/chats/Buyer/buyer_chat_provider.dart';
 import 'package:wood_service/chats/message_bubble.dart' show MessageBubble;
 
 class BuyerChatScreen extends StatefulWidget {
@@ -12,6 +10,7 @@ class BuyerChatScreen extends StatefulWidget {
   final String? productId;
   final String? productName;
   final String? orderId;
+
   const BuyerChatScreen({
     super.key,
     required this.sellerId,
@@ -30,15 +29,21 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
   final FocusNode _messageFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
   late BuyerChatProvider _chatProvider;
-  Timer? _typingTimer;
+
+  // For file picking
+  final ImagePicker _imagePicker = ImagePicker();
+  File? _selectedFile;
+  String? _selectedFileName;
+  bool _isUploading = false;
 
   @override
   void initState() {
     super.initState();
-    log(
-      'data is here ${widget.sellerId} ${widget.sellerName} ${widget.productId} ${widget.productName} ${widget.orderId} ',
+    print(
+      'BuyerChatScreen init - Seller: ${widget.sellerId}, Order: ${widget.orderId}',
     );
     _chatProvider = Provider.of<BuyerChatProvider>(context, listen: false);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeChat();
     });
@@ -46,7 +51,6 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
 
   Future<void> _initializeChat() async {
     try {
-      // Get current user info
       final userInfo = await _chatProvider.getCurrentUserInfo();
       final buyerId = userInfo['userId'] as String?;
 
@@ -54,62 +58,221 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
         throw Exception('Buyer ID not found');
       }
 
-      // Open chat with seller (order-based or product-based)
-      await _chatProvider.openChat(
-        sellerId: widget.sellerId,
-        buyerId: buyerId,
-        productId: widget.productId,
-        orderId: widget.orderId, // Support order-based chats
+      print(
+        'Opening chat - Buyer: $buyerId, Seller: ${widget.sellerId}, Order: ${widget.orderId}',
       );
 
-      // Scroll to bottom after messages load
-      _scrollToBottom();
+      await _chatProvider.openChat(
+        sellerId: widget.sellerId,
+        orderId: widget.orderId ?? '',
+      );
+
+      // Scroll to bottom AFTER messages load
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToBottom();
+      });
     } catch (e) {
       print('Error initializing chat: $e');
-      // Handle error - show snackbar or dialog
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
-        _scrollController.position.minScrollExtent,
+        0.0,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
     }
   }
 
-  void _onTyping() {
-    if (_typingTimer != null) {
-      _typingTimer!.cancel();
+  Future<void> _sendMessage() async {
+    final message = _messageController.text.trim();
+
+    // Don't send if no message and no file
+    if (message.isEmpty && _selectedFile == null) return;
+
+    print(
+      'Sending message: $message, OrderId: ${widget.orderId}, SellerId: ${widget.sellerId}',
+    );
+
+    try {
+      List<Map<String, dynamic>>? attachments;
+
+      // Prepare attachments if file is selected
+      if (_selectedFile != null) {
+        attachments = [
+          {
+            'file': _selectedFile!,
+            'name': _selectedFileName ?? 'attachment',
+            'type': _getFileType(_selectedFile!.path),
+          },
+        ];
+      }
+
+      setState(() {
+        _isUploading = true;
+      });
+
+      await _chatProvider.sendMessage(
+        message,
+        orderId: widget.orderId,
+        sellerId: widget.sellerId, // PASS SELLER ID HERE
+        attachments: attachments,
+      );
+
+      _messageController.clear();
+
+      // Clear selected file
+      setState(() {
+        _selectedFile = null;
+        _selectedFileName = null;
+        _isUploading = false;
+      });
+
+      // Scroll to bottom to show new message
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToBottom();
+      });
+    } catch (e) {
+      print('Error sending message: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to send: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      setState(() {
+        _isUploading = false;
+      });
     }
-
-    // Send typing indicator
-    _chatProvider.sendTypingIndicator(true);
-
-    _typingTimer = Timer(const Duration(seconds: 2), () {
-      _chatProvider.sendTypingIndicator(false);
-    });
   }
 
-  Future<void> _sendMessage() async {
-    log('111 2222 _sendMessage  -------------------');
-    final message = _messageController.text.trim();
-    if (message.isEmpty) return;
-    log('111 33333 _sendMessage  ------------------- $message');
+  String _getFileType(String path) {
+    final ext = path.split('.').last.toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].contains(ext)) {
+      return 'image';
+    } else if (['mp4', 'mov', 'avi', 'mkv'].contains(ext)) {
+      return 'video';
+    } else if (['pdf', 'doc', 'docx', 'txt'].contains(ext)) {
+      return 'document';
+    } else {
+      return 'file';
+    }
+  }
 
-    await _chatProvider.sendMessage(message, orderId: widget.orderId);
-    log('111 44444 _sendMessage  -------------------');
+  // File picking methods
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
 
-    _messageController.clear();
-    _scrollToBottom();
-    log('111 55555 _sendMessage  -------------------');
+      if (image != null) {
+        setState(() {
+          _selectedFile = File(image.path);
+          _selectedFileName = image.name;
+        });
 
-    // Stop typing indicator
-    _typingTimer?.cancel();
-    await _chatProvider.sendTypingIndicator(false);
-    log('111 66666 _sendMessage  -------------------');
+        // Show preview or indicator that file is selected
+        _showFileSelectedSnackbar();
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick image: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Future<void> _pickDocument() async {
+  //   try {
+  //     FilePickerResult? result = await FilePicker.platform.pickFiles(
+  //       type: FileType.custom,
+  //       allowedExtensions: ['pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx'],
+  //     );
+
+  //     if (result != null && result.files.single.path != null) {
+  //       setState(() {
+  //         _selectedFile = File(result.files.single.path!);
+  //         _selectedFileName = result.files.single.name;
+  //       });
+
+  //       _showFileSelectedSnackbar();
+  //     }
+  //   } catch (e) {
+  //     print('Error picking document: $e');
+  //     if (mounted) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //           content: Text('Failed to pick document: $e'),
+  //           backgroundColor: Colors.red,
+  //         ),
+  //       );
+  //     }
+  //   }
+  // }
+
+  Future<void> _takePhoto() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedFile = File(image.path);
+          _selectedFileName =
+              'photo_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        });
+
+        _showFileSelectedSnackbar();
+      }
+    } catch (e) {
+      print('Error taking photo: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to take photo: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showFileSelectedSnackbar() {
+    if (mounted && _selectedFileName != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('File selected: $_selectedFileName'),
+          duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: 'Remove',
+            onPressed: () {
+              setState(() {
+                _selectedFile = null;
+                _selectedFileName = null;
+              });
+            },
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -123,8 +286,10 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
           appBar: _buildAppBar(context, chatProvider),
           body: Column(
             children: [
-              // Order info banner if exists
               if (currentChat?.orderId != null) _buildOrderInfo(currentChat!),
+
+              // Show selected file preview
+              if (_selectedFile != null) _buildFilePreview(),
 
               Expanded(
                 child: chatProvider.isLoading
@@ -133,11 +298,74 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
               ),
             ],
           ),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerDocked,
-          floatingActionButton: _buildMessageInput(),
+          bottomSheet: _buildMessageInput(chatProvider),
         );
       },
+    );
+  }
+
+  Widget _buildFilePreview() {
+    final fileType = _getFileType(_selectedFile!.path);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.05),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.blue[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              fileType == 'image'
+                  ? Icons.image
+                  : fileType == 'video'
+                  ? Icons.videocam
+                  : fileType == 'document'
+                  ? Icons.description
+                  : Icons.insert_drive_file,
+              color: Colors.blue,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _selectedFileName ?? 'File',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  maxLines: 1,
+                ),
+                Text(
+                  '${(_selectedFile!.lengthSync() / 1024).toStringAsFixed(1)} KB',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 20),
+            onPressed: () {
+              setState(() {
+                _selectedFile = null;
+                _selectedFileName = null;
+              });
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -154,7 +382,7 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Order ${chat.orderId}',
+              'Order: ${chat.orderId ?? 'Unknown'}',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[700],
@@ -162,165 +390,195 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
               ),
             ),
           ),
-          TextButton(
-            onPressed: () {
-              // Navigate to order details
-            },
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: Size.zero,
-            ),
-            child: Text(
-              'View Order',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
+          if (chat.orderDetails?['status'] != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: _getStatusColor(chat.orderDetails!['status']),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${chat.orderDetails!['status']}'.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Colors.green;
+      case 'pending':
+        return Colors.orange;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 
   Widget _buildChatMessages(BuyerChatProvider chatProvider) {
+    final messages = chatProvider.currentMessages;
+
+    if (messages.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.chat_bubble_outline, size: 60, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            const Text(
+              'No messages yet',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Start the conversation',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
-      padding: EdgeInsets.only(bottom: 60),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
-        ),
-        child: ListView.builder(
-          controller: _scrollController,
-          padding: const EdgeInsets.all(16),
-          reverse: false,
-          itemCount: chatProvider.currentMessages.length + 1,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return const SizedBox(height: 20);
-            }
+      padding: const EdgeInsets.only(bottom: 80),
+      child: ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.all(16),
+        reverse: true,
+        itemCount: messages.length,
+        itemBuilder: (context, index) {
+          final messageIndex = messages.length - 1 - index;
+          final message = messages[messageIndex];
 
-            final messageIndex = index - 1;
-            final message = chatProvider.currentMessages[messageIndex];
-
-            return MessageBubble(
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: MessageBubble(
               message: message,
-              isSentByMe:
-                  message.senderType == 'Buyer', // Adjust based on user role
-            );
-          },
-        ),
+              isSentByMe: message.isSentByMe,
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildMessageInput() {
-    final hasText = _messageController.text.trim().isNotEmpty;
+  Widget _buildMessageInput(BuyerChatProvider chatProvider) {
+    final hasContent =
+        _messageController.text.trim().isNotEmpty || _selectedFile != null;
 
     return Container(
-      padding: const EdgeInsets.only(right: 10, left: 6, bottom: 10),
-      color: AppColors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.white,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_isUploading) _buildUploadingIndicator(),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(25),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _messageController,
+                          focusNode: _messageFocusNode,
+                          decoration: const InputDecoration(
+                            hintText: 'Type a message...',
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          maxLines: null,
+                          onChanged: (value) {
+                            setState(() {});
+                          },
+                          onSubmitted: (_) => _sendMessage(),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.attach_file, color: Colors.grey[600]),
+                        onPressed: _showAttachmentOptions,
+                      ),
+                      if (_selectedFile != null)
+                        Container(
+                          margin: const EdgeInsets.only(right: 4),
+                          child: CircleAvatar(
+                            radius: 12,
+                            backgroundColor: Colors.blue,
+                            child: Icon(
+                              Icons.attachment,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: hasContent ? AppColors.primary : Colors.grey[300],
+                ),
+                child: _isUploading
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                        ),
+                      )
+                    : IconButton(
+                        icon: Icon(Icons.send, color: Colors.white),
+                        onPressed: hasContent && !chatProvider.isSending
+                            ? _sendMessage
+                            : null,
+                      ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUploadingIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Expanded(
-            child: CustomTextFormField(
-              controller: _messageController,
-              focusNode: _messageFocusNode,
-              textFieldType: TextFieldType.text,
-              hintText: 'Type a message...',
-              minline: 1,
-              maxLines: 3,
-              isDialogField: true,
-              validate: false, // Disable validation for chat
-              fillcolor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              onChanged: (value) {
-                _onTyping();
-                setState(() {});
-              },
-              onSubmitted: (_) => _sendMessage(),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: IconButton(
-              icon: Icon(
-                Icons.add_rounded,
-                color: Colors.grey.shade700,
-                size: 20,
-              ),
-              onPressed: _showAttachmentOptions,
-              padding: EdgeInsets.zero,
-            ),
+          const SizedBox(width: 8),
+          const CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation(AppColors.primary),
           ),
           const SizedBox(width: 12),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 45,
-            height: 45,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: hasText
-                  ? const LinearGradient(
-                      colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : LinearGradient(
-                      colors: [Colors.grey.shade300, Colors.grey.shade400],
-                    ),
-              boxShadow: hasText
-                  ? [
-                      BoxShadow(
-                        color: const Color(0xFF667EEA).withOpacity(0.4),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: IconButton(
-              icon: const Icon(
-                Icons.send_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-              // ! *****
-              // ! *****
-              // ! *****
-              // ! *****
-              // ! *****
-              // ! *****
-              // ! *****
-              // ! *****
-              onPressed: hasText ? _sendMessage : null,
-            ),
+          Text(
+            'Uploading...',
+            style: TextStyle(color: Colors.grey[700], fontSize: 14),
           ),
         ],
       ),
@@ -329,7 +587,6 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
 
   AppBar _buildAppBar(BuildContext context, BuyerChatProvider chatProvider) {
     final currentChat = chatProvider.currentChat;
-    final otherUserOnline = currentChat?.otherUserIsOnline ?? false;
 
     return AppBar(
       backgroundColor: Colors.white,
@@ -345,17 +602,13 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
         children: [
           CircleAvatar(
             backgroundColor: AppColors.primary,
-            // foregroundImage: currentChat?.otherUserImage != null
-            //     ? NetworkImage(currentChat!.otherUserImage!)
-            //     : null,
-            // child: currentChat?.otherUserImage == null
-            //     ? Text(
-            //         widget.sellerName.isNotEmpty
-            //             ? widget.sellerName[0].toUpperCase()
-            //             : 'S',
-            //         style: const TextStyle(color: Colors.white),
-            //       )
-            //     : null,
+            child: Text(
+              (currentChat?.otherUserName ?? widget.sellerName).isNotEmpty
+                  ? (currentChat?.otherUserName ?? widget.sellerName)[0]
+                        .toUpperCase()
+                  : 'S',
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
           const SizedBox(width: 12),
           Column(
@@ -369,12 +622,9 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Text(
-                otherUserOnline ? 'Online' : 'Offline',
-                style: TextStyle(
-                  color: otherUserOnline ? Colors.green : Colors.grey,
-                  fontSize: 12,
-                ),
+              const Text(
+                'Online',
+                style: TextStyle(color: Colors.green, fontSize: 12),
               ),
             ],
           ),
@@ -386,7 +636,7 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
   void _showAttachmentOptions() {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) => Container(
@@ -398,28 +648,52 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
               'Send File',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildAttachmentOption(
-                  icon: Icons.image_rounded,
+                  icon: Icons.image,
                   label: 'Gallery',
-                  onTap: () => _pickImageFromGallery(),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImageFromGallery();
+                  },
                 ),
+                // _buildAttachmentOption(
+                //   icon: Icons.description,
+                //   label: 'Document',
+                //   onTap: () {
+                //     Navigator.pop(context);
+                //     _pickDocument();
+                //   },
+                // ),
                 _buildAttachmentOption(
-                  icon: Icons.description_rounded,
-                  label: 'Document',
-                  onTap: () => _pickDocument(),
-                ),
-                _buildAttachmentOption(
-                  icon: Icons.folder_rounded,
-                  label: 'File',
-                  onTap: () => _pickFile(),
+                  icon: Icons.camera_alt,
+                  label: 'Camera',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _takePhoto();
+                  },
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
+            if (_selectedFile != null)
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    _selectedFile = null;
+                    _selectedFileName = null;
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Clear Selected File'),
+              ),
           ],
         ),
       ),
@@ -431,33 +705,24 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
     required String label,
     required VoidCallback onTap,
   }) {
-    return Column(
-      children: [
-        IconButton(
-          icon: Icon(icon, size: 30, color: Color(0xFF667EEA)),
-          onPressed: onTap,
-        ),
-        Text(label, style: TextStyle(fontSize: 12)),
-      ],
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 30, color: AppColors.primary),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
     );
-  }
-
-  void _pickImageFromGallery() {
-    Navigator.pop(context);
-    // Implement image picker
-    print('Pick image from gallery');
-  }
-
-  void _pickDocument() {
-    Navigator.pop(context);
-    // Implement document picker
-    print('Pick document');
-  }
-
-  void _pickFile() {
-    Navigator.pop(context);
-    // Implement file picker
-    print('Pick file');
   }
 
   @override
@@ -465,7 +730,6 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
     _messageController.dispose();
     _messageFocusNode.dispose();
     _scrollController.dispose();
-    _typingTimer?.cancel();
     super.dispose();
   }
 }

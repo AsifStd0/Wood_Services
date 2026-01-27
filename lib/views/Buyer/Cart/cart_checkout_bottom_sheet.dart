@@ -2,8 +2,10 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wood_service/app/index.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
+import 'package:wood_service/widgets/app_input_decoration.dart';
 
 class CartCheckoutBottomSheet extends StatefulWidget {
   const CartCheckoutBottomSheet({super.key});
@@ -180,37 +182,36 @@ class _CartCheckoutBottomSheetState extends State<CartCheckoutBottomSheet> {
               style: TextStyle(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
-
-            TextField(
+            CustomTextFormField(
               controller: _descriptionController,
+              hintText: 'Description ',
+              prefixIcon: Icon(Icons.description),
               textInputAction: TextInputAction.next,
               onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                labelText: 'Description *',
-                border: OutlineInputBorder(),
-              ),
-              minLines: 2,
+              minline: 2,
               maxLines: 4,
             ),
+
             const SizedBox(height: 10),
-            TextField(
+            CustomTextFormField(
               controller: _locationController,
+              hintText: 'Location ',
+              prefixIcon: Icon(Icons.location_on),
               textInputAction: TextInputAction.next,
               onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                labelText: 'Location *',
-                border: OutlineInputBorder(),
-              ),
             ),
+
             const SizedBox(height: 10),
 
             InkWell(
               onTap: _isLoading ? null : _pickPreferredDate,
               child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Preferred Date *',
-                  border: OutlineInputBorder(),
+                decoration: AppInputDecoration.outlined(
+                  context: context,
+                  labelText: 'Preferred Date',
+                  hintText: 'Preferred Date',
                 ),
+
                 child: Row(
                   children: [
                     Expanded(
@@ -229,23 +230,31 @@ class _CartCheckoutBottomSheetState extends State<CartCheckoutBottomSheet> {
             ),
             const SizedBox(height: 10),
 
-            TextField(
+            // TextField(
+            //   controller: _estimatedDurationController,
+            //   textInputAction: TextInputAction.next,
+            //   decoration: const InputDecoration(
+            //     labelText: 'Estimated Duration (optional)',
+            //     border: OutlineInputBorder(),
+            //   ),
+            // ),
+            CustomTextFormField(
               controller: _estimatedDurationController,
+              hintText: 'Estimated Duration (optional)',
+              prefixIcon: Icon(Icons.schedule),
               textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Estimated Duration (optional)',
-                border: OutlineInputBorder(),
-              ),
+              onChanged: (_) => setState(() {}),
+              minline: 1,
+              maxLines: 3,
             ),
             const SizedBox(height: 10),
-            TextField(
+            CustomTextFormField(
               controller: _specialRequirementsController,
+              hintText: 'Special Requirements (optional)',
+              prefixIcon: Icon(Icons.info),
               textInputAction: TextInputAction.done,
-              decoration: const InputDecoration(
-                labelText: 'Special Requirements (optional)',
-                border: OutlineInputBorder(),
-              ),
-              minLines: 1,
+              onChanged: (_) => setState(() {}),
+              minline: 1,
               maxLines: 3,
             ),
             const SizedBox(height: 12),
@@ -259,14 +268,18 @@ class _CartCheckoutBottomSheetState extends State<CartCheckoutBottomSheet> {
               value: _paymentMethod,
               items: const [
                 DropdownMenuItem(value: 'card', child: Text('Card')),
-                DropdownMenuItem(value: 'cod', child: Text('Cash on Delivery')),
-                DropdownMenuItem(value: 'mada', child: Text('Mada/SADAD')),
-                DropdownMenuItem(value: 'apple_pay', child: Text('Apple Pay')),
+                // DropdownMenuItem(value: 'cod', child: Text('Cash on Delivery')),
+                // DropdownMenuItem(value: 'mada', child: Text('Mada/SADAD')),
+                // DropdownMenuItem(value: 'apple_pay', child: Text('Apple Pay')),
               ],
               onChanged: _isLoading
                   ? null
                   : (v) => setState(() => _paymentMethod = v ?? 'card'),
-              decoration: const InputDecoration(border: OutlineInputBorder()),
+              decoration: AppInputDecoration.outlined(
+                context: context,
+                labelText: 'Payment Method',
+                hintText: 'Payment Method',
+              ),
             ),
 
             const SizedBox(height: 14),

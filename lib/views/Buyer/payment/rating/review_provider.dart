@@ -46,39 +46,6 @@ class ReviewProvider with ChangeNotifier {
     };
   }
 
-  // ========== GET REVIEWABLE ORDERS ==========
-  Future<void> fetchReviewableOrders() async {
-    try {
-      _isLoading = true;
-      _errorMessage = '';
-      notifyListeners();
-
-      final headers = await _getHeaders();
-      final response = await http.get(
-        Uri.parse('${Config.apiBaseUrl}/reviews/orders'),
-        headers: headers,
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success'] == true) {
-          _reviewableOrders = data['items'] ?? [];
-          print('✅ Found ${_reviewableOrders.length} reviewable orders');
-        } else {
-          _errorMessage = data['message'] ?? 'Failed to fetch orders';
-        }
-      } else {
-        _errorMessage = 'Failed to fetch orders: ${response.statusCode}';
-      }
-    } catch (e) {
-      _errorMessage = 'Error: ${e.toString()}';
-      print('❌ Error fetching reviewable orders: $e');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
   //! ========== SUBMIT REVIEW BY ORDER ID ==========
   Future<Map<String, dynamic>> submitOrderReview({
     required String orderId,
@@ -87,7 +54,7 @@ class ReviewProvider with ChangeNotifier {
     List<String>? images,
   }) async {
     log('📝 Starting review submission...');
-    log('   Order ID: $orderId');
+    log(' 6978431fc56da0f9215cd1a6  Order ID: $orderId');
     log('   Rating: $rating');
     log('   Comment: $comment');
     log('   Images count: ${images?.length ?? 0}');
@@ -102,23 +69,17 @@ class ReviewProvider with ChangeNotifier {
         return {'success': false, 'message': 'Please login to submit review'};
       }
 
-      log('✅ Token obtained');
+      // ✅ FIX: Use apiBaseUrl instead of baseUrl
+      log('✅ Token obtained 🔧 Config.apiBaseUrl: ${Config.apiBaseUrl}');
 
-      // Check Config.baseUrl
-      log('🔧 Config.baseUrl: ${Config.baseUrl}');
-
-      // Build URL correctly
-      String url;
-      if (Config.baseUrl.endsWith('/api')) {
-        url = '${Config.baseUrl}/buyer/orders/$orderId/review';
-      } else {
-        url = '${Config.baseUrl}/api/buyer/orders/$orderId/review';
-      }
+      // ✅ FIX: Build URL with apiBaseUrl
+      String url = '${Config.apiBaseUrl}/buyer/orders/$orderId/review';
+      // This will give: http://3.27.171.3/api/buyer/orders/:orderId/review
 
       log('🌐 Final URL: $url');
       final uri = Uri.parse(url);
 
-      // Decide: Use multipart (with images) or JSON (without images)
+      // Rest of your code remains the same...
       final hasImages = images != null && images.isNotEmpty;
 
       if (hasImages) {
@@ -128,7 +89,7 @@ class ReviewProvider with ChangeNotifier {
           token,
           rating,
           comment,
-          images!,
+          images,
         );
       } else {
         log('📤 Using application/json (no images)');
@@ -192,6 +153,7 @@ class ReviewProvider with ChangeNotifier {
     }
   }
 
+  // Reting with image
   Future<Map<String, dynamic>> _submitMultipartReview(
     Uri uri,
     String token,
@@ -271,6 +233,38 @@ class ReviewProvider with ChangeNotifier {
     }
   }
 
+  // ========== GET REVIEWABLE ORDERS ==========
+  Future<void> fetchReviewableOrders() async {
+    try {
+      _isLoading = true;
+      _errorMessage = '';
+      notifyListeners();
+
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('${Config.apiBaseUrl}/reviews/orders'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          _reviewableOrders = data['items'] ?? [];
+          print('✅ Found ${_reviewableOrders.length} reviewable orders');
+        } else {
+          _errorMessage = data['message'] ?? 'Failed to fetch orders';
+        }
+      } else {
+        _errorMessage = 'Failed to fetch orders: ${response.statusCode}';
+      }
+    } catch (e) {
+      _errorMessage = 'Error: ${e.toString()}';
+      print('❌ Error fetching reviewable orders: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
   // ========== SUBMIT REVIEW ==========
   /// POST /reviews
   /// Body: { serviceId, sellerId, rating, comment }

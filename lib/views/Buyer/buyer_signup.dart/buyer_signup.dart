@@ -331,12 +331,14 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
         ),
 
         // Address Field - Optional for buyer
-        CustomText('Address (Optional)', type: CustomTextType.subtitleMedium),
+        CustomText('Address *', type: CustomTextType.subtitleMedium),
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
             controller: viewModel.addressController, // Optional for buyer
             hintText: 'Enter your full address',
+
+            validator: (value) => value?.isEmpty == true ? 'Required' : null,
           ),
         ),
 

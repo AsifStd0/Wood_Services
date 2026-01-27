@@ -1,4 +1,5 @@
 // features/seller_settings/presentation/providers/seller_settings_provider.dart
+import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -30,7 +31,10 @@ class SellerSettingsProvider extends ChangeNotifier {
   late TextEditingController shopNameController;
   late TextEditingController businessNameController;
   late TextEditingController descriptionController;
+  // ! ****
+
   late TextEditingController addressController;
+  // ! *****
   late TextEditingController ibanController;
 
   // Getters
@@ -78,6 +82,7 @@ class SellerSettingsProvider extends ChangeNotifier {
       descriptionController.text = _currentUser!.businessDescription ?? '';
       addressController.text = _currentUser!.address ?? '';
       ibanController.text = _currentUser!.iban ?? '';
+
       // TODO: Load categories from API if available in user model
       // For now, categories are managed locally
     }
@@ -105,6 +110,7 @@ class SellerSettingsProvider extends ChangeNotifier {
   // Update profile
   Future<bool> saveChanges() async {
     try {
+      log('🔍 Saving changes... --------');
       _isLoading = true;
       _errorMessage = null;
       _successMessage = null;
