@@ -101,7 +101,7 @@ class _UploadedProductsScreenState extends State<UploadedProductsScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 0.66,
+        childAspectRatio: 0.60,
       ),
       itemCount: provider.products.length,
       itemBuilder: (context, index) {
@@ -175,7 +175,7 @@ class _UploadedProductsScreenState extends State<UploadedProductsScreen> {
           children: [
             // Image
             Expanded(
-              flex: 3,
+              flex: 2,
               child: Stack(
                 children: [
                   ClipRRect(

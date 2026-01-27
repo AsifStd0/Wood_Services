@@ -51,7 +51,8 @@ class _MediaTabState extends State<MediaTab> {
 
               // Validation message
               if (productProvider.currentTabIndex == 4 &&
-                  productProvider.selectedImages.isEmpty)
+                  productProvider.selectedImages.isEmpty &&
+                  productProvider.existingImageUrls.isEmpty)
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -65,7 +66,7 @@ class _MediaTabState extends State<MediaTab> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Please upload at least one product image before publishing',
+                          'Please upload at least one product image before ${productProvider.isEditMode ? "updating" : "publishing"}',
                           style: TextStyle(color: Colors.orange[800]),
                         ),
                       ),
@@ -429,5 +430,99 @@ class _MediaTabState extends State<MediaTab> {
 
   TextStyle _buildSubtitleStyle() {
     return TextStyle(fontSize: 14, color: Colors.grey[600]);
+  }
+
+  Widget _buildExistingImagesSection(SellerProductProvider provider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Existing Images (${provider.existingImageUrls.length})',
+          style: _buildLabelStyle(),
+        ),
+        const SizedBox(height: 8),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 1,
+          ),
+          itemCount: provider.existingImageUrls.length,
+          itemBuilder: (context, index) {
+            return Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    provider.existingImageUrls[index],
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[200],
+                        child: const Icon(
+                          Icons.image_not_supported,
+                          color: Colors.grey,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: () {
+                      provider.removeExistingImageUrl(
+                        provider.existingImageUrls[index],
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.8),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        size: 12,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                if (index == 0)
+                  Positioned(
+                    top: 4,
+                    left: 4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'Featured',
+                        style: TextStyle(
+                          fontSize: 8,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
   }
 }

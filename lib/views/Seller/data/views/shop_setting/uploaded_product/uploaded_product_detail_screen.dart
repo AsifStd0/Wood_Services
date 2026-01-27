@@ -1,6 +1,9 @@
 // screens/uploaded_product_detail_screen.dart
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/edit_product_screen.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_model.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
@@ -12,6 +15,7 @@ class UploadedProductDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    log('product is here \n ${product.title}');
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: CustomAppBar(
@@ -22,10 +26,19 @@ class UploadedProductDetailScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-              // TODO: Navigate to edit screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Edit functionality coming soon')),
-              );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      EditProductScreen(productId: product.id,productModel: product,),
+                ),
+              ).then((shouldRefresh) {
+                if (shouldRefresh == true && context.mounted) {
+                  // Refresh the product list
+                  final provider = context.read<UploadedProductProvider>();
+                  provider.refresh();
+                }
+              });
             },
             tooltip: 'Edit Product',
           ),
@@ -37,7 +50,7 @@ class UploadedProductDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Product Images
-            _buildImageSection(),
+            _buildImageSection(context),
 
             const SizedBox(height: 24),
 
@@ -222,7 +235,7 @@ class UploadedProductDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildImageSection() {
+  Widget _buildImageSection(BuildContext context) {
     final allImages = [
       if (product.featuredImage.isNotEmpty) product.featuredImage,
       ...product.images.where((img) => img != product.featuredImage),
@@ -277,29 +290,118 @@ class UploadedProductDetailScreen extends StatelessWidget {
               child: PageView.builder(
                 itemCount: allImages.length,
                 itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        allImages[index],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[200],
-                            child: const Icon(
-                              Icons.image_not_supported,
-                              color: Colors.grey,
-                              size: 48,
-                            ),
-                          );
-                        },
+                  return Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            allImages[index],
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[200],
+                                child: const Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.grey,
+                                  size: 48,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       ),
-                    ),
+                      // Delete button
+                      Positioned(
+                        top: 16,
+                        right: 16,
+                        child: Consumer<UploadedProductProvider>(
+                          builder: (context, provider, child) {
+                            return IconButton(
+                              icon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.delete,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                              onPressed: provider.isLoading
+                                  ? null
+                                  : () => _showDeleteImageDialog(
+                                      context,
+                                      provider,
+                                      allImages[index],
+                                    ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteImageDialog(
+    BuildContext context,
+    UploadedProductProvider provider,
+    String imageUrl,
+  ) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Image'),
+        content: const Text(
+          'Are you sure you want to delete this image? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+
+              final success = await provider.deleteProductImage(
+                product.id,
+                imageUrl,
+              );
+
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? 'Image deleted successfully'
+                          : provider.errorMessage ?? 'Failed to delete image',
+                    ),
+                    backgroundColor: success ? Colors.green : Colors.red,
+                  ),
+                );
+
+                if (success) {
+                  // Refresh the product list to update images
+                  provider.refresh();
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
         ],
       ),
     );
@@ -395,10 +497,19 @@ class UploadedProductDetailScreen extends StatelessWidget {
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () {
-              // TODO: Navigate to edit screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Edit functionality coming soon')),
-              );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      EditProductScreen(productId: product.id,productModel: product,),
+                ),
+              ).then((shouldRefresh) {
+                if (shouldRefresh == true && context.mounted) {
+                  // Refresh the product list
+                  final provider = context.read<UploadedProductProvider>();
+                  provider.refresh();
+                }
+              });
             },
             icon: const Icon(Icons.edit),
             label: const Text('Edit Product'),
