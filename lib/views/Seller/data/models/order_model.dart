@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 enum OrderStatus {
   pending('pending'),
   accepted('accepted'),
+  cancelled('cancelled'),
   // shipped('shipped'),
   // delivered('delivered'),
   rejected('rejected');
@@ -27,6 +28,8 @@ enum OrderStatus {
         return 'Pending';
       case OrderStatus.accepted:
         return 'Accepted';
+      case OrderStatus.cancelled:
+        return 'Cancelled';
       // case OrderStatus.shipped:
       //   return 'Shipped';
       // case OrderStatus.delivered:
@@ -41,9 +44,11 @@ enum OrderStatus {
       case OrderStatus.pending:
         return const Color(0xFFFFA726);
       case OrderStatus.accepted:
-        // case OrderStatus.shipped:
-        //   return const Color(0xFF7E57C2);
-        // case OrderStatus.delivered:
+        return const Color(0xFF4CAF50);
+      // case OrderStatus.shipped:
+      //   return const Color(0xFF7E57C2);
+      // case OrderStatus.delivered:
+      case OrderStatus.cancelled:
         return const Color(0xFF66BB6A);
       case OrderStatus.rejected:
         return const Color(0xFFEF5350);
@@ -294,6 +299,7 @@ class OrderModelSeller {
         paymentMethod: paymentMethod,
         paymentStatus: json['paymentStatus']?.toString() ?? 'pending',
         status: OrderStatus.fromString(json['status']?.toString() ?? 'pending'),
+
         requestType: json['requestType']?.toString() ?? 'buy_now',
         isVisitRequest: json['isVisitRequest'] == true,
         isQuotationRequest: json['isQuotationRequest'] == true,

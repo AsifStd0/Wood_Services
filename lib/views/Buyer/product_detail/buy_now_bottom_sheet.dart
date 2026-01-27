@@ -161,37 +161,37 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
           log('✅ Order placed! ID: $orderId');
           log('message');
           log(' ---------- 1111111$orderId');
-
-          if (orderId != null) {
-            log(' ---------- $orderId');
-            // Navigate to review screen
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => OrderRatingScreen(
-                  orderId: orderId,
-                  orderItemId: orderId, // Using orderId as fallback
-                  items: [widget.product.title],
-                  buyerProduct: widget.product,
-                  cartItemId: orderId,
-                  productId: widget.product.id,
-                  quantity: widget.quantity,
-                  totalPrice: total.toDouble(),
-                ),
-              ),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Order placed successfully!'),
-                backgroundColor: Colors.green,
-              ),
-            );
-            Navigator.pop(
-              context,
-              true,
-            ); // Close bottom sheet and return to product
-          }
+          Navigator.pop(context);
+          // if (orderId != null) {
+          //   log(' ---------- $orderId');
+          //   // Navigate to review screen
+          //   Navigator.push(
+          //     context,
+          //     MaterialPageRoute(
+          //       builder: (_) => OrderRatingScreen(
+          //         orderId: orderId,
+          //         orderItemId: orderId, // Using orderId as fallback
+          //         items: [widget.product.title],
+          //         buyerProduct: widget.product,
+          //         cartItemId: orderId,
+          //         productId: widget.product.id,
+          //         quantity: widget.quantity,
+          //         totalPrice: total.toDouble(),
+          //       ),
+          //     ),
+          //   );
+          // } else {
+          //   ScaffoldMessenger.of(context).showSnackBar(
+          //     const SnackBar(
+          //       content: Text('Order placed successfully!'),
+          //       backgroundColor: Colors.green,
+          //     ),
+          //   );
+          //   Navigator.pop(
+          //     context,
+          //     true,
+          //   ); // Close bottom sheet and return to product
+          // }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

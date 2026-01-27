@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/views/Buyer/order_screen/accepted_orders_tab.dart';
+import 'package:wood_service/views/Buyer/order_screen/order_status/accepted_orders_tab.dart';
 import 'package:wood_service/views/Buyer/Model/buyer_order_model.dart';
 import 'package:wood_service/views/Buyer/order_screen/buyer_order_provider.dart';
-import 'package:wood_service/views/Buyer/order_screen/completed_orders_tab.dart';
-import 'package:wood_service/views/Buyer/order_screen/declined_orders_tab.dart';
-import 'package:wood_service/views/Buyer/order_screen/pending_order.dart';
+import 'package:wood_service/views/Buyer/order_screen/order_status/completed_orders_tab.dart';
+import 'package:wood_service/views/Buyer/order_screen/order_status/declined_orders_tab.dart';
+import 'package:wood_service/views/Buyer/order_screen/order_status/pending_order.dart';
 
 class OrdersScreen extends StatefulWidget {
   final int initialTab;

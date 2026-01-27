@@ -1,6 +1,7 @@
 // screens/seller/seller_home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
+import 'package:wood_service/views/Seller/data/views/noification_seller/seller_notificaion_screen.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/visit_requests_provider.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 
@@ -37,7 +38,17 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
         title: 'Seller Dashboard',
         showBackButton: false,
         actions: [
-          IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SellerNotificaionScreen(),
+                ),
+              );
+            },
+          ),
         ],
       ),
       body: ListenableProvider.value(

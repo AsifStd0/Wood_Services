@@ -8,6 +8,7 @@ import 'package:wood_service/views/Buyer/Model/buyer_order_model.dart';
 
 abstract class BuyerOrderRepository {
   Future<List<BuyerOrder>> getOrders({String? status});
+  Future<List<BuyerOrder>> getOrdersBuyer({String? status});
   // Future<BuyerOrder> getOrderDetails(String orderId);
   Future<Map<String, int>> getOrderSummary();
   Future<void> cancelOrder(String orderId);
@@ -29,14 +30,78 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
 
   @override
   Future<List<BuyerOrder>> getOrders({String? status}) async {
-    log('message');
-    log('🔄 Fetching buyer orders with status: $status');
+    log('00000 🔄 Fetching buyer orders with status: $status');
 
     try {
       final token = storageService.getToken();
       if (token == null) throw Exception('Please login again');
       // ! ****** Seller
       final uri = Uri.parse('$baseUrl/seller/orders');
+
+      log('📤 --------Fetching orders from: $uri');
+
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          )
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        log('📥 Orders response: ${data['success']}');
+
+        // 🔥 ADD THIS DEBUG
+        log('📊 Full response data:');
+        log('   success: ${data['success']}');
+        log('   message: ${data['message']}');
+        log('   data type: ${data['data'].runtimeType}');
+
+        if (data['data'] is Map) {
+          log('   data keys: ${data['data'].keys.toList()}');
+          if (data['data']['orders'] is List) {
+            log('   orders count: ${data['data']['orders'].length}');
+            if (data['data']['orders'].isNotEmpty) {
+              // Log first order structure
+              log('   First order structure:');
+              log('     ${data['data']['orders'][0]}');
+            }
+          }
+        }
+
+        if (data['success'] == true) {
+          // New API structure: data.data.orders[]
+          final List<dynamic> orders =
+              data['data']?['orders'] ?? data['orders'] ?? [];
+          log('✅ Found ${orders.length} orders');
+
+          return orders.map((order) => BuyerOrder.fromJson(order)).toList();
+        } else {
+          throw Exception(data['message'] ?? 'Failed to load orders');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      log('❌ Error fetching orders: $e');
+      rethrow;
+    }
+  }
+
+  // ! &&&&&&&
+
+  @override
+  Future<List<BuyerOrder>> getOrdersBuyer({String? status}) async {
+    log('111111 🔄 Fetching buyer orders with status: $status');
+
+    try {
+      final token = storageService.getToken();
+      if (token == null) throw Exception('Please login again');
+      // ! ****** Seller
+      final uri = Uri.parse('$baseUrl/buyer/orders');
 
       log('📤 Fetching orders from: $uri');
 
@@ -178,7 +243,7 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
 
       log('❌ Cancelling order: $orderId');
 
-      final url = '$baseUrl/buyer/orders/$orderId';
+      final url = '$baseUrl/buyer/orders/$orderId/cancel';
       log('📤 Sending PUT request to: $url');
 
       final response = await http

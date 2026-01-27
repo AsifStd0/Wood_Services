@@ -1,14 +1,13 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/views/Buyer/Model/buyer_order_model.dart';
 import 'package:wood_service/views/Buyer/order_screen/buyer_order_provider.dart';
-import 'package:wood_service/widgets/custom_button.dart';
+import 'package:wood_service/views/Buyer/order_screen/order_status/comman_widget.dart';
 
 class PendingOrdersTab extends StatelessWidget {
   final List<BuyerOrder> orders;
   final BuyerOrderProvider provider;
+
   const PendingOrdersTab({
     super.key,
     required this.orders,
@@ -18,158 +17,67 @@ class PendingOrdersTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (orders.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inbox, size: 80, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            const Text(
-              'No pending orders',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
-            ),
-          ],
-        ),
+      return const OrderEmptyState(
+        message: 'No pending orders',
+        icon: Icons.pending_outlined,
       );
     }
 
     return RefreshIndicator(
       onRefresh: () async {
-        // Implement refresh logic
+        await provider.loadOrders(status: OrderStatusBuyer.pending);
+        await provider.loadOrderSummary();
       },
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(10),
         itemCount: orders.length,
         itemBuilder: (context, index) {
-          return _buildOrderCard(context, orders[index], provider);
+          return _buildOrderCard(context, orders[index]);
         },
       ),
     );
   }
 
-  Widget _buildOrderCard(
-    BuildContext context,
-    BuyerOrder order,
-    BuyerOrderProvider provider,
-  ) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Order Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '#${order.orderId}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.brown,
-                  ),
-                ),
-                Chip(
-                  label: Text(
-                    order.statusText,
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                  backgroundColor: order.statusColor,
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Product Info
-            if (order.items.isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    order.items.first.productName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  if (order.items.length > 1)
-                    Text(
-                      '+ ${order.items.length - 1} more item${order.items.length > 2 ? 's' : ''}',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                    ),
-                ],
-              ),
-            const SizedBox(height: 4),
-            Text(
-              'Items: ${order.itemsCount}',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 8),
-
-            // Order Details
-            // In your _buildOrderCard method - Row with calendar and chat icon
-            Row(
-              children: [
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(
-                  'Ordered: ${order.formattedDate}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Price and Actions
-            // Price and Actions Row - Add chat button here
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  order.formattedTotal,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-                Row(
-                  children: [
-                    // Chat Button
-                    IconButton(
-                      onPressed: () => provider.startChat(context, order),
-                      icon: Icon(Icons.chat, color: Colors.blue),
-                      tooltip: 'Chat with seller',
-                    ),
-                    const SizedBox(width: 8),
-                    CustomButtonUtils.login(
-                      width: 80,
-                      height: 40,
-                      onPressed: () => _cancelOrder(context, order),
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-
-                    const SizedBox(width: 8),
-                    OutlinedButton(
-                      onPressed: () => _viewDetails(context, order),
-                      child: const Text('Details'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+  // ! ?? Chats Cancel Details Button
+  Widget _buildOrderCard(BuildContext context, BuyerOrder order) {
+    return OrderCardWidget(
+      order: order,
+      status: OrderStatusBuyer.pending,
+      actionButtons: [
+        // Chat Button
+        IconButton(
+          onPressed: () => provider.startChat(context, order),
+          icon: const Icon(Icons.chat_bubble_outline, size: 20),
+          color: Colors.blue,
+          tooltip: 'Chat with seller',
+          style: IconButton.styleFrom(
+            backgroundColor: Colors.blue[50],
+            padding: const EdgeInsets.all(12),
+          ),
         ),
-      ),
+        // Cancel Button
+        if (order.canCancel)
+          OutlinedButton.icon(
+            onPressed: () => _cancelOrder(context, order),
+            icon: const Icon(Icons.cancel_outlined, size: 18),
+            label: const Text('Cancel'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.red,
+              side: BorderSide(color: Colors.red[300]!),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            ),
+          ),
+        // Details Button
+        OutlinedButton.icon(
+          onPressed: () => _viewDetails(context, order),
+          icon: const Icon(Icons.info_outline, size: 18),
+          label: const Text('Details'),
+        ),
+      ],
     );
   }
 
+  // ! ?? Cancel Order Dialog
   void _cancelOrder(BuildContext context, BuyerOrder order) async {
     // Check if order can be cancelled
     if (!order.canCancel) {
@@ -212,6 +120,7 @@ class PendingOrdersTab extends StatelessWidget {
     );
   }
 
+  // ! ?? Confirm Cancel Order
   void _confirmCancelOrder(BuildContext context, BuyerOrder order) async {
     Navigator.pop(context); // Close dialog
 
@@ -280,6 +189,7 @@ class PendingOrdersTab extends StatelessWidget {
     }
   }
 
+  // ! ?? View Details Order Detail screen
   void _viewDetails(BuildContext context, BuyerOrder order) {
     Navigator.push(
       context,
@@ -346,7 +256,7 @@ class OrderDetailsScreen extends StatelessWidget {
 
   Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

@@ -45,7 +45,7 @@ class BuyerOrderProvider with ChangeNotifier {
         statusParam = status.toString().split('.').last;
       }
       log('1111');
-      _orders = await _repository.getOrders(status: statusParam);
+      _orders = await _repository.getOrdersBuyer(status: statusParam);
       _currentFilter = status;
 
       // Load summary if not already loaded

@@ -170,7 +170,7 @@ class OrdersViewModel with ChangeNotifier {
         (order) => order.id == orderId || order.orderId == orderId,
         orElse: () => throw Exception('Order not found locally'),
       );
-
+      log('order.id ${order.id}');
       await _repository.addOrderNote(order.id, message);
       log('✅ Note added successfully');
     } catch (e) {

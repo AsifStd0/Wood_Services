@@ -215,10 +215,9 @@ class FavoriteProvider extends ChangeNotifier {
     }
   }
 
-  // ✅ LOAD FAVORITE STATUS FOR MULTIPLE PRODUCTS
   Future<void> loadFavoriteStatusForProducts(List<String> productIds) async {
     try {
-      final token = _storage.getToken(); // getToken() is synchronous
+      final token = _storage.getToken();
 
       if (token == null || token.isEmpty) {
         log('⚠️ Skipping favorite status load - no token');
@@ -230,6 +229,8 @@ class FavoriteProvider extends ChangeNotifier {
       for (var productId in productIds) {
         try {
           final url = Uri.parse('$_baseUrl/api/favorites/check/$productId');
+
+          log('🌐 Checking favorite for: $productId');
 
           final response = await http.get(
             url,
@@ -243,27 +244,100 @@ class FavoriteProvider extends ChangeNotifier {
             final jsonData = json.decode(response.body);
 
             if (jsonData['success'] == true) {
-              _favorites[productId] = jsonData['isFavorited'];
+              // ✅ Get data safely
+              final data = jsonData['data'];
 
-              if (jsonData['favoriteId'] != null) {
-                _favoriteIds[productId] = jsonData['favoriteId'].toString();
+              if (data is Map<String, dynamic>) {
+                // ✅ Get isFavorited from data object
+                final isFavorited = data['isFavorited'];
+
+                // Set favorite status (handle null as false)
+                _favorites[productId] = isFavorited is bool
+                    ? isFavorited
+                    : false;
+
+                // Set favorite ID if available
+                if (data['favoriteId'] != null) {
+                  _favoriteIds[productId] = data['favoriteId'].toString();
+                }
+
+                log(
+                  '✅ Product $productId: ${_favorites[productId] ?? false ? '❤️ Favorited' : '🤍 Not favorited'}',
+                );
+              } else {
+                _favorites[productId] = false;
+                log('⚠️ Product $productId: Invalid data format');
               }
-
-              log(
-                '✅ Product $productId isFavorited: ${jsonData['isFavorited']}',
-              );
+            } else {
+              _favorites[productId] = false;
+              log('⚠️ Product $productId: API returned success=false');
             }
+          } else {
+            _favorites[productId] = false;
+            log('⚠️ Product $productId: HTTP ${response.statusCode}');
           }
         } catch (e) {
-          log('⚠️ Error checking favorite for $productId: $e');
+          _favorites[productId] = false;
+          log('⚠️ Error for $productId: $e');
         }
       }
 
+      log('✅ Completed loading favorite status');
       notifyListeners();
     } catch (e) {
       log('❌ Error loading favorite status: $e');
     }
   }
+
+  // // ✅ LOAD FAVORITE STATUS FOR MULTIPLE PRODUCTS
+  // Future<void> loadFavoriteStatusForProducts(List<String> productIds) async {
+  //   try {
+  //     final token = _storage.getToken(); // getToken() is synchronous
+
+  //     if (token == null || token.isEmpty) {
+  //       log('⚠️ Skipping favorite status load - no token');
+  //       return;
+  //     }
+
+  //     log('📋 Loading favorite status for ${productIds.length} products');
+
+  //     for (var productId in productIds) {
+  //       try {
+  //         final url = Uri.parse('$_baseUrl/api/favorites/check/$productId');
+
+  //         final response = await http.get(
+  //           url,
+  //           headers: {
+  //             'Authorization': 'Bearer $token',
+  //             'Content-Type': 'application/json',
+  //           },
+  //         );
+
+  //         if (response.statusCode == 200) {
+  //           final jsonData = json.decode(response.body);
+
+  //           if (jsonData['success'] == true) {
+  //             _favorites[productId] = jsonData['isFavorited'];
+
+  //             if (jsonData['favoriteId'] != null) {
+  //               _favoriteIds[productId] = jsonData['favoriteId'].toString();
+  //             }
+
+  //             log(
+  //               '✅ Product $productId isFavorited: ${jsonData['isFavorited']}',
+  //             );
+  //           }
+  //         }
+  //       } catch (e) {
+  //         log('⚠️ Error checking favorite for $productId: $e');
+  //       }
+  //     }
+
+  //     notifyListeners();
+  //   } catch (e) {
+  //     log('❌ Error loading favorite status: $e');
+  //   }
+  // }
 
   // ✅ GET ALL FAVORITE PRODUCTS
   Future<List<FavoriteProduct>> getFavoriteProducts({

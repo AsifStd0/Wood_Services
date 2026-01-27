@@ -28,6 +28,7 @@ import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/s
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_services.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/seller_stats_service.dart';
+import 'package:wood_service/views/Seller/data/views/noification_seller/notification_service.dart';
 
 final GetIt locator = GetIt.instance;
 
@@ -145,6 +146,16 @@ Future<void> setupLocator() async {
   // Register SellerStatsService
   if (!locator.isRegistered<SellerStatsService>()) {
     locator.registerSingleton<SellerStatsService>(SellerStatsService());
+  }
+
+  // Register NotificationService
+  if (!locator.isRegistered<NotificationService>()) {
+    locator.registerSingleton<NotificationService>(
+      NotificationService(
+        dio: locator<Dio>(),
+        storage: locator<UnifiedLocalStorageServiceImpl>(),
+      ),
+    );
   }
 
   // Register SellerSettingsDataSource

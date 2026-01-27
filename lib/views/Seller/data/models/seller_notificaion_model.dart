@@ -1,26 +1,95 @@
 // models/seller_notification_model.dart
-import 'package:wood_service/views/Seller/data/views/noification/notification_provider.dart';
+import 'dart:developer';
+import 'package:wood_service/views/Seller/data/views/noification_seller/notification_provider.dart';
 
 class SellerNotificaionModel {
   final String id;
+  final String userId;
   final NotificationType type;
   final String title;
-  final String description;
+  final String message; // API uses 'message' not 'description'
+  final String? relatedId;
+  final String? relatedModel;
   final DateTime timestamp;
   final bool isRead;
-  final String? orderId;
-  final String? contractId;
 
   SellerNotificaionModel({
     required this.id,
+    required this.userId,
     required this.type,
     required this.title,
-    required this.description,
+    required this.message,
+    this.relatedId,
+    this.relatedModel,
     required this.timestamp,
     this.isRead = false,
-    this.orderId,
-    this.contractId,
   });
+
+  // Getter for description (for backward compatibility)
+  String get description => message;
+
+  // Getter for orderId (if relatedModel is Order)
+  String? get orderId => relatedModel == 'Order' ? relatedId : null;
+
+  // Getter for contractId (if relatedModel is Contract)
+  String? get contractId => relatedModel == 'Contract' ? relatedId : null;
+
+  // Factory to parse from API JSON
+  factory SellerNotificaionModel.fromJson(Map<String, dynamic> json) {
+    try {
+      // Parse ID
+      final id = json['_id']?.toString() ?? json['id']?.toString() ?? '';
+
+      // Parse userId
+      final userId = json['userId']?.toString() ?? '';
+
+      // Parse type - API returns string like "order", "visit", etc.
+      final typeString = json['type']?.toString().toLowerCase() ?? '';
+      NotificationType type;
+      switch (typeString) {
+        case 'order':
+        case 'orders':
+          type = NotificationType.contracts; // Map orders to contracts for now
+          break;
+        case 'visit':
+        case 'visits':
+        case 'visit_request':
+          type = NotificationType.visits;
+          break;
+        default:
+          type = NotificationType.all;
+      }
+
+      // Parse timestamp
+      DateTime timestamp;
+      try {
+        if (json['createdAt'] != null) {
+          timestamp = DateTime.parse(json['createdAt'].toString()).toLocal();
+        } else {
+          timestamp = DateTime.now();
+        }
+      } catch (e) {
+        log('⚠️ Error parsing timestamp: $e');
+        timestamp = DateTime.now();
+      }
+
+      return SellerNotificaionModel(
+        id: id,
+        userId: userId,
+        type: type,
+        title: json['title']?.toString() ?? 'Notification',
+        message: json['message']?.toString() ?? '',
+        relatedId: json['relatedId']?.toString(),
+        relatedModel: json['relatedModel']?.toString(),
+        timestamp: timestamp,
+        isRead: json['isRead'] ?? false,
+      );
+    } catch (e) {
+      log('❌ Error parsing SellerNotificaionModel: $e');
+      log('   JSON: $json');
+      rethrow;
+    }
+  }
 
   // Time ago getter
   String get timeAgo {
@@ -47,23 +116,25 @@ class SellerNotificaionModel {
   // Copy with method
   SellerNotificaionModel copyWith({
     String? id,
+    String? userId,
     NotificationType? type,
     String? title,
-    String? description,
+    String? message,
+    String? relatedId,
+    String? relatedModel,
     DateTime? timestamp,
     bool? isRead,
-    String? orderId,
-    String? contractId,
   }) {
     return SellerNotificaionModel(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       type: type ?? this.type,
       title: title ?? this.title,
-      description: description ?? this.description,
+      message: message ?? this.message,
+      relatedId: relatedId ?? this.relatedId,
+      relatedModel: relatedModel ?? this.relatedModel,
       timestamp: timestamp ?? this.timestamp,
       isRead: isRead ?? this.isRead,
-      orderId: orderId ?? this.orderId,
-      contractId: contractId ?? this.contractId,
     );
   }
 
@@ -71,31 +142,15 @@ class SellerNotificaionModel {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'userId': userId,
       'type': type.toString(),
       'title': title,
-      'description': description,
+      'message': message,
+      'relatedId': relatedId,
+      'relatedModel': relatedModel,
       'timestamp': timestamp.millisecondsSinceEpoch,
       'isRead': isRead,
-      'orderId': orderId,
-      'contractId': contractId,
     };
-  }
-
-  // Create from map for deserialization
-  factory SellerNotificaionModel.fromMap(Map<String, dynamic> map) {
-    return SellerNotificaionModel(
-      id: map['id'],
-      type: NotificationType.values.firstWhere(
-        (e) => e.toString() == map['type'],
-        orElse: () => NotificationType.all,
-      ),
-      title: map['title'],
-      description: map['description'],
-      timestamp: DateTime.fromMillisecondsSinceEpoch(map['timestamp']),
-      isRead: map['isRead'] ?? false,
-      orderId: map['orderId'],
-      contractId: map['contractId'],
-    );
   }
 
   @override
