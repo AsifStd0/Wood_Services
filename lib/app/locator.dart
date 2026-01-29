@@ -29,6 +29,8 @@ import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/s
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository_impl.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_services.dart';
+import 'package:wood_service/views/visit_request_buyer_resp/visit_provider.dart';
+import 'package:wood_service/views/visit_request_buyer_resp/visit_services.dart';
 
 final GetIt locator = GetIt.instance;
 
@@ -155,6 +157,32 @@ Future<void> setupLocator() async {
         dio: locator<Dio>(),
         storage: locator<UnifiedLocalStorageServiceImpl>(),
       ),
+    );
+  }
+
+  // // Register BuyerVisitRequestService
+  // if (!locator.isRegistered<BuyerVisitRequestService>()) {
+  //   locator.registerSingleton<BuyerVisitRequestService>(
+  //     BuyerVisitRequestService(
+  //       dio: locator<Dio>(),
+  //       storage: locator<UnifiedLocalStorageServiceImpl>(),
+  //     ),
+  //   );
+  // }
+  // Register services first
+  if (!locator.isRegistered<BuyerVisitRequestService>()) {
+    locator.registerSingleton<BuyerVisitRequestService>(
+      BuyerVisitRequestService(
+        dio: locator<Dio>(),
+        storage: locator<UnifiedLocalStorageServiceImpl>(),
+      ),
+    );
+  }
+
+  // Then register the provider
+  if (!locator.isRegistered<BuyerVisitRequestProvider>()) {
+    locator.registerSingleton<BuyerVisitRequestProvider>(
+      BuyerVisitRequestProvider(service: locator<BuyerVisitRequestService>()),
     );
   }
 

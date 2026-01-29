@@ -3,16 +3,17 @@ import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/profile/profile_widget.dart';
 import 'package:wood_service/views/Buyer/profile/setting/setting_screen.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';
+import 'package:wood_service/views/visit_request_buyer_resp/visit_screen.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+class ProfileScreenBuyer extends StatefulWidget {
+  const ProfileScreenBuyer({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<ProfileScreenBuyer> createState() => _ProfileScreenBuyerState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen>
+class _ProfileScreenBuyerState extends State<ProfileScreenBuyer>
     with WidgetsBindingObserver {
   @override
   void initState() {
@@ -331,8 +332,9 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
       child: Column(
         children: [
+          // BuyerVisitRequestScreen
           // Orders & Purchases
-          buildMenuHeader('Orders & Management'),
+          buildMenuHeader('Orders & Visit Requests Management'),
           buildMenuTile(
             context: context,
             icon: Icons.shopping_bag_outlined,
@@ -343,6 +345,22 @@ class _ProfileScreenState extends State<ProfileScreen>
                 MaterialPageRoute(
                   builder: (_) {
                     return OrdersScreen();
+                  },
+                ),
+              );
+            },
+            // ! *******
+          ),
+          buildMenuTile(
+            context: context,
+            icon: Icons.shopping_bag_outlined,
+            title: 'My Visit Requests',
+            subtitle: 'Track visit requests and status',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) {
+                    return BuyerVisitRequestScreen();
                   },
                 ),
               );

@@ -3,7 +3,7 @@ import 'package:wood_service/chats/Buyer/buyer_outer_messages_screen.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/home_screen.dart';
 import 'package:wood_service/views/Buyer/Cart/cart_screen.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_screen.dart';
-import 'package:wood_service/views/Buyer/profile/profile.dart';
+import 'package:wood_service/views/Buyer/profile/profile_screen_buyer.dart';
 
 class MainScreenProvider extends ChangeNotifier {
   int _currentIndex = 0;
@@ -12,7 +12,7 @@ class MainScreenProvider extends ChangeNotifier {
     const FavoritesScreen(),
     const BuyerCartScreen(),
     const BuyerOuterMessagesScreen(),
-    const ProfileScreen(),
+    const ProfileScreenBuyer(),
   ];
 
   // Getters
