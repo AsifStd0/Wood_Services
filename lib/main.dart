@@ -4,7 +4,7 @@ import 'package:wood_service/app/all_provider.dart';
 import 'package:wood_service/app/helper.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/views/Buyer/buyer_main/buyer_main.dart';
-import 'package:wood_service/views/Seller/signup.dart/main_se.dart';
+import 'package:wood_service/views/Seller/main_seller_screen.dart';
 import 'package:wood_service/views/splash/splash_screen.dart';
 
 void main() async {

@@ -5,7 +5,7 @@ import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';
 
-class SellerSettingsDataSource {
+class SellerSettingsService {
   final UnifiedLocalStorageServiceImpl _storage =
       locator<UnifiedLocalStorageServiceImpl>();
   final Dio _dio = locator<Dio>();

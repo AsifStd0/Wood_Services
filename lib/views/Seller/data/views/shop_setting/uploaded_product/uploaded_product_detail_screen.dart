@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/tabs/edit_products/edit_product_screen.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_model.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
@@ -459,7 +460,7 @@ class UploadedProductDetailScreen extends StatelessWidget {
                 : Text(
                     value,
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -472,33 +473,33 @@ class UploadedProductDetailScreen extends StatelessWidget {
   Widget _buildActionButtons(BuildContext context) {
     return Row(
       children: [
-        // Expanded(
-        //   child: OutlinedButton.icon(
-        //     onPressed: () {
-        //       Navigator.push(
-        //         context,
-        //         MaterialPageRoute(
-        //           builder: (context) => EditProductScreen(
-        //             productId: product.id,
-        //             productModel: product,
-        //           ),
-        //         ),
-        //       ).then((shouldRefresh) {
-        //         if (shouldRefresh == true && context.mounted) {
-        //           // Refresh the product list
-        //           final provider = context.read<UploadedProductProvider>();
-        //           provider.refresh();
-        //         }
-        //       });
-        //     },
-        //     icon: const Icon(Icons.edit),
-        //     label: const Text('Edit Product'),
-        //     style: OutlinedButton.styleFrom(
-        //       padding: const EdgeInsets.symmetric(vertical: 16),
-        //     ),
-        //   ),
-        // ),
-        // const SizedBox(width: 12),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditProductScreen(
+                    productId: product.id,
+                    productModel: product,
+                  ),
+                ),
+              ).then((shouldRefresh) {
+                if (shouldRefresh == true && context.mounted) {
+                  // Refresh the product list
+                  final provider = context.read<UploadedProductProvider>();
+                  provider.refresh();
+                }
+              });
+            },
+            icon: const Icon(Icons.edit),
+            label: const Text('Edit Product'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
         Expanded(
           child: Consumer<UploadedProductProvider>(
             builder: (context, provider, child) {

@@ -1,19 +1,20 @@
 // view_models/register_viewmodel.dart
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:provider/provider.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Buyer/buyer_main/buyer_main.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';
-import 'package:wood_service/views/Seller/data/services/new_service/auth_service.dart';
-import 'package:wood_service/views/Seller/signup.dart/main_se.dart';
+import 'package:wood_service/views/Seller/data/services/auth_service.dart';
+import 'package:wood_service/views/Seller/main_seller_screen.dart';
 
 class RegisterViewModel extends ChangeNotifier {
   final AuthService _authService;

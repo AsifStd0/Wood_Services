@@ -170,4 +170,50 @@ class UnifiedLocalStorageServiceImpl implements BaseLocalStorageService {
   String getAppLanguage() {
     return _prefs.getString(_appLanguageKey) ?? 'en';
   }
+
+  // Generic string storage methods
+  @override
+  Future<void> saveString(String key, String value) async {
+    await _prefs.setString(key, value);
+  }
+
+  @override
+  Future<String?> getString(String key) async {
+    return _prefs.getString(key);
+  }
+
+  // Generic boolean storage methods
+  @override
+  Future<void> saveBool(String key, bool value) async {
+    await _prefs.setBool(key, value);
+  }
+
+  @override
+  Future<bool?> getBool(String key) async {
+    return _prefs.getBool(key);
+  }
+
+  // Generic delete method
+  @override
+  Future<void> delete(String key) async {
+    await _prefs.remove(key);
+  }
+
+  // Generic clear all method
+  @override
+  Future<void> clearAll() async {
+    await _prefs.clear();
+  }
+
+  // Check if key exists
+  @override
+  Future<bool> containsKey(String key) async {
+    return _prefs.containsKey(key);
+  }
+
+  // Get all keys
+  @override
+  Future<Set<String>> getAllKeys() async {
+    return _prefs.getKeys();
+  }
 }

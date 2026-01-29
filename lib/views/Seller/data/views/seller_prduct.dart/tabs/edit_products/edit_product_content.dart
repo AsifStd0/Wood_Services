@@ -13,7 +13,8 @@ class EditProductContent extends StatelessWidget {
   final String productId;
   final UploadedProductModel productModel;
 
-  const EditProductContent({super.key, 
+  const EditProductContent({
+    super.key,
     required this.productId,
     required this.productModel,
   });

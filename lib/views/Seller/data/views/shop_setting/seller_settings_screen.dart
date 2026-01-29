@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository.dart';
-import 'package:wood_service/views/Seller/data/views/shop_setting/shop_widgets.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_products_screen.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
+import 'package:wood_service/widgets/shop_widgets.dart';
 
 class SellerSettingsScreen extends StatelessWidget {
   const SellerSettingsScreen({super.key});

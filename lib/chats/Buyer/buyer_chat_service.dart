@@ -1,6 +1,8 @@
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:wood_service/app/config.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_model.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
@@ -11,7 +13,7 @@ class BuyerChatService {
       locator<UnifiedLocalStorageServiceImpl>();
 
   // Base URL
-  static const String _baseUrl = 'http://3.27.171.3/api';
+  static final String _baseUrl = Config.baseUrl + '/api';
 
   Future<String?> _getAuthToken() async {
     try {

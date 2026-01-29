@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/views/Seller/data/models/seller_notificaion_model.dart';
-import 'package:wood_service/widgets/custom_appbar.dart';
+import 'package:wood_service/views/Seller/data/services/notification_service.dart';
 import 'package:wood_service/views/Seller/data/views/noification_seller/notification_provider.dart';
-import 'package:wood_service/views/Seller/data/views/noification_seller/notification_service.dart';
+import 'package:wood_service/widgets/custom_appbar.dart';
 
 class SellerNotificaionScreen extends StatefulWidget {
   const SellerNotificaionScreen({super.key});

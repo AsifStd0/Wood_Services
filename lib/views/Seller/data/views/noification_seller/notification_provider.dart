@@ -1,9 +1,10 @@
 // view_models/notifications_view_model.dart
 import 'dart:developer';
+
 import 'package:flutter/foundation.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/views/Seller/data/models/seller_notificaion_model.dart';
-import 'package:wood_service/views/Seller/data/views/noification_seller/notification_service.dart';
+import 'package:wood_service/views/Seller/data/services/notification_service.dart';
 
 enum NotificationType { all, unread, visits, contracts }
 
@@ -42,7 +43,7 @@ class NotificationsViewModel with ChangeNotifier {
   }
 
   NotificationsViewModel({NotificationService? service})
-      : _service = service ?? locator<NotificationService>() {
+    : _service = service ?? locator<NotificationService>() {
     loadNotifications();
   }
 
@@ -72,7 +73,7 @@ class NotificationsViewModel with ChangeNotifier {
   Future<bool> markAsRead(String notificationId) async {
     try {
       log('✅ Marking notification as read: $notificationId');
-      
+
       // Optimistically update UI
       final index = _notifications.indexWhere((n) => n.id == notificationId);
       if (index != -1) {
@@ -82,13 +83,13 @@ class NotificationsViewModel with ChangeNotifier {
 
       // Call API
       final success = await _service.markAsRead(notificationId);
-      
+
       if (!success && index != -1) {
         // Revert if API call failed
         _notifications[index] = _notifications[index].copyWith(isRead: false);
         notifyListeners();
       }
-      
+
       return success;
     } catch (e) {
       log('❌ Error marking notification as read: $e');
@@ -101,7 +102,7 @@ class NotificationsViewModel with ChangeNotifier {
   Future<bool> markAllAsRead() async {
     try {
       log('✅ Marking all notifications as read');
-      
+
       // Optimistically update UI
       for (int i = 0; i < _notifications.length; i++) {
         if (!_notifications[i].isRead) {
@@ -112,12 +113,12 @@ class NotificationsViewModel with ChangeNotifier {
 
       // Call API
       final success = await _service.markAllAsRead();
-      
+
       if (!success) {
         // Revert if API call failed
         await loadNotifications(); // Reload from server
       }
-      
+
       return success;
     } catch (e) {
       log('❌ Error marking all notifications as read: $e');
@@ -130,27 +131,27 @@ class NotificationsViewModel with ChangeNotifier {
   Future<bool> deleteNotification(String notificationId) async {
     try {
       log('🗑️ Deleting notification: $notificationId');
-      
+
       // Store the notification in case we need to revert
       final notification = _notifications.firstWhere(
         (n) => n.id == notificationId,
         orElse: () => _notifications.first,
       );
-      
+
       // Optimistically remove from UI
       _notifications.removeWhere((n) => n.id == notificationId);
       notifyListeners();
 
       // Call API
       final success = await _service.deleteNotification(notificationId);
-      
+
       if (!success) {
         // Revert if API call failed
         _notifications.add(notification);
         _notifications.sort((a, b) => b.timestamp.compareTo(a.timestamp));
         notifyListeners();
       }
-      
+
       return success;
     } catch (e) {
       log('❌ Error deleting notification: $e');

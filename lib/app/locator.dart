@@ -15,16 +15,16 @@ import 'package:wood_service/views/Buyer/order_screen/buyer_order_provider.dart'
 import 'package:wood_service/views/Buyer/order_screen/buyer_order_repository.dart';
 import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
-import 'package:wood_service/views/Seller/data/services/new_service/auth_service.dart';
-import 'package:wood_service/views/Seller/data/views/noification_seller/notification_service.dart';
+import 'package:wood_service/views/Seller/data/services/auth_service.dart';
+import 'package:wood_service/views/Seller/data/services/notification_service.dart';
+import 'package:wood_service/views/Seller/data/services/seller_settings_service.dart';
+import 'package:wood_service/views/Seller/data/services/seller_stats_service.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_repository_seller.dart';
-import 'package:wood_service/views/Seller/data/views/seller_home/seller_stats_service.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/visit_requests_provider.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/visit_requests_service.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
-import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_datasource.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository_impl.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
@@ -187,16 +187,14 @@ Future<void> setupLocator() async {
   }
 
   // Register SellerSettingsDataSource
-  if (!locator.isRegistered<SellerSettingsDataSource>()) {
-    locator.registerSingleton<SellerSettingsDataSource>(
-      SellerSettingsDataSource(),
-    );
+  if (!locator.isRegistered<SellerSettingsService>()) {
+    locator.registerSingleton<SellerSettingsService>(SellerSettingsService());
   }
 
   // Register SellerSettingsRepository
   if (!locator.isRegistered<SellerSettingsRepository>()) {
     locator.registerSingleton<SellerSettingsRepository>(
-      SellerSettingsRepositoryImpl(locator<SellerSettingsDataSource>()),
+      SellerSettingsRepositoryImpl(locator<SellerSettingsService>()),
     );
   }
 
