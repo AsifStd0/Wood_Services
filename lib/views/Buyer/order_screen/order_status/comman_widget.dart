@@ -438,7 +438,9 @@ class OrderCardWidget extends StatelessWidget {
 
   Widget _buildDeclineReason() {
     final isCancelled = order.status == OrderStatusBuyer.cancelled;
-    final declinedDate = isCancelled ? order.cancelledAt! : order.rejectedAt!;
+    final declinedDate = isCancelled
+        ? (order.cancelledAt ?? order.requestedAt)
+        : (order.rejectedAt ?? order.requestedAt);
     final reason = isCancelled ? 'Cancelled by buyer' : 'Rejected by seller';
 
     return Container(

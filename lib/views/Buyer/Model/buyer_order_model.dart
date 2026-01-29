@@ -12,6 +12,7 @@ class BuyerOrder {
   final double shippingFee;
   final double taxAmount;
   final double totalAmount;
+  final String currency; // Add currency field
   final String paymentMethod;
   final String paymentStatus;
   final OrderStatusBuyer status;
@@ -42,6 +43,7 @@ class BuyerOrder {
     required this.shippingFee,
     required this.taxAmount,
     required this.totalAmount,
+    this.currency = 'USD', // Default currency
     required this.paymentMethod,
     required this.paymentStatus,
     required this.status,
@@ -104,9 +106,20 @@ class BuyerOrder {
     if (serviceIdObj is Map) {
       productId = serviceIdObj['_id']?.toString() ?? '';
       productName = serviceIdObj['title']?.toString() ?? 'Unknown Product';
-      final images = serviceIdObj['images'];
-      if (images is List && images.isNotEmpty) {
-        productImage = images.first?.toString();
+
+      // Try to get image from featuredImage first, then images array
+      productImage = serviceIdObj['featuredImage']?.toString();
+      if (productImage == null || productImage.isEmpty) {
+        final images = serviceIdObj['images'];
+        if (images is List && images.isNotEmpty) {
+          // Get first valid image URL
+          for (var img in images) {
+            if (img != null && img.toString().isNotEmpty) {
+              productImage = img.toString();
+              break;
+            }
+          }
+        }
       }
     } else {
       productId = serviceIdObj?.toString() ?? '';
@@ -125,10 +138,22 @@ class BuyerOrder {
           sellerEmail: sellerEmail,
           sellerPhone: sellerPhone,
           quantity: (json['quantity'] ?? 1).toInt(),
-          unitPrice: (pricing['unitPrice'] ?? pricing['basePrice'] ?? 0)
-              .toDouble(),
-          subtotal: (pricing['finalAmount'] ?? pricing['basePrice'] ?? 0)
-              .toDouble(),
+          unitPrice:
+              (pricing['unitPrice'] ??
+                      (pricing['useSalePrice'] == true
+                          ? (pricing['salePrice'] ?? pricing['basePrice'] ?? 0)
+                          : (pricing['basePrice'] ?? 0)))
+                  .toDouble(),
+          subtotal:
+              (pricing['finalAmount'] ??
+                      (pricing['useSalePrice'] == true
+                          ? ((pricing['salePrice'] ??
+                                    pricing['basePrice'] ??
+                                    0) *
+                                (json['quantity'] ?? 1))
+                          : (pricing['basePrice'] ?? 0) *
+                                (json['quantity'] ?? 1)))
+                  .toDouble(),
           reviewed: json['reviewed'] ?? false,
         ),
       );
@@ -151,6 +176,10 @@ class BuyerOrder {
       taxAmount: (pricing['taxAmount'] ?? 0).toDouble(),
       totalAmount: (pricing['finalAmount'] ?? pricing['basePrice'] ?? 0)
           .toDouble(),
+      currency:
+          pricing['currency']?.toString() ??
+          json['currency']?.toString() ??
+          'USD',
       paymentMethod:
           pricing['paymentMethod']?.toString() ??
           json['paymentMethod']?.toString() ??
@@ -266,7 +295,27 @@ class BuyerOrder {
 
   // Helper methods
   String get formattedDate => DateFormat('MMM dd, yyyy').format(requestedAt);
-  String get formattedTotal => '₹${totalAmount.toStringAsFixed(2)}';
+  String get formattedTotal {
+    // Use currency symbol based on currency code
+    String symbol = _getCurrencySymbol(currency);
+    return '$symbol${totalAmount.toStringAsFixed(2)}';
+  }
+
+  String _getCurrencySymbol(String currencyCode) {
+    switch (currencyCode.toUpperCase()) {
+      case 'USD':
+        return '\$';
+      case 'EUR':
+        return '€';
+      case 'GBP':
+        return '£';
+      case 'INR':
+      case '₹':
+        return '₹';
+      default:
+        return '$currencyCode ';
+    }
+  }
 
   String get statusText {
     switch (status) {
@@ -284,8 +333,6 @@ class BuyerOrder {
         return 'Cancelled';
       case OrderStatusBuyer.rejected:
         return 'Rejected';
-      default:
-        return 'Pending';
     }
   }
 
@@ -303,8 +350,6 @@ class BuyerOrder {
         return Colors.red;
       case OrderStatusBuyer.rejected:
         return Colors.red;
-      default:
-        return Colors.grey;
     }
   }
 

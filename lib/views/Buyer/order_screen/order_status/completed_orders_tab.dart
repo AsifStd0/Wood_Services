@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wood_service/views/Buyer/Model/buyer_order_model.dart';
+import 'package:wood_service/views/Buyer/order_screen/buyer_order_provider.dart';
 import 'package:wood_service/views/Buyer/order_screen/order_status/comman_widget.dart';
 
 class CompletedOrdersTab extends StatelessWidget {
@@ -70,7 +72,7 @@ class CompletedOrdersTab extends StatelessWidget {
 
   void _rateOrder(BuildContext context, BuyerOrder order) {
     int selectedRating = 0;
-    String reviewText = '';
+    final reviewTextController = TextEditingController();
 
     showDialog(
       context: context,
@@ -125,14 +127,12 @@ class CompletedOrdersTab extends StatelessWidget {
                   const Text('Add a review (optional):'),
                   const SizedBox(height: 8),
                   TextField(
+                    controller: reviewTextController,
                     maxLines: 3,
                     decoration: const InputDecoration(
                       hintText: 'Share your experience...',
                       border: OutlineInputBorder(),
                     ),
-                    onChanged: (value) {
-                      reviewText = value;
-                    },
                   ),
                 ],
               ),
@@ -146,6 +146,14 @@ class CompletedOrdersTab extends StatelessWidget {
                 onPressed: selectedRating > 0
                     ? () {
                         // Submit review
+                        final provider = context.read<BuyerOrderProvider>();
+                        provider.submitReview(
+                          order.orderId,
+                          rating: selectedRating,
+                          comment: reviewTextController.text.isNotEmpty
+                              ? reviewTextController.text
+                              : null,
+                        );
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
