@@ -1,21 +1,24 @@
 // app/locator.dart
-import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
+import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wood_service/app/config.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_provider.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_service.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/buyer_product_service.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_provider.dart';
 import 'package:wood_service/views/Buyer/buyer_main/buyer_main_provider.dart';
-import 'package:wood_service/views/Buyer/Buyer_home/buyer_product_service.dart';
 import 'package:wood_service/views/Buyer/order_screen/buyer_order_provider.dart';
 import 'package:wood_service/views/Buyer/order_screen/buyer_order_repository.dart';
 import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
-import 'package:wood_service/views/Seller/data/services/new_service/auth_service.dart';
+import 'package:wood_service/views/Seller/data/services/auth_service.dart';
+import 'package:wood_service/views/Seller/data/services/notification_service.dart';
+import 'package:wood_service/views/Seller/data/services/seller_settings_service.dart';
+import 'package:wood_service/views/Seller/data/services/seller_stats_service.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_repository_seller.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/visit_requests_provider.dart';
@@ -24,10 +27,10 @@ import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_p
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository_impl.dart';
-import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_datasource.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_services.dart';
-import 'package:wood_service/views/Seller/data/views/seller_home/seller_stats_service.dart';
+import 'package:wood_service/views/visit_request_buyer_resp/visit_provider.dart';
+import 'package:wood_service/views/visit_request_buyer_resp/visit_services.dart';
 
 final GetIt locator = GetIt.instance;
 
@@ -147,24 +150,58 @@ Future<void> setupLocator() async {
     locator.registerSingleton<SellerStatsService>(SellerStatsService());
   }
 
-  // Register SellerSettingsDataSource
-  if (!locator.isRegistered<SellerSettingsDataSource>()) {
-    locator.registerSingleton<SellerSettingsDataSource>(
-      SellerSettingsDataSource(),
+  // Register NotificationService
+  if (!locator.isRegistered<NotificationService>()) {
+    locator.registerSingleton<NotificationService>(
+      NotificationService(
+        dio: locator<Dio>(),
+        storage: locator<UnifiedLocalStorageServiceImpl>(),
+      ),
     );
+  }
+
+  // // Register BuyerVisitRequestService
+  // if (!locator.isRegistered<BuyerVisitRequestService>()) {
+  //   locator.registerSingleton<BuyerVisitRequestService>(
+  //     BuyerVisitRequestService(
+  //       dio: locator<Dio>(),
+  //       storage: locator<UnifiedLocalStorageServiceImpl>(),
+  //     ),
+  //   );
+  // }
+  // Register services first
+  if (!locator.isRegistered<BuyerVisitRequestService>()) {
+    locator.registerSingleton<BuyerVisitRequestService>(
+      BuyerVisitRequestService(
+        dio: locator<Dio>(),
+        storage: locator<UnifiedLocalStorageServiceImpl>(),
+      ),
+    );
+  }
+
+  // Then register the provider
+  if (!locator.isRegistered<BuyerVisitRequestProvider>()) {
+    locator.registerSingleton<BuyerVisitRequestProvider>(
+      BuyerVisitRequestProvider(service: locator<BuyerVisitRequestService>()),
+    );
+  }
+
+  // Register SellerSettingsDataSource
+  if (!locator.isRegistered<SellerSettingsService>()) {
+    locator.registerSingleton<SellerSettingsService>(SellerSettingsService());
   }
 
   // Register SellerSettingsRepository
   if (!locator.isRegistered<SellerSettingsRepository>()) {
     locator.registerSingleton<SellerSettingsRepository>(
-      SellerSettingsRepositoryImpl(locator<SellerSettingsDataSource>()),
+      SellerSettingsRepositoryImpl(locator<SellerSettingsService>()),
     );
   }
 
   // Register OrderRepository
-  if (!locator.isRegistered<OrderRepository>()) {
-    locator.registerSingleton<OrderRepository>(
-      ApiOrderRepository(
+  if (!locator.isRegistered<SellerOrderRepository>()) {
+    locator.registerSingleton<SellerOrderRepository>(
+      ApiOrderRepositorySeller(
         dio: locator<Dio>(),
         storageService: locator<UnifiedLocalStorageServiceImpl>(),
       ),
@@ -200,7 +237,7 @@ Future<void> setupLocator() async {
 
   // Register OrdersViewModel
   locator.registerFactory<OrdersViewModel>(
-    () => OrdersViewModel(locator<OrderRepository>()),
+    () => OrdersViewModel(locator<SellerOrderRepository>()),
   );
 
   // Register BuyerProfileViewProvider

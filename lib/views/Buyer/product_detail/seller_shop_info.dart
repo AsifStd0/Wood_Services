@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
-import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
 
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NWY0N2I5ZTIxZGVjMTRjMDg0Mzc2ZiIsImlhdCI6MTc2NzkzNDY4MywiZXhwIjoxNzcwNTI2NjgzfQ.EhD26aua5ngVyY2f5YUZ-nRrVal2scWfy4AlcvJsSN8
 
@@ -247,7 +245,7 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
   final TextEditingController _messageController = TextEditingController();
   String? _selectedDate;
   String? _selectedTime;
-  List<Map<String, dynamic>> _myVisitRequests = [];
+  final List<Map<String, dynamic>> _myVisitRequests = [];
 
   @override
   void initState() {

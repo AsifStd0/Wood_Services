@@ -1,16 +1,17 @@
 import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/views/Seller/data/models/order_model.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_repository_seller.dart';
-import 'package:wood_service/views/Seller/data/views/seller_home/seller_stats_service.dart';
+import 'package:wood_service/views/Seller/data/views/seller_home/visit_requests_service.dart';
 
 class OrdersViewModel with ChangeNotifier {
-  final OrderRepository _repository;
+  final SellerOrderRepository _repository;
 
   OrdersViewModel(this._repository);
 
-  final SellerStatsService _service = locator<SellerStatsService>();
+  final VisitRequestsService _service = locator<VisitRequestsService>();
 
   // Stats data
   Map<String, dynamic> _stats = {};
@@ -45,7 +46,7 @@ class OrdersViewModel with ChangeNotifier {
 
     try {
       log('📊 Loading seller stats...');
-      _stats = await _service.getSellerStats();
+      _stats = await _service.getVisitRequests();
       log('✅ Stats loaded successfully: $_stats');
       _errorMessage = null;
     } catch (e) {
@@ -170,7 +171,7 @@ class OrdersViewModel with ChangeNotifier {
         (order) => order.id == orderId || order.orderId == orderId,
         orElse: () => throw Exception('Order not found locally'),
       );
-
+      log('order.id ${order.id}');
       await _repository.addOrderNote(order.id, message);
       log('✅ Note added successfully');
     } catch (e) {

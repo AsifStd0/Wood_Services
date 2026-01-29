@@ -1,7 +1,6 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:wood_service/chats/Buyer/buyer_chating.dart';
-import 'package:wood_service/views/Buyer/Cart/cart_screen.dart';
 import 'package:wood_service/views/Buyer/Model/buyer_order_model.dart';
 import 'package:wood_service/views/Buyer/order_screen/buyer_order_repository.dart';
 
@@ -72,12 +71,12 @@ class BuyerOrderProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> cancelOrder(String orderId, String reason) async {
+  Future<bool> cancelOrder(String orderId) async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      await _repository.cancelOrder(orderId, reason);
+      await _repository.cancelOrder(orderId);
 
       // Remove the cancelled order from the current list
       // Use order.orderId instead of order.id
@@ -156,20 +155,58 @@ class BuyerOrderProvider with ChangeNotifier {
   // final String? productId;
   // final String? productName;
   // final String? orderId;
+  // void startChat(BuildContext context, BuyerOrder order) {
+  //   log('order.items.first.sellerName: ${order.items.first.sellerName}');
+  //   log('order.items.first.productId: ${order.items.first.productId}');
+  //   log('order.items.first.productName: ${order.items.first.productName}');
+  //   log('order.orderId: ${order.orderId}');
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (context) => BuyerChatScreen(
+  //         sellerId: order.id,
+  //         sellerName: order.items.first.sellerName,
+  //         productId: order.items.first.productId,
+  //         productName: order.items.first.productName,
+  //         orderId: order.orderId,
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  //   Starting chat for order:
+  // [log]    Order ID: 6977182bc56da0f9215ccb9c
+  // [log]    Order Display ID: 6977182bc56da0f9215ccb9c
+  // [log]    Seller ID: 696e0a77b557741a53f299c9
+  // [log]    Seller Name: asif
+  // [log]    Product ID: 696e0daeb557741a53f299d5
+  // [log]    Product Name: asif ready product
+
+  // I/flutter (14734): order: 6974beb3c56da0f9215cbfc3
+  // [log] 🔍 Starting chat for order:
+  // [log]    Order ID: 6974beb3c56da0f9215cbfc3
+  // [log]    Order Display ID: 6974beb3c56da0f9215cbfc3
+  // [log]    Seller ID: 696ddbafc3d836ac73456fa1
+  // [log]    Seller Name: Mike Wilson
+  // [log]    Product ID: 696ddbafc3d836ac73456fbc
+  // [log]    Product Name: Cedar Wood Garden Bench
+
   void startChat(BuildContext context, BuyerOrder order) {
-    log('order.items.first.sellerName: ${order.items.first.sellerName}');
-    log('order.items.first.productId: ${order.items.first.productId}');
-    log('order.items.first.productName: ${order.items.first.productName}');
-    log('order.orderId: ${order.orderId}');
+    log('🔍 Starting chat for order:');
+    log('   Order ID: ${order.id}');
+    log('   Order Display ID: ${order.orderId}');
+    log('   Seller ID: ${order.items.first.sellerId}');
+    log('   Seller Name: ${order.items.first.sellerName}');
+    log('   Product ID: ${order.items.first.productId}');
+    log('   Product Name: ${order.items.first.productName}');
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => BuyerChatScreen(
-          sellerId: order.id,
-          sellerName: order.items.first.sellerName,
-          productId: order.items.first.productId,
-          productName: order.items.first.productName,
           orderId: order.orderId,
+          sellerId: order.items.first.sellerId,
+          sellerName: order.items.first.sellerName,
         ),
       ),
     );

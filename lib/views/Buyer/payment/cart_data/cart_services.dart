@@ -21,12 +21,12 @@ class CartServices {
 
   Future<void> initialize() async {
     await storage.initialize(); // Use 'storage' not '_storage'
-    _cachedToken = await storage.getToken();
+    _cachedToken = storage.getToken();
     print('🛒 CartServices initialized');
   }
 
   Future<String?> _getToken() async {
-    _cachedToken ??= await storage.getToken();
+    _cachedToken ??= storage.getToken();
     return _cachedToken;
   }
 

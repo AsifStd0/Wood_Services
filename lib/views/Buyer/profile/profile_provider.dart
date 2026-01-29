@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -48,6 +49,7 @@ class BuyerProfileViewProvider extends ChangeNotifier {
     : _storage = storage ?? locator<UnifiedLocalStorageServiceImpl>(),
       _dio = dio ?? locator<Dio>() {
     loadProfile();
+    initializeSettings();
   }
 
   // Load profile data
@@ -334,27 +336,43 @@ ${const JsonEncoder.withIndent('  ').convert(userData)}
     notifyListeners();
   }
 
-  // // Update individual fields
-  // void updateField(String field, String value) {
-  //   if (_currentUser != null) {
-  //     final updatedUser = _currentUser!.copyWith(
-  //       name: field == 'fullName' || field == 'name'
-  //           ? value
-  //           : _currentUser!.name,
-  //       email: field == 'email' ? value : _currentUser!.email,
-  //       businessName: field == 'businessName'
-  //           ? value
-  //           : _currentUser!.businessName,
-  //       address: field == 'address' ? value : _currentUser!.address,
-  //       businessDescription:
-  //           field == 'description' || field == 'businessDescription'
-  //           ? value
-  //           : _currentUser!.businessDescription,
-  //       iban: field == 'iban' ? value : _currentUser!.iban,
-  //     );
+  // Language settings
+  String _language = 'English';
+  String get language => _language;
 
-  //     _currentUser = updatedUser;
-  //     notifyListeners();
-  //   }
-  // }
+  Future<void> setLanguage(String language) async {
+    _language = language;
+    await _storage.saveString('user_language', language);
+    notifyListeners();
+    log('🌐 Language changed to: $language');
+  }
+
+  Future<void> loadLanguage() async {
+    final savedLanguage = await _storage.getString('user_language');
+    _language = savedLanguage ?? 'English';
+    notifyListeners();
+  }
+
+  // Dark mode settings
+  bool _darkMode = false;
+  bool get darkMode => _darkMode;
+
+  Future<void> setDarkMode(bool enabled) async {
+    _darkMode = enabled;
+    await _storage.saveBool('dark_mode', enabled);
+    notifyListeners();
+    log('🌙 Dark mode ${enabled ? 'enabled' : 'disabled'}');
+  }
+
+  Future<void> loadDarkMode() async {
+    final savedDarkMode = await _storage.getBool('dark_mode');
+    _darkMode = savedDarkMode ?? false;
+    notifyListeners();
+  }
+
+  // Initialize settings
+  Future<void> initializeSettings() async {
+    await loadLanguage();
+    await loadDarkMode();
+  }
 }

@@ -120,29 +120,29 @@ class _QuantityStepperState extends State<QuantityStepper> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: isEnabled ? onTap : null,
+      onTap: isEnabled ? onTap : null,
         borderRadius: BorderRadius.only(
           topLeft: isLeft ? const Radius.circular(25) : Radius.zero,
           bottomLeft: isLeft ? const Radius.circular(25) : Radius.zero,
           topRight: !isLeft ? const Radius.circular(25) : Radius.zero,
           bottomRight: !isLeft ? const Radius.circular(25) : Radius.zero,
         ),
-        child: Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: isEnabled ? Colors.white : Colors.grey[100],
-            borderRadius: BorderRadius.only(
-              topLeft: isLeft ? const Radius.circular(25) : Radius.zero,
-              bottomLeft: isLeft ? const Radius.circular(25) : Radius.zero,
-              topRight: !isLeft ? const Radius.circular(25) : Radius.zero,
-              bottomRight: !isLeft ? const Radius.circular(25) : Radius.zero,
-            ),
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: isEnabled ? Colors.white : Colors.grey[100],
+          borderRadius: BorderRadius.only(
+            topLeft: isLeft ? const Radius.circular(25) : Radius.zero,
+            bottomLeft: isLeft ? const Radius.circular(25) : Radius.zero,
+            topRight: !isLeft ? const Radius.circular(25) : Radius.zero,
+            bottomRight: !isLeft ? const Radius.circular(25) : Radius.zero,
           ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: isEnabled ? Colors.brown : Colors.grey,
+        ),
+        child: Icon(
+          icon,
+          size: 18,
+          color: isEnabled ? Colors.brown : Colors.grey,
           ),
         ),
       ),
@@ -435,13 +435,13 @@ void updateQuantity(
     await cartViewModel.updateCartItem(itemId, newQuantity);
   } catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to update quantity: $error'),
-          backgroundColor: Colors.red,
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Failed to update quantity: $error'),
+        backgroundColor: Colors.red,
           duration: const Duration(seconds: 2),
-        ),
-      );
+      ),
+    );
     }
   }
 }

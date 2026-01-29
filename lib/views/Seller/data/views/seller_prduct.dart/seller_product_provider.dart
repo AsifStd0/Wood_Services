@@ -10,14 +10,22 @@ import 'package:image_picker/image_picker.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_model.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_model.dart'
+    as uploaded;
+import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_services.dart';
 
 class SellerProductProvider extends ChangeNotifier {
   final UnifiedLocalStorageServiceImpl _storage;
   final Dio _dio;
+  final UploadedProductService? _productService;
 
-  SellerProductProvider({UnifiedLocalStorageServiceImpl? storage, Dio? dio})
-    : _storage = storage ?? locator<UnifiedLocalStorageServiceImpl>(),
-      _dio = dio ?? Dio() {
+  SellerProductProvider({
+    UnifiedLocalStorageServiceImpl? storage,
+    Dio? dio,
+    UploadedProductService? productService,
+  }) : _storage = storage ?? locator<UnifiedLocalStorageServiceImpl>(),
+       _dio = dio ?? Dio(),
+       _productService = productService {
     // Initialize Dio with correct base URL
     _dio.options.baseUrl = 'http://3.27.171.3/api';
     _dio.options.connectTimeout = const Duration(seconds: 30);
@@ -30,7 +38,7 @@ class SellerProductProvider extends ChangeNotifier {
 
   Future<String?> _getToken() async {
     try {
-      final token = await _storage.getToken();
+      final token = _storage.getToken();
       log(
         '🔑 Token retrieved: ${token != null && token.isNotEmpty ? "Yes" : "No"}',
       );
@@ -78,6 +86,9 @@ class SellerProductProvider extends ChangeNotifier {
   String? _errorMessage;
   final List<File> _selectedImages = [];
   File? _featuredImage;
+  bool _isEditMode = false;
+  final List<String> _existingImageUrls =
+      []; // URLs of existing images from server
 
   // Getters
   SellerProduct get product => _product;
@@ -86,6 +97,8 @@ class SellerProductProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   List<File> get selectedImages => _selectedImages;
   File? get featuredImage => _featuredImage;
+  bool get isEditMode => _isEditMode;
+  List<String> get existingImageUrls => _existingImageUrls;
 
   void setCurrentTab(int index) {
     _currentTabIndex = index;
@@ -491,6 +504,386 @@ class SellerProductProvider extends ChangeNotifier {
     return false;
   }
 
+  /// Load product from UploadedProductModel immediately (for instant display)
+  void loadProductFromModel(uploaded.UploadedProductModel model) {
+    log('📦 Loading product from model immediately: ${model.title}');
+
+    _isEditMode = true;
+    _errorMessage = null;
+
+    // Convert variants from UploadedProductModel to SellerProduct format
+    final variants = model.variants.map((v) {
+      return ProductVariant(
+        type: v.type,
+        value: v.value,
+        priceAdjustment: v.priceAdjustment,
+      );
+    }).toList();
+
+    // Create SellerProduct from UploadedProductModel
+    _product = SellerProduct(
+      id: model.id,
+      title: model.title,
+      shortDescription: model.shortDescription,
+      description: model.description,
+      category: model.category,
+      productType: model.productType,
+      tags: model.tags,
+      price: model.price,
+      salePrice: null, // Will be loaded from API if available
+      costPrice: null, // Will be loaded from API if available
+      taxRate: model.taxRate,
+      currency: model.currency,
+      priceUnit: model.priceUnit,
+      sku: '', // Will be loaded from API if available
+      stockQuantity: model.stockQuantity,
+      lowStockAlert: model.lowStockAlert,
+      weight: null, // Will be loaded from API if available
+      dimensions: null, // Will be loaded from API if available
+      variants: variants,
+      location: model.location,
+      images: [],
+    );
+
+    // Store existing image URLs
+    _existingImageUrls.clear();
+    if (model.featuredImage.isNotEmpty) {
+      _existingImageUrls.add(model.featuredImage);
+    }
+    for (var img in model.images) {
+      if (img.isNotEmpty && !_existingImageUrls.contains(img)) {
+        _existingImageUrls.add(img);
+      }
+    }
+
+    _selectedImages.clear();
+    _featuredImage = null;
+    _currentTabIndex = 0;
+
+    log('✅ Product loaded from model - form is ready for editing');
+    notifyListeners();
+  }
+
+  /// Load product for editing from API (for full data including salePrice, costPrice, etc.)
+  Future<void> loadProductForEditing(String productId) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      log('📦 Fetching full product data from API: $productId');
+
+      final token = await _getToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('Authentication token not found.');
+      }
+
+      final response = await _dio.get(
+        '/seller/services/$productId',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      log('Product API response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        log('Product API response data: ${response.data}');
+        final data = response.data;
+        if (data['success'] == true) {
+          final serviceData =
+              data['data']?['service'] ?? data['service'] ?? data['data'];
+
+          // Convert to SellerProduct (this will include salePrice, costPrice, weight, sku, dimensions)
+          _product = _convertToSellerProduct(serviceData);
+
+          // Store existing image URLs
+          _existingImageUrls.clear();
+          if (serviceData['featuredImage'] != null &&
+              serviceData['featuredImage'].toString().isNotEmpty) {
+            _existingImageUrls.add(serviceData['featuredImage'].toString());
+          }
+          if (serviceData['images'] != null && serviceData['images'] is List) {
+            for (var img in serviceData['images']) {
+              final imgUrl = img.toString();
+              if (imgUrl.isNotEmpty && !_existingImageUrls.contains(imgUrl)) {
+                _existingImageUrls.add(imgUrl);
+              }
+            }
+          }
+
+          _selectedImages.clear();
+          _featuredImage = null;
+          _currentTabIndex = 0;
+
+          log('✅ Full product data loaded from API');
+        } else {
+          throw Exception(data['message'] ?? 'Failed to load product');
+        }
+      } else {
+        throw Exception('Request failed with status: ${response.statusCode}');
+      }
+    } catch (e) {
+      log('❌ Error loading product: $e');
+      _errorMessage = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Convert API response to SellerProduct
+  SellerProduct _convertToSellerProduct(Map<String, dynamic> json) {
+    // Parse dimensions
+    ProductDimensions? dimensions;
+    if (json['dimensions'] != null && json['dimensions'] is Map) {
+      final dims = json['dimensions'] as Map;
+      dimensions = ProductDimensions(
+        length: _parseDouble(dims['length']),
+        width: _parseDouble(dims['width']),
+        height: _parseDouble(dims['height']),
+        specification: dims['specification']?.toString(),
+      );
+    }
+
+    // Parse variants
+    final variants = <ProductVariant>[];
+    if (json['variants'] != null && json['variants'] is List) {
+      for (var variant in json['variants']) {
+        if (variant is Map) {
+          variants.add(
+            ProductVariant(
+              type: variant['type']?.toString() ?? '',
+              value: variant['value']?.toString() ?? '',
+              priceAdjustment: _parseDouble(variant['priceAdjustment']),
+            ),
+          );
+        }
+      }
+    }
+
+    // Parse tags
+    final tags = <String>[];
+    if (json['tags'] != null && json['tags'] is List) {
+      for (var tag in json['tags']) {
+        if (tag != null && tag.toString().isNotEmpty) {
+          tags.add(tag.toString());
+        }
+      }
+    }
+
+    return SellerProduct(
+      id: json['_id']?.toString() ?? json['id']?.toString(),
+      title: json['title']?.toString() ?? '',
+      shortDescription: json['shortDescription']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      category: json['category']?.toString() ?? '',
+      productType: json['productType']?.toString() ?? 'Ready Product',
+      tags: tags,
+      price: _parseDouble(json['price']),
+      salePrice: json['salePrice'] != null
+          ? _parseDouble(json['salePrice'])
+          : null,
+      costPrice: json['costPrice'] != null
+          ? _parseDouble(json['costPrice'])
+          : null,
+      taxRate: _parseDouble(json['taxRate']),
+      currency: json['currency']?.toString() ?? 'USD',
+      priceUnit: json['priceUnit']?.toString() ?? 'per item',
+      sku: json['sku']?.toString() ?? '',
+      stockQuantity: json['stockQuantity'] ?? 0,
+      lowStockAlert: json['lowStockAlert'],
+      weight: json['weight'] != null ? _parseDouble(json['weight']) : null,
+      dimensions: dimensions,
+      variants: variants,
+      location: json['location']?.toString() ?? '',
+      images: [], // Images are handled separately
+    );
+  }
+
+  double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
+
+  /// Update product
+  Future<bool> updateProduct() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      if (_product.id == null) {
+        throw Exception('Product ID is required for update');
+      }
+
+      // Validate
+      if (_product.title.isEmpty ||
+          _product.description.isEmpty ||
+          _product.category.isEmpty) {
+        throw Exception('Please complete all required fields');
+      }
+
+      // Get token
+      final token = await _getToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('Authentication token not found.');
+      }
+
+      // Prepare FormData
+      final formData = FormData();
+
+      // Add text fields
+      final Map<String, dynamic> apiFields = {
+        'title': _product.title,
+        'shortDescription': _product.shortDescription,
+        'description': _product.description,
+        'category': _product.category,
+        'productType': _product.productType,
+        'tags': jsonEncode(_product.tags),
+        'price': _product.price.toString(),
+        'salePrice': _product.salePrice?.toString() ?? '',
+        'costPrice': _product.costPrice?.toString() ?? '',
+        'taxRate': _product.taxRate.toString(),
+        'currency': _product.currency,
+        'priceUnit': _product.priceUnit,
+        'sku': _product.sku,
+        'stockQuantity': _product.stockQuantity.toString(),
+        'lowStockAlert': _product.lowStockAlert?.toString() ?? '2',
+        'weight': _product.weight?.toString() ?? '',
+        'location': _product.location,
+      };
+
+      // Add dimensions if available
+      if (_product.dimensions != null) {
+        apiFields['dimensions'] = jsonEncode({
+          'length': _product.dimensions!.length,
+          'width': _product.dimensions!.width,
+          'height': _product.dimensions!.height,
+          'specification': _product.dimensions!.specification ?? '',
+        });
+      }
+
+      // Add variants if available
+      if (_product.variants.isNotEmpty) {
+        apiFields['variants'] = jsonEncode(
+          _product.variants.map((v) => v.toJson()).toList(),
+        );
+      }
+
+      // Add all fields to formData
+      apiFields.forEach((key, value) {
+        if (value != null && value.toString().isNotEmpty) {
+          formData.fields.add(MapEntry(key, value.toString()));
+        }
+      });
+
+      // Add new images if any
+      for (int i = 0; i < _selectedImages.length; i++) {
+        final image = _selectedImages[i];
+        formData.files.add(
+          MapEntry(
+            'images',
+            await MultipartFile.fromFile(
+              image.path,
+              filename:
+                  'product_${DateTime.now().millisecondsSinceEpoch}_$i.jpg',
+            ),
+          ),
+        );
+      }
+
+      log('🌐 Updating product: ${_product.id}');
+
+      final response = await _dio.put(
+        '/seller/services/${_product.id}',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      log('✅ Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        log('🎉 Product updated successfully!');
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        throw Exception(response.data['message'] ?? 'Failed to update product');
+      }
+    } on DioException catch (e) {
+      log('❌ === DIO ERROR ===');
+      log('   Type: ${e.type}');
+      log('   Status: ${e.response?.statusCode}');
+      log('   Response: ${e.response?.data}');
+      _errorMessage =
+          e.response?.data?['message']?.toString() ??
+          e.message ??
+          'Failed to update product';
+    } catch (e) {
+      log('❌ === ERROR ===');
+      log('   $e');
+      _errorMessage = e.toString();
+    }
+
+    _isLoading = false;
+    notifyListeners();
+    return false;
+  }
+
+  /// Remove existing image URL (for deletion)
+  Future<bool> deleteExistingImage(String imageUrl) async {
+    final productId = _product.id;
+    if (productId == null || productId.isEmpty || _productService == null) {
+      // Just remove from UI if no service or product ID
+      _existingImageUrls.remove(imageUrl);
+      notifyListeners();
+      return true;
+    }
+
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final success = await _productService.deleteProductImage(
+        productId,
+        imageUrl,
+      );
+
+      if (success) {
+        _existingImageUrls.remove(imageUrl);
+        log('✅ Image deleted successfully');
+      }
+
+      _isLoading = false;
+      notifyListeners();
+      return success;
+    } catch (e) {
+      log('❌ Error deleting image: $e');
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Remove existing image URL from UI only (for preview)
+  void removeExistingImageUrl(String imageUrl) {
+    _existingImageUrls.remove(imageUrl);
+    notifyListeners();
+  }
+
   void resetForm() {
     _product = SellerProduct(
       title: '',
@@ -518,6 +911,8 @@ class SellerProductProvider extends ChangeNotifier {
     _selectedImages.clear();
     _featuredImage = null;
     _errorMessage = null;
+    _isEditMode = false;
+    _existingImageUrls.clear();
     notifyListeners();
   }
 }

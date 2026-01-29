@@ -7,7 +7,7 @@ import 'package:wood_service/app/config.dart';
 import 'package:wood_service/views/Seller/data/models/order_model.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 
-abstract class OrderRepository {
+abstract class SellerOrderRepository {
   Future<List<OrderModelSeller>> getOrders({String? status, String? type});
   Future<void> updateOrderStatus(String orderId, String status);
   Future<OrderModelSeller> getOrderDetails(String orderId);
@@ -15,11 +15,11 @@ abstract class OrderRepository {
   Future<void> addOrderNote(String orderId, String message);
 }
 
-class ApiOrderRepository implements OrderRepository {
+class ApiOrderRepositorySeller implements SellerOrderRepository {
   final Dio dio;
   final UnifiedLocalStorageServiceImpl storageService;
 
-  ApiOrderRepository({required this.dio, required this.storageService});
+  ApiOrderRepositorySeller({required this.dio, required this.storageService});
   @override
   Future<List<OrderModelSeller>> getOrders({
     String? status,
@@ -155,26 +155,85 @@ class ApiOrderRepository implements OrderRepository {
         throw Exception('Please login again');
       }
 
+      // ✅ FIRST: Check what status the order actually has
+      String currentStatus = 'unknown';
+      try {
+        final checkUri = Uri.parse(
+          '${Config.apiBaseUrl}/seller/orders/$orderId',
+        );
+        log('🔍 Checking order details before update...');
+
+        final checkResponse = await http
+            .get(checkUri, headers: {'Authorization': 'Bearer $token'})
+            .timeout(const Duration(seconds: 10));
+
+        if (checkResponse.statusCode == 200) {
+          final checkData = jsonDecode(checkResponse.body);
+          if (checkData['success'] == true) {
+            final orderData = checkData['data']?['order'] ?? checkData['order'];
+            currentStatus =
+                orderData['status']?.toString().toLowerCase() ?? 'unknown';
+            log('📊 Current order status: $currentStatus');
+            log('📊 Order ID in DB: ${orderData['_id']}');
+            log('📊 Seller ID: ${orderData['sellerId']}');
+
+            // ✅ Check if order can be accepted
+            if (currentStatus != 'pending' &&
+                status.toLowerCase() == 'accepted') {
+              throw Exception(
+                'Order is already $currentStatus. Cannot accept.',
+              );
+            }
+
+            // ✅ Check if order can be rejected
+            if (currentStatus != 'pending' &&
+                status.toLowerCase() == 'rejected') {
+              throw Exception(
+                'Order is already $currentStatus. Cannot reject.',
+              );
+            }
+
+            // ✅ Check if order is cancelled (special case)
+            if (currentStatus == 'cancelled') {
+              throw Exception(
+                'Order has been cancelled by buyer. Cannot update.',
+              );
+            }
+
+            // ✅ Check if order is completed
+            if (currentStatus == 'completed') {
+              throw Exception('Order is already completed. Cannot update.');
+            }
+          } else {
+            throw Exception(
+              'Failed to get order details: ${checkData['message']}',
+            );
+          }
+        } else {
+          throw Exception(
+            'Order check failed with status: ${checkResponse.statusCode}',
+          );
+        }
+      } catch (e) {
+        log('❌ Order check failed: $e');
+        rethrow; // Stop here if order check fails
+      }
+
+      // ✅ Only proceed if order check passed
       // Map status to endpoint
-      String endpoint;
-      switch (status.toLowerCase()) {
-        case 'accepted':
-          endpoint = '/seller/orders/$orderId/accept';
-          break;
-        case 'rejected':
-          endpoint = '/seller/orders/$orderId/reject';
-          break;
-        case 'processing':
-        case 'started':
-          endpoint = '/seller/orders/$orderId/start';
-          break;
-        case 'delivered':
-        case 'completed':
-          endpoint = '/seller/orders/$orderId/complete';
-          break;
-        default:
-          // Fallback to old endpoint
-          endpoint = '/seller/orders/$orderId/status';
+      final endpointMap = {
+        'accepted': '/seller/orders/$orderId/accept',
+        'rejected': '/seller/orders/$orderId/reject',
+        'processing': '/seller/orders/$orderId/start',
+        'started': '/seller/orders/$orderId/start',
+        'delivered': '/seller/orders/$orderId/complete',
+        'completed': '/seller/orders/$orderId/complete',
+      };
+
+      final endpoint = endpointMap[status.toLowerCase()];
+
+      if (endpoint == null) {
+        throw Exception('Invalid status: $status');
       }
 
       final uri = Uri.parse('${Config.apiBaseUrl}$endpoint');
@@ -187,14 +246,11 @@ class ApiOrderRepository implements OrderRepository {
               'Authorization': 'Bearer $token',
               'Content-Type': 'application/json',
             },
-            body: endpoint.contains('/status')
-                ? jsonEncode({'status': status})
-                : jsonEncode({}),
+            body: jsonEncode({}), // Empty body for accept/reject endpoints
           )
           .timeout(const Duration(seconds: 30));
 
       log('📡 Response: ${response.statusCode}');
-      log('📦 Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -206,8 +262,12 @@ class ApiOrderRepository implements OrderRepository {
           throw Exception(data['message'] ?? 'Failed to update status');
         }
       } else if (response.statusCode == 404) {
-        log('❌ Order not found: $orderId');
-        throw Exception('Order not found');
+        final data = jsonDecode(response.body);
+        final message = data['message'] ?? 'Order not found';
+
+        throw Exception(
+          'Cannot update order: $message (Current status: $currentStatus)',
+        );
       } else {
         throw Exception('Server error: ${response.statusCode}');
       }
@@ -218,49 +278,33 @@ class ApiOrderRepository implements OrderRepository {
     }
   }
 
-  /// Add note to order
-  /// PUT /api/seller/orders/:orderId/notes
+  @override
   Future<void> addOrderNote(String orderId, String message) async {
-    log('📝 Adding note to order: $orderId');
-
     try {
       final token = storageService.getToken();
       if (token == null || token.isEmpty) {
-        throw Exception('Please login again');
+        throw Exception('Authentication required');
       }
 
-      final uri = Uri.parse(
-        '${Config.apiBaseUrl}/seller/orders/$orderId/notes',
+      final response = await http.post(
+        Uri.parse('${Config.apiBaseUrl}/seller/orders/$orderId/notes'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'message': message}),
       );
-      log('🌐 URL: $uri');
-
-      final response = await http
-          .put(
-            uri,
-            headers: {
-              'Authorization': 'Bearer $token',
-              'Content-Type': 'application/json',
-            },
-            body: jsonEncode({'message': message}),
-          )
-          .timeout(const Duration(seconds: 30));
-
-      log('📡 Response: ${response.statusCode}');
-      log('📦 Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          log('✅ Note added successfully');
-          return;
-        } else {
+        if (data['success'] != true) {
           throw Exception(data['message'] ?? 'Failed to add note');
         }
       } else {
         throw Exception('Server error: ${response.statusCode}');
       }
     } catch (e) {
-      log('❌ Error adding note: $e');
+      log('Error adding note: $e');
       rethrow;
     }
   }
@@ -270,7 +314,7 @@ class ApiOrderRepository implements OrderRepository {
     log('🔄 ========== getOrderDetails START ==========');
 
     try {
-      final token = await storageService.getToken();
+      final token = storageService.getToken();
 
       if (token == null) {
         throw Exception('Please login again');
@@ -307,7 +351,7 @@ class ApiOrderRepository implements OrderRepository {
   @override
   Future<Map<String, dynamic>> getOrderStatistics() async {
     try {
-      final token = await storageService.getToken();
+      final token = storageService.getToken();
 
       if (token == null) {
         return _defaultStatistics();

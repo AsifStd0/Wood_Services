@@ -255,8 +255,9 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
                 .confirmPasswordController, // Use viewModel's controller
             validator: (value) {
               if (value?.isEmpty == true) return 'Required';
-              if (value != viewModel.passwordController.text)
+              if (value != viewModel.passwordController.text) {
                 return 'Passwords do not match';
+              }
               return null;
             },
             hintText: 'Confirm your password',
@@ -331,12 +332,14 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
         ),
 
         // Address Field - Optional for buyer
-        CustomText('Address (Optional)', type: CustomTextType.subtitleMedium),
+        CustomText('Address *', type: CustomTextType.subtitleMedium),
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: CustomTextFormField(
             controller: viewModel.addressController, // Optional for buyer
             hintText: 'Enter your full address',
+
+            validator: (value) => value?.isEmpty == true ? 'Required' : null,
           ),
         ),
 

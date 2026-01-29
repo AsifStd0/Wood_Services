@@ -4,7 +4,7 @@ import 'package:wood_service/views/Seller/data/registration_data/register_viewmo
 
 class SellerLogin extends StatefulWidget {
   final String role;
-  SellerLogin({super.key, required this.role});
+  const SellerLogin({super.key, required this.role});
 
   @override
   State<SellerLogin> createState() => _SellerLoginState();

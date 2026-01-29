@@ -1,5 +1,6 @@
 // providers/uploaded_product_provider.dart
 import 'dart:developer';
+
 import 'package:flutter/foundation.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_model.dart';
@@ -129,6 +130,41 @@ class UploadedProductProvider extends ChangeNotifier {
       }
     } catch (e) {
       log('❌ Error deleting product: $e');
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Delete product image
+  Future<bool> deleteProductImage(String productId, String imageUrl) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      log('🗑️ Deleting product image: $imageUrl');
+
+      final success = await _service.deleteProductImage(productId, imageUrl);
+
+      if (success) {
+        // Update the product in the list
+        final productIndex = _products.indexWhere((p) => p.id == productId);
+        if (productIndex != -1) {
+          // Note: We would need to reload the product to get updated images
+          // For now, just refresh the list
+          await refresh();
+        }
+        log('✅ Image deleted successfully');
+        notifyListeners();
+        return true;
+      } else {
+        throw Exception('Failed to delete image');
+      }
+    } catch (e) {
+      log('❌ Error deleting image: $e');
       _errorMessage = e.toString();
       notifyListeners();
       return false;

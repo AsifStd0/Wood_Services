@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/views/Seller/data/models/order_model.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
-import 'package:wood_service/widgets/custom_textfield.dart';
 
 class OrdersList extends StatelessWidget {
-  const OrdersList();
+  const OrdersList({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -216,20 +215,6 @@ class _OrderCard extends StatelessWidget {
                         ),
                       ],
 
-                      // if (order.status == OrderStatus.accepted) ...[
-                      //   Expanded(
-                      //     child: _buildActionButton(
-                      //       'Start',
-                      //       Colors.blue,
-                      //       Icons.play_circle_rounded,
-                      //       () => _updateOrderStatus(
-                      //         context,
-                      //         order,
-                      //         OrderStatus.shipped, // OrderStatus.processing,
-                      //       ),
-                      //     ),
-                      //   ),
-                      // ],
                       const SizedBox(width: 8),
 
                       Expanded(
@@ -314,12 +299,19 @@ class _OrderCard extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
+
+              // Store context locally since we'll use it after async operation
+              final localContext = context;
+
               try {
-                final viewModel = context.read<OrdersViewModel>();
+                final viewModel = localContext.read<OrdersViewModel>();
                 // Pass order.id (MongoDB _id) - the ViewModel will convert it
                 await viewModel.updateOrderStatus(order.id, newStatus);
 
-                ScaffoldMessenger.of(context).showSnackBar(
+                // Check if widget is still mounted
+                if (!localContext.mounted) return;
+
+                ScaffoldMessenger.of(localContext).showSnackBar(
                   SnackBar(
                     content: Text(
                       'Order #${order.orderId} updated to ${newStatus.displayName}',
@@ -328,7 +320,10 @@ class _OrderCard extends StatelessWidget {
                   ),
                 );
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                // Check if widget is still mounted
+                if (!localContext.mounted) return;
+
+                ScaffoldMessenger.of(localContext).showSnackBar(
                   SnackBar(
                     content: Text('Failed to update: $e'),
                     backgroundColor: Colors.red,
@@ -379,6 +374,9 @@ class _OrderCard extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               if (noteController.text.trim().isEmpty) {
+                // Check mounted before showing snackbar
+                if (!context.mounted) return;
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Please enter a note'),
@@ -390,15 +388,18 @@ class _OrderCard extends StatelessWidget {
 
               Navigator.pop(context);
 
+              // Store context for async operation
+              final localContext = context;
+
               try {
-                final viewModel = context.read<OrdersViewModel>();
+                final viewModel = localContext.read<OrdersViewModel>();
                 await viewModel.addOrderNote(
                   order.id,
                   noteController.text.trim(),
                 );
 
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                if (localContext.mounted) {
+                  ScaffoldMessenger.of(localContext).showSnackBar(
                     const SnackBar(
                       content: Text('Note added successfully'),
                       backgroundColor: Colors.green,
@@ -406,8 +407,8 @@ class _OrderCard extends StatelessWidget {
                   );
                 }
               } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                if (localContext.mounted) {
+                  ScaffoldMessenger.of(localContext).showSnackBar(
                     SnackBar(
                       content: Text('Failed to add note: $e'),
                       backgroundColor: Colors.red,
@@ -764,7 +765,7 @@ Widget buildFilterChip(
 }
 
 class StatusFilterBar extends StatelessWidget {
-  const StatusFilterBar();
+  const StatusFilterBar({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -794,7 +795,7 @@ class StatusFilterBar extends StatelessWidget {
                     color: status.color,
                     onSelected: () => viewModel.setStatusFilter(status),
                   );
-                }).toList(), // Add .toList() here
+                }), // Add .toList() here
               ],
             ),
           ),

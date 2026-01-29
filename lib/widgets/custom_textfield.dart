@@ -253,6 +253,8 @@ class CustomTextFormField extends StatelessWidget {
         initialValue: initialValue,
 
         decoration: InputDecoration(
+          alignLabelWithHint: true,
+
           isDense: true, // THIS FIXES THE HEIGHT
           filled: fillcolor != null,
           fillColor: fillcolor ?? AppColors.white,

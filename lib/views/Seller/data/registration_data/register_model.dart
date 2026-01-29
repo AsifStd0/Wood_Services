@@ -203,17 +203,21 @@ class UserModel {
 
     // Add optional fields if they exist
     if (password != null && password!.isNotEmpty) data['password'] = password!;
-    if (existingPassword != null && existingPassword!.isNotEmpty)
+    if (existingPassword != null && existingPassword!.isNotEmpty) {
       data['existingPassword'] = existingPassword!;
+    }
     if (phone != null) data['phone'] = phone!;
     if (address != null && address!.isNotEmpty) data['address'] = address!;
-    if (businessName != null && businessName!.isNotEmpty)
+    if (businessName != null && businessName!.isNotEmpty) {
       data['businessName'] = businessName!;
+    }
     if (shopName != null && shopName!.isNotEmpty) data['shopName'] = shopName!;
-    if (businessDescription != null && businessDescription!.isNotEmpty)
+    if (businessDescription != null && businessDescription!.isNotEmpty) {
       data['businessDescription'] = businessDescription!;
-    if (businessAddress != null && businessAddress!.isNotEmpty)
+    }
+    if (businessAddress != null && businessAddress!.isNotEmpty) {
       data['businessAddress'] = businessAddress!;
+    }
     if (iban != null && iban!.isNotEmpty) data['iban'] = iban!;
 
     return data;

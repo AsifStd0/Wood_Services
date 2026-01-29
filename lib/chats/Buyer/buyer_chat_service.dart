@@ -1,4 +1,8 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:wood_service/app/config.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_model.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
@@ -8,27 +12,18 @@ class BuyerChatService {
   final UnifiedLocalStorageServiceImpl _storage =
       locator<UnifiedLocalStorageServiceImpl>();
 
-  // static const String _baseUrl = '${Config.apiBaseUrl}/chats';
-  static const String _baseUrl = 'http://3.27.171.3/api/chats';
+  // Base URL
+  static final String _baseUrl = Config.baseUrl + '/api';
 
-  // Get auth token from unified storage
   Future<String?> _getAuthToken() async {
     try {
-      final token = _storage.getToken();
-      if (token != null && token.isNotEmpty) {
-        print('✅ Using token for chat');
-        return token;
-      }
-
-      print('❌ No auth token found');
-      return null;
+      return _storage.getToken();
     } catch (e) {
-      print('❌ Error getting auth token: $e');
+      log('Error getting auth token: $e');
       return null;
     }
   }
 
-  // ✅ FIX: Add this method to set headers for all requests
   Future<Options> _getRequestOptions() async {
     final token = await _getAuthToken();
 
@@ -41,104 +36,23 @@ class BuyerChatService {
     );
   }
 
-  Future<List<ChatRoom>> getChats() async {
-    try {
-      print('📤 Getting chats from $_baseUrl...');
-
-      final options = await _getRequestOptions();
-
-      final response = await _dio.get(_baseUrl, options: options);
-
-      print('✅ Chats response received');
-      print('Response status: ${response.statusCode}');
-      print('Response data keys: ${response.data.keys}');
-
-      if (response.data['success'] == true) {
-        // Log the full structure for debugging
-        print('Full response structure:');
-        print(response.data.toString());
-
-        // Extract chats array - check different possible structures
-        List<dynamic> chatsData;
-
-        if (response.data['data'] != null &&
-            response.data['data']['chats'] != null) {
-          print('✅ Found chats in data.chats');
-          chatsData = response.data['data']['chats'];
-        } else if (response.data['chats'] != null) {
-          print('✅ Found chats in chats');
-          chatsData = response.data['chats'];
-        } else {
-          print('❌ No chats found in response');
-          throw Exception('No chats data found in response');
-        }
-
-        print('📱 Found ${chatsData.length} chats');
-
-        // Log first chat for debugging
-        if (chatsData.isNotEmpty) {
-          print('First chat structure:');
-          print(chatsData[0].toString());
-        }
-
-        // Get current user info to pass to ChatRoom
-        final userInfo = await _getCurrentUserInfo();
-        final currentUserId = userInfo['userId']?.toString();
-
-        // Parse each chat
-        List<ChatRoom> chatRooms = [];
-        for (var chatData in chatsData) {
-          try {
-            final chatRoom = ChatRoom.fromJson(
-              chatData,
-              currentUserId: currentUserId,
-            );
-            chatRooms.add(chatRoom);
-          } catch (e) {
-            print('❌ Error parsing chat: $e');
-            print('Problematic chat data: $chatData');
-          }
-        }
-
-        print('✅ Successfully parsed ${chatRooms.length} chat rooms');
-        return chatRooms;
-      } else {
-        final errorMessage = response.data['message'] ?? 'Failed to load chats';
-        print('❌ API Error: $errorMessage');
-        throw Exception(errorMessage);
-      }
-    } on DioException catch (e) {
-      print('❌ DioError getting chats: ${e.message}');
-      print('Response: ${e.response?.data}');
-      print('Status code: ${e.response?.statusCode}');
-      throw Exception(e.response?.data['message'] ?? 'Network error');
-    } catch (e) {
-      print('❌ Error getting chats: $e');
-      throw Exception('Failed to load chats: $e');
-    }
-  }
-
-  // ✅ Update other methods to use _getRequestOptions() too:
-
+  // Get chat by order ID
   Future<ChatSession> getChatByOrder(String orderId) async {
     try {
-      print('📤 Getting chat by order: $orderId');
+      log('📤 Getting chat by order: $orderId');
 
       final options = await _getRequestOptions();
-
       final response = await _dio.get(
-        '$_baseUrl/order/$orderId',
+        '$_baseUrl/chats/order/$orderId',
         options: options,
       );
-
-      print('✅ Get chat by order response received');
 
       if (response.data['success'] == true) {
         final chatData = response.data['data']?['chat'] ?? response.data;
 
         // Get current user info
-        final userInfo = await _getCurrentUserInfo();
-        final currentUserId = userInfo['userId']?.toString();
+        final currentUserInfo = await _getCurrentUserInfo();
+        final currentUserId = currentUserInfo['userId']?.toString();
 
         // Parse chat room
         final chat = ChatRoom.fromJson(chatData, currentUserId: currentUserId);
@@ -150,197 +64,138 @@ class BuyerChatService {
         for (var msg in messagesData) {
           final message = BuyerChatModel.fromJson(
             msg,
-            currentUserId: currentUserId,
+            currentUserId: currentUserId!,
+            chatId: chat.id,
+            chatData: chatData,
           );
-          // Set chatId if not present
-          if (message.chatId.isEmpty) {
-            message.chatId = chat.id;
-          }
           messages.add(message);
         }
 
+        log('✅ Successfully loaded chat with ${messages.length} messages');
         return ChatSession(chat: chat, messages: messages);
       }
 
       throw Exception('Failed to get chat: ${response.data['message']}');
     } on DioException catch (e) {
-      print('❌ DioError getting chat by order: ${e.response?.data}');
+      log('❌ DioError getting chat by order: ${e.response?.statusCode}');
+      if (e.response?.statusCode == 404) {
+        throw Exception('Chat not found for order: $orderId');
+      }
       throw Exception(e.response?.data['message'] ?? 'Network error');
     } catch (e) {
-      print('❌ Error getting chat by order: $e');
-      throw Exception('Failed to get chat: $e');
+      log('❌ Error getting chat by order: $e');
+      rethrow;
     }
   }
 
-  // Helper to get current user info
-  Future<Map<String, dynamic>> _getCurrentUserInfo() async {
-    try {
-      final userData = _storage.getUserData();
-      return {
-        'userId': userData?['_id']?.toString() ?? userData?['id']?.toString(),
-        'userType': userData?['userType'] ?? 'Buyer',
-      };
-    } catch (e) {
-      return {'userId': '', 'userType': 'Buyer'};
-    }
-  }
-  // // Get chat by order ID
-  // Future<ChatSession> getChatByOrder(String orderId) async {
-  //   try {
-  //     print('📤 Getting chat by order: $orderId');
-
-  //     final options = await _getRequestOptions();
-
-  //     final response = await _dio.get(
-  //       '$_baseUrl/order/$orderId',
-  //       options: options,
-  //     );
-
-  //     print('✅ Get chat by order response received');
-  //     log('----------🔍 Debug: Chat data: ${response.data['data']}');
-
-  //     if (response.data['success'] == true) {
-  //       final chatData =
-  //           response.data['data']?['chat'] ?? response.data['chat'];
-  //       final chat = ChatRoom.fromJson(chatData);
-  //       log('🔍 Debug: Chat data: ${response.data['data']}');
-  //       final messages =
-  //           (chatData['messages'] as List?)
-  //               ?.map((msg) => BuyerChatModel.fromJson(msg))
-  //               .toList() ??
-  //           [];
-
-  //       return ChatSession(chat: chat, messages: messages);
-  //     }
-
-  //     throw Exception('Failed to get chat: ${response.data['message']}');
-  //   } on DioException catch (e) {
-  //     print('❌ DioError getting chat by order: ${e.response?.data}');
-  //     throw Exception(e.response?.data['message'] ?? 'Network error');
-  //   } catch (e) {
-  //     print('❌ Error getting chat by order: $e');
-  //     throw Exception('Failed to get chat: $e');
-  //   }
-  // }
-
-  // Start chat (for product-based chats, or create new order chat)
-  Future<ChatSession> startChat({
+  // Create a new chat for an order - FIXED VERSION
+  Future<ChatSession> createChatForOrder({
+    required String orderId,
     required String sellerId,
-    required String buyerId,
-    String? productId,
-    String? orderId,
   }) async {
     try {
-      print('📤 Starting chat... $_baseUrl');
+      log('📤 Creating new chat for order: $orderId');
 
       final options = await _getRequestOptions();
 
-      // If orderId exists, get chat by order
-      if (orderId != null) {
-        return await getChatByOrder(orderId);
+      // Get current user info
+      final userInfo = await _getCurrentUserInfo();
+      final buyerId = userInfo['userId']?.toString();
+
+      if (buyerId == null) throw Exception('Buyer ID not found');
+
+      // IMPORTANT: Based on your API documentation, try different endpoints
+
+      // Try Option 1: POST to /api/chats (if endpoint exists)
+      try {
+        final response = await _dio.post(
+          '$_baseUrl/chats',
+          data: {'orderId': orderId, 'sellerId': sellerId, 'buyerId': buyerId},
+          options: options,
+        );
+
+        if (response.data['success'] == true) {
+          log('✅ Chat created successfully using POST /api/chats');
+          return _parseChatResponse(response.data);
+        }
+      } on DioException catch (e) {
+        log('⚠️ POST /api/chats failed: ${e.response?.statusCode}');
+        // Continue to try other methods
       }
 
-      // Otherwise, create new chat (API might need POST to /api/chats)
-      final response = await _dio.post(
-        _baseUrl,
-        data: {
-          'sellerId': sellerId,
-          'buyerId': buyerId,
-          if (productId != null) 'productId': productId,
-        },
-        options: options,
+      // Try Option 2: Maybe chat is automatically created when first message is sent?
+      // In this case, we'll just return an empty chat session
+      log('⚠️ Chat creation endpoint not found, returning empty chat');
+
+      return ChatSession(
+        chat: ChatRoom(
+          id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+          participants: [
+            ChatParticipant(
+              userId: sellerId,
+              userType: 'Seller',
+              name: 'Seller',
+              lastSeen: DateTime.now(),
+            ),
+            ChatParticipant(
+              userId: buyerId,
+              userType: 'Buyer',
+              name: userInfo['userName'] ?? 'Buyer',
+              lastSeen: DateTime.now(),
+            ),
+          ],
+          updatedAt: DateTime.now(),
+          orderId: orderId,
+        ),
+        messages: [],
       );
-
-      print('✅ Start chat response received');
-
-      if (response.data['success'] == true) {
-        final chatData =
-            response.data['data']?['chat'] ?? response.data['chat'];
-
-        // Get current user info
-        final userInfo = await _getCurrentUserInfo();
-        final currentUserId = userInfo['userId']?.toString();
-
-        final chat = ChatRoom.fromJson(chatData, currentUserId: currentUserId);
-        final messages =
-            (chatData['messages'] as List?)
-                ?.map(
-                  (msg) => BuyerChatModel.fromJson(
-                    msg,
-                    currentUserId: currentUserId,
-                  ),
-                )
-                .toList() ??
-            [];
-
-        return ChatSession(chat: chat, messages: messages);
-      }
-
-      throw Exception('Failed to start chat: ${response.data['message']}');
-    } on DioException catch (e) {
-      print('❌ DioError starting chat: ${e.response?.data}');
-      throw Exception(e.response?.data['message'] ?? 'Network error');
     } catch (e) {
-      print('❌ Error starting chat: $e');
-      throw Exception('Failed to start chat: $e');
+      log('❌ Error creating chat: $e');
+      rethrow;
     }
   }
 
-  Future<List<BuyerChatModel>> getChatMessages(String chatId) async {
-    try {
-      final options = await _getRequestOptions();
-
-      // Try to get chat by ID (might need to use orderId if chat is order-based)
-      final response = await _dio.get('$_baseUrl/$chatId', options: options);
-
-      if (response.data['success'] == true) {
-        final chatData =
-            response.data['data']?['chat'] ?? response.data['chat'];
-        final List<dynamic> messagesData = chatData['messages'] ?? [];
-
-        // Get current user info
-        final userInfo = await _getCurrentUserInfo();
-        final currentUserId = userInfo['userId']?.toString();
-
-        return messagesData
-            .map(
-              (msg) =>
-                  BuyerChatModel.fromJson(msg, currentUserId: currentUserId),
-            )
-            .toList();
-      }
-
-      throw Exception('Failed to load messages');
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Network error');
-    } catch (e) {
-      throw Exception('Failed to load messages: $e');
-    }
-  }
-
-  Future<BuyerChatModel> sendMessage({
+  // Try to send message directly - maybe chat is auto-created on first message
+  Future<BuyerChatModel> sendMessageDirect({
     required String orderId,
     required String message,
+    required String sellerId,
     List<Map<String, dynamic>>? attachments,
   }) async {
     try {
+      log('📤 Sending message directly to order: $orderId');
+
       final token = await _getAuthToken();
       if (token == null) throw Exception('Not authenticated');
 
-      // Prepare form data for file uploads
-      FormData formData;
+      // ✅ FIX: Always send a message, even if it's empty
+      String finalMessage = message;
+
+      // If message is empty but we have attachments, use a default message
+      if (message.isEmpty && attachments != null && attachments.isNotEmpty) {
+        finalMessage = '📷 Image'; // or '📎 Attachment'
+      }
+
+      // Create FormData
+      FormData formData = FormData.fromMap({'message': finalMessage});
+
+      // Add attachments if any
       if (attachments != null && attachments.isNotEmpty) {
-        formData = FormData.fromMap({
-          'message': message,
-          // Add file attachments here if needed
-          // 'attachments': attachments,
-        });
-      } else {
-        formData = FormData.fromMap({'message': message});
+        for (var attachment in attachments) {
+          final file = attachment['file'] as File;
+          final name = attachment['name'] as String? ?? 'file';
+
+          formData.files.add(
+            MapEntry(
+              'attachments',
+              await MultipartFile.fromFile(file.path, filename: name),
+            ),
+          );
+        }
       }
 
       final response = await _dio.post(
-        '$_baseUrl/order/$orderId/message',
+        '$_baseUrl/chats/order/$orderId/message',
         data: formData,
         options: Options(
           headers: {
@@ -350,72 +205,248 @@ class BuyerChatService {
         ),
       );
 
-      if (response.statusCode == 201 || response.data['success'] == true) {
-        // New API returns chat with updated messages
-        final chatData =
-            response.data['data']?['chat'] ?? response.data['chat'];
-        final messages = chatData['messages'] as List?;
-        if (messages != null && messages.isNotEmpty) {
-          // Get current user info
-          final userInfo = await _getCurrentUserInfo();
-          final currentUserId = userInfo['userId']?.toString();
+      if (response.data['success'] == true) {
+        final chatData = response.data['data']?['chat'] ?? response.data;
 
-          // Return the last message (newly sent)
+        // Get current user info
+        final currentUserInfo = await _getCurrentUserInfo();
+        final currentUserId = currentUserInfo['userId']?.toString();
+
+        // Extract the last message (newly sent)
+        final messagesData = chatData['messages'] as List? ?? [];
+        if (messagesData.isNotEmpty) {
+          final lastMessage = messagesData.last;
+
           return BuyerChatModel.fromJson(
-            messages.last,
-            currentUserId: currentUserId,
+            lastMessage,
+            currentUserId: currentUserId!,
+            chatId: chatData['_id']?.toString() ?? '',
+            chatData: chatData,
           );
         }
+
         throw Exception('No message in response');
       }
 
       throw Exception('Failed to send message: ${response.data['message']}');
     } on DioException catch (e) {
+      log('❌ DioError sending message: ${e.message}');
+      if (e.response?.statusCode == 404) {
+        throw Exception('Chat not found. Please try sending a message first.');
+      }
       throw Exception(e.response?.data['message'] ?? 'Network error');
     } catch (e) {
-      throw Exception('Failed to send message: $e');
+      log('❌ Error sending message: $e');
+      rethrow;
     }
   }
 
-  Future<void> markAsRead(String chatId) async {
+  // Main send message method
+  Future<BuyerChatModel> sendMessage({
+    required String orderId,
+    required String message,
+    required String sellerId,
+    List<Map<String, dynamic>>? attachments,
+  }) async {
     try {
-      final options = await _getRequestOptions();
+      // Try to get existing chat first
+      try {
+        final chat = await getChatByOrder(orderId);
+        log('✅ Chat exists, sending message...');
 
-      // New API might use PUT /api/chats/:chatId/read
-      await _dio.put('$_baseUrl/$chatId/read', options: options);
-    } on DioException catch (e) {
-      // If endpoint doesn't exist, try old endpoint
-      if (e.response?.statusCode == 404) {
-        try {
-          await _dio.put(
-            '$_baseUrl/mark-read',
-            data: {'chatId': chatId},
-            options: await _getRequestOptions(),
+        return await sendMessageDirect(
+          orderId: orderId,
+          message: message,
+          sellerId: sellerId,
+          attachments: attachments,
+        );
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 404) {
+          log(
+            '⚠️ Chat not found, trying to send message directly (might auto-create chat)',
           );
-        } catch (e2) {
-          print('⚠️ Mark as read failed: $e2');
-          // Don't throw - marking as read is not critical
+
+          // Try to send message directly - chat might be auto-created
+          return await sendMessageDirect(
+            orderId: orderId,
+            message: message,
+            sellerId: sellerId,
+            attachments: attachments,
+          );
         }
-      } else {
-        throw Exception(e.response?.data['message'] ?? 'Network error');
+        rethrow;
+      } catch (e) {
+        if (e.toString().contains('Chat not found')) {
+          log('⚠️ Chat not found, trying to send message directly');
+
+          return await sendMessageDirect(
+            orderId: orderId,
+            message: message,
+            sellerId: sellerId,
+            attachments: attachments,
+          );
+        }
+        rethrow;
       }
     } catch (e) {
-      throw Exception('Failed to mark as read: $e');
+      log('❌ Error in sendMessage: $e');
+      rethrow;
     }
   }
 
-  Future<int> getUnreadCount() async {
+  // Open chat - simplified version
+  Future<ChatSession> openChat({
+    required String sellerId,
+    required String orderId,
+  }) async {
     try {
-      // Calculate unread from chats list
-      final chats = await getChats();
-      int totalUnread = 0;
-      for (var chat in chats) {
-        totalUnread += chat.unreadCount;
+      log('🚀 Opening chat for order: $orderId');
+
+      // Try to get existing chat
+      try {
+        return await getChatByOrder(orderId);
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 404) {
+          log('⚠️ Chat not found, returning empty chat session');
+
+          // Get current user info
+          final userInfo = await _getCurrentUserInfo();
+          final buyerId = userInfo['userId']?.toString() ?? '';
+
+          return ChatSession(
+            chat: ChatRoom(
+              id: 'temp_$orderId',
+              participants: [
+                ChatParticipant(
+                  userId: sellerId,
+                  userType: 'Seller',
+                  name: 'Seller',
+                  lastSeen: DateTime.now(),
+                ),
+                ChatParticipant(
+                  userId: buyerId,
+                  userType: 'Buyer',
+                  name: userInfo['userName'] ?? 'Buyer',
+                  lastSeen: DateTime.now(),
+                ),
+              ],
+              updatedAt: DateTime.now(),
+              orderId: orderId,
+            ),
+            messages: [],
+          );
+        }
+        rethrow;
       }
-      return totalUnread;
     } catch (e) {
-      print('Failed to get unread count: $e');
-      return 0;
+      log('❌ Error opening chat: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<ChatRoom>> getChats() async {
+    try {
+      log('📤 Getting all chats...');
+
+      final options = await _getRequestOptions();
+      final response = await _dio.get('$_baseUrl/chats', options: options);
+
+      if (response.data['success'] == true) {
+        // Get current user info
+        final currentUserInfo = await _getCurrentUserInfo();
+        final currentUserId = currentUserInfo['userId']?.toString();
+
+        // Extract chats array
+        List<dynamic> chatsData;
+
+        if (response.data['data'] != null &&
+            response.data['data']['chats'] != null) {
+          chatsData = response.data['data']['chats'];
+          log('📊 Found ${chatsData.length} chats in data.data.chats');
+        } else if (response.data['chats'] != null) {
+          chatsData = response.data['chats'];
+          log('📊 Found ${chatsData.length} chats in data.chats');
+        } else {
+          log('⚠️ No chats data found in response');
+          throw Exception('No chats data found');
+        }
+
+        // Parse chats
+        List<ChatRoom> chatRooms = [];
+        for (int i = 0; i < chatsData.length; i++) {
+          try {
+            log('\n📄 Parsing chat ${i + 1}/${chatsData.length}');
+            final chatRoom = ChatRoom.fromJson(
+              chatsData[i],
+              currentUserId: currentUserId,
+            );
+            chatRooms.add(chatRoom);
+            log('✅ Successfully parsed chat: ${chatRoom.id}');
+          } catch (e) {
+            log('❌ Error parsing chat ${i + 1}: $e');
+            log('❌ Chat data: ${chatsData[i]}');
+            // Continue with other chats instead of failing completely
+          }
+        }
+
+        log(
+          '✅ Successfully loaded ${chatRooms.length}/${chatsData.length} chats',
+        );
+        return chatRooms;
+      }
+
+      throw Exception('Failed to load chats: ${response.data['message']}');
+    } on DioException catch (e) {
+      log('❌ DioError getting chats: ${e.message}');
+      throw Exception(e.response?.data['message'] ?? 'Network error');
+    } catch (e) {
+      log('❌ Error getting chats: $e');
+      rethrow;
+    }
+  }
+
+  ChatSession _parseChatResponse(Map<String, dynamic> responseData) {
+    final chatData = responseData['data']?['chat'] ?? responseData;
+
+    // Get current user info
+    // final currentUserInfo = _getCurrentUserInfo();
+    final currentUserId = _storage.getUserData()?['_id']?.toString() ?? '';
+
+    final chat = ChatRoom.fromJson(chatData, currentUserId: currentUserId);
+
+    // Parse messages
+    final List<BuyerChatModel> messages = [];
+    final messagesData = chatData['messages'] as List? ?? [];
+
+    for (var msg in messagesData) {
+      final message = BuyerChatModel.fromJson(
+        msg,
+        currentUserId: currentUserId,
+        chatId: chat.id,
+        chatData: chatData,
+      );
+      messages.add(message);
+    }
+
+    return ChatSession(chat: chat, messages: messages);
+  }
+
+  Future<Map<String, dynamic>> _getCurrentUserInfo() async {
+    try {
+      final userData = _storage.getUserData();
+      return {
+        'userId':
+            userData?['_id']?.toString() ?? userData?['id']?.toString() ?? '',
+        'userType': userData?['userType']?.toString() ?? 'Buyer',
+        'userName':
+            userData?['fullName']?.toString() ??
+            userData?['businessName']?.toString() ??
+            userData?['name']?.toString() ??
+            'User',
+      };
+    } catch (e) {
+      log('Error getting current user info: $e');
+      return {'userId': '', 'userType': 'Buyer', 'userName': 'User'};
     }
   }
 }

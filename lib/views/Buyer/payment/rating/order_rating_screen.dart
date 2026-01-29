@@ -1,13 +1,8 @@
 import 'dart:developer' as developer;
-import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
-import 'package:wood_service/views/Buyer/payment/rating/review_provider.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 
 class OrderRatingScreen extends StatefulWidget {
@@ -41,7 +36,7 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
   final TextEditingController _reviewController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
   bool _isLoading = false;
-  List<File> _selectedImages = []; // Up to 5 images
+  final List<File> _selectedImages = []; // Up to 5 images
 
   final List<String> _ratingTitles = [
     'Very Dissatisfied',
@@ -167,10 +162,8 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
       );
 
       developer.log(
-        '📝 --------Submitting review for product: ${widget.buyerProduct.id}',
+        '📝 --------Submitting review for product: ${widget.buyerProduct.id} -----  Rating: $_selectedRating  Comment: ${_reviewController.text}',
       );
-      developer.log('   Rating: $_selectedRating');
-      developer.log('   Comment: ${_reviewController.text}');
 
       // ✅ USE THE CORRECT METHOD WITH SERVICE ID AND SELLER ID
       final result = await reviewProvider.submitOrderReview(
@@ -237,7 +230,7 @@ class _OrderRatingScreenState extends State<OrderRatingScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Only ${remainingSlots} image(s) added (max 5 allowed)',
+                'Only $remainingSlots image(s) added (max 5 allowed)',
               ),
               backgroundColor: Colors.orange,
             ),

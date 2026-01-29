@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
-import 'package:wood_service/views/Buyer/payment/rating/order_rating_screen.dart';
+import 'package:wood_service/widgets/app_input_decoration.dart';
 
 class BuyNowBottomSheet extends StatefulWidget {
   final BuyerProductModel product;
@@ -160,37 +160,37 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
           log('✅ Order placed! ID: $orderId');
           log('message');
           log(' ---------- 1111111$orderId');
-
-          if (orderId != null) {
-            log(' ---------- $orderId');
-            // Navigate to review screen
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => OrderRatingScreen(
-                  orderId: orderId,
-                  orderItemId: orderId, // Using orderId as fallback
-                  items: [widget.product.title],
-                  buyerProduct: widget.product,
-                  cartItemId: orderId,
-                  productId: widget.product.id,
-                  quantity: widget.quantity,
-                  totalPrice: total.toDouble(),
-                ),
-              ),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Order placed successfully!'),
-                backgroundColor: Colors.green,
-              ),
-            );
-            Navigator.pop(
-              context,
-              true,
-            ); // Close bottom sheet and return to product
-          }
+          Navigator.pop(context);
+          // if (orderId != null) {
+          //   log(' ---------- $orderId');
+          //   // Navigate to review screen
+          //   Navigator.push(
+          //     context,
+          //     MaterialPageRoute(
+          //       builder: (_) => OrderRatingScreen(
+          //         orderId: orderId,
+          //         orderItemId: orderId, // Using orderId as fallback
+          //         items: [widget.product.title],
+          //         buyerProduct: widget.product,
+          //         cartItemId: orderId,
+          //         productId: widget.product.id,
+          //         quantity: widget.quantity,
+          //         totalPrice: total.toDouble(),
+          //       ),
+          //     ),
+          //   );
+          // } else {
+          //   ScaffoldMessenger.of(context).showSnackBar(
+          //     const SnackBar(
+          //       content: Text('Order placed successfully!'),
+          //       backgroundColor: Colors.green,
+          //     ),
+          //   );
+          //   Navigator.pop(
+          //     context,
+          //     true,
+          //   ); // Close bottom sheet and return to product
+          // }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -403,32 +403,29 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
         ),
         const SizedBox(height: 12),
 
-        // Description
-        TextField(
+        CustomTextFormField(
           controller: _descriptionController,
-          decoration: const InputDecoration(
-            labelText: 'Description (Required)',
-            hintText: 'Describe your order requirements...',
-            border: OutlineInputBorder(),
-            filled: true,
-            fillColor: Colors.white,
-          ),
+          hintText: 'Describe your order requirements...',
           maxLines: 3,
+          validator: (value) => value?.isEmpty == true ? 'Required' : null,
+          prefixIcon: Icon(Icons.description),
+          textInputType: TextInputType.multiline,
+          textInputAction: TextInputAction.newline,
+          textAlign: TextAlign.start,
+          minline: 3,
+          fillcolor: Colors.white,
         ),
 
         const SizedBox(height: 12),
 
-        // Location
-        TextField(
+        CustomTextFormField(
           controller: _locationController,
-          decoration: const InputDecoration(
-            labelText: 'Location (Required)',
-            hintText: '123 Main St, New York, NY',
-            border: OutlineInputBorder(),
-            filled: true,
-            fillColor: Colors.white,
-            prefixIcon: Icon(Icons.location_on),
-          ),
+          hintText: '123 Main St, New York, NY',
+          prefixIcon: Icon(Icons.location_on),
+          textInputType: TextInputType.streetAddress,
+          textInputAction: TextInputAction.next,
+          textAlign: TextAlign.start,
+          fillcolor: Colors.white,
         ),
 
         const SizedBox(height: 12),
@@ -451,12 +448,10 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
             }
           },
           child: InputDecorator(
-            decoration: const InputDecoration(
-              labelText: 'Preferred Date *',
-              border: OutlineInputBorder(),
-              filled: true,
-              fillColor: Colors.white,
-              prefixIcon: Icon(Icons.calendar_today),
+            decoration: AppInputDecoration.outlined(
+              context: context,
+              labelText: 'Preferred Date',
+              hintText: 'Preferred Date',
             ),
             child: Text(
               _selectedDate ??
@@ -474,31 +469,27 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
         const SizedBox(height: 12),
 
         // Estimated Duration
-        TextField(
+        CustomTextFormField(
           controller: _estimatedDurationController,
-          decoration: const InputDecoration(
-            labelText: 'Estimated Duration (Optional)',
-            hintText: 'e.g., 2 weeks, 1 month',
-            border: OutlineInputBorder(),
-            filled: true,
-            fillColor: Colors.white,
-            prefixIcon: Icon(Icons.schedule),
-          ),
+          hintText: 'e.g., 2 weeks, 1 month',
+          prefixIcon: Icon(Icons.schedule),
+          textInputType: TextInputType.text,
+          textInputAction: TextInputAction.next,
+          textAlign: TextAlign.start,
+          fillcolor: Colors.white,
         ),
 
         const SizedBox(height: 12),
 
-        // Special Requirements
-        TextField(
+        CustomTextFormField(
           controller: _specialRequirementsController,
-          decoration: const InputDecoration(
-            labelText: 'Special Requirements (Optional)',
-            hintText: 'Any special instructions or requirements...',
-            border: OutlineInputBorder(),
-            filled: true,
-            fillColor: Colors.white,
-          ),
+          hintText: 'Any special instructions or requirements...',
           maxLines: 2,
+          prefixIcon: Icon(Icons.info),
+          textInputType: TextInputType.multiline,
+          textInputAction: TextInputAction.newline,
+          textAlign: TextAlign.start,
+          fillcolor: Colors.white,
         ),
       ],
     );
@@ -556,19 +547,19 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
                 activeColor: AppColors.brightOrange,
               ),
             ),
-            Expanded(
-              child: RadioListTile<String>(
-                title: const Text('Cash on Delivery'),
-                value: 'cod',
-                groupValue: _paymentMethod,
-                onChanged: (value) {
-                  setState(() {
-                    _paymentMethod = value;
-                  });
-                },
-                activeColor: AppColors.brightOrange,
-              ),
-            ),
+            // Expanded(
+            //   child: RadioListTile<String>(
+            //     title: const Text('Cash on Delivery'),
+            //     value: 'cod',
+            //     groupValue: _paymentMethod,
+            //     onChanged: (value) {
+            //       setState(() {
+            //         _paymentMethod = value;
+            //       });
+            //     },
+            //     activeColor: AppColors.brightOrange,
+            //   ),
+            // ),
           ],
         ),
       ],

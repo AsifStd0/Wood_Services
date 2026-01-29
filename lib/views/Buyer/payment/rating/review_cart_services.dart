@@ -2,8 +2,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:wood_service/app/config.dart';
-import 'package:wood_service/app/locator.dart';
-import 'package:wood_service/core/services/buyer_local_storage_service.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 
 class ReviewService {
@@ -11,7 +9,7 @@ class ReviewService {
   final UnifiedLocalStorageServiceImpl _storage =
       UnifiedLocalStorageServiceImpl();
   Future<String?> _getToken() async {
-    return await _storage.getToken();
+    return _storage.getToken();
   }
 
   Future<Map<String, String>> _getHeaders() async {

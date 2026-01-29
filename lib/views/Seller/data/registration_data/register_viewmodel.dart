@@ -1,19 +1,20 @@
 // view_models/register_viewmodel.dart
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:provider/provider.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Buyer/buyer_main/buyer_main.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';
-import 'package:wood_service/views/Seller/data/services/new_service/auth_service.dart';
-import 'package:wood_service/views/Seller/signup.dart/main_se.dart';
+import 'package:wood_service/views/Seller/data/services/auth_service.dart';
+import 'package:wood_service/views/Seller/main_seller_screen.dart';
 
 class RegisterViewModel extends ChangeNotifier {
   final AuthService _authService;
@@ -431,6 +432,7 @@ class RegisterViewModel extends ChangeNotifier {
       password: passwordController.text,
       phone: phoneNumber, // Now int
       role: role,
+
       address: addressController.text.trim().isNotEmpty
           ? addressController.text.trim()
           : null,
@@ -475,7 +477,7 @@ class RegisterViewModel extends ChangeNotifier {
     log('🔍 Validating form...');
 
     if (!validateForm()) {
-      log('❌ Form validation failed: ${_errorMessage}');
+      log('❌ Form validation failed: $_errorMessage');
       return null;
     }
 
@@ -505,6 +507,7 @@ class RegisterViewModel extends ChangeNotifier {
       log('   ID: ${user.id}');
       log('   Name: ${user.name}');
       log('   Email: ${user.email}');
+      log('   Address --------------------------------------: ${user.address}');
       log(
         '   Phone: ${user.phone} (Type: ${user.phone.runtimeType})',
       ); // Should show int
@@ -580,10 +583,6 @@ class RegisterViewModel extends ChangeNotifier {
         log('   $key: $value (Type: ${value.runtimeType})');
       });
 
-      log(
-        '🔑 Token extracted (first 20 chars): ${token.substring(0, min(token.length, 20))}...',
-      );
-
       // Create UserModel from API response
       log('🔄 Creating UserModel...');
       final user = UserModel.fromJson(userData);
@@ -646,7 +645,6 @@ class RegisterViewModel extends ChangeNotifier {
   }
 
   // Helper function
-  int min(int a, int b) => a < b ? a : b;
   Future<void> handleSubmission(BuildContext context, String role) async {
     final viewModel = context.read<RegisterViewModel>();
 
@@ -701,6 +699,7 @@ class RegisterViewModel extends ChangeNotifier {
         );
       } else if (role == 'buyer') {
         Navigator.of(
+          // ignore: use_build_context_synchronously
           context,
         ).pushReplacement(MaterialPageRoute(builder: (_) => BuyerMainScreen()));
       } else {

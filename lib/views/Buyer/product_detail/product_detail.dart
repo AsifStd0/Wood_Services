@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
-import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/product_detail/desc_spec_vari_widget.dart';
 import 'package:wood_service/views/Buyer/product_detail/product_detail_second_widget.dart';
 import 'package:wood_service/views/Buyer/product_detail/product_detail_widget.dart';

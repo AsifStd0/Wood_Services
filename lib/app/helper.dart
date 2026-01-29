@@ -25,7 +25,6 @@ Future<Map<String, dynamic>> checkAuthStatus() async {
     // If user is logged in, check if data is complete
     if (isUserLoggedIn) {
       final userData = storage.getUserData();
-      final userModel = storage.getUserModel();
 
       if (userData != null) {
         log(
@@ -57,31 +56,10 @@ Future<Map<String, dynamic>> checkAuthStatus() async {
             }
           }
         }
-
-        // if (missingFields.isNotEmpty) {
-        //   log('⚠️ Missing required fields for $userRole: $missingFields');
-
-        //   // Try to refresh user data from API
-        //   try {
-        //     final authService = locator<AuthService>();
-        //     final freshData = await authService.getProfile();
-
-        //     // Save updated data
-        //     await storage.saveUserModel(freshData);
-        //     log('✅ Successfully refreshed user data');
-
-        //   } catch (refreshError) {
-        //     log('⚠️ Could not refresh user data: $refreshError');
-        //   }
-        // } else {
-        //   log('✅ User data is complete');
-        // }
-      } else {
         log('⚠️ User data is null');
       }
     }
 
-    log('');
     log('🔐 FINAL AUTH STATUS:');
     log('   User: ${isUserLoggedIn ? "✅ LOGGED IN" : "❌ NOT LOGGED IN"}');
     log('   Role: ${userRole ?? "Not set"}');
@@ -208,46 +186,9 @@ bool isProfileComplete() {
   return false;
 }
 
-// // Get user display info
-// Map<String, dynamic> getUserDisplayInfo() {
-//   final user = getCurrentUser();
-//   return {
-//     'name': user?.name ?? 'Guest',
-//     'email': user?.email ?? '',
-//     'role': user?.role ?? 'guest',
-//     'profileImage': user?.profileImage,
-//     'displayName': user?.isSeller && user.shopName != null
-//         ? user.shopName
-//         : user?.name ?? 'User',
-//     'isProfileComplete': isProfileComplete(),
-//   };
-// }
-
 void dismissKeyboard(BuildContext context) {
   FocusScopeNode currentFocus = FocusScope.of(context);
   if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
     FocusManager.instance.primaryFocus?.unfocus();
-  }
-}
-
-// Navigation helper based on auth status
-void navigateBasedOnAuth(BuildContext context) {
-  if (isUserLoggedIn) {
-    switch (userRole) {
-      case 'seller':
-        // Navigator.pushReplacementNamed(context, '/seller-dashboard');
-        break;
-      case 'buyer':
-        // Navigator.pushReplacementNamed(context, '/buyer-dashboard');
-        break;
-      case 'admin':
-        // Navigator.pushReplacementNamed(context, '/admin-dashboard');
-        break;
-      default:
-        // Navigator.pushReplacementNamed(context, '/register');
-        break;
-    }
-  } else {
-    // Navigator.pushReplacementNamed(context, '/register');
   }
 }

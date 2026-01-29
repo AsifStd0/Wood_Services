@@ -12,6 +12,7 @@ class BuyerOrder {
   final double shippingFee;
   final double taxAmount;
   final double totalAmount;
+  final String currency; // Add currency field
   final String paymentMethod;
   final String paymentStatus;
   final OrderStatusBuyer status;
@@ -42,6 +43,7 @@ class BuyerOrder {
     required this.shippingFee,
     required this.taxAmount,
     required this.totalAmount,
+    this.currency = 'USD', // Default currency
     required this.paymentMethod,
     required this.paymentStatus,
     required this.status,
@@ -104,9 +106,20 @@ class BuyerOrder {
     if (serviceIdObj is Map) {
       productId = serviceIdObj['_id']?.toString() ?? '';
       productName = serviceIdObj['title']?.toString() ?? 'Unknown Product';
-      final images = serviceIdObj['images'];
-      if (images is List && images.isNotEmpty) {
-        productImage = images.first?.toString();
+
+      // Try to get image from featuredImage first, then images array
+      productImage = serviceIdObj['featuredImage']?.toString();
+      if (productImage == null || productImage.isEmpty) {
+        final images = serviceIdObj['images'];
+        if (images is List && images.isNotEmpty) {
+          // Get first valid image URL
+          for (var img in images) {
+            if (img != null && img.toString().isNotEmpty) {
+              productImage = img.toString();
+              break;
+            }
+          }
+        }
       }
     } else {
       productId = serviceIdObj?.toString() ?? '';
@@ -125,10 +138,22 @@ class BuyerOrder {
           sellerEmail: sellerEmail,
           sellerPhone: sellerPhone,
           quantity: (json['quantity'] ?? 1).toInt(),
-          unitPrice: (pricing['unitPrice'] ?? pricing['basePrice'] ?? 0)
-              .toDouble(),
-          subtotal: (pricing['finalAmount'] ?? pricing['basePrice'] ?? 0)
-              .toDouble(),
+          unitPrice:
+              (pricing['unitPrice'] ??
+                      (pricing['useSalePrice'] == true
+                          ? (pricing['salePrice'] ?? pricing['basePrice'] ?? 0)
+                          : (pricing['basePrice'] ?? 0)))
+                  .toDouble(),
+          subtotal:
+              (pricing['finalAmount'] ??
+                      (pricing['useSalePrice'] == true
+                          ? ((pricing['salePrice'] ??
+                                    pricing['basePrice'] ??
+                                    0) *
+                                (json['quantity'] ?? 1))
+                          : (pricing['basePrice'] ?? 0) *
+                                (json['quantity'] ?? 1)))
+                  .toDouble(),
           reviewed: json['reviewed'] ?? false,
         ),
       );
@@ -151,6 +176,10 @@ class BuyerOrder {
       taxAmount: (pricing['taxAmount'] ?? 0).toDouble(),
       totalAmount: (pricing['finalAmount'] ?? pricing['basePrice'] ?? 0)
           .toDouble(),
+      currency:
+          pricing['currency']?.toString() ??
+          json['currency']?.toString() ??
+          'USD',
       paymentMethod:
           pricing['paymentMethod']?.toString() ??
           json['paymentMethod']?.toString() ??
@@ -201,40 +230,41 @@ class BuyerOrder {
     );
   }
 
+  // print all data  ???
   static OrderStatusBuyer _parseOrderStatus(Map<String, dynamic> json) {
     final status = json['status']?.toString().toLowerCase() ?? '';
     final timeline = json['timeline'] is Map
         ? json['timeline']
         : <String, dynamic>{};
 
-    log('🔍 Parsing order status:');
-    log('   Raw status: $status');
-    log('   Timeline: $timeline');
+    // log('🔍 Parsing order status:');
+    // log('   Raw status: $status');
+    // log('   Timeline: $timeline');
 
     // Check timeline dates to determine actual status
     if (timeline['deliveredAt'] != null) {
-      log(
-        '   → Has deliveredAt: ${timeline['deliveredAt']} → OrderStatusBuyer.completed',
-      );
+      // log(
+      //   '   → Has deliveredAt: ${timeline['deliveredAt']} → OrderStatusBuyer.completed',
+      // );
       return OrderStatusBuyer.completed;
     }
 
     if (timeline['shippedAt'] != null) {
-      log(
-        '   → Has shippedAt: ${timeline['shippedAt']} → OrderStatusBuyer.accepted',
-      );
+      // log(
+      //   '   → Has shippedAt: ${timeline['shippedAt']} → OrderStatusBuyer.accepted',
+      // );
       return OrderStatusBuyer.accepted;
     }
 
     if (timeline['acceptedAt'] != null) {
-      log(
-        '   → Has acceptedAt: ${timeline['acceptedAt']} → OrderStatusBuyer.accepted',
-      );
+      // log(
+      //   '   → Has acceptedAt: ${timeline['acceptedAt']} → OrderStatusBuyer.accepted',
+      // );
       return OrderStatusBuyer.accepted;
     }
 
     if (timeline['cancelledAt'] != null || timeline['rejectedAt'] != null) {
-      log('   → Has cancelledAt/rejectedAt → OrderStatusBuyer.declined');
+      // log('   → Has cancelledAt/rejectedAt → OrderStatusBuyer.declined');
       return OrderStatusBuyer.declined;
     }
 
@@ -265,7 +295,27 @@ class BuyerOrder {
 
   // Helper methods
   String get formattedDate => DateFormat('MMM dd, yyyy').format(requestedAt);
-  String get formattedTotal => '₹${totalAmount.toStringAsFixed(2)}';
+  String get formattedTotal {
+    // Use currency symbol based on currency code
+    String symbol = _getCurrencySymbol(currency);
+    return '$symbol${totalAmount.toStringAsFixed(2)}';
+  }
+
+  String _getCurrencySymbol(String currencyCode) {
+    switch (currencyCode.toUpperCase()) {
+      case 'USD':
+        return '\$';
+      case 'EUR':
+        return '€';
+      case 'GBP':
+        return '£';
+      case 'INR':
+      case '₹':
+        return '₹';
+      default:
+        return '$currencyCode ';
+    }
+  }
 
   String get statusText {
     switch (status) {
@@ -279,6 +329,10 @@ class BuyerOrder {
         return cancelledAt != null ? 'Cancelled' : 'Rejected';
       case OrderStatusBuyer.completed:
         return 'Delivered';
+      case OrderStatusBuyer.cancelled:
+        return 'Cancelled';
+      case OrderStatusBuyer.rejected:
+        return 'Rejected';
     }
   }
 
@@ -292,6 +346,10 @@ class BuyerOrder {
         return Colors.red;
       case OrderStatusBuyer.completed:
         return Colors.green;
+      case OrderStatusBuyer.cancelled:
+        return Colors.red;
+      case OrderStatusBuyer.rejected:
+        return Colors.red;
     }
   }
 
@@ -349,4 +407,11 @@ class OrderItem {
   String get formattedSubtotal => '₹${subtotal.toStringAsFixed(2)}';
 }
 
-enum OrderStatusBuyer { pending, accepted, declined, completed }
+enum OrderStatusBuyer {
+  pending,
+  accepted,
+  declined,
+  completed,
+  cancelled,
+  rejected,
+}

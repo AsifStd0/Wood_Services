@@ -37,7 +37,17 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
         title: 'Seller Dashboard',
         showBackButton: false,
         actions: [
-          IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SellerNotificaionScreen(),
+                ),
+              );
+            },
+          ),
         ],
       ),
       body: ListenableProvider.value(
@@ -163,23 +173,6 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
           style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 10),
         ),
       ],
-    );
-  }
-
-  Widget _buildFilterTabs(VisitRequestsProvider visitProvider) {
-    return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: [
-          _buildFilterChip('All', 'all', visitProvider),
-          _buildFilterChip('Pending', 'pending', visitProvider),
-          _buildFilterChip('Accepted', 'accepted', visitProvider),
-          _buildFilterChip('Rejected', 'rejected', visitProvider),
-          _buildFilterChip('Completed', 'completed', visitProvider),
-        ],
-      ),
     );
   }
 
@@ -517,15 +510,27 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
     }
   }
 
+  // In seller_home_screen.dart, update the _acceptRequest method:
   Future<void> _acceptRequest(
     String requestId,
     VisitRequestsProvider visitProvider,
   ) async {
-    final result = await visitProvider.acceptRequest(requestId);
+    // Show dialog to get estimated cost
+    final estimatedCost = await _showEstimatedCostDialog(context);
+
+    if (estimatedCost == null) {
+      return; // User cancelled
+    }
+
+    final result = await visitProvider.acceptRequest(
+      requestId: requestId,
+      estimatedCost: estimatedCost,
+    );
+
     if (result && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Visit request accepted'),
+          content: Text('Visit request accepted with estimated cost'),
           backgroundColor: Colors.green,
         ),
       );
@@ -539,6 +544,88 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
         ),
       );
     }
+  }
+
+  Future<double?> _showEstimatedCostDialog(BuildContext context) async {
+    final costController = TextEditingController();
+
+    return await showDialog<double>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Enter Estimated Cost'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: costController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Estimated Cost (USD)',
+                prefixText: '\$ ',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter estimated cost';
+                }
+                final cost = double.tryParse(value);
+                if (cost == null || cost <= 0) {
+                  return 'Please enter a valid amount';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Estimated cost is required when accepting a visit request',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, null),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final cost = double.tryParse(costController.text);
+              if (cost != null && cost > 0) {
+                Navigator.pop(context, cost);
+              }
+            },
+            child: const Text('Accept'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Also update the filter tabs to include all statuses:
+  Widget _buildFilterTabs(VisitRequestsProvider visitProvider) {
+    final statuses = [
+      {'label': 'All', 'value': 'all'},
+      {'label': 'Pending', 'value': 'pending'},
+      {'label': 'Accepted', 'value': 'accepted'},
+      {'label': 'Rejected', 'value': 'rejected'},
+      {'label': 'Completed', 'value': 'completed'},
+      {'label': 'Cancelled', 'value': 'cancelled'},
+      {'label': 'Visited', 'value': 'visited'},
+    ];
+
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: statuses.map((status) {
+          return _buildFilterChip(
+            status['label']!,
+            status['value']!,
+            visitProvider,
+          );
+        }).toList(),
+      ),
+    );
   }
 
   Future<void> _rejectRequest(

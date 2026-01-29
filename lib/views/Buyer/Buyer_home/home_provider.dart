@@ -85,21 +85,6 @@ class BuyerHomeViewProvider extends ChangeNotifier {
   String? get selectedProvider => _selectedProvider;
   String? get selectedColor => _selectedColor;
 
-  // ========== CONSTRUCTOR ==========
-
-  // // ========== AUTH METHODS ==========
-  // void setAuthToken(String token) {
-  //   _authToken = token;
-  //   _favoriteProvider.setToken(token);
-  //   notifyListeners();
-  // }
-
-  // void clearAuthToken() {
-  //   _authToken = null;
-  //   _favoriteProvider.setToken(null);
-  //   notifyListeners();
-  // }
-
   // ========== PRODUCT METHODS ==========
   Future<void> loadProducts() async {
     if (_isLoading) return;
@@ -122,7 +107,7 @@ class BuyerHomeViewProvider extends ChangeNotifier {
 
       // Load favorite status from server to ensure accuracy
       final storage = locator<UnifiedLocalStorageServiceImpl>();
-      final token = await storage.getToken();
+      final token = storage.getToken();
       if (token != null && token.isNotEmpty) {
         final productIds = _products.map((p) => p.id).toList();
         await _favoriteProvider.loadFavoriteStatusForProducts(productIds);
@@ -292,7 +277,7 @@ class BuyerHomeViewProvider extends ChangeNotifier {
   // ! *********
   // ! *********
   // Add visit request state
-  Map<String, String> _visitRequestStatus = {}; // sellerId -> status
+  final Map<String, String> _visitRequestStatus = {}; // sellerId -> status
   bool _isRequestingVisit = false;
   String? _visitRequestError;
   // Getter for visit request status

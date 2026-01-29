@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+
 import 'package:http/http.dart' as http;
 import 'package:wood_service/app/config.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
@@ -8,9 +9,9 @@ import 'package:wood_service/views/Buyer/Model/buyer_order_model.dart';
 
 abstract class BuyerOrderRepository {
   Future<List<BuyerOrder>> getOrders({String? status});
-  Future<BuyerOrder> getOrderDetails(String orderId);
+  // Future<BuyerOrder> getOrderDetails(String orderId);
   Future<Map<String, int>> getOrderSummary();
-  Future<void> cancelOrder(String orderId, String reason);
+  Future<void> cancelOrder(String orderId);
   Future<void> markAsReceived(String orderId);
   Future<void> submitReview(
     String orderId, {
@@ -29,16 +30,14 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
 
   @override
   Future<List<BuyerOrder>> getOrders({String? status}) async {
-    log('message');
-    log('🔄 Fetching buyer orders with status: $status');
+    log('00000 🔄 Fetching buyer orders with status: $status');
 
     try {
       final token = storageService.getToken();
       if (token == null) throw Exception('Please login again');
-
       final uri = Uri.parse('$baseUrl/buyer/orders');
 
-      log('📤 Fetching orders from: $uri');
+      log('📤 --------Fetching orders from: $uri');
 
       final response = await http
           .get(
@@ -52,32 +51,18 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        log('📥 Orders response: ${data['success']}');
+        log('📥 Orders response:  buyer${data['success']}');
 
         // 🔥 ADD THIS DEBUG
         log('📊 Full response data:');
         log('   success: ${data['success']}');
-        log('   message: ${data['message']}');
-        log('   data type: ${data['data'].runtimeType}');
-
-        if (data['data'] is Map) {
-          log('   data keys: ${data['data'].keys.toList()}');
-          if (data['data']['orders'] is List) {
-            log('   orders count: ${data['data']['orders'].length}');
-            if (data['data']['orders'].isNotEmpty) {
-              // Log first order structure
-              log('   First order structure:');
-              log('     ${data['data']['orders'][0]}');
-            }
-          }
-        }
 
         if (data['success'] == true) {
           // New API structure: data.data.orders[]
           final List<dynamic> orders =
               data['data']?['orders'] ?? data['orders'] ?? [];
           log('✅ Found ${orders.length} orders');
-
+          log('orders: ${jsonEncode(orders)}');
           return orders.map((order) => BuyerOrder.fromJson(order)).toList();
         } else {
           throw Exception(data['message'] ?? 'Failed to load orders');
@@ -100,7 +85,12 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
       // Calculate summary from orders list
       final orders = await getOrders();
 
-      int pending = 0, accepted = 0, declined = 0, completed = 0;
+      int pending = 0,
+          accepted = 0,
+          declined = 0,
+          completed = 0,
+          cancelled = 0,
+          rejected = 0;
 
       for (var order in orders) {
         switch (order.status) {
@@ -116,6 +106,12 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
           case OrderStatusBuyer.completed:
             completed++;
             break;
+          case OrderStatusBuyer.cancelled:
+            cancelled++;
+            break;
+          case OrderStatusBuyer.rejected:
+            rejected++;
+            break;
         }
       }
 
@@ -124,6 +120,8 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
         'accepted': accepted,
         'declined': declined,
         'completed': completed,
+        'cancelled': cancelled,
+        'rejected': rejected,
         'total': orders.length,
       };
     } catch (e) {
@@ -133,53 +131,54 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
         'accepted': 0,
         'declined': 0,
         'completed': 0,
+        'cancelled': 0,
+        'rejected': 0,
         'total': 0,
       };
     }
   }
 
+  // @override
+  // Future<BuyerOrder> getOrderDetails(String orderId) async {
+  //   try {
+  //     final token = storageService.getToken();
+  //     if (token == null) throw Exception('Please login again');
+
+  //     final response = await http
+  //         .get(
+  //           Uri.parse('$baseUrl/buyer/orders/$orderId'),
+  //           headers: {'Authorization': 'Bearer $token'},
+  //         )
+  //         .timeout(const Duration(seconds: 30));
+
+  //     if (response.statusCode == 200) {
+  //       final data = jsonDecode(response.body);
+  //       if (data['success'] == true) {
+  //         // New API structure: data.data.order or data.order
+  //         final orderData =
+  //             data['data']?['order'] ?? data['order'] ?? data['data'];
+  //         return BuyerOrder.fromJson(orderData);
+  //       } else {
+  //         throw Exception(data['message'] ?? 'Failed to fetch order details');
+  //       }
+  //     } else {
+  //       throw Exception('Server error: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     log('❌ Error fetching order details: $e');
+  //     rethrow;
+  //   }
+  // }
+
   @override
-  Future<BuyerOrder> getOrderDetails(String orderId) async {
-    try {
-      final token = storageService.getToken();
-      if (token == null) throw Exception('Please login again');
-
-      final response = await http
-          .get(
-            Uri.parse('$baseUrl/buyer/orders/$orderId'),
-            headers: {'Authorization': 'Bearer $token'},
-          )
-          .timeout(const Duration(seconds: 30));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          // New API structure: data.data.order or data.order
-          final orderData =
-              data['data']?['order'] ?? data['order'] ?? data['data'];
-          return BuyerOrder.fromJson(orderData);
-        } else {
-          throw Exception(data['message'] ?? 'Failed to fetch order details');
-        }
-      } else {
-        throw Exception('Server error: ${response.statusCode}');
-      }
-    } catch (e) {
-      log('❌ Error fetching order details: $e');
-      rethrow;
-    }
-  }
-
-  @override
-  Future<void> cancelOrder(String orderId, String reason) async {
+  Future<void> cancelOrder(String orderId) async {
     try {
       final token = storageService.getToken();
       if (token == null) throw Exception('Please login again');
 
       log('❌ Cancelling order: $orderId');
-      log('   Reason: $reason');
 
-      final url = '$baseUrl/buyer/orders/$orderId';
+      final url = '$baseUrl/buyer/orders/$orderId/cancel';
       log('📤 Sending PUT request to: $url');
 
       final response = await http
@@ -189,7 +188,7 @@ class ApiBuyerOrderRepository implements BuyerOrderRepository {
               'Authorization': 'Bearer $token',
               'Content-Type': 'application/json',
             },
-            body: jsonEncode({'status': 'cancelled', 'reason': reason}),
+            body: jsonEncode({'status': 'cancelled'}),
           )
           .timeout(const Duration(seconds: 30));
 

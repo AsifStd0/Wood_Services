@@ -35,6 +35,7 @@ class UnifiedLocalStorageServiceImpl implements BaseLocalStorageService {
   }
 
   // Save UserModel directly
+  @override
   Future<void> saveUserModel(UserModel user) async {
     final jsonString = json.encode(user.toJson());
     await _prefs.setString(_userDataKey, jsonString);
@@ -43,6 +44,7 @@ class UnifiedLocalStorageServiceImpl implements BaseLocalStorageService {
   }
 
   // Get UserModel
+  @override
   UserModel? getUserModel() {
     final jsonString = _prefs.getString(_userDataKey);
     if (jsonString != null) {
@@ -112,6 +114,7 @@ class UnifiedLocalStorageServiceImpl implements BaseLocalStorageService {
   }
 
   // Update specific user fields
+  @override
   Future<void> updateUserField(String key, dynamic value) async {
     final userModel = getUserModel();
     if (userModel != null) {
@@ -122,16 +125,19 @@ class UnifiedLocalStorageServiceImpl implements BaseLocalStorageService {
   }
 
   // Update profile image URL
+  @override
   Future<void> updateProfileImage(String imageUrl) async {
     await updateUserField('profileImage', imageUrl);
   }
 
   // Update shop logo URL (for sellers)
+  @override
   Future<void> updateShopLogo(String logoUrl) async {
     await updateUserField('shopLogo', logoUrl);
   }
 
   // Check if user has seller documents
+  @override
   bool hasSellerDocuments() {
     final user = getUserModel();
     if (user == null || !user.isSeller) return false;
@@ -142,6 +148,7 @@ class UnifiedLocalStorageServiceImpl implements BaseLocalStorageService {
   }
 
   // Get user display name
+  @override
   String? getDisplayName() {
     final user = getUserModel();
     if (user == null) return null;
@@ -153,12 +160,60 @@ class UnifiedLocalStorageServiceImpl implements BaseLocalStorageService {
   }
 
   // Save app language
+  @override
   Future<void> saveAppLanguage(String languageCode) async {
     await _prefs.setString(_appLanguageKey, languageCode);
   }
 
   // Get app language
+  @override
   String getAppLanguage() {
     return _prefs.getString(_appLanguageKey) ?? 'en';
+  }
+
+  // Generic string storage methods
+  @override
+  Future<void> saveString(String key, String value) async {
+    await _prefs.setString(key, value);
+  }
+
+  @override
+  Future<String?> getString(String key) async {
+    return _prefs.getString(key);
+  }
+
+  // Generic boolean storage methods
+  @override
+  Future<void> saveBool(String key, bool value) async {
+    await _prefs.setBool(key, value);
+  }
+
+  @override
+  Future<bool?> getBool(String key) async {
+    return _prefs.getBool(key);
+  }
+
+  // Generic delete method
+  @override
+  Future<void> delete(String key) async {
+    await _prefs.remove(key);
+  }
+
+  // Generic clear all method
+  @override
+  Future<void> clearAll() async {
+    await _prefs.clear();
+  }
+
+  // Check if key exists
+  @override
+  Future<bool> containsKey(String key) async {
+    return _prefs.containsKey(key);
+  }
+
+  // Get all keys
+  @override
+  Future<Set<String>> getAllKeys() async {
+    return _prefs.getKeys();
   }
 }

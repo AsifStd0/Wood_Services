@@ -1,76 +1,472 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
-import 'dart:io';
-import 'package:wood_service/app/locator.dart';
-import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
-import 'package:wood_service/views/Buyer/profile/setting/setting_widget.dart';
+import 'package:wood_service/app/index.dart';
+import 'package:wood_service/views/Buyer/profile/profile_widget.dart';
+import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';
+import 'package:wood_service/views/visit_request_buyer_resp/visit_screen.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+class ProfileScreenBuyer extends StatefulWidget {
+  const ProfileScreenBuyer({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  State<ProfileScreenBuyer> createState() => _ProfileScreenBuyerState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  bool _darkMode = false;
-  String _language = 'English';
-  final ImagePicker _imagePicker = ImagePicker();
+class _ProfileScreenBuyerState extends State<ProfileScreenBuyer>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Refresh when app comes back to foreground
+      _refreshData();
+    }
+  }
+
+  void _refreshData() {
+    final provider = context.read<BuyerProfileViewProvider>();
+    provider.refreshProfile();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: locator<BuyerProfileViewProvider>(),
-      child: Consumer<BuyerProfileViewProvider>(
-        builder: (context, provider, child) {
-          return Scaffold(
-            backgroundColor: Colors.grey[50],
-            appBar: CustomAppBar(title: 'Settings'),
+    return ChangeNotifierProvider(
+      create: (context) => locator<BuyerProfileViewProvider>(),
+      child: Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: CustomAppBar(title: 'Profile', showBackButton: false),
+        body: Consumer<BuyerProfileViewProvider>(
+          builder: (context, provider, child) {
+            if (provider.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-            body: CustomScrollView(
-              slivers: [
-                // Account Settings
-                buildSettingsSection('Account Settings', [
-                  buildSettingsTile(
-                    icon: Icons.person_outline,
-                    title: 'My Profile',
-                    subtitle: 'View & Edit your profile',
-                    onTap: () => _viewAndEditProfile(context, provider),
-                    color: Colors.blue,
-                  ),
-                ]),
+            if (!provider.isLoggedIn) {
+              return CircularProgressIndicator();
+            }
 
-                // App Preferences
-                buildSettingsSection('App Preferences', [
-                  buildSettingsTile(
-                    icon: Icons.language_outlined,
-                    title: 'Language',
-                    subtitle: _language,
-                    onTap: () => _showLanguageDialog(context),
-                    color: Colors.blue,
-                  ),
-                  _buildSwitchTile(
-                    icon: Icons.dark_mode_outlined,
-                    title: 'Dark Mode',
-                    subtitle: 'Switch to dark theme',
-                    value: _darkMode,
-                    onChanged: (value) {
-                      setState(() => _darkMode = value);
-                    },
-                    color: Colors.purple,
-                  ),
-                ]),
-              ],
-            ),
-          );
-        },
+            return _buildProfileContent(context, provider);
+          },
+        ),
       ),
     );
   }
 
-  // View and Edit Profile Function
+  Widget _buildProfileContent(
+    BuildContext context,
+    BuyerProfileViewProvider provider,
+  ) {
+    final user = provider.currentUser!;
+    return RefreshIndicator(
+      onRefresh: () async {
+        await provider.refreshProfile();
+      },
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Column(
+            children: [
+              // User Header Section with REAL DATA
+              _buildUserHeader(user, provider),
+              const SizedBox(height: 20),
+
+              // // Stats Section
+              // _buildStatsSection(provider),
+              // const SizedBox(height: 20),
+
+              // Main Menu Section
+              _buildMenuSection(context, provider),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // BuyerProfileViewProvider
+  Widget _buildUserHeader(UserModel user, BuyerProfileViewProvider provider) {
+    // Use provider's profileImagePath for consistency with settings screen
+    final profileImageUrl = provider.profileImagePath ?? user.profileImage;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.brown.shade50, Colors.orange.shade50],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Profile Avatar
+              Stack(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Colors.brown.shade400, Colors.orange.shade400],
+                      ),
+                    ),
+                    child:
+                        (profileImageUrl != null && profileImageUrl.isNotEmpty)
+                        ? ClipOval(
+                            child: Image.network(
+                              profileImageUrl,
+                              fit: BoxFit.cover,
+                              width: 80,
+                              height: 80,
+                              errorBuilder: (context, error, stackTrace) {
+                                return CircleAvatar(
+                                  radius: 40,
+                                  backgroundColor: Colors.brown.shade100,
+                                  child: Text(
+                                    user.name.isNotEmpty
+                                        ? user.name
+                                              .substring(0, 1)
+                                              .toUpperCase()
+                                        : 'U',
+                                    style: const TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.brown,
+                                    ),
+                                  ),
+                                );
+                              },
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return CircleAvatar(
+                                      radius: 40,
+                                      backgroundColor: Colors.brown.shade100,
+                                      child: const CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    );
+                                  },
+                            ),
+                          )
+                        : CircleAvatar(
+                            radius: 40,
+                            backgroundColor: Colors.brown.shade100,
+                            child: Text(
+                              user.name.isNotEmpty
+                                  ? user.name.substring(0, 1).toUpperCase()
+                                  : 'U',
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.brown,
+                              ),
+                            ),
+                          ),
+                  ),
+
+                  Positioned(
+                    bottom: 5,
+                    right: 5,
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: const BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 3,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.pending,
+                        size: 12,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 20),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      provider.fullName,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.brown,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      provider.email,
+                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                    ),
+                    if (provider.businessName.isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 5),
+                          Text(
+                            provider.businessName,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // // Enhanced Stats Section
+  // Widget _buildStatsSection(BuyerProfileViewProvider provider) {
+  //   return Container(
+  //     width: double.infinity,
+  //     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(20),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.grey.withOpacity(0.1),
+  //           blurRadius: 15,
+  //           offset: const Offset(0, 5),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       children: [
+  //         const Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //           children: [
+  //             CustomText('Activity ', type: CustomTextType.activityHeading),
+  //           ],
+  //         ),
+  //         const SizedBox(height: 16),
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceAround,
+  //           children: [
+  //             buildStatItem('12', 'Orders', Icons.shopping_bag),
+  //             buildStatItem('8', 'Favorites', Icons.favorite),
+  //             buildStatItem('4', 'Reviews', Icons.star),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  // Enhanced Main Menu Section
+  Widget _buildMenuSection(
+    BuildContext context,
+    BuyerProfileViewProvider provider,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // BuyerVisitRequestScreen
+          // Orders & Purchases
+          buildMenuHeader('Orders & Visit Requests Management'),
+          buildMenuTile(
+            context: context,
+            icon: Icons.shopping_bag_outlined,
+            title: 'My Orders',
+            subtitle: 'Track purchases and returns',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) {
+                    return OrdersScreen();
+                  },
+                ),
+              );
+            },
+            // ! *******
+          ),
+          buildMenuTile(
+            context: context,
+            icon: Icons.shopping_bag_outlined,
+            title: 'My Visit Requests',
+            subtitle: 'Track visit requests and status',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) {
+                    return BuyerVisitRequestScreen();
+                  },
+                ),
+              );
+            },
+          ),
+
+          buildMenuTile(
+            context: context,
+            icon: Icons.assignment_return_outlined,
+            title: 'Returns & Refunds',
+            subtitle: 'Manage returns and refund requests',
+            onTap: () {},
+            // gradient: [Colors.orange.shade400, Colors.orange.shade600],
+          ),
+
+          const Divider(height: 20),
+
+          // Account & Preferences
+          buildMenuHeader('Account & Preferences'),
+
+          buildMenuTile(
+            context: context,
+            icon: Icons.person_outline,
+            title: 'My Profile',
+            subtitle: 'View & Edit your profile',
+            onTap: () => _viewAndEditProfile(context, provider),
+          ),
+          buildMenuTile(
+            context: context,
+            icon: Icons.payment_outlined,
+            title: 'Payment Methods',
+            subtitle: 'Cards, wallets, and payment options',
+            onTap: () {},
+            // gradient: [Colors.teal.shade400, Colors.teal.shade600],
+          ),
+          buildMenuTile(
+            context: context,
+            icon: Icons.location_on_outlined,
+            title: 'Saved Addresses',
+            subtitle: 'Delivery and billing addresses',
+            onTap: () {},
+            // gradient: [Colors.red.shade400, Colors.red.shade600],
+          ),
+
+          const Divider(height: 20),
+
+          // App Preferences
+          buildMenuHeader('App Preferences'),
+          buildMenuTile(
+            context: context,
+            icon: Icons.language_outlined,
+            title: 'Language',
+            subtitle: provider.language,
+            onTap: () => _showLanguageDialog(context, provider),
+          ),
+          buildMenuTile(
+            context: context,
+            icon: Icons.dark_mode_outlined,
+            title: 'Dark Mode',
+            subtitle: provider.darkMode ? 'Enabled' : 'Disabled',
+            onTap: () => provider.setDarkMode(!provider.darkMode),
+            onChanged: (value) => provider.setDarkMode(value),
+          ),
+
+          const Divider(height: 20),
+
+          // Support & Information
+          buildMenuHeader('Support & Information'),
+          buildMenuTile(
+            context: context,
+            icon: Icons.help_outline,
+            title: 'Help Center',
+            subtitle: 'FAQs and support articles',
+            onTap: () {},
+            // gradient: [Colors.indigo.shade400, Colors.indigo.shade600],
+          ),
+          buildMenuTile(
+            context: context,
+            icon: Icons.contact_support_outlined,
+            title: 'Contact Support',
+            subtitle: '24/7 customer service',
+            onTap: () {},
+            // gradient: [Colors.pink.shade400, Colors.pink.shade600],
+          ),
+          buildMenuTile(
+            context: context,
+            icon: Icons.info_outline,
+            title: 'About WoodMart',
+            subtitle: 'App version 1.0.0',
+            onTap: () {},
+            // gradient: [Colors.cyan.shade400, Colors.cyan.shade600],
+          ),
+
+          const Divider(height: 20),
+
+          // Account Actions
+          buildMenuHeader('Account Actions'),
+          buildMenuTile(
+            context: context,
+            icon: Icons.logout_outlined,
+            title: 'Sign Out',
+            subtitle: 'Logout from your account',
+            onTap: () => showLogoutDialog(context, provider),
+            iconColor: Colors.red,
+            textColor: Colors.red,
+            // gradient: [Colors.red.shade400, Colors.red.shade600],
+          ),
+          buildMenuTile(
+            context: context,
+            icon: Icons.logout_outlined,
+            title: 'Delete Account',
+            subtitle: 'Permanently remove account',
+            onTap: () => showLogoutDialog(context, provider),
+            iconColor: Colors.red,
+            textColor: Colors.red,
+            // gradient: [Colors.red.shade400, Colors.red.shade600],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // View and Edit Profile Function (from settings screen)
   void _viewAndEditProfile(
     BuildContext context,
     BuyerProfileViewProvider provider,
@@ -105,6 +501,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     bool isEditing = false;
     File? tempProfileImage;
+    final ImagePicker _imagePicker = ImagePicker();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -386,7 +784,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 'Bank Details',
                                 Icons.account_balance_outlined,
                                 isEditing,
-
                                 [
                                   _buildProfileField(
                                     label: 'IBAN',
@@ -554,7 +951,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // Refresh profile data after update
         await provider.refreshProfile();
 
-        // Show success message and pop back
+        // Show success message
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -563,9 +960,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               duration: Duration(seconds: 2),
             ),
           );
-
-          // Pop back to previous screen
-          Navigator.pop(context);
         }
       } else {
         if (context.mounted) {
@@ -594,7 +988,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // Language dialog
-  Future<void> _showLanguageDialog(BuildContext context) async {
+  Future<void> _showLanguageDialog(
+    BuildContext context,
+    BuyerProfileViewProvider provider,
+  ) async {
     final languages = ['English', 'Spanish', 'French', 'German', 'Chinese'];
 
     await showDialog(
@@ -609,70 +1006,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
             itemBuilder: (context, index) {
               return ListTile(
                 title: Text(languages[index]),
-                trailing: _language == languages[index]
+                trailing: provider.language == languages[index]
                     ? const Icon(Icons.check, color: Colors.brown)
                     : null,
                 onTap: () {
-                  setState(() {
-                    _language = languages[index];
-                  });
+                  provider.setLanguage(languages[index]);
                   Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Language changed to ${languages[index]}'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
                 },
               );
             },
           ),
         ),
-      ),
-    );
-  }
-
-  // Helper function to build switch tile
-  Widget _buildSwitchTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required Function(bool) onChanged,
-    required Color color,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(color: Colors.grey[600], fontSize: 12),
-        ),
-        trailing: Switch(
-          value: value,
-          onChanged: onChanged,
-          activeColor: Colors.brown,
-        ),
-        onTap: () => onChanged(!value),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
     );
   }

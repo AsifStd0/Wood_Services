@@ -1,6 +1,7 @@
 // services/auth_service.dart
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:wood_service/app/config.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';

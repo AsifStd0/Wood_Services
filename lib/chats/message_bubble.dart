@@ -1,133 +1,192 @@
+// In your message_bubble.dart file, update to handle attachments
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_model.dart';
-import 'package:intl/intl.dart';
 
 class MessageBubble extends StatelessWidget {
   final BuyerChatModel message;
   final bool isSentByMe;
 
-  const MessageBubble({super.key, required this.message, required this.isSentByMe});
+  const MessageBubble({
+    super.key,
+    required this.message,
+    required this.isSentByMe,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: isSentByMe
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!isSentByMe) ...[
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.person_rounded,
-                color: Colors.grey[600],
-                size: 14,
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
-              ),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isSentByMe ? const Color(0xFF667EEA) : Colors.grey[100],
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: isSentByMe
-                      ? const Radius.circular(20)
-                      : const Radius.circular(4),
-                  bottomRight: isSentByMe
-                      ? const Radius.circular(4)
-                      : const Radius.circular(20),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!isSentByMe)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        message.senderName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  Text(
-                    message.message,
-                    style: TextStyle(
-                      color: isSentByMe ? Colors.white : Colors.black87,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _formatTime(message.createdAt),
-                        style: TextStyle(
-                          color: isSentByMe ? Colors.white70 : Colors.grey,
-                          fontSize: 10,
-                        ),
-                      ),
-                      if (isSentByMe) ...[
-                        const SizedBox(width: 4),
-                        Icon(
-                          message.isRead ? Icons.done_all : Icons.done,
-                          size: 12,
-                          color: isSentByMe
-                              ? (message.isRead
-                                    ? Colors.blue[100]
-                                    : Colors.white70)
-                              : Colors.grey,
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
+    return Align(
+      alignment: isSentByMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isSentByMe ? Colors.blue[50] : Colors.grey[100],
+            borderRadius: BorderRadius.circular(16),
           ),
-          if (isSentByMe) const SizedBox(width: 8),
-        ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Display attachments if any
+              if (message.attachments.isNotEmpty) ...[
+                ...message.attachments.map((attachment) {
+                  return _buildAttachmentWidget(attachment, context);
+                }),
+                const SizedBox(height: 8),
+              ],
+
+              // Display message text
+              if (message.message.isNotEmpty)
+                Text(
+                  message.message,
+                  style: TextStyle(color: Colors.grey[800], fontSize: 14),
+                ),
+
+              // Timestamp
+              const SizedBox(height: 4),
+              Text(
+                _formatTime(message.createdAt),
+                style: TextStyle(color: Colors.grey[500], fontSize: 10),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  String _formatTime(DateTime time) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-
-    if (time.isAfter(today)) {
-      return DateFormat('hh:mm a').format(time);
-    } else if (time.isAfter(yesterday)) {
-      return 'Yesterday';
+  Widget _buildAttachmentWidget(
+    ChatAttachment attachment,
+    BuildContext context,
+  ) {
+    if (attachment.type == 'image' ||
+        attachment.url.endsWith('.jpg') ||
+        attachment.url.endsWith('.jpeg') ||
+        attachment.url.endsWith('.png')) {
+      return GestureDetector(
+        onTap: () {
+          // Show image in full screen
+          _showFullScreenImage(attachment.url, context);
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: CachedNetworkImage(
+              imageUrl: attachment.url,
+              width: double.infinity,
+              height: 200,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                width: double.infinity,
+                height: 200,
+                color: Colors.grey[200],
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+              errorWidget: (context, url, error) => Container(
+                width: double.infinity,
+                height: 200,
+                color: Colors.grey[200],
+                child: const Icon(Icons.broken_image),
+              ),
+            ),
+          ),
+        ),
+      );
     } else {
-      return DateFormat('MMM d').format(time);
+      // Generic file attachment
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
+        child: Row(
+          children: [
+            Icon(_getFileIcon(attachment.type), color: Colors.blue, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    attachment.name,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    '${(attachment.size / 1024).toStringAsFixed(1)} KB',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.download, size: 20),
+              onPressed: () {
+                // Download file
+                _downloadFile(attachment.url, attachment.name);
+              },
+            ),
+          ],
+        ),
+      );
     }
+  }
+
+  IconData _getFileIcon(String type) {
+    switch (type.toLowerCase()) {
+      case 'pdf':
+        return Icons.picture_as_pdf;
+      case 'document':
+        return Icons.description;
+      case 'video':
+        return Icons.videocam;
+      case 'audio':
+        return Icons.audiotrack;
+      default:
+        return Icons.insert_drive_file;
+    }
+  }
+
+  void _showFullScreenImage(String url, BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Container(
+            color: Colors.black87,
+            child: Center(
+              child: CachedNetworkImage(imageUrl: url, fit: BoxFit.contain),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _downloadFile(String url, String fileName) {
+    // Implement file download logic
+    // You can use dio or http to download the file
+    print('Downloading file: $fileName from $url');
+  }
+
+  String _formatTime(DateTime time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }

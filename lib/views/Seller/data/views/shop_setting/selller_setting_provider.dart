@@ -1,4 +1,5 @@
 // features/seller_settings/presentation/providers/seller_settings_provider.dart
+import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -30,7 +31,10 @@ class SellerSettingsProvider extends ChangeNotifier {
   late TextEditingController shopNameController;
   late TextEditingController businessNameController;
   late TextEditingController descriptionController;
+  // ! ****
+
   late TextEditingController addressController;
+  // ! *****
   late TextEditingController ibanController;
 
   // Getters
@@ -78,6 +82,7 @@ class SellerSettingsProvider extends ChangeNotifier {
       descriptionController.text = _currentUser!.businessDescription ?? '';
       addressController.text = _currentUser!.address ?? '';
       ibanController.text = _currentUser!.iban ?? '';
+
       // TODO: Load categories from API if available in user model
       // For now, categories are managed locally
     }
@@ -105,34 +110,43 @@ class SellerSettingsProvider extends ChangeNotifier {
   // Update profile
   Future<bool> saveChanges() async {
     try {
+      log('🔍 Saving changes... --------');
       _isLoading = true;
       _errorMessage = null;
       _successMessage = null;
       notifyListeners();
 
       final updates = <String, dynamic>{};
-      if (nameController.text.isNotEmpty)
+      if (nameController.text.isNotEmpty) {
         updates['name'] = nameController.text.trim();
-      if (emailController.text.isNotEmpty)
+      }
+      if (emailController.text.isNotEmpty) {
         updates['email'] = emailController.text.trim();
+      }
       if (phoneController.text.isNotEmpty) {
         final phoneDigits = phoneController.text.replaceAll(
           RegExp(r'[^0-9]'),
           '',
         );
-        if (phoneDigits.isNotEmpty)
+        if (phoneDigits.isNotEmpty) {
           updates['phone'] = int.tryParse(phoneDigits);
+        }
       }
-      if (shopNameController.text.isNotEmpty)
+      if (shopNameController.text.isNotEmpty) {
         updates['shopName'] = shopNameController.text.trim();
-      if (businessNameController.text.isNotEmpty)
+      }
+      if (businessNameController.text.isNotEmpty) {
         updates['businessName'] = businessNameController.text.trim();
-      if (descriptionController.text.isNotEmpty)
+      }
+      if (descriptionController.text.isNotEmpty) {
         updates['businessDescription'] = descriptionController.text.trim();
-      if (addressController.text.isNotEmpty)
+      }
+      if (addressController.text.isNotEmpty) {
         updates['address'] = addressController.text.trim();
-      if (ibanController.text.isNotEmpty)
+      }
+      if (ibanController.text.isNotEmpty) {
         updates['iban'] = ibanController.text.trim();
+      }
 
       final files = <Map<String, dynamic>>[];
       if (_newShopLogo != null) {
@@ -237,21 +251,26 @@ class SellerSettingsProvider extends ChangeNotifier {
     }
   }
 
-  // Logout
+  // In SellerSettingsProvider class
   Future<bool> logout() async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      final success = await _repository.logout();
+      // Just clear local storage - no API call needed for logout
+      await _repository.logout();
 
+      // Reset provider state
       _currentUser = null;
       _clearNewImages();
+      _errorMessage = null;
+      _successMessage = null;
+      _isEditing = false;
 
       _isLoading = false;
       notifyListeners();
 
-      return success;
+      return true;
     } catch (e) {
       _errorMessage = 'Logout failed: $e';
       _isLoading = false;

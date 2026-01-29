@@ -1,5 +1,6 @@
 // services/uploaded_product_services.dart
 import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
@@ -100,6 +101,54 @@ class UploadedProductService {
       }
     } catch (e) {
       log('❌ Error fetching products: $e');
+      rethrow;
+    }
+  }
+
+  /// DELETE /api/seller/services/:id/images - Delete product image
+  Future<bool> deleteProductImage(String productId, String imageUrl) async {
+    try {
+      log('🗑️ Deleting product image: $imageUrl');
+
+      final token = _storage.getToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('Please login to delete images');
+      }
+
+      final response = await _dio.delete(
+        '/seller/services/$productId/images',
+        data: {'imageUrl': imageUrl},
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      log('📥 Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['success'] == true) {
+          log('✅ Image deleted successfully');
+          return true;
+        } else {
+          throw Exception(data['message'] ?? 'Failed to delete image');
+        }
+      } else {
+        throw Exception('Request failed with status: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      log('❌ Dio error deleting image: ${e.message}');
+      final errorMsg =
+          e.response?.data?['message']?.toString() ??
+          e.message ??
+          'Failed to delete image';
+      throw Exception(errorMsg);
+    } catch (e) {
+      log('❌ Error deleting image: $e');
       rethrow;
     }
   }

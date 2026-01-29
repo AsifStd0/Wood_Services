@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:wood_service/chats/Buyer/buyer_chating.dart';
-import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/favorite_button.dart';
-import 'package:wood_service/views/Buyer/product_detail/product_detail.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 
 import '../../../app/index.dart';

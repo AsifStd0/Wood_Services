@@ -1,11 +1,8 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
-import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/home_widget.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
-import 'package:provider/provider.dart';
 
 class BuyerHomeScreen extends StatefulWidget {
   const BuyerHomeScreen({super.key});
@@ -58,17 +55,30 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
         showSearch: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications),
+            icon: const Icon(Icons.notifications),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const NotificationsScreen(),
+                  builder: (context) => const SellerNotificaionScreen(),
                 ),
               );
             },
           ),
         ],
+        // actions: [
+        //   IconButton(
+        //     icon: Icon(Icons.notifications),
+        //     onPressed: () {
+        //       // Navigator.push(
+        //       //   context,
+        //       //   MaterialPageRoute(
+        //       //     builder: (context) => const NotificationsScreen(),
+        //       //   ),
+        //       // );
+        //     },
+        //   ),
+        // ],
       ),
       body: GestureDetector(
         onTap: () {

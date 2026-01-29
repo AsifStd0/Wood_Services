@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
 import 'package:wood_service/views/splash/splash_screen.dart';
 
