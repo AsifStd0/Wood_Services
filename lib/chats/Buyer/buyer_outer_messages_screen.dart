@@ -1,9 +1,7 @@
-import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_model.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_provider.dart';
 import 'package:wood_service/chats/Buyer/buyer_chating.dart';
@@ -17,99 +15,81 @@ class BuyerOuterMessagesScreen extends StatefulWidget {
 }
 
 class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
-  late Future<void> _initialLoadFuture;
-
   @override
   void initState() {
     super.initState();
     log('🎯 MessagesScreen initState - Buyer Chat List');
 
-    final chatProvider = locator<BuyerChatProvider>();
-    _initialLoadFuture = chatProvider.initialize();
+    // Trigger initial load after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final chatProvider = context.read<BuyerChatProvider>();
+      if (chatProvider.chats.isEmpty) {
+        chatProvider.loadChats();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<void>(
-      future: _initialLoadFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Messages'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              final chatProvider = context.read<BuyerChatProvider>();
+              chatProvider.loadChats();
+            },
+          ),
+        ],
+      ),
+      body: Consumer<BuyerChatProvider>(
+        builder: (context, chatProvider, child) {
+          log(
+            '🔄 Consumer rebuilt, chats count: ${chatProvider.chats.length}, isLoading: ${chatProvider.isLoading}',
           );
-        }
 
-        if (snapshot.hasError) {
-          log('Error loading chats: ${snapshot.error}');
-          return Scaffold(
-            appBar: AppBar(title: const Text('Messages')),
-            body: Center(
+          // Show loading only when truly loading and empty
+          if (chatProvider.isLoading && chatProvider.chats.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          // Handle error state
+          if (chatProvider.error != null && chatProvider.chats.isEmpty) {
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error, color: Colors.red, size: 50),
+                  const Icon(Icons.error, size: 60, color: Colors.red),
                   const SizedBox(height: 16),
-                  Text('Error: ${snapshot.error}'),
+                  Text(
+                    'Error: ${chatProvider.error}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        final chatProvider = locator<BuyerChatProvider>();
-                        _initialLoadFuture = chatProvider.initialize();
-                      });
-                    },
+                    onPressed: () => chatProvider.loadChats(),
                     child: const Text('Retry'),
                   ),
                 ],
               ),
-            ),
-          );
-        }
+            );
+          }
 
-        return _ChatListContent();
-      },
-    );
-  }
-}
-
-class _ChatListContent extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<BuyerChatProvider>(
-      builder: (context, chatProvider, child) {
-        if (chatProvider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Messages'),
-            centerTitle: true,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () {
-                  // Implement search
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: () async {
-                  await chatProvider.loadChats();
-                },
-              ),
-            ],
-          ),
-          body: RefreshIndicator(
+          // Show empty state or chat list
+          return RefreshIndicator(
             onRefresh: () async {
               await chatProvider.loadChats();
             },
             child: chatProvider.chats.isEmpty
                 ? _buildEmptyState()
                 : _buildChatList(chatProvider),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 

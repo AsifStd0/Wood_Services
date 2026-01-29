@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/views/Seller/data/models/order_model.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
-import 'package:wood_service/widgets/custom_textfield.dart';
 
 class OrdersList extends StatelessWidget {
-  const OrdersList();
+  const OrdersList({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -766,7 +765,7 @@ Widget buildFilterChip(
 }
 
 class StatusFilterBar extends StatelessWidget {
-  const StatusFilterBar();
+  const StatusFilterBar({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -796,7 +795,7 @@ class StatusFilterBar extends StatelessWidget {
                     color: status.color,
                     onSelected: () => viewModel.setStatusFilter(status),
                   );
-                }).toList(), // Add .toList() here
+                }), // Add .toList() here
               ],
             ),
           ),

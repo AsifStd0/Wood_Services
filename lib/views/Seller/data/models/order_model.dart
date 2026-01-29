@@ -289,7 +289,7 @@ class OrderModelSeller {
             json['buyerAddress']?.toString() ??
             json['deliveryAddress']?.toString(),
         items: items,
-        itemsCount: items.length > 0
+        itemsCount: items.isNotEmpty
             ? items.length
             : parseInt(json['quantity'] ?? 1),
         subtotal: subtotal,
@@ -417,9 +417,9 @@ class OrderModelSeller {
       rejectedAt: rejectedAt ?? this.rejectedAt,
       createdAt: createdAt,
       updatedAt: updatedAt,
-      orderDetails: orderDetails ?? this.orderDetails,
-      pricing: pricing ?? this.pricing,
-      currency: currency ?? this.currency,
+      orderDetails: orderDetails ?? orderDetails,
+      pricing: pricing ?? pricing,
+      currency: currency ?? currency,
     );
   }
 

@@ -192,7 +192,7 @@ class _StatisticsBar extends StatelessWidget {
 class SearchBar extends StatelessWidget {
   final TextEditingController searchController;
 
-  const SearchBar({required this.searchController});
+  const SearchBar({super.key, required this.searchController});
 
   @override
   Widget build(BuildContext context) {

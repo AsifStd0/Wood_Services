@@ -38,7 +38,7 @@ class SellerProductProvider extends ChangeNotifier {
 
   Future<String?> _getToken() async {
     try {
-      final token = await _storage.getToken();
+      final token = _storage.getToken();
       log(
         '🔑 Token retrieved: ${token != null && token.isNotEmpty ? "Yes" : "No"}',
       );

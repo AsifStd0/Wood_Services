@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
 import 'package:wood_service/views/Buyer/profile/profile_widget.dart';
 import 'package:wood_service/views/Buyer/profile/setting/setting_screen.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';

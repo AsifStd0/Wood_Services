@@ -7,7 +7,7 @@ import 'package:wood_service/app/config.dart';
 import 'package:wood_service/views/Seller/data/models/order_model.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 
-abstract class OrderRepository {
+abstract class SellerOrderRepository {
   Future<List<OrderModelSeller>> getOrders({String? status, String? type});
   Future<void> updateOrderStatus(String orderId, String status);
   Future<OrderModelSeller> getOrderDetails(String orderId);
@@ -15,11 +15,11 @@ abstract class OrderRepository {
   Future<void> addOrderNote(String orderId, String message);
 }
 
-class ApiOrderRepository implements OrderRepository {
+class ApiOrderRepositorySeller implements SellerOrderRepository {
   final Dio dio;
   final UnifiedLocalStorageServiceImpl storageService;
 
-  ApiOrderRepository({required this.dio, required this.storageService});
+  ApiOrderRepositorySeller({required this.dio, required this.storageService});
   @override
   Future<List<OrderModelSeller>> getOrders({
     String? status,
@@ -278,6 +278,7 @@ class ApiOrderRepository implements OrderRepository {
     }
   }
 
+  @override
   Future<void> addOrderNote(String orderId, String message) async {
     try {
       final token = storageService.getToken();
@@ -313,7 +314,7 @@ class ApiOrderRepository implements OrderRepository {
     log('🔄 ========== getOrderDetails START ==========');
 
     try {
-      final token = await storageService.getToken();
+      final token = storageService.getToken();
 
       if (token == null) {
         throw Exception('Please login again');
@@ -350,7 +351,7 @@ class ApiOrderRepository implements OrderRepository {
   @override
   Future<Map<String, dynamic>> getOrderStatistics() async {
     try {
-      final token = await storageService.getToken();
+      final token = storageService.getToken();
 
       if (token == null) {
         return _defaultStatistics();

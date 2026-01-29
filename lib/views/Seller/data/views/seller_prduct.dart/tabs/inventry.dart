@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_model.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
 
 class InventoryTab extends StatelessWidget {
+  const InventoryTab({super.key});
+
   @override
   Widget build(BuildContext context) {
     final productProvider = context.watch<SellerProductProvider>();
@@ -87,7 +88,7 @@ class InventoryTab extends StatelessWidget {
                   'Length (cm)',
                   Icons.straighten_rounded,
                   // product.dimensions.length.toString() ?? '',
-                  product.dimensions?.length?.toString() ?? '', // ✅ FIXED
+                  product.dimensions?.length.toString() ?? '', // ✅ FIXED
                   (value) {
                     final length = value.isEmpty
                         ? null
@@ -105,7 +106,7 @@ class InventoryTab extends StatelessWidget {
                 child: _buildDimensionField(
                   'Width (cm)',
                   Icons.straighten_rounded,
-                  product.dimensions?.width?.toString() ?? '', // ✅ FIXED
+                  product.dimensions?.width.toString() ?? '', // ✅ FIXED
                   (value) {
                     final width = value.isEmpty ? null : double.tryParse(value);
                     productProvider.updateDimensions(width: width); // ✅ FIXED
@@ -117,7 +118,7 @@ class InventoryTab extends StatelessWidget {
                 child: _buildDimensionField(
                   'Height (cm)',
                   Icons.height_rounded,
-                  product.dimensions?.height?.toString() ?? '', // ✅ FIXED
+                  product.dimensions?.height.toString() ?? '', // ✅ FIXED
                   (value) {
                     final height = value.isEmpty
                         ? null

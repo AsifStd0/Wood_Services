@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:dio/dio.dart';
-import 'package:wood_service/app/config.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_model.dart';

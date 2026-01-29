@@ -255,8 +255,9 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
                 .confirmPasswordController, // Use viewModel's controller
             validator: (value) {
               if (value?.isEmpty == true) return 'Required';
-              if (value != viewModel.passwordController.text)
+              if (value != viewModel.passwordController.text) {
                 return 'Passwords do not match';
+              }
               return null;
             },
             hintText: 'Confirm your password',

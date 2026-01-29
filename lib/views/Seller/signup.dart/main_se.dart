@@ -1,6 +1,5 @@
 // lib/views/Seller/Main/main_seller_screen.dart
 import 'package:flutter/material.dart';
-import 'package:wood_service/buyer_seller_chat.dart';
 import 'package:wood_service/chats/Buyer/buyer_outer_messages_screen.dart';
 // Import from correct file
 import 'package:wood_service/views/Seller/data/views/order_data/order_screen_seller.dart';
@@ -22,8 +21,6 @@ class _MainSellerScreenState extends State<MainSellerScreen> {
     const SellerHomeScreen(),
     const OrdersScreenSeller(),
     const AddProductScreen(),
-    // const SellerOuterMessagesScreen(), // Use ChatSeller from buyer_seller_chat.dart
-    // const SellerChatScreen(),
     const BuyerOuterMessagesScreen(),
     const SellerSettingsScreen(),
   ];

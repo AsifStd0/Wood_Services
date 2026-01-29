@@ -3,7 +3,6 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/tabs/edit_products/edit_product_screen.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_model.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';

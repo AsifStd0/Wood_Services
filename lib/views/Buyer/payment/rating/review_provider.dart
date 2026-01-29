@@ -30,11 +30,11 @@ class ReviewProvider with ChangeNotifier {
 
   Future<void> initialize() async {
     await _storage.initialize();
-    _cachedToken = await _storage.getToken();
+    _cachedToken = _storage.getToken();
   }
 
   Future<String?> _getToken() async {
-    _cachedToken ??= await _storage.getToken();
+    _cachedToken ??= _storage.getToken();
     return _cachedToken;
   }
 

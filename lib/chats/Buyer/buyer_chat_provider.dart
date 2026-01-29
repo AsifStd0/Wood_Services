@@ -195,19 +195,6 @@ class BuyerChatProvider extends ChangeNotifier {
       _chats.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     }
   }
-  // void _updateChatList(String lastMessage) {
-  //   if (_currentChat == null) return;
-
-  //   final index = _chats.indexWhere((c) => c.id == _currentChat!.id);
-
-  //   if (index != -1) {
-  //     _chats[index] = _chats[index].copyWith(
-  //       lastMessageText: lastMessage,
-  //       updatedAt: DateTime.now(),
-  //     );
-  //     _chats.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-  //   }
-  // }
 
   Future<Map<String, dynamic>> getCurrentUserInfo() async {
     if (_currentUser != null) return _currentUser!;

@@ -1,7 +1,6 @@
 // lib/views/Buyer/Main/main_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/views/Buyer/buyer_main/buyer_main_provider.dart';
 
 class BuyerMainScreen extends StatelessWidget {

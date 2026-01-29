@@ -1,7 +1,6 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:wood_service/chats/Buyer/buyer_chating.dart';
-import 'package:wood_service/views/Buyer/Cart/cart_screen.dart';
 import 'package:wood_service/views/Buyer/Model/buyer_order_model.dart';
 import 'package:wood_service/views/Buyer/order_screen/buyer_order_repository.dart';
 
@@ -45,7 +44,7 @@ class BuyerOrderProvider with ChangeNotifier {
         statusParam = status.toString().split('.').last;
       }
       log('1111');
-      _orders = await _repository.getOrdersBuyer(status: statusParam);
+      _orders = await _repository.getOrders(status: statusParam);
       _currentFilter = status;
 
       // Load summary if not already loaded

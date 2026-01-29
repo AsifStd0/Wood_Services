@@ -295,107 +295,139 @@ class ChatRoom {
     String? currentUserId,
   }) {
     log('🔄 Parsing ChatRoom from JSON');
+    log('   Raw JSON keys: ${json.keys}');
 
-    final chatId = json['_id']?.toString() ?? '';
+    try {
+      final chatId = json['_id']?.toString() ?? '';
+      log('   Chat ID: $chatId');
 
-    // Extract orderId
-    String? orderIdString;
-    if (json['orderId'] != null) {
-      if (json['orderId'] is String) {
-        orderIdString = json['orderId'];
-      } else if (json['orderId'] is Map) {
-        orderIdString = json['orderId']['_id']?.toString();
+      // Extract orderId
+      String? orderIdString;
+      if (json['orderId'] != null) {
+        log('   orderId type: ${json['orderId'].runtimeType}');
+
+        if (json['orderId'] is String) {
+          orderIdString = json['orderId'];
+          log('   orderId (String): $orderIdString');
+        } else if (json['orderId'] is Map) {
+          orderIdString = json['orderId']['_id']?.toString();
+          log('   orderId (Map) ID: $orderIdString');
+        }
       }
-    }
 
-    // Extract order details
-    Map<String, dynamic>? orderDetails;
-    if (json['orderId'] != null && json['orderId'] is Map) {
-      final orderData = json['orderId'] as Map<String, dynamic>;
-      orderDetails = {
-        'status': orderData['status']?.toString() ?? 'pending',
-        'description': orderData['orderDetails']?['description']?.toString(),
-        'location': orderData['orderDetails']?['location']?.toString(),
-        'preferredDate': orderData['orderDetails']?['preferredDate']
-            ?.toString(),
-      };
-    }
+      // Extract order details
+      Map<String, dynamic>? orderDetails;
+      if (json['orderId'] != null && json['orderId'] is Map) {
+        try {
+          final orderData = json['orderId'] as Map<String, dynamic>;
+          log('   orderData keys: ${orderData.keys}');
 
-    // Extract last message
-    String? lastMessageText = '';
-    DateTime updatedAt = DateTime.now();
-
-    if (json['lastMessage'] != null) {
-      lastMessageText = json['lastMessage']?.toString();
-    }
-
-    if (json['lastMessageAt'] != null) {
-      try {
-        updatedAt = DateTime.parse(json['lastMessageAt'].toString());
-      } catch (e) {
-        log('Error parsing lastMessageAt: $e');
+          orderDetails = {
+            'status': orderData['status']?.toString() ?? 'pending',
+            'description': orderData['orderDetails']?['description']
+                ?.toString(),
+            'location': orderData['orderDetails']?['location']?.toString(),
+            'preferredDate': orderData['orderDetails']?['preferredDate']
+                ?.toString(),
+          };
+          log('   Parsed orderDetails: $orderDetails');
+        } catch (e) {
+          log('   Error parsing orderDetails: $e');
+        }
       }
-    }
 
-    // Build participants
-    List<ChatParticipant> participants = [];
+      // Extract last message
+      String? lastMessageText = '';
+      DateTime updatedAt = DateTime.now();
 
-    // Add buyer
-    if (json['buyerId'] != null) {
-      final buyer = json['buyerId'];
-      final buyerId = buyer is Map
-          ? buyer['_id']?.toString()
-          : buyer.toString();
-      if (buyerId != null) {
-        participants.add(
-          ChatParticipant(
-            userId: buyerId,
-            userType: 'Buyer',
-            name: buyer is Map ? buyer['name']?.toString() ?? 'Buyer' : 'Buyer',
-            profileImage: buyer is Map
-                ? buyer['profileImage']?.toString()
-                : null,
-            lastSeen: updatedAt,
-          ),
-        );
+      if (json['lastMessage'] != null) {
+        lastMessageText = json['lastMessage']?.toString();
+        log('   lastMessage: $lastMessageText');
       }
-    }
 
-    // Add seller
-    if (json['sellerId'] != null) {
-      final seller = json['sellerId'];
-      final sellerId = seller is Map
-          ? seller['_id']?.toString()
-          : seller.toString();
-      if (sellerId != null) {
-        participants.add(
-          ChatParticipant(
-            userId: sellerId,
-            userType: 'Seller',
-            name: seller is Map
-                ? seller['name']?.toString() ?? 'Seller'
-                : 'Seller',
-            profileImage: seller is Map
-                ? seller['profileImage']?.toString()
-                : null,
-            lastSeen: updatedAt,
-          ),
-        );
+      if (json['lastMessageAt'] != null) {
+        try {
+          updatedAt = DateTime.parse(json['lastMessageAt'].toString());
+          log('   lastMessageAt: $updatedAt');
+        } catch (e) {
+          log('   Error parsing lastMessageAt: $e');
+        }
       }
-    }
 
-    return ChatRoom(
-      id: chatId,
-      orderId: orderIdString,
-      participants: participants,
-      lastMessage: lastMessageText,
-      lastMessageText: lastMessageText,
-      updatedAt: updatedAt,
-      currentUserId: currentUserId,
-      orderDetails: orderDetails,
-    );
+      // Build participants
+      List<ChatParticipant> participants = [];
+
+      // Add buyer
+      if (json['buyerId'] != null) {
+        log('   buyerId type: ${json['buyerId'].runtimeType}');
+        final buyer = json['buyerId'];
+        final buyerId = buyer is Map
+            ? buyer['_id']?.toString()
+            : buyer.toString();
+
+        if (buyerId != null) {
+          participants.add(
+            ChatParticipant(
+              userId: buyerId,
+              userType: 'Buyer',
+              name: buyer is Map
+                  ? buyer['name']?.toString() ?? 'Buyer'
+                  : 'Buyer',
+              profileImage: buyer is Map
+                  ? buyer['profileImage']?.toString()
+                  : null,
+              lastSeen: updatedAt,
+            ),
+          );
+          log('   Added buyer: $buyerId');
+        }
+      }
+
+      // Add seller
+      if (json['sellerId'] != null) {
+        log('   sellerId type: ${json['sellerId'].runtimeType}');
+        final seller = json['sellerId'];
+        final sellerId = seller is Map
+            ? seller['_id']?.toString()
+            : seller.toString();
+
+        if (sellerId != null) {
+          participants.add(
+            ChatParticipant(
+              userId: sellerId,
+              userType: 'Seller',
+              name: seller is Map
+                  ? seller['name']?.toString() ?? 'Seller'
+                  : 'Seller',
+              profileImage: seller is Map
+                  ? seller['profileImage']?.toString()
+                  : null,
+              lastSeen: updatedAt,
+            ),
+          );
+          log('   Added seller: $sellerId');
+        }
+      }
+
+      log('   Total participants: ${participants.length}');
+
+      return ChatRoom(
+        id: chatId,
+        orderId: orderIdString,
+        participants: participants,
+        lastMessage: lastMessageText,
+        lastMessageText: lastMessageText,
+        updatedAt: updatedAt,
+        currentUserId: currentUserId,
+        orderDetails: orderDetails,
+      );
+    } catch (e, stackTrace) {
+      log('❌ ERROR in ChatRoom.fromJson: $e');
+      log('❌ Stack trace: $stackTrace');
+      log('❌ Problematic JSON: $json');
+      rethrow; // Re-throw to see the actual error
+    }
   }
-
   String get otherUserName {
     if (_currentUserId != null && participants.isNotEmpty) {
       try {

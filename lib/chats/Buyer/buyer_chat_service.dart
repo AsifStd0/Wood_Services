@@ -360,27 +360,36 @@ class BuyerChatService {
         if (response.data['data'] != null &&
             response.data['data']['chats'] != null) {
           chatsData = response.data['data']['chats'];
+          log('📊 Found ${chatsData.length} chats in data.data.chats');
         } else if (response.data['chats'] != null) {
           chatsData = response.data['chats'];
+          log('📊 Found ${chatsData.length} chats in data.chats');
         } else {
+          log('⚠️ No chats data found in response');
           throw Exception('No chats data found');
         }
 
         // Parse chats
         List<ChatRoom> chatRooms = [];
-        for (var chatData in chatsData) {
+        for (int i = 0; i < chatsData.length; i++) {
           try {
+            log('\n📄 Parsing chat ${i + 1}/${chatsData.length}');
             final chatRoom = ChatRoom.fromJson(
-              chatData,
+              chatsData[i],
               currentUserId: currentUserId,
             );
             chatRooms.add(chatRoom);
+            log('✅ Successfully parsed chat: ${chatRoom.id}');
           } catch (e) {
-            log('Error parsing chat: $e');
+            log('❌ Error parsing chat ${i + 1}: $e');
+            log('❌ Chat data: ${chatsData[i]}');
+            // Continue with other chats instead of failing completely
           }
         }
 
-        log('✅ Successfully loaded ${chatRooms.length} chats');
+        log(
+          '✅ Successfully loaded ${chatRooms.length}/${chatsData.length} chats',
+        );
         return chatRooms;
       }
 

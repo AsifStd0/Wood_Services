@@ -476,7 +476,7 @@ class RegisterViewModel extends ChangeNotifier {
     log('🔍 Validating form...');
 
     if (!validateForm()) {
-      log('❌ Form validation failed: ${_errorMessage}');
+      log('❌ Form validation failed: $_errorMessage');
       return null;
     }
 

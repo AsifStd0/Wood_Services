@@ -1,12 +1,9 @@
-import 'dart:developer';
+// lib/views/Buyer/Favorite_Screen/favorites_screen.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/favorite_button.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/buyer_favorite_product_model.dart';
-import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_provider.dart';
-import 'package:wood_service/views/Buyer/product_detail/product_detail.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 
@@ -18,63 +15,58 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
+  // Pagination state
   int _currentPage = 1;
   bool _hasMore = true;
-  bool _isLoading = false;
-  List<FavoriteProduct> _favoriteProducts = [];
+  bool _isLoadingMore = false;
+
+  // Local favorites list
+  final List<FavoriteProduct> _favoriteProducts = [];
 
   @override
   void initState() {
     super.initState();
     _loadFavorites();
 
-    // Listen to provider changes to sync local list
+    // Listen to provider changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final favoriteProvider = Provider.of<FavoriteProvider>(
-          context,
-          listen: false,
-        );
-        favoriteProvider.addListener(_onFavoritesChanged);
+        final provider = Provider.of<FavoriteProvider>(context, listen: false);
+        provider.addListener(_onProviderChanged);
       }
     });
   }
 
-  void _onFavoritesChanged() {
+  @override
+  void dispose() {
+    final provider = Provider.of<FavoriteProvider>(context, listen: false);
+    provider.removeListener(_onProviderChanged);
+    super.dispose();
+  }
+
+  // Handle provider changes
+  void _onProviderChanged() {
     if (!mounted) return;
 
-    // Filter out items that are no longer favorited
-    final favoriteProvider = Provider.of<FavoriteProvider>(
-      context,
-      listen: false,
-    );
-    final filtered = _favoriteProducts.where((product) {
-      return favoriteProvider.isProductFavorited(product.productId);
-    }).toList();
+    final provider = Provider.of<FavoriteProvider>(context, listen: false);
 
-    if (filtered.length != _favoriteProducts.length) {
+    // Remove items that are no longer favorited
+    _favoriteProducts.removeWhere((product) {
+      return !provider.isProductFavorited(product.productId);
+    });
+
+    // Reset pagination if list becomes empty
+    if (_favoriteProducts.isEmpty && mounted) {
       setState(() {
-        _favoriteProducts = filtered;
-        if (_favoriteProducts.isEmpty) {
-          _currentPage = 1;
-          _hasMore = false;
-        }
+        _currentPage = 1;
+        _hasMore = false;
       });
     }
   }
 
-  @override
-  void dispose() {
-    final favoriteProvider = Provider.of<FavoriteProvider>(
-      context,
-      listen: false,
-    );
-    favoriteProvider.removeListener(_onFavoritesChanged);
-    super.dispose();
-  }
-
+  // Load favorites
   Future<void> _loadFavorites({bool refresh = false}) async {
-    if (_isLoading) return;
+    if (_isLoadingMore && !refresh) return;
 
     setState(() {
       if (refresh) {
@@ -82,16 +74,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         _favoriteProducts.clear();
         _hasMore = true;
       }
-      _isLoading = true;
+      _isLoadingMore = true;
     });
 
     try {
-      final favoriteProvider = Provider.of<FavoriteProvider>(
-        context,
-        listen: false,
-      );
-
-      final products = await favoriteProvider.getFavoriteProducts(
+      final provider = Provider.of<FavoriteProvider>(context, listen: false);
+      final products = await provider.getFavoriteProducts(
         page: _currentPage,
         limit: 20,
         refreshCache: refresh,
@@ -99,83 +87,131 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
       setState(() {
         if (refresh) {
-          _favoriteProducts = products;
-        } else {
-          _favoriteProducts.addAll(products);
+          _favoriteProducts.clear();
         }
-
-        _hasMore =
-            products.length == 20; // If we got 20 items, there might be more
-
+        _favoriteProducts.addAll(products);
+        _hasMore = products.length == 20;
         if (products.isNotEmpty) {
           _currentPage++;
         }
       });
     } catch (error) {
       log('❌ Load favorites error: $error');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to load favorites: $error'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showErrorSnackbar('Failed to load favorites: $error');
     } finally {
       setState(() {
-        _isLoading = false;
+        _isLoadingMore = false;
       });
     }
+  }
+
+  // Clear all favorites dialog
+  void _showClearAllDialog() {
+    if (_favoriteProducts.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear All Favorites'),
+        content: Text(
+          'Remove all ${_favoriteProducts.length} items from favorites?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => _clearAllFavorites(),
+            child: const Text('Clear All', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Clear all favorites
+  Future<void> _clearAllFavorites() async {
+    Navigator.pop(context);
+
+    final tempList = List<FavoriteProduct>.from(_favoriteProducts);
+
+    // Optimistic update
+    setState(() {
+      _favoriteProducts.clear();
+    });
+
+    try {
+      final provider = Provider.of<FavoriteProvider>(context, listen: false);
+      await provider.clearAllFavorites();
+
+      _showSuccessSnackbar('All favorites cleared');
+    } catch (error) {
+      // Restore on error
+      setState(() {
+        _favoriteProducts.clear();
+        _favoriteProducts.addAll(tempList);
+      });
+      _showErrorSnackbar('Error: $error');
+    }
+  }
+
+  // Helper methods
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+
+  void _showSuccessSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<FavoriteProvider>(
-      builder: (context, favoriteProvider, child) {
-        final totalFavorites = favoriteProvider.favoriteCount;
-
-        // Filter out items that are no longer favorited (when user clicks unfavorite)
-        final filteredProducts = _favoriteProducts.where((product) {
-          return favoriteProvider.isProductFavorited(product.productId);
-        }).toList();
-
-        // Update local list if filtered list is different (only once per frame)
-        if (filteredProducts.length != _favoriteProducts.length && mounted) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              setState(() {
-                _favoriteProducts = filteredProducts;
-                // Reset pagination if list becomes empty
-                if (_favoriteProducts.isEmpty) {
-                  _currentPage = 1;
-                  _hasMore = false;
-                }
-              });
-            }
-          });
-        }
-
-        final displayProducts =
-            filteredProducts.length != _favoriteProducts.length
-            ? filteredProducts
-            : _favoriteProducts;
+      builder: (context, provider, child) {
+        final totalFavorites = provider.favoriteCount;
+        final isLoading = provider.isLoading;
 
         return Scaffold(
           backgroundColor: Colors.grey[50],
           appBar: CustomAppBar(title: 'My Favorites', showBackButton: false),
-          body: _isLoading && _favoriteProducts.isEmpty
+          body: isLoading && _favoriteProducts.isEmpty
               ? const Center(child: CircularProgressIndicator())
-              : displayProducts.isEmpty
-              ? buildEmptyView()
-              : _buildFavoritesGrid(context, totalFavorites, displayProducts),
+              : _favoriteProducts.isEmpty
+              ? _buildEmptyView()
+              : _buildFavoritesList(totalFavorites),
         );
       },
     );
   }
 
-  Widget _buildFavoritesGrid(
-    BuildContext context,
-    int totalFavorites,
-    List<FavoriteProduct> products,
-  ) {
+  // Empty state
+  Widget _buildEmptyView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.favorite_border_rounded,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'No Favorites Yet',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Favorites list with grid
+  Widget _buildFavoritesList(int totalFavorites) {
     return RefreshIndicator(
       onRefresh: () => _loadFavorites(refresh: true),
       child: CustomScrollView(
@@ -214,21 +250,23 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 0.70, // Same as home screen
+                childAspectRatio: 0.70,
               ),
-              delegate: SliverChildBuilderDelegate((context, index) {
-                return _buildFavoriteCard(products[index], index);
-              }, childCount: products.length),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) =>
+                    _buildFavoriteCard(_favoriteProducts[index]),
+                childCount: _favoriteProducts.length,
+              ),
             ),
           ),
 
-          // Load more button
+          // Load more indicator
           if (_hasMore)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Center(
-                  child: _isLoading
+                  child: _isLoadingMore
                       ? const CircularProgressIndicator()
                       : TextButton(
                           onPressed: () => _loadFavorites(),
@@ -242,11 +280,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  Widget _buildFavoriteCard(FavoriteProduct product, int index) {
-    final bool hasDiscount = product.discountPercentage > 0;
-    final double discount = hasDiscount ? product.discountPercentage : 0;
-
-    // Convert FavoriteProduct to BuyerProductModel for navigation
+  // Single favorite card
+  Widget _buildFavoriteCard(FavoriteProduct product) {
+    final hasDiscount = product.discountPercentage > 0;
     final buyerProduct = _convertToBuyerProduct(product);
 
     return Container(
@@ -265,6 +301,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Image section
           Expanded(
             flex: 2,
             child: Stack(
@@ -278,38 +315,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       topRight: Radius.circular(16),
                     ),
                   ),
-                  child: product.featuredImage != null
-                      ? ClipRRect(
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            topRight: Radius.circular(16),
-                          ),
-                          child: Image.network(
-                            product.featuredImage!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Center(
-                                child: Icon(
-                                  Icons.image,
-                                  size: 40,
-                                  color: Colors.grey,
-                                ),
-                              );
-                            },
-                          ),
-                        )
-                      : const Center(
-                          child: CircleAvatar(
-                            radius: 30,
-                            backgroundColor: Colors.grey,
-                            child: Icon(Icons.image, color: Colors.white),
-                          ),
-                        ),
+                  child: _buildProductImage(product),
                 ),
 
-                // Favorite Button (Already favorited - shows red heart)
+                // Favorite Button
                 Positioned(
                   top: 8,
                   right: 8,
@@ -320,7 +329,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 ),
 
                 // Discount Badge
-                if (hasDiscount && discount > 0)
+                if (hasDiscount)
                   Positioned(
                     top: 10,
                     left: 8,
@@ -334,7 +343,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        '${discount.toInt()}% OFF',
+                        '${product.discountPercentage.toInt()}% OFF',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 9,
@@ -347,7 +356,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             ),
           ),
 
-          // Product Details
+          // Details section
           Expanded(
             flex: 3,
             child: Padding(
@@ -357,136 +366,167 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 top: 5,
                 bottom: 2,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title
-                      Text(
-                        product.title,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          height: 1.2,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-
-                      // Short Description
-                      Text(
-                        product.shortDescription,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey[600],
-                          height: 1.2,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-
-                  // Price and Rating
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Price Column
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '\$${product.finalPrice.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              if (hasDiscount &&
-                                  product.basePrice > product.finalPrice)
-                                Text(
-                                  '\$${product.basePrice.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                    decoration: TextDecoration.lineThrough,
-                                  ),
-                                ),
-                            ],
-                          ),
-
-                          // Rating
-                          if (product.rating > 0)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.star,
-                                    size: 12,
-                                    color: Colors.amber,
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    product.rating.toStringAsFixed(1),
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-
-                  // Order Now Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: CustomButton(
-                      backgroundColor: AppColors.yellowButton,
-                      height: 32,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                ProductDetailScreen(product: buyerProduct),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        'Order Now',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              child: _buildProductDetails(product, buyerProduct),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  // Product image widget
+  Widget _buildProductImage(FavoriteProduct product) {
+    if (product.featuredImage == null) {
+      return const Center(
+        child: CircleAvatar(
+          radius: 30,
+          backgroundColor: Colors.grey,
+          child: Icon(Icons.image, color: Colors.white),
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(16),
+        topRight: Radius.circular(16),
+      ),
+      child: Image.network(
+        product.featuredImage!,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(
+            child: Icon(Icons.image, size: 40, color: Colors.grey),
+          );
+        },
+      ),
+    );
+  }
+
+  // Product details widget
+  Widget _buildProductDetails(
+    FavoriteProduct product,
+    BuyerProductModel buyerProduct,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Title and Description
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              product.title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                height: 1.2,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              product.shortDescription,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey[600],
+                height: 1.2,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+
+        // Price and Rating
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Price
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '\$${product.finalPrice.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: Colors.black,
+                      ),
+                    ),
+                    if (product.basePrice > product.finalPrice)
+                      Text(
+                        '\$${product.basePrice.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                  ],
+                ),
+
+                // Rating
+                if (product.rating > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.star, size: 12, color: Colors.amber),
+                        const SizedBox(width: 2),
+                        Text(
+                          product.rating.toStringAsFixed(1),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+
+        // Order Now Button
+        SizedBox(
+          width: double.infinity,
+          child: CustomButton(
+            backgroundColor: AppColors.yellowButton,
+            height: 32,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ProductDetailScreen(product: buyerProduct),
+                ),
+              );
+            },
+            child: const Text(
+              'Order Now',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -533,95 +573,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       createdAt: favorite.addedDate,
       updatedAt: favorite.addedDate,
       createdBy: null,
-    );
-  }
-
-  void _showClearAllDialog() {
-    if (_favoriteProducts.isEmpty) return;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear All Favorites'),
-        content: Text(
-          'Remove all ${_favoriteProducts.length} items from favorites?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-
-              final favoriteProvider = Provider.of<FavoriteProvider>(
-                context,
-                listen: false,
-              );
-
-              // Optimistic update
-              final tempList = List<FavoriteProduct>.from(_favoriteProducts);
-              setState(() {
-                _favoriteProducts.clear();
-              });
-
-              try {
-                await favoriteProvider.clearAllFavorites();
-
-                // Reset state and reload
-                setState(() {
-                  _favoriteProducts.clear();
-                  _currentPage = 1;
-                  _hasMore = false;
-                });
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('All favorites cleared'),
-                    backgroundColor: Colors.green,
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              } catch (error) {
-                // If error, restore list
-                setState(() {
-                  _favoriteProducts = tempList;
-                });
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error: $error'),
-                    backgroundColor: Colors.red,
-                    duration: const Duration(seconds: 3),
-                  ),
-                );
-              }
-            },
-            child: const Text('Clear All', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildEmptyView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.favorite_border_rounded,
-            size: 80,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'No Favorites Yet',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
     );
   }
 }

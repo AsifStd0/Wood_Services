@@ -201,40 +201,41 @@ class BuyerOrder {
     );
   }
 
+  // print all data  ???
   static OrderStatusBuyer _parseOrderStatus(Map<String, dynamic> json) {
     final status = json['status']?.toString().toLowerCase() ?? '';
     final timeline = json['timeline'] is Map
         ? json['timeline']
         : <String, dynamic>{};
 
-    log('🔍 Parsing order status:');
-    log('   Raw status: $status');
-    log('   Timeline: $timeline');
+    // log('🔍 Parsing order status:');
+    // log('   Raw status: $status');
+    // log('   Timeline: $timeline');
 
     // Check timeline dates to determine actual status
     if (timeline['deliveredAt'] != null) {
-      log(
-        '   → Has deliveredAt: ${timeline['deliveredAt']} → OrderStatusBuyer.completed',
-      );
+      // log(
+      //   '   → Has deliveredAt: ${timeline['deliveredAt']} → OrderStatusBuyer.completed',
+      // );
       return OrderStatusBuyer.completed;
     }
 
     if (timeline['shippedAt'] != null) {
-      log(
-        '   → Has shippedAt: ${timeline['shippedAt']} → OrderStatusBuyer.accepted',
-      );
+      // log(
+      //   '   → Has shippedAt: ${timeline['shippedAt']} → OrderStatusBuyer.accepted',
+      // );
       return OrderStatusBuyer.accepted;
     }
 
     if (timeline['acceptedAt'] != null) {
-      log(
-        '   → Has acceptedAt: ${timeline['acceptedAt']} → OrderStatusBuyer.accepted',
-      );
+      // log(
+      //   '   → Has acceptedAt: ${timeline['acceptedAt']} → OrderStatusBuyer.accepted',
+      // );
       return OrderStatusBuyer.accepted;
     }
 
     if (timeline['cancelledAt'] != null || timeline['rejectedAt'] != null) {
-      log('   → Has cancelledAt/rejectedAt → OrderStatusBuyer.declined');
+      // log('   → Has cancelledAt/rejectedAt → OrderStatusBuyer.declined');
       return OrderStatusBuyer.declined;
     }
 
@@ -279,6 +280,12 @@ class BuyerOrder {
         return cancelledAt != null ? 'Cancelled' : 'Rejected';
       case OrderStatusBuyer.completed:
         return 'Delivered';
+      case OrderStatusBuyer.cancelled:
+        return 'Cancelled';
+      case OrderStatusBuyer.rejected:
+        return 'Rejected';
+      default:
+        return 'Pending';
     }
   }
 
@@ -292,6 +299,12 @@ class BuyerOrder {
         return Colors.red;
       case OrderStatusBuyer.completed:
         return Colors.green;
+      case OrderStatusBuyer.cancelled:
+        return Colors.red;
+      case OrderStatusBuyer.rejected:
+        return Colors.red;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -349,4 +362,11 @@ class OrderItem {
   String get formattedSubtotal => '₹${subtotal.toStringAsFixed(2)}';
 }
 
-enum OrderStatusBuyer { pending, accepted, declined, completed }
+enum OrderStatusBuyer {
+  pending,
+  accepted,
+  declined,
+  completed,
+  cancelled,
+  rejected,
+}

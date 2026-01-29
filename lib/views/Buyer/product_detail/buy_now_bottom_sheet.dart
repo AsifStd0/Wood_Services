@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
-import 'package:wood_service/views/Buyer/payment/rating/order_rating_screen.dart';
 import 'package:wood_service/widgets/app_input_decoration.dart';
 
 class BuyNowBottomSheet extends StatefulWidget {

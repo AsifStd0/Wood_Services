@@ -22,37 +22,60 @@ class _SellerSettingsScreenContent extends StatelessWidget {
   const _SellerSettingsScreenContent();
 
   void _showLogoutDialog(BuildContext context) {
-    final provider = context.read<SellerSettingsProvider>();
-
+    // Use Consumer to get the provider
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              final success = await provider.logout();
-              if (success && context.mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-                  (route) => false,
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Logout'),
-          ),
-        ],
+      builder: (context) => Consumer<SellerSettingsProvider>(
+        builder: (context, provider, child) {
+          return AlertDialog(
+            title: const Text('Logout'),
+            content: const Text('Are you sure you want to logout?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: provider.isLoading
+                    ? null
+                    : () async {
+                        Navigator.pop(context);
+                        final success = await provider.logout();
+                        if (success && context.mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const OnboardingScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        } else if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Logout failed'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                child: provider.isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Logout'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

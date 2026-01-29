@@ -1,5 +1,5 @@
-// visit_requests_provider.dart
 import 'dart:developer';
+
 import 'package:flutter/foundation.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/views/Seller/data/views/seller_home/visit_requests_service.dart';
@@ -7,7 +7,7 @@ import 'package:wood_service/views/Seller/data/views/seller_home/visit_requests_
 class VisitRequestsProvider with ChangeNotifier {
   final VisitRequestsService _service = locator<VisitRequestsService>();
 
-  // Visit requests data
+  // Data
   List<Map<String, dynamic>> _visitRequests = [];
   List<Map<String, dynamic>> get visitRequests => _visitRequests;
 
@@ -19,7 +19,7 @@ class VisitRequestsProvider with ChangeNotifier {
   int get totalRequests => _pagination['total'] ?? 0;
   bool get hasMore => currentPage < totalPages;
 
-  // Filter
+  // Status filter
   String? _statusFilter;
   String? get statusFilter => _statusFilter;
 
@@ -31,55 +31,46 @@ class VisitRequestsProvider with ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get hasError => _errorMessage != null;
 
-  // Getters for filtered lists
-  List<Map<String, dynamic>> get pendingRequests {
-    return _visitRequests
-        .where((req) => req['status']?.toString().toLowerCase() == 'pending')
-        .toList();
-  }
+  // Status-specific lists
+  List<Map<String, dynamic>> get pendingRequests => _visitRequests
+      .where((req) => req['status']?.toString().toLowerCase() == 'pending')
+      .toList();
 
-  List<Map<String, dynamic>> get acceptedRequests {
-    return _visitRequests
-        .where((req) => req['status']?.toString().toLowerCase() == 'accepted')
-        .toList();
-  }
+  List<Map<String, dynamic>> get acceptedRequests => _visitRequests
+      .where((req) => req['status']?.toString().toLowerCase() == 'accepted')
+      .toList();
 
-  List<Map<String, dynamic>> get rejectedRequests {
-    return _visitRequests
-        .where(
-          (req) =>
-              req['status']?.toString().toLowerCase() == 'rejected' ||
-              req['status']?.toString().toLowerCase() == 'declined',
-        )
-        .toList();
-  }
+  List<Map<String, dynamic>> get rejectedRequests => _visitRequests
+      .where((req) => req['status']?.toString().toLowerCase() == 'rejected')
+      .toList();
 
-  List<Map<String, dynamic>> get completedRequests {
-    return _visitRequests
-        .where((req) => req['status']?.toString().toLowerCase() == 'completed')
-        .toList();
-  }
+  List<Map<String, dynamic>> get completedRequests => _visitRequests
+      .where((req) => req['status']?.toString().toLowerCase() == 'completed')
+      .toList();
 
+  List<Map<String, dynamic>> get cancelledRequests => _visitRequests
+      .where((req) => req['status']?.toString().toLowerCase() == 'cancelled')
+      .toList();
+
+  List<Map<String, dynamic>> get visitedRequests => _visitRequests
+      .where((req) => req['status']?.toString().toLowerCase() == 'visited')
+      .toList();
+
+  // Counters
   int get pendingCount => pendingRequests.length;
   int get acceptedCount => acceptedRequests.length;
   int get rejectedCount => rejectedRequests.length;
   int get completedCount => completedRequests.length;
+  int get cancelledCount => cancelledRequests.length;
+  int get visitedCount => visitedRequests.length;
 
-  // Add these counters
-  int _pendingCount = 0;
-  int _acceptedCount = 0;
-  int _rejectedCount = 0;
-  int _completedCount = 0;
-
-  // Update the load method to calculate counts
+  /// Load visit requests
   Future<void> loadVisitRequests({String? status, bool refresh = false}) async {
     if (_isLoading && !refresh) return;
 
     _isLoading = true;
     _errorMessage = null;
-    if (refresh) {
-      _visitRequests = [];
-    }
+    if (refresh) _visitRequests = [];
     notifyListeners();
 
     try {
@@ -103,14 +94,10 @@ class VisitRequestsProvider with ChangeNotifier {
           );
         }
         _pagination = Map<String, dynamic>.from(result['pagination'] ?? {});
-
-        // 🔥 CALCULATE COUNTS HERE
-        _calculateCounts();
-
-        log('✅ Loaded ${_visitRequests.length} visit requests');
         _errorMessage = null;
+        log('✅ Loaded ${_visitRequests.length} visit requests');
       } else {
-        throw Exception(result['message'] ?? 'Failed to load visit requests');
+        throw Exception('Failed to load visit requests');
       }
     } catch (e) {
       log('❌ Error loading visit requests: $e');
@@ -121,71 +108,16 @@ class VisitRequestsProvider with ChangeNotifier {
     }
   }
 
-  void _calculateCounts() {
-    _pendingCount = _visitRequests
-        .where((req) => req['status']?.toString().toLowerCase() == 'pending')
-        .length;
-    _acceptedCount = _visitRequests
-        .where((req) => req['status']?.toString().toLowerCase() == 'accepted')
-        .length;
-    _rejectedCount = _visitRequests
-        .where(
-          (req) =>
-              req['status']?.toString().toLowerCase() == 'rejected' ||
-              req['status']?.toString().toLowerCase() == 'declined',
-        )
-        .length;
-    _completedCount = _visitRequests
-        .where((req) => req['status']?.toString().toLowerCase() == 'completed')
-        .length;
-  }
-
-  // Also update when status changes
-  Future<bool> updateStatus({
+  /// Accept visit request with estimated cost
+  Future<bool> acceptRequest({
     required String requestId,
-    required String status,
+    required double estimatedCost, // REQUIRED
     String? message,
   }) async {
-    try {
-      log('🔄 Updating visit request status...');
-      final result = await _service.updateVisitRequestStatus(
-        requestId: requestId,
-        status: status,
-        message: message,
-      );
-
-      if (result['success'] == true) {
-        // Update local state
-        final index = _visitRequests.indexWhere(
-          (req) => req['_id']?.toString() == requestId,
-        );
-        if (index != -1) {
-          _visitRequests[index]['status'] = status;
-          if (result['visitRequest'] != null) {
-            _visitRequests[index] = result['visitRequest'];
-          }
-        }
-
-        // 🔥 RECALCULATE COUNTS
-        _calculateCounts();
-
-        notifyListeners();
-        return true;
-      }
-      return false;
-    } catch (e) {
-      log('❌ Error updating status: $e');
-      _errorMessage = e.toString();
-      notifyListeners();
-      return false;
-    }
-  }
-
-  /// Accept visit request
-  Future<bool> acceptRequest(String requestId, {String? message}) async {
     return await updateStatus(
       requestId: requestId,
       status: 'accepted',
+      estimatedCost: estimatedCost,
       message: message,
     );
   }
@@ -199,8 +131,112 @@ class VisitRequestsProvider with ChangeNotifier {
     );
   }
 
+  /// Complete visit request
+  Future<bool> completeRequest(String requestId, {String? message}) async {
+    return await updateStatus(
+      requestId: requestId,
+      status: 'completed',
+      message: message,
+    );
+  }
+
+  /// Cancel visit request
+  Future<bool> cancelRequest(String requestId, {String? message}) async {
+    return await updateStatus(
+      requestId: requestId,
+      status: 'cancelled',
+      message: message,
+    );
+  }
+
+  /// General status update method
+  Future<bool> updateStatus({
+    required String requestId,
+    required String status,
+    double? estimatedCost,
+    String? message,
+  }) async {
+    try {
+      log('🔄 Updating status to: $status for request: $requestId');
+
+      // Find request locally
+      final requestIndex = _visitRequests.indexWhere(
+        (req) => req['_id']?.toString() == requestId,
+      );
+
+      if (requestIndex == -1) {
+        _errorMessage = 'Request not found in local list';
+        notifyListeners();
+        return false;
+      }
+
+      final currentRequest = _visitRequests[requestIndex];
+      final currentStatus =
+          currentRequest['status']?.toString().toLowerCase() ?? 'pending';
+
+      // Validate state transitions
+      if (!_isValidStatusTransition(currentStatus, status)) {
+        _errorMessage = 'Cannot change status from $currentStatus to $status';
+        notifyListeners();
+        return false;
+      }
+
+      // Call API
+      final result = await _service.updateVisitRequestStatus(
+        requestId: requestId,
+        status: status,
+        estimatedCost: estimatedCost,
+        message: message,
+      );
+
+      if (result['success'] == true) {
+        // Update local state
+        _visitRequests[requestIndex]['status'] = status;
+
+        // Update with full response if available
+        if (result['visitRequest'] != null) {
+          _visitRequests[requestIndex] = result['visitRequest'];
+        }
+
+        _errorMessage = null;
+        notifyListeners();
+        return true;
+      }
+
+      _errorMessage = result['message'] ?? 'Failed to update status';
+      notifyListeners();
+      return false;
+    } catch (e) {
+      log('❌ Error updating status: $e');
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Validate status transitions
+  bool _isValidStatusTransition(String currentStatus, String newStatus) {
+    final validTransitions = {
+      'pending': ['accepted', 'rejected', 'cancelled'],
+      'accepted': ['scheduled', 'cancelled', 'visited'],
+      'scheduled': ['visited', 'cancelled'],
+      'visited': ['completed', 'cancelled'],
+      'completed': [], // Final state
+      'rejected': [], // Final state
+      'cancelled': [], // Final state
+    };
+
+    return validTransitions[currentStatus]?.contains(newStatus) ?? false;
+  }
+
   /// Refresh visit requests
   Future<void> refresh() async {
     await loadVisitRequests(status: _statusFilter, refresh: true);
+  }
+
+  /// Clear error
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
   }
 }

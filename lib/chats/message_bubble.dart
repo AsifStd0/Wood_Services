@@ -36,7 +36,7 @@ class MessageBubble extends StatelessWidget {
               if (message.attachments.isNotEmpty) ...[
                 ...message.attachments.map((attachment) {
                   return _buildAttachmentWidget(attachment, context);
-                }).toList(),
+                }),
                 const SizedBox(height: 8),
               ],
 

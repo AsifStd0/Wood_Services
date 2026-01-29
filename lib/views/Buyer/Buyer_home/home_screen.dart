@@ -55,17 +55,30 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
         showSearch: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications),
+            icon: const Icon(Icons.notifications),
             onPressed: () {
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) => const NotificationsScreen(),
-              //   ),
-              // );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SellerNotificaionScreen(),
+                ),
+              );
             },
           ),
         ],
+        // actions: [
+        //   IconButton(
+        //     icon: Icon(Icons.notifications),
+        //     onPressed: () {
+        //       // Navigator.push(
+        //       //   context,
+        //       //   MaterialPageRoute(
+        //       //     builder: (context) => const NotificationsScreen(),
+        //       //   ),
+        //       // );
+        //     },
+        //   ),
+        // ],
       ),
       body: GestureDetector(
         onTap: () {
