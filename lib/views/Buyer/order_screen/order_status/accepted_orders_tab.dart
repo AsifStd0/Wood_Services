@@ -80,7 +80,9 @@ class AcceptedOrdersTab extends StatelessWidget {
               ),
             if (order.processedAt != null)
               Text(
-                'Processing: ${DateFormat('MMM dd, yyyy').format(order.processedAt!)}',
+                order.deliveredAt == null
+                    ? 'Started: ${DateFormat('MMM dd, yyyy').format(order.processedAt!)}'
+                    : 'Processing: ${DateFormat('MMM dd, yyyy').format(order.processedAt!)}',
               ),
             if (order.shippedAt != null)
               Text(

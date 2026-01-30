@@ -177,12 +177,9 @@ class _OrderCard extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Action Buttons
-            if ( // order.status == OrderStatus.requested ||
-            order.status == OrderStatus.pending ||
-                order.status == OrderStatus.accepted
-            // ||
-            // order.status == OrderStatus.processing
-            )
+            if (order.status == OrderStatus.pending ||
+                order.status == OrderStatus.accepted ||
+                order.status == OrderStatus.inProgress)
               Column(
                 children: [
                   Row(
@@ -213,6 +210,32 @@ class _OrderCard extends StatelessWidget {
                             ),
                           ),
                         ),
+                      ] else if (order.status == OrderStatus.accepted) ...[
+                        Expanded(
+                          child: _buildActionButton(
+                            'Start Work',
+                            Colors.blue,
+                            Icons.play_circle_rounded,
+                            () => _updateOrderStatus(
+                              context,
+                              order,
+                              OrderStatus.inProgress,
+                            ),
+                          ),
+                        ),
+                      ] else if (order.status == OrderStatus.inProgress) ...[
+                        Expanded(
+                          child: _buildActionButton(
+                            'Complete',
+                            Colors.green,
+                            Icons.check_circle_outline_rounded,
+                            () => _updateOrderStatus(
+                              context,
+                              order,
+                              OrderStatus.completed,
+                            ),
+                          ),
+                        ),
                       ],
 
                       const SizedBox(width: 8),
@@ -227,21 +250,6 @@ class _OrderCard extends StatelessWidget {
                       ),
                     ],
                   ),
-
-                  // Add Note button for active orders
-                  if (order.status == OrderStatus.accepted)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: _buildActionButton(
-                          'Add Note',
-                          Colors.orange,
-                          Icons.note_add_rounded,
-                          () => _showAddNoteDialog(context, order),
-                        ),
-                      ),
-                    ),
                 ],
               ),
           ],
@@ -347,80 +355,6 @@ class _OrderCard extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => _OrderDetailsSheet(order: order),
-    );
-  }
-
-  void _showAddNoteDialog(BuildContext context, OrderModelSeller order) {
-    final noteController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Note to Order'),
-        content: TextField(
-          controller: noteController,
-          decoration: const InputDecoration(
-            hintText: 'Enter note message...',
-            border: OutlineInputBorder(),
-          ),
-          maxLines: 4,
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (noteController.text.trim().isEmpty) {
-                // Check mounted before showing snackbar
-                if (!context.mounted) return;
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter a note'),
-                    backgroundColor: Colors.orange,
-                  ),
-                );
-                return;
-              }
-
-              Navigator.pop(context);
-
-              // Store context for async operation
-              final localContext = context;
-
-              try {
-                final viewModel = localContext.read<OrdersViewModel>();
-                await viewModel.addOrderNote(
-                  order.id,
-                  noteController.text.trim(),
-                );
-
-                if (localContext.mounted) {
-                  ScaffoldMessenger.of(localContext).showSnackBar(
-                    const SnackBar(
-                      content: Text('Note added successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (localContext.mounted) {
-                  ScaffoldMessenger.of(localContext).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to add note: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('Add Note'),
-          ),
-        ],
-      ),
     );
   }
 }

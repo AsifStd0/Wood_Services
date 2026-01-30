@@ -137,46 +137,34 @@ class OrdersViewModel with ChangeNotifier {
       final apiOrderId = order.id;
       log('🔍 Using order ID: $apiOrderId');
 
-      // Update via API
-      await _repository.updateOrderStatus(apiOrderId, newStatus.value);
+      // Update via API and get updated order
+      final updatedOrder = await _repository.updateOrderStatus(
+        apiOrderId,
+        newStatus.value,
+      );
+      log('✅ Received updated order from API: ${updatedOrder.status.value}');
 
-      // Update local order
+      // Update local order with the complete updated order data
       final index = _orders.indexWhere((o) => o.id == order.id);
       if (index != -1) {
-        _orders[index] = _orders[index].copyWith(status: newStatus);
+        _orders[index] = updatedOrder;
         _applyFilters();
 
         // Refresh statistics
         await _loadStatistics();
 
         notifyListeners();
+        log('✅ Order status updated successfully in local state');
+      } else {
+        log('⚠️ Order not found in local list, adding it');
+        _orders.add(updatedOrder);
+        _applyFilters();
+        await _loadStatistics();
+        notifyListeners();
       }
-
-      log('✅ Order status updated successfully');
     } catch (e) {
       _errorMessage = 'Failed to update order status: $e';
       log('❌ Error updating order status: $e');
-      notifyListeners();
-      rethrow;
-    }
-  }
-
-  /// Add note to order
-  Future<void> addOrderNote(String orderId, String message) async {
-    try {
-      log('📝 Adding note to order: $orderId');
-
-      // Find the order
-      final order = _orders.firstWhere(
-        (order) => order.id == orderId || order.orderId == orderId,
-        orElse: () => throw Exception('Order not found locally'),
-      );
-      log('order.id ${order.id}');
-      await _repository.addOrderNote(order.id, message);
-      log('✅ Note added successfully');
-    } catch (e) {
-      _errorMessage = 'Failed to add note: $e';
-      log('❌ Error adding note: $e');
       notifyListeners();
       rethrow;
     }

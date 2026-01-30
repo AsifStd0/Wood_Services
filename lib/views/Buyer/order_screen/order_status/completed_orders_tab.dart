@@ -55,17 +55,6 @@ class CompletedOrdersTab extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => _viewDetails(context, order),
-            icon: const Icon(Icons.info_outline, size: 18),
-            label: const Text('Details'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -75,7 +64,9 @@ class CompletedOrdersTab extends StatelessWidget {
     final reviewTextController = TextEditingController();
 
     showDialog(
+      // remove  padding etc rating star overflow to roght
       context: context,
+      barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
@@ -87,7 +78,7 @@ class CompletedOrdersTab extends StatelessWidget {
                   Text(
                     '#${order.orderId}',
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -102,26 +93,43 @@ class CompletedOrdersTab extends StatelessWidget {
                   // Star Rating
                   const Text('How would you rate this order?'),
                   const SizedBox(height: 8),
+
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: List.generate(5, (index) {
-                      return IconButton(
-                        icon: Icon(
-                          Icons.star,
-                          size: 30,
-                          color: index < selectedRating
-                              ? Colors.amber
-                              : Colors.grey,
-                        ),
-                        onPressed: () {
+                      return GestureDetector(
+                        onTap: () {
                           setState(() {
                             selectedRating = index + 1;
                           });
                         },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            child: Icon(
+                              Icons
+                                  .star_rounded, // Use rounded star for modern look
+                              size: 32,
+                              color: index < selectedRating
+                                  ? Colors.amber.shade600
+                                  : Colors.grey,
+                              shadows: index < selectedRating
+                                  ? [
+                                      BoxShadow(
+                                        color: Colors.amber.withOpacity(0.4),
+                                        blurRadius: 8,
+                                        spreadRadius: 0,
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                          ),
+                        ),
                       );
                     }),
                   ),
-
                   // Review Text
                   const SizedBox(height: 16),
                   const Text('Add a review (optional):'),

@@ -1,4 +1,5 @@
 import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:wood_service/chats/Buyer/buyer_chating.dart';
 import 'package:wood_service/views/Buyer/Model/buyer_order_model.dart';
@@ -71,6 +72,12 @@ class BuyerOrderProvider with ChangeNotifier {
     }
   }
 
+  /// Refresh orders for the current filter
+  Future<void> refreshOrders() async {
+    await loadOrders(status: _currentFilter);
+    await loadOrderSummary();
+  }
+
   Future<bool> cancelOrder(String orderId) async {
     try {
       _isLoading = true;
@@ -114,7 +121,7 @@ class BuyerOrderProvider with ChangeNotifier {
     String orderId, {
     required int rating,
     String? comment,
-    List<Map<String, dynamic>>? itemReviews,
+    // List<Map<String, dynamic>>? itemReviews,
   }) async {
     try {
       log('orders ----- 00000 ');
@@ -123,7 +130,7 @@ class BuyerOrderProvider with ChangeNotifier {
         orderId,
         rating: rating,
         comment: comment,
-        itemReviews: itemReviews,
+        // itemReviews: itemReviews,
       );
       log('orders -----');
       // Update local order
