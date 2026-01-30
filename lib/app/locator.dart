@@ -27,6 +27,7 @@ import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_p
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository_impl.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/status/seller_stats_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_services.dart';
 import 'package:wood_service/views/visit_request_buyer_resp/visit_provider.dart';
@@ -71,19 +72,19 @@ Future<void> setupLocator() async {
       ),
     );
 
-    // Add interceptors for logging (optional)
-    if (Config.isDevelopment) {
-      dio.interceptors.add(
-        LogInterceptor(
-          request: true,
-          requestHeader: true,
-          requestBody: true,
-          responseHeader: true,
-          responseBody: true,
-          error: true,
-        ),
-      );
-    }
+    // // Add interceptors for logging (optional)
+    // if (Config.isDevelopment) {
+    //   dio.interceptors.add(
+    //     LogInterceptor(
+    //       request: true,
+    //       requestHeader: true,
+    //       requestBody: true,
+    //       responseHeader: true,
+    //       responseBody: true,
+    //       error: true,
+    //     ),
+    //   );
+    // }
 
     // Add auth interceptor - NOW storage is ready!
     dio.interceptors.add(
@@ -301,6 +302,12 @@ Future<void> setupLocator() async {
   locator.registerFactory<BuyerOrderProvider>(
     () => BuyerOrderProvider(locator<BuyerOrderRepository>()),
   );
+  // ! ******
+
+  // Register Seller Stats Provider
+  if (!locator.isRegistered<SellerStatsProvider>()) {
+    locator.registerSingleton<SellerStatsProvider>(SellerStatsProvider());
+  }
 
   print('✅ Locator setup completed successfully!');
 }

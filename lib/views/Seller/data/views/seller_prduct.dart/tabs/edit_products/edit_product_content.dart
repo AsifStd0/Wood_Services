@@ -20,11 +20,11 @@ class EditProductContent extends StatelessWidget {
   });
 
   List<Widget> get _tabs => [
-    BasicTab(),
-    PricingTab(),
-    InventoryTab(),
-    const VariantsTab(),
-    const MediaTab(),
+    BasicTab(key: ValueKey('basic_${productModel.id}')),
+    PricingTab(key: ValueKey('pricing_${productModel.id}')),
+    InventoryTab(key: ValueKey('inventory_${productModel.id}')),
+    VariantsTab(key: ValueKey('variants_${productModel.id}')),
+    MediaTab(key: ValueKey('media_${productModel.id}')),
   ];
 
   @override

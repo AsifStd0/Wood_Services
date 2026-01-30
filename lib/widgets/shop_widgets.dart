@@ -56,7 +56,7 @@ Widget buildShopHeader(SellerSettingsProvider provider) {
                 )
               : const Icon(Icons.store_rounded, color: Colors.white, size: 30),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,12 +66,12 @@ Widget buildShopHeader(SellerSettingsProvider provider) {
                     ? provider.currentUser!.shopName!
                     : 'Your Shop Name',
                 style: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: Colors.black87,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
                 provider.currentUser?.businessName?.isNotEmpty == true
                     ? provider.currentUser!.businessName!
@@ -80,11 +80,9 @@ Widget buildShopHeader(SellerSettingsProvider provider) {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(Icons.email_rounded, color: Colors.blue, size: 16),
-                  const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       provider.currentUser?.email ?? 'email@example.com',

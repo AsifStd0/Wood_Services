@@ -24,25 +24,36 @@ class EditProductScreen extends StatefulWidget {
 }
 
 class _EditProductScreenState extends State<EditProductScreen> {
+  late final SellerProductProvider _provider;
+
   @override
   void initState() {
     super.initState();
-    // Load product data immediately from model, then fetch full data from API
+    // Create provider instance
+    _provider = SellerProductProvider(
+      productService: locator<UploadedProductService>(),
+    );
+
+    // Load product data immediately from model (synchronously, before first build)
+    // This ensures fields are populated when the UI first renders
+    _provider.loadProductFromModel(widget.productModel);
+
+    // Then, fetch full data from API in background (for salePrice, costPrice, etc.)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<SellerProductProvider>();
-      // First, load data from model immediately (so tabs show data right away)
-      provider.loadProductFromModel(widget.productModel);
-      // Then, fetch full data from API in background (for salePrice, costPrice, etc.)
-      provider.loadProductForEditing(widget.productId);
+      _provider.loadProductForEditing(widget.productId);
     });
   }
 
   @override
+  void dispose() {
+    // Don't dispose the provider here as it's managed by Provider
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => SellerProductProvider(
-        productService: locator<UploadedProductService>(),
-      ),
+    return ChangeNotifierProvider.value(
+      value: _provider,
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: CustomAppBar(
@@ -52,11 +63,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
         ),
         body: Consumer<SellerProductProvider>(
           builder: (context, viewModel, child) {
-            if (viewModel.isLoading && viewModel.product.title.isEmpty) {
+            // Show loading only if we don't have any data yet
+            if (viewModel.isLoading &&
+                viewModel.product.title.isEmpty &&
+                !viewModel.isEditMode) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            if (viewModel.errorMessage != null && !viewModel.isEditMode) {
+            // Show error only if we failed to load and have no data
+            if (viewModel.errorMessage != null &&
+                !viewModel.isEditMode &&
+                viewModel.product.title.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -67,10 +84,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       color: Colors.red,
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      viewModel.errorMessage!,
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        viewModel.errorMessage!,
+                        style: const TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
