@@ -267,9 +267,10 @@ class OrderCardWidget extends StatelessWidget {
   Widget _buildProgressBar() {
     double progress = 0.0;
     if (order.status == OrderStatusBuyer.accepted) progress = 0.3;
-    if (order.processedAt != null) progress = 0.6;
+    if (order.processedAt != null && order.deliveredAt == null)
+      progress = 0.6; // In Progress
     if (order.shippedAt != null) progress = 0.8;
-    if (order.deliveredAt != null) progress = 1.0;
+    if (order.deliveredAt != null) progress = 1.0; // Completed
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -610,27 +611,30 @@ class OrderTimelineWidget extends StatelessWidget {
             order.acceptedAt != null,
           ),
           _buildTimelineItem(
-            'Processing',
+            order.processedAt != null && order.deliveredAt == null
+                ? 'In Progress'
+                : 'Processing',
             order.processedAt != null
                 ? DateFormat('MMM dd, yyyy').format(order.processedAt!)
                 : 'Pending',
-            Icons.settings,
+            order.processedAt != null && order.deliveredAt == null
+                ? Icons.build
+                : Icons.settings,
             order.processedAt != null,
           ),
+          if (order.shippedAt != null)
+            _buildTimelineItem(
+              'Shipped',
+              DateFormat('MMM dd, yyyy').format(order.shippedAt!),
+              Icons.local_shipping,
+              true,
+            ),
           _buildTimelineItem(
-            'Shipped',
-            order.shippedAt != null
-                ? DateFormat('MMM dd, yyyy').format(order.shippedAt!)
-                : 'Estimated: ${_getEstimatedDelivery(order.requestedAt)}',
-            Icons.local_shipping,
-            order.shippedAt != null,
-          ),
-          _buildTimelineItem(
-            'Delivered',
+            order.deliveredAt != null ? 'Completed' : 'Delivered',
             order.deliveredAt != null
                 ? DateFormat('MMM dd, yyyy').format(order.deliveredAt!)
                 : 'Estimated: ${_getEstimatedDelivery(order.requestedAt)}',
-            Icons.home,
+            order.deliveredAt != null ? Icons.check_circle : Icons.home,
             order.deliveredAt != null,
           ),
         ],

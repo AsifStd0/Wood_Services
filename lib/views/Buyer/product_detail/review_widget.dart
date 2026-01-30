@@ -1,11 +1,13 @@
 // lib/views/Buyer/widgets/product_review_widget.dart
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 // import 'package:cached_network_image/cached_network_image.dart';
 
 // lib/views/Buyer/widgets/reviews_preview_section.dart
-import 'package:provider/provider.dart';
 import 'package:wood_service/app/config.dart';
-import 'package:wood_service/views/Buyer/payment/rating/review_provider.dart';
+import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 
 class ReviewsPreviewSection extends StatefulWidget {
   final String productId;
@@ -40,17 +42,54 @@ class _ReviewsPreviewSectionState extends State<ReviewsPreviewSection> {
         _error = false;
       });
 
-      final reviewProvider = context.read<ReviewProvider>();
-      final result = await reviewProvider.getProductReviewsWithStats(
-        productId: widget.productId,
-        limit: 2, // Show 2 reviews in preview
+      // Call /api/buyer/services/:id to get product details with reviews
+      final token = await _getToken();
+      if (token == null) {
+        setState(() {
+          _error = true;
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse('${Config.apiBaseUrl}/buyer/services/${widget.productId}'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
       );
 
-      if (result['success'] == true) {
-        setState(() {
-          _reviews = result['reviews'] ?? [];
-          _stats = result['stats'] ?? {};
-        });
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          final serviceData = data['data']['service'] ?? {};
+          final reviewsData = data['data']['reviews'] ?? [];
+          final ratingsData = serviceData['ratings'] ?? {};
+
+          // Parse reviews and map to expected format
+          final reviews = (reviewsData as List).map((review) {
+            final buyerId = review['buyerId'] ?? {};
+            return {
+              'buyerName': buyerId['name'] ?? 'Anonymous',
+              'buyerImage': buyerId['profileImage'],
+              'rating': review['rating'] ?? 0,
+              'comment': review['comment'] ?? '',
+              'createdAt': review['createdAt'],
+              'verifiedPurchase': review['isApproved'] ?? false,
+            };
+          }).toList();
+
+          setState(() {
+            _reviews = reviews;
+            _stats = {
+              'average': (ratingsData['average'] ?? 0).toDouble(),
+              'total': ratingsData['count'] ?? 0,
+            };
+          });
+        } else {
+          setState(() => _error = true);
+        }
       } else {
         setState(() => _error = true);
       }
@@ -60,6 +99,12 @@ class _ReviewsPreviewSectionState extends State<ReviewsPreviewSection> {
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  Future<String?> _getToken() async {
+    final storage = UnifiedLocalStorageServiceImpl();
+    await storage.initialize();
+    return storage.getToken();
   }
 
   @override
@@ -128,23 +173,6 @@ class _ReviewsPreviewSectionState extends State<ReviewsPreviewSection> {
                 ],
               ),
             ),
-
-            // View All Button (only if there are reviews)
-            if (totalReviews > 2)
-              TextButton(
-                onPressed: () {
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) => AllProductReviewsScreen(
-                  //       productId: widget.productId,
-                  //       productName: widget.productName,
-                  //     ),
-                  //   ),
-                  // );
-                },
-                child: const Text('View All'),
-              ),
           ],
         ),
 
@@ -333,10 +361,7 @@ class ProductReviewWidget extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.grey[300]!),
                 ),
-                child: ClipOval(
-                  // child: _buildAvatar(fullImageUrl, buyerName)),
-                  child: Icon(Icons.person, color: Colors.grey[300]),
-                ),
+                child: ClipOval(child: _buildAvatar(fullImageUrl, buyerName)),
               ),
 
               const SizedBox(width: 12),
@@ -401,17 +426,22 @@ class ProductReviewWidget extends StatelessWidget {
                     Row(
                       children: [
                         ...List.generate(5, (index) {
+                          final ratingInt = (rating is int)
+                              ? rating
+                              : (rating as num).toInt();
                           return Icon(
-                            index < rating ? Icons.star : Icons.star_border,
+                            index < ratingInt ? Icons.star : Icons.star_border,
                             size: 18,
-                            color: index < rating
+                            color: index < ratingInt
                                 ? Colors.amber
                                 : Colors.grey[400],
                           );
                         }),
                         const SizedBox(width: 8),
                         Text(
-                          rating.toStringAsFixed(1),
+                          (rating is int)
+                              ? rating.toString()
+                              : (rating as num).toStringAsFixed(1),
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
@@ -491,72 +521,70 @@ class ProductReviewWidget extends StatelessWidget {
     );
   }
 
-  // ! ******
-  // Widget _buildAvatar(String? imageUrl, String buyerName) {
-  //   if (imageUrl != null && imageUrl.isNotEmpty) {
-  //     // Validate and fix the image URL
-  //     final String fixedImageUrl = _fixImageUrl(imageUrl);
+  Widget _buildAvatar(String? imageUrl, String buyerName) {
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      // Validate and fix the image URL
+      final String fixedImageUrl = _fixImageUrl(imageUrl);
 
-  //     return Image.network(
-  //       fixedImageUrl,
-  //       fit: BoxFit.cover,
-  //       errorBuilder: (context, error, stackTrace) {
-  //         return _buildInitialsAvatar(buyerName);
-  //       },
-  //       loadingBuilder: (context, child, loadingProgress) {
-  //         if (loadingProgress == null) return child;
-  //         return Center(
-  //           child: CircularProgressIndicator(
-  //             value: loadingProgress.expectedTotalBytes != null
-  //                 ? loadingProgress.cumulativeBytesLoaded /
-  //                       loadingProgress.expectedTotalBytes!
-  //                 : null,
-  //           ),
-  //         );
-  //       },
-  //     );
-  //   } else {
-  //     return _buildInitialsAvatar(buyerName);
-  //   }
-  // }
+      return Image.network(
+        fixedImageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildInitialsAvatar(buyerName);
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          );
+        },
+      );
+    } else {
+      return _buildInitialsAvatar(buyerName);
+    }
+  }
 
-  // Widget _buildInitialsAvatar(String buyerName) {
-  //   return Container(
-  //     color: Colors.blue[100],
-  //     child: Center(
-  //       child: Text(
-  //         buyerName.isNotEmpty ? buyerName[0].toUpperCase() : '?',
-  //         style: TextStyle(
-  //           color: Colors.blue[700],
-  //           fontWeight: FontWeight.bold,
-  //           fontSize: 16,
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
+  Widget _buildInitialsAvatar(String buyerName) {
+    return Container(
+      color: Colors.blue[100],
+      child: Center(
+        child: Text(
+          buyerName.isNotEmpty ? buyerName[0].toUpperCase() : '?',
+          style: TextStyle(
+            color: Colors.blue[700],
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      ),
+    );
+  }
 
-  // String _fixImageUrl(String url) {
-  //   // If URL contains localhost with wrong port, replace with your API base URL
-  //   if (url.contains('localhost:')) {
-  //     // Extract the path from the URL
-  //     final uri = Uri.tryParse(url);
-  //     if (uri != null) {
-  //       // Replace localhost with your actual backend domain
-  //       return '${Config.apiBaseUrl}${uri.path}';
-  //     }
-  //   }
+  String _fixImageUrl(String url) {
+    // If URL contains localhost with wrong port, replace with your API base URL
+    if (url.contains('localhost:')) {
+      // Extract the path from the URL
+      final uri = Uri.tryParse(url);
+      if (uri != null) {
+        // Replace localhost with your actual backend domain
+        return '${Config.apiBaseUrl}${uri.path}';
+      }
+    }
 
-  //   // If URL starts with /uploads/, prepend base URL
-  //   if (url.startsWith('/uploads/') || url.startsWith('/')) {
-  //     return '${Config.apiBaseUrl}$url';
-  //   }
+    // If URL starts with /uploads/, prepend base URL
+    if (url.startsWith('/uploads/') || url.startsWith('/')) {
+      return '${Config.apiBaseUrl}$url';
+    }
 
-  //   // Return as-is if it's already a valid URL
-  //   return url;
-  // }
+    // Return as-is if it's already a valid URL
+    return url;
+  }
 
-  // ! *******
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);

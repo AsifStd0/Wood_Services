@@ -6,18 +6,19 @@ import 'package:intl/intl.dart';
 enum OrderStatus {
   pending('pending'),
   accepted('accepted'),
+  inProgress('in-progress'),
+  completed('completed'),
   cancelled('cancelled'),
-  // shipped('shipped'),
-  // delivered('delivered'),
   rejected('rejected');
 
   final String value;
   const OrderStatus(this.value);
 
   factory OrderStatus.fromString(String value) {
+    // Handle both "in-progress" and "inProgress" formats
+    final normalizedValue = value.toLowerCase().replaceAll('_', '-');
     return OrderStatus.values.firstWhere(
-      (e) => e.value == value,
-      // orElse: () => OrderStatus.requested,
+      (e) => e.value == normalizedValue,
       orElse: () => OrderStatus.pending,
     );
   }
@@ -28,12 +29,12 @@ enum OrderStatus {
         return 'Pending';
       case OrderStatus.accepted:
         return 'Accepted';
+      case OrderStatus.inProgress:
+        return 'In Progress';
+      case OrderStatus.completed:
+        return 'Completed';
       case OrderStatus.cancelled:
         return 'Cancelled';
-      // case OrderStatus.shipped:
-      //   return 'Shipped';
-      // case OrderStatus.delivered:
-      // return 'Delivered';
       case OrderStatus.rejected:
         return 'Rejected';
     }
@@ -45,11 +46,12 @@ enum OrderStatus {
         return const Color(0xFFFFA726);
       case OrderStatus.accepted:
         return const Color(0xFF4CAF50);
-      // case OrderStatus.shipped:
-      //   return const Color(0xFF7E57C2);
-      // case OrderStatus.delivered:
-      case OrderStatus.cancelled:
+      case OrderStatus.inProgress:
+        return const Color(0xFF2196F3);
+      case OrderStatus.completed:
         return const Color(0xFF66BB6A);
+      case OrderStatus.cancelled:
+        return const Color(0xFF9E9E9E);
       case OrderStatus.rejected:
         return const Color(0xFFEF5350);
     }
@@ -306,18 +308,18 @@ class OrderModelSeller {
         requestedAt: parseDate(
           timeline['orderedAt'] ?? json['requestedAt'] ?? json['createdAt'],
         ),
-        acceptedAt: json['acceptedAt'] != null
-            ? parseDate(json['acceptedAt'])
-            : null,
-        processedAt: json['processedAt'] != null
-            ? parseDate(json['processedAt'])
-            : null,
+        acceptedAt: timeline['acceptedAt'] != null
+            ? parseDate(timeline['acceptedAt'])
+            : (json['acceptedAt'] != null ? parseDate(json['acceptedAt']) : null),
+        processedAt: timeline['startedAt'] != null
+            ? parseDate(timeline['startedAt'])
+            : (json['processedAt'] != null ? parseDate(json['processedAt']) : null),
         shippedAt: json['shippedAt'] != null
             ? parseDate(json['shippedAt'])
             : null,
-        deliveredAt: json['deliveredAt'] != null
-            ? parseDate(json['deliveredAt'])
-            : null,
+        deliveredAt: timeline['completedAt'] != null
+            ? parseDate(timeline['completedAt'])
+            : (json['deliveredAt'] != null ? parseDate(json['deliveredAt']) : null),
         cancelledAt: json['cancelledAt'] != null
             ? parseDate(json['cancelledAt'])
             : null,

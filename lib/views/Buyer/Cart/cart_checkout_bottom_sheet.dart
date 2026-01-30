@@ -152,170 +152,175 @@ class _CartCheckoutBottomSheetState extends State<CartCheckoutBottomSheet> {
           top: 16,
           bottom: 16 + bottomInset,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Checkout',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                IconButton(
-                  onPressed: _isLoading ? null : () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-
-            const Text(
-              'Order Details',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            CustomTextFormField(
-              controller: _descriptionController,
-              hintText: 'Description ',
-              prefixIcon: Icon(Icons.description),
-              textInputAction: TextInputAction.next,
-              onChanged: (_) => setState(() {}),
-              minline: 2,
-              maxLines: 4,
-            ),
-
-            const SizedBox(height: 10),
-            CustomTextFormField(
-              controller: _locationController,
-              hintText: 'Location ',
-              prefixIcon: Icon(Icons.location_on),
-              textInputAction: TextInputAction.next,
-              onChanged: (_) => setState(() {}),
-            ),
-
-            const SizedBox(height: 10),
-
-            InkWell(
-              onTap: _isLoading ? null : _pickPreferredDate,
-              child: InputDecorator(
-                decoration: AppInputDecoration.outlined(
-                  context: context,
-                  labelText: 'Preferred Date',
-                  hintText: 'Preferred Date',
-                ),
-
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _selectedDate ??
-                            DateTime.now()
-                                .add(const Duration(days: 1))
-                                .toString()
-                                .split(' ')[0],
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Checkout',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const Icon(Icons.calendar_today, size: 18),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // TextField(
-            //   controller: _estimatedDurationController,
-            //   textInputAction: TextInputAction.next,
-            //   decoration: const InputDecoration(
-            //     labelText: 'Estimated Duration (optional)',
-            //     border: OutlineInputBorder(),
-            //   ),
-            // ),
-            CustomTextFormField(
-              controller: _estimatedDurationController,
-              hintText: 'Estimated Duration (optional)',
-              prefixIcon: Icon(Icons.schedule),
-              textInputAction: TextInputAction.next,
-              onChanged: (_) => setState(() {}),
-              minline: 1,
-              maxLines: 3,
-            ),
-            const SizedBox(height: 10),
-            CustomTextFormField(
-              controller: _specialRequirementsController,
-              hintText: 'Special Requirements (optional)',
-              prefixIcon: Icon(Icons.info),
-              textInputAction: TextInputAction.done,
-              onChanged: (_) => setState(() {}),
-              minline: 1,
-              maxLines: 3,
-            ),
-            const SizedBox(height: 12),
-
-            const Text(
-              'Payment Method',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: _paymentMethod,
-              items: const [
-                DropdownMenuItem(value: 'card', child: Text('Card')),
-                // DropdownMenuItem(value: 'cod', child: Text('Cash on Delivery')),
-                // DropdownMenuItem(value: 'mada', child: Text('Mada/SADAD')),
-                // DropdownMenuItem(value: 'apple_pay', child: Text('Apple Pay')),
-              ],
-              onChanged: _isLoading
-                  ? null
-                  : (v) => setState(() => _paymentMethod = v ?? 'card'),
-              decoration: AppInputDecoration.outlined(
-                context: context,
-                labelText: 'Payment Method',
-                hintText: 'Payment Method',
-              ),
-            ),
-
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed:
-                    (_descriptionController.text.trim().isNotEmpty &&
-                        _locationController.text.trim().isNotEmpty &&
-                        !_isLoading)
-                    ? _handleCheckout
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.brightOrange,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                        ),
-                      )
-                    : const Text(
-                        'Place Order',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                  IconButton(
+                    onPressed: _isLoading ? null : () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+
+              const Text(
+                'Order Details',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              CustomTextFormField(
+                controller: _descriptionController,
+                hintText: 'Description ',
+                prefixIcon: Icon(Icons.description),
+                textInputAction: TextInputAction.next,
+                onChanged: (_) => setState(() {}),
+                minline: 2,
+                maxLines: 4,
+              ),
+
+              const SizedBox(height: 10),
+              CustomTextFormField(
+                controller: _locationController,
+                hintText: 'Location ',
+                prefixIcon: Icon(Icons.location_on),
+                textInputAction: TextInputAction.next,
+                onChanged: (_) => setState(() {}),
+              ),
+
+              const SizedBox(height: 10),
+
+              InkWell(
+                onTap: _isLoading ? null : _pickPreferredDate,
+                child: InputDecorator(
+                  decoration: AppInputDecoration.outlined(
+                    context: context,
+                    labelText: 'Preferred Date',
+                    hintText: 'Preferred Date',
+                  ),
+
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _selectedDate ??
+                              DateTime.now()
+                                  .add(const Duration(days: 1))
+                                  .toString()
+                                  .split(' ')[0],
                         ),
                       ),
+                      const Icon(Icons.calendar_today, size: 18),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 10),
+
+              // TextField(
+              //   controller: _estimatedDurationController,
+              //   textInputAction: TextInputAction.next,
+              //   decoration: const InputDecoration(
+              //     labelText: 'Estimated Duration (optional)',
+              //     border: OutlineInputBorder(),
+              //   ),
+              // ),
+              CustomTextFormField(
+                controller: _estimatedDurationController,
+                hintText: 'Estimated Duration (optional)',
+                prefixIcon: Icon(Icons.schedule),
+                textInputAction: TextInputAction.next,
+                onChanged: (_) => setState(() {}),
+                minline: 1,
+                maxLines: 3,
+              ),
+              const SizedBox(height: 10),
+              CustomTextFormField(
+                controller: _specialRequirementsController,
+                hintText: 'Special Requirements (optional)',
+                prefixIcon: Icon(Icons.info),
+                textInputAction: TextInputAction.done,
+                onChanged: (_) => setState(() {}),
+                minline: 1,
+                maxLines: 3,
+              ),
+              const SizedBox(height: 12),
+
+              const Text(
+                'Payment Method',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: _paymentMethod,
+                items: const [
+                  DropdownMenuItem(value: 'card', child: Text('Card')),
+                  // DropdownMenuItem(value: 'cod', child: Text('Cash on Delivery')),
+                  // DropdownMenuItem(value: 'mada', child: Text('Mada/SADAD')),
+                  // DropdownMenuItem(value: 'apple_pay', child: Text('Apple Pay')),
+                ],
+                onChanged: _isLoading
+                    ? null
+                    : (v) => setState(() => _paymentMethod = v ?? 'card'),
+                decoration: AppInputDecoration.outlined(
+                  context: context,
+                  labelText: 'Payment Method',
+                  hintText: 'Payment Method',
+                ),
+              ),
+
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed:
+                      (_descriptionController.text.trim().isNotEmpty &&
+                          _locationController.text.trim().isNotEmpty &&
+                          !_isLoading)
+                      ? _handleCheckout
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.brightOrange,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : const Text(
+                          'Place Order',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

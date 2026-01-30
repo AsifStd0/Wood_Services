@@ -201,15 +201,19 @@ class BuyerOrder {
       acceptedAt: timeline['acceptedAt'] != null
           ? DateTime.parse(timeline['acceptedAt'])
           : null,
-      processedAt: timeline['processedAt'] != null
-          ? DateTime.parse(timeline['processedAt'])
-          : null,
+      processedAt: timeline['startedAt'] != null
+          ? DateTime.parse(timeline['startedAt'])
+          : (timeline['processedAt'] != null
+                ? DateTime.parse(timeline['processedAt'])
+                : null),
       shippedAt: timeline['shippedAt'] != null
           ? DateTime.parse(timeline['shippedAt'])
           : null,
-      deliveredAt: timeline['deliveredAt'] != null
-          ? DateTime.parse(timeline['deliveredAt'])
-          : null,
+      deliveredAt: timeline['completedAt'] != null
+          ? DateTime.parse(timeline['completedAt'])
+          : (timeline['deliveredAt'] != null
+                ? DateTime.parse(timeline['deliveredAt'])
+                : null),
       cancelledAt: timeline['cancelledAt'] != null
           ? DateTime.parse(timeline['cancelledAt'])
           : null,
@@ -242,36 +246,57 @@ class BuyerOrder {
     // log('   Timeline: $timeline');
 
     // Check timeline dates to determine actual status
-    if (timeline['deliveredAt'] != null) {
-      // log(
-      //   '   → Has deliveredAt: ${timeline['deliveredAt']} → OrderStatusBuyer.completed',
-      // );
+    // Priority: completedAt > startedAt > acceptedAt > cancelledAt/rejectedAt
+    if (timeline['completedAt'] != null) {
+      log(
+        '   → Has completedAt: ${timeline['completedAt']} → OrderStatusBuyer.completed',
+      );
       return OrderStatusBuyer.completed;
     }
 
+    if (timeline['deliveredAt'] != null) {
+      log(
+        '   → Has deliveredAt: ${timeline['deliveredAt']} → OrderStatusBuyer.completed',
+      );
+      return OrderStatusBuyer.completed;
+    }
+
+    // Check for startedAt (in-progress status)
+    if (timeline['startedAt'] != null) {
+      log(
+        '   → Has startedAt: ${timeline['startedAt']} → OrderStatusBuyer.accepted (In Progress)',
+      );
+      return OrderStatusBuyer
+          .accepted; // Show in Accepted tab but with "In Progress" text
+    }
+
     if (timeline['shippedAt'] != null) {
-      // log(
-      //   '   → Has shippedAt: ${timeline['shippedAt']} → OrderStatusBuyer.accepted',
-      // );
+      log(
+        '   → Has shippedAt: ${timeline['shippedAt']} → OrderStatusBuyer.accepted',
+      );
       return OrderStatusBuyer.accepted;
     }
 
     if (timeline['acceptedAt'] != null) {
-      // log(
-      //   '   → Has acceptedAt: ${timeline['acceptedAt']} → OrderStatusBuyer.accepted',
-      // );
+      log(
+        '   → Has acceptedAt: ${timeline['acceptedAt']} → OrderStatusBuyer.accepted',
+      );
       return OrderStatusBuyer.accepted;
     }
 
     if (timeline['cancelledAt'] != null || timeline['rejectedAt'] != null) {
-      // log('   → Has cancelledAt/rejectedAt → OrderStatusBuyer.declined');
+      log('   → Has cancelledAt/rejectedAt → OrderStatusBuyer.declined');
       return OrderStatusBuyer.declined;
     }
 
     // Default based on status string
     switch (status) {
-      case 'accepted':
+      case 'in-progress':
+      case 'inprogress':
       case 'processing':
+        log('   → Status "$status" → OrderStatusBuyer.accepted (In Progress)');
+        return OrderStatusBuyer.accepted; // Show in Accepted tab
+      case 'accepted':
       case 'shipped':
         log('   → Status "$status" → OrderStatusBuyer.accepted');
         return OrderStatusBuyer.accepted;
@@ -322,13 +347,20 @@ class BuyerOrder {
       case OrderStatusBuyer.pending:
         return 'Pending';
       case OrderStatusBuyer.accepted:
+        // Check if order is in-progress (has startedAt in timeline)
+        if (processedAt != null) {
+          // Check if it's actually completed by looking at deliveredAt
+          if (deliveredAt != null) {
+            return 'Completed';
+          }
+          return 'In Progress'; // Seller clicked "Start"
+        }
         if (shippedAt != null) return 'Shipped';
-        if (processedAt != null) return 'Processing';
         return 'Accepted';
       case OrderStatusBuyer.declined:
         return cancelledAt != null ? 'Cancelled' : 'Rejected';
       case OrderStatusBuyer.completed:
-        return 'Delivered';
+        return 'Completed';
       case OrderStatusBuyer.cancelled:
         return 'Cancelled';
       case OrderStatusBuyer.rejected:

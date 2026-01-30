@@ -1,18 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:wood_service/app/config.dart';
-import 'package:wood_service/views/Seller/data/models/order_model.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
+import 'package:wood_service/views/Seller/data/models/order_model.dart';
 
 abstract class SellerOrderRepository {
   Future<List<OrderModelSeller>> getOrders({String? status, String? type});
-  Future<void> updateOrderStatus(String orderId, String status);
+  Future<OrderModelSeller> updateOrderStatus(String orderId, String status);
   Future<OrderModelSeller> getOrderDetails(String orderId);
   Future<Map<String, dynamic>> getOrderStatistics();
-  Future<void> addOrderNote(String orderId, String message);
+  Future<OrderModelSeller> addOrderNote(String orderId, String message);
 }
 
 class ApiOrderRepositorySeller implements SellerOrderRepository {
@@ -144,7 +145,10 @@ class ApiOrderRepositorySeller implements SellerOrderRepository {
   }
 
   @override
-  Future<void> updateOrderStatus(String orderId, String status) async {
+  Future<OrderModelSeller> updateOrderStatus(
+    String orderId,
+    String status,
+  ) async {
     log('🔄 ========== updateOrderStatus START ==========');
     log('📋 Parameters: orderId=$orderId, status=$status');
 
@@ -224,10 +228,12 @@ class ApiOrderRepositorySeller implements SellerOrderRepository {
       final endpointMap = {
         'accepted': '/seller/orders/$orderId/accept',
         'rejected': '/seller/orders/$orderId/reject',
+        'in-progress': '/seller/orders/$orderId/start',
+        'inprogress': '/seller/orders/$orderId/start',
         'processing': '/seller/orders/$orderId/start',
         'started': '/seller/orders/$orderId/start',
-        'delivered': '/seller/orders/$orderId/complete',
         'completed': '/seller/orders/$orderId/complete',
+        'delivered': '/seller/orders/$orderId/complete',
       };
 
       final endpoint = endpointMap[status.toLowerCase()];
@@ -256,8 +262,21 @@ class ApiOrderRepositorySeller implements SellerOrderRepository {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
           log('✅ Status updated successfully');
-          log('✅ ========== updateOrderStatus COMPLETE ==========');
-          return;
+
+          // Parse and return the updated order from response
+          final orderData = data['data']?['order'] ?? data['order'];
+          if (orderData != null) {
+            final updatedOrder = OrderModelSeller.fromJson(orderData);
+            log(
+              '✅ Updated order parsed: ${updatedOrder.orderId} - ${updatedOrder.status.value}',
+            );
+            log('✅ ========== updateOrderStatus COMPLETE ==========');
+            return updatedOrder;
+          } else {
+            log('⚠️ No order data in response, fetching order details...');
+            // Fallback: fetch order details
+            return await getOrderDetails(orderId);
+          }
         } else {
           throw Exception(data['message'] ?? 'Failed to update status');
         }
@@ -279,14 +298,14 @@ class ApiOrderRepositorySeller implements SellerOrderRepository {
   }
 
   @override
-  Future<void> addOrderNote(String orderId, String message) async {
+  Future<OrderModelSeller> addOrderNote(String orderId, String message) async {
     try {
       final token = storageService.getToken();
       if (token == null || token.isEmpty) {
         throw Exception('Authentication required');
       }
 
-      final response = await http.post(
+      final response = await http.put(
         Uri.parse('${Config.apiBaseUrl}/seller/orders/$orderId/notes'),
         headers: {
           'Authorization': 'Bearer $token',
@@ -297,7 +316,18 @@ class ApiOrderRepositorySeller implements SellerOrderRepository {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        if (data['success'] != true) {
+        if (data['success'] == true) {
+          // Parse and return the updated order from response
+          final orderData = data['data']?['order'] ?? data['order'];
+          if (orderData != null) {
+            final updatedOrder = OrderModelSeller.fromJson(orderData);
+            log('✅ Note added, order updated: ${updatedOrder.orderId}');
+            return updatedOrder;
+          } else {
+            // Fallback: fetch order details
+            return await getOrderDetails(orderId);
+          }
+        } else {
           throw Exception(data['message'] ?? 'Failed to add note');
         }
       } else {
