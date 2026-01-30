@@ -1,4 +1,4 @@
-// seller_stats_service.dart
+// services/seller_stats_service.dart
 import 'dart:developer';
 
 import 'package:dio/dio.dart';
@@ -10,7 +10,8 @@ class SellerStatsService {
   final Dio _dio = locator<Dio>();
   final UnifiedLocalStorageServiceImpl _storage =
       locator<UnifiedLocalStorageServiceImpl>();
-  // services/seller_stats_service.dart - FIXED VERSION
+
+  /// GET /api/seller/stats
   Future<SellerStatsModel> getSellerStats() async {
     try {
       final token = _storage.getToken();
@@ -29,39 +30,19 @@ class SellerStatsService {
       log('📥 Stats Response Data: ${response.data}');
 
       if (response.statusCode == 200 && response.data['success'] == true) {
-        final data = response.data['data'];
-
-        // Handle different response structures
-        if (data != null) {
-          if (data is Map<String, dynamic>) {
-            if (data.containsKey('stats')) {
-              // Case 1: Direct 'stats' key in data
-              return SellerStatsModel.fromJson({'stats': data['stats']});
-            } else {
-              // Case 2: Data itself is stats
-              return SellerStatsModel.fromJson({'stats': data});
-            }
-          } else {
-            throw Exception('Invalid response format');
-          }
-        } else {
-          throw Exception('No data received from server');
+        final statsData = response.data['data']?['stats'];
+        if (statsData != null) {
+          return SellerStatsModel.fromJson({'stats': statsData});
         }
-      } else {
-        throw Exception(
-          response.data['message']?.toString() ??
-              'Failed to fetch stats: Status ${response.statusCode}',
-        );
       }
+
+      throw Exception(response.data['message'] ?? 'Failed to fetch stats');
     } on DioException catch (e) {
       log('❌ Stats API Dio error: ${e.message}');
-      log('❌ Response: ${e.response?.data}');
-
       if (e.response != null) {
-        final errorMsg =
-            e.response?.data['message']?.toString() ??
-            'Failed to get statistics';
-        throw Exception(errorMsg);
+        throw Exception(
+          e.response?.data['message'] ?? 'Failed to get statistics',
+        );
       }
       throw Exception('Network error: ${e.message}');
     } catch (e) {

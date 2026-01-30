@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
@@ -31,21 +33,43 @@ class _MediaTabState extends State<MediaTab> {
               _buildMediaSection(
                 'Featured Image',
                 'Main product image displayed in listings (Required)',
-                _buildFeaturedImageSection(productProvider),
+                _buildFeaturedImageSection(
+                  productProvider,
+                  productProvider.product.images,
+                ),
               ),
               const SizedBox(height: 32),
+
+              // Existing Images (for edit mode)
+              if (productProvider.existingImageUrls.isNotEmpty) ...[
+                _buildMediaSection(
+                  'Existing Images',
+                  'Current product images (tap to remove)',
+                  _buildExistingImagesSection(
+                    productProvider,
+                    productProvider.existingImageUrls,
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
 
               // Image Gallery
               _buildMediaSection(
                 'Image Gallery',
                 'Additional product images (Optional, up to 10 images)',
-                _buildImageGallery(productProvider),
+                _buildImageGallery(
+                  productProvider,
+                  productProvider.product.images,
+                ),
               ),
               const SizedBox(height: 32),
 
               // Uploaded Images Preview
               if (productProvider.selectedImages.isNotEmpty) ...[
-                _buildUploadedImagesPreview(productProvider),
+                _buildUploadedImagesPreview(
+                  productProvider,
+                  productProvider.product.images,
+                ),
                 const SizedBox(height: 32),
               ],
 
@@ -104,7 +128,16 @@ class _MediaTabState extends State<MediaTab> {
     );
   }
 
-  Widget _buildFeaturedImageSection(SellerProductProvider provider) {
+  Widget _buildFeaturedImageSection(
+    SellerProductProvider provider,
+    List<File> images,
+  ) {
+    // Check if we have existing featured image URL
+    final hasExistingFeatured = provider.existingImageUrls.isNotEmpty;
+    final existingFeaturedUrl = hasExistingFeatured
+        ? provider.existingImageUrls.first
+        : null;
+
     return GestureDetector(
       onTap: () => provider.pickFeaturedImage(),
       child: Container(
@@ -113,7 +146,8 @@ class _MediaTabState extends State<MediaTab> {
           color: Colors.grey[50],
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: provider.featuredImage == null
+            color:
+                (provider.featuredImage == null && existingFeaturedUrl == null)
                 ? Colors.red.withOpacity(0.5)
                 : Colors.grey.withOpacity(0.3),
             width: 2,
@@ -129,6 +163,77 @@ class _MediaTabState extends State<MediaTab> {
                   width: double.infinity,
                   height: double.infinity,
                 ),
+              )
+            : existingFeaturedUrl != null
+            ? Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      existingFeaturedUrl,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[200],
+                          child: const Icon(
+                            Icons.image_not_supported,
+                            color: Colors.grey,
+                            size: 48,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: GestureDetector(
+                      onTap: () async {
+                        try {
+                          await provider.removeExistingImageUrl(
+                            existingFeaturedUrl,
+                          );
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Image removed successfully'),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  provider.errorMessage ??
+                                      'Failed to remove image',
+                                ),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.8),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               )
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -152,7 +257,8 @@ class _MediaTabState extends State<MediaTab> {
                     'Recommended: 800x800px, Max 5MB',
                     style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
-                  if (provider.featuredImage == null)
+                  if (provider.featuredImage == null &&
+                      existingFeaturedUrl == null)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
@@ -166,7 +272,7 @@ class _MediaTabState extends State<MediaTab> {
     );
   }
 
-  Widget _buildImageGallery(SellerProductProvider provider) {
+  Widget _buildImageGallery(SellerProductProvider provider, List<File> images) {
     return Column(
       children: [
         GridView.builder(
@@ -181,11 +287,11 @@ class _MediaTabState extends State<MediaTab> {
           itemCount: provider.selectedImages.length + 1,
           itemBuilder: (context, index) {
             if (index == 0) {
-              return _buildAddImageButton(provider);
+              return _buildAddImageButton(provider, images);
             }
             final imageIndex = index - 1;
             if (imageIndex < provider.selectedImages.length) {
-              return _buildImageThumbnail(provider, imageIndex);
+              return _buildImageThumbnail(provider, imageIndex, images);
             }
             return Container();
           },
@@ -204,7 +310,10 @@ class _MediaTabState extends State<MediaTab> {
     );
   }
 
-  Widget _buildAddImageButton(SellerProductProvider provider) {
+  Widget _buildAddImageButton(
+    SellerProductProvider provider,
+    List<File> images,
+  ) {
     return GestureDetector(
       onTap: () => provider.pickMultipleImages(),
       child: Container(
@@ -237,7 +346,11 @@ class _MediaTabState extends State<MediaTab> {
     );
   }
 
-  Widget _buildImageThumbnail(SellerProductProvider provider, int index) {
+  Widget _buildImageThumbnail(
+    SellerProductProvider provider,
+    int index,
+    List<File> images,
+  ) {
     final isFeatured =
         provider.featuredImage != null &&
         provider.selectedImages[index].path == provider.featuredImage!.path;
@@ -296,7 +409,10 @@ class _MediaTabState extends State<MediaTab> {
     );
   }
 
-  Widget _buildUploadedImagesPreview(SellerProductProvider provider) {
+  Widget _buildUploadedImagesPreview(
+    SellerProductProvider provider,
+    List<File> images,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -432,14 +548,14 @@ class _MediaTabState extends State<MediaTab> {
     return TextStyle(fontSize: 14, color: Colors.grey[600]);
   }
 
-  Widget _buildExistingImagesSection(SellerProductProvider provider) {
+  Widget _buildExistingImagesSection(
+    SellerProductProvider provider,
+    List<String> images,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Existing Images (${provider.existingImageUrls.length})',
-          style: _buildLabelStyle(),
-        ),
+        Text('Existing Images (${images.length})', style: _buildLabelStyle()),
         const SizedBox(height: 8),
         GridView.builder(
           shrinkWrap: true,
@@ -450,14 +566,14 @@ class _MediaTabState extends State<MediaTab> {
             mainAxisSpacing: 8,
             childAspectRatio: 1,
           ),
-          itemCount: provider.existingImageUrls.length,
+          itemCount: images.length,
           itemBuilder: (context, index) {
             return Stack(
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
-                    provider.existingImageUrls[index],
+                    images[index],
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: double.infinity,
@@ -476,10 +592,32 @@ class _MediaTabState extends State<MediaTab> {
                   top: 4,
                   right: 4,
                   child: GestureDetector(
-                    onTap: () {
-                      provider.removeExistingImageUrl(
-                        provider.existingImageUrls[index],
-                      );
+                    onTap: () async {
+                      try {
+                        await provider.removeExistingImageUrl(images[index]);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Image removed successfully'),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                provider.errorMessage ??
+                                    'Failed to remove image',
+                              ),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                        }
+                      }
                     },
                     child: Container(
                       padding: const EdgeInsets.all(4),

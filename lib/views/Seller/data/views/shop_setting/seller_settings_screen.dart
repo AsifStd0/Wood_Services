@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wood_service/app/index.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/status/seller_stats_screen.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_products_screen.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 import 'package:wood_service/widgets/shop_widgets.dart';
@@ -123,10 +124,44 @@ class _SellerSettingsScreenContent extends StatelessWidget {
                 buildShopHeader(provider),
                 const SizedBox(height: 14),
 
-                // Uploaded Products Button
-                _buildUploadedProductsButton(context),
+                _buildUploadedProductsButton(
+                  context,
+                  'View Seller Statistics',
+                  'View your seller statistics',
+                  Icons.analytics_rounded,
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SellerStatsScreen(),
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: 14),
-
+                _buildUploadedProductsButton(
+                  context,
+                  'My Uploaded Products',
+                  'View and manage all your products',
+                  Icons.inventory_2_rounded,
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const UploadedProductsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  "Shop Details",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.grey[800],
+                  ),
+                ),
                 // Shop Banner
                 buildShopBanner(provider),
                 const SizedBox(height: 14),
@@ -312,7 +347,13 @@ class _SellerSettingsScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildUploadedProductsButton(BuildContext context) {
+  Widget _buildUploadedProductsButton(
+    BuildContext context,
+    String title,
+    String description,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -328,16 +369,7 @@ class _SellerSettingsScreenContent extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            // Navigate to uploaded products
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) {
-                  return UploadedProductsScreen();
-                },
-              ),
-            );
-          },
+          onTap: onTap,
           borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -349,19 +381,16 @@ class _SellerSettingsScreenContent extends StatelessWidget {
                     color: Colors.brown[50],
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(
-                    Icons.inventory_2,
-                    color: Colors.brown,
-                    size: 28,
-                  ),
+                  child: Icon(Icons.inventory_2, color: Colors.brown, size: 28),
                 ),
                 const SizedBox(width: 16),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'My Uploaded Products',
+                        // 'My Uploaded Products',
+                        '$title',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -370,13 +399,13 @@ class _SellerSettingsScreenContent extends StatelessWidget {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'View and manage all your products',
+                        '$description',
                         style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right, color: Colors.grey),
+                Icon(icon, color: Colors.grey, size: 24),
               ],
             ),
           ),

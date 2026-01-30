@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_model.dart';
+import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
 
 class VariantsTab extends StatefulWidget {
@@ -28,9 +28,7 @@ class _VariantsTabState extends State<VariantsTab> {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<SellerProductProvider>();
-    // Get the product from viewModel - adjust based on your actual model name
-    final product =
-        viewModel.product; // or viewModel.sellerProduct based on your model
+    final product = viewModel.product;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -102,10 +100,13 @@ class _VariantsTabState extends State<VariantsTab> {
                 ),
                 const SizedBox(height: 16),
 
-                // Variant Name
+                // Variant Name/Value
                 CustomTextFormField(
                   controller: _variantColorController,
                   hintText: 'e.g., Small, Red, Wood',
+                  onChanged: (value) {
+                    // Controller already handles this
+                  },
                 ),
                 const SizedBox(height: 16),
 
@@ -113,7 +114,12 @@ class _VariantsTabState extends State<VariantsTab> {
                 CustomTextFormField(
                   controller: _variantPriceController,
                   hintText: 'e.g., 10.00 or -5.00',
-                  textInputType: TextInputType.number,
+                  textInputType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  onChanged: (value) {
+                    // Controller already handles this
+                  },
                 ),
                 const SizedBox(height: 24),
 
@@ -136,22 +142,6 @@ class _VariantsTabState extends State<VariantsTab> {
           ),
           const SizedBox(height: 24),
 
-          // Quick Add Buttons
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildQuickButton('Add Sizes (S, M, L)', () {
-                _addSizeTemplate(context, viewModel);
-              }),
-              _buildQuickButton('Add Colors', () {
-                _addColorTemplate(context, viewModel);
-              }),
-              _buildQuickButton('Add Materials', () {
-                _addMaterialTemplate(context, viewModel);
-              }),
-            ],
-          ),
           const SizedBox(height: 24),
 
           // Current Variants
@@ -197,17 +187,6 @@ class _VariantsTabState extends State<VariantsTab> {
           const SizedBox(height: 80),
         ],
       ),
-    );
-  }
-
-  Widget _buildQuickButton(String label, VoidCallback onPressed) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue[50],
-        foregroundColor: Colors.blue[700],
-      ),
-      child: Text(label),
     );
   }
 
@@ -345,61 +324,6 @@ class _VariantsTabState extends State<VariantsTab> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Added $_selectedType variant'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  // Template methods - add only one variant per button click
-  void _addSizeTemplate(BuildContext context, SellerProductProvider viewModel) {
-      final variant = ProductVariant(
-      type: 'Size',
-      value: 'Medium',
-      priceAdjustment: 0.0,
-      );
-      viewModel.addVariant(variant);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Added Size variant'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _addColorTemplate(
-    BuildContext context,
-    SellerProductProvider viewModel,
-  ) {
-      final variant = ProductVariant(
-      type: 'Color',
-      value: 'Red',
-        priceAdjustment: 0.0,
-      );
-      viewModel.addVariant(variant);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Added Color variant'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _addMaterialTemplate(
-    BuildContext context,
-    SellerProductProvider viewModel,
-  ) {
-      final variant = ProductVariant(
-      type: 'Material',
-      value: 'Wood',
-      priceAdjustment: 0.0,
-      );
-      viewModel.addVariant(variant);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Added Material variant'),
         backgroundColor: Colors.green,
       ),
     );

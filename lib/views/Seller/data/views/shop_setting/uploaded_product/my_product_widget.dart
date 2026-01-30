@@ -99,7 +99,7 @@ Widget buildProductUploadCard(
           Expanded(
             flex: 2,
             child: Padding(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(5),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -113,7 +113,7 @@ Widget buildProductUploadCard(
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
 
                   // Category
                   Text(
@@ -131,7 +131,7 @@ Widget buildProductUploadCard(
                       Text(
                         product.formattedPrice,
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.bold,
                           color: Colors.brown,
                         ),
@@ -148,7 +148,7 @@ Widget buildProductUploadCard(
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          '${product.stockQuantity} in stock',
+                          '${double.tryParse(product.stockQuantity.toString())?.toStringAsFixed(0) ?? product.stockQuantity.toString()} in stock',
                           style: TextStyle(
                             fontSize: 10,
                             color: product.stockQuantity > 0

@@ -217,11 +217,13 @@ class SellerProductProvider extends ChangeNotifier {
     double? height,
     String? specification,
   }) {
+    // Preserve existing dimensions if not provided
+    final existingDimensions = _product.dimensions;
     final dimensions = ProductDimensions(
-      length: length ?? 0.0,
-      width: width ?? 0.0,
-      height: height ?? 0.0,
-      specification: specification,
+      length: length ?? existingDimensions?.length ?? 0.0,
+      width: width ?? existingDimensions?.width ?? 0.0,
+      height: height ?? existingDimensions?.height ?? 0.0,
+      specification: specification ?? existingDimensions?.specification,
     );
     _product = _product.copyWith(dimensions: dimensions);
     notifyListeners();
@@ -700,7 +702,10 @@ class SellerProductProvider extends ChangeNotifier {
       dimensions: dimensions,
       variants: variants,
       location: json['location']?.toString() ?? '',
-      images: [], // Images are handled separately
+      // images handle here
+      images: json['images'] != null
+          ? json['images'].map((img) => File(img)).toList()
+          : [],
     );
   }
 
@@ -748,17 +753,25 @@ class SellerProductProvider extends ChangeNotifier {
         'productType': _product.productType,
         'tags': jsonEncode(_product.tags),
         'price': _product.price.toString(),
-        'salePrice': _product.salePrice?.toString() ?? '',
-        'costPrice': _product.costPrice?.toString() ?? '',
         'taxRate': _product.taxRate.toString(),
         'currency': _product.currency,
         'priceUnit': _product.priceUnit,
         'sku': _product.sku,
         'stockQuantity': _product.stockQuantity.toString(),
         'lowStockAlert': _product.lowStockAlert?.toString() ?? '2',
-        'weight': _product.weight?.toString() ?? '',
         'location': _product.location,
       };
+
+      // Add optional price fields (only if they have values)
+      if (_product.salePrice != null) {
+        apiFields['salePrice'] = _product.salePrice!.toString();
+      }
+      if (_product.costPrice != null) {
+        apiFields['costPrice'] = _product.costPrice!.toString();
+      }
+      if (_product.weight != null) {
+        apiFields['weight'] = _product.weight!.toString();
+      }
 
       // Add dimensions if available
       if (_product.dimensions != null) {
@@ -777,11 +790,32 @@ class SellerProductProvider extends ChangeNotifier {
         );
       }
 
+      // Add existing image URLs if any (to keep them)
+      // Convert full URLs to paths for the API
+      if (_existingImageUrls.isNotEmpty) {
+        final imagePaths = _existingImageUrls.map((url) {
+          try {
+            final uri = Uri.parse(url);
+            return uri.path; // Extract just the path part
+          } catch (e) {
+            return url; // Fallback to original if parsing fails
+          }
+        }).toList();
+        apiFields['existingImages'] = jsonEncode(imagePaths);
+        log('📸 Sending existingImages (${imagePaths.length}): $imagePaths');
+      }
+
       // Add all fields to formData
+      // Send all fields that are in apiFields (they're already filtered)
       apiFields.forEach((key, value) {
-        if (value != null && value.toString().isNotEmpty) {
+        if (value != null) {
           formData.fields.add(MapEntry(key, value.toString()));
         }
+      });
+
+      log('📋 Form Data Fields (${apiFields.length}):');
+      apiFields.forEach((key, value) {
+        log('   $key: $value');
       });
 
       // Add new images if any
@@ -798,6 +832,9 @@ class SellerProductProvider extends ChangeNotifier {
           ),
         );
       }
+
+      log('📸 Existing images: ${_existingImageUrls.length}');
+      log('📸 New images: ${_selectedImages.length}');
 
       log('🌐 Updating product: ${_product.id}');
 
@@ -816,6 +853,37 @@ class SellerProductProvider extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         log('🎉 Product updated successfully!');
+
+        // Update existingImageUrls from API response to stay in sync
+        final responseData = response.data;
+        if (responseData['success'] == true && responseData['data'] != null) {
+          final serviceData =
+              responseData['data']['service'] ?? responseData['data'];
+
+          // Update existingImageUrls from the API response
+          _existingImageUrls.clear();
+
+          // Add featured image if exists
+          if (serviceData['featuredImage'] != null &&
+              serviceData['featuredImage'].toString().isNotEmpty) {
+            _existingImageUrls.add(serviceData['featuredImage'].toString());
+          }
+
+          // Add all images from the images array
+          if (serviceData['images'] != null && serviceData['images'] is List) {
+            for (var img in serviceData['images']) {
+              final imgUrl = img.toString();
+              if (imgUrl.isNotEmpty && !_existingImageUrls.contains(imgUrl)) {
+                _existingImageUrls.add(imgUrl);
+              }
+            }
+          }
+
+          log(
+            '✅ Updated existingImageUrls after product update: ${_existingImageUrls.length} images',
+          );
+        }
+
         _isLoading = false;
         notifyListeners();
         return true;
@@ -878,10 +946,131 @@ class SellerProductProvider extends ChangeNotifier {
     }
   }
 
-  /// Remove existing image URL from UI only (for preview)
-  void removeExistingImageUrl(String imageUrl) {
-    _existingImageUrls.remove(imageUrl);
-    notifyListeners();
+  /// Remove existing image URL and delete from server
+  Future<void> removeExistingImageUrl(String imageUrl) async {
+    final productId = _product.id;
+    if (productId == null || productId.isEmpty) {
+      // Just remove from UI if no product ID
+      _existingImageUrls.remove(imageUrl);
+      notifyListeners();
+      return;
+    }
+
+    try {
+      // Extract the path from the full URL
+      // e.g., "http://3.27.171.3/uploads/image.jpg" -> "/uploads/image.jpg"
+      String imagePath = imageUrl;
+      try {
+        final uri = Uri.parse(imageUrl);
+        imagePath = uri.path; // Get just the path part
+      } catch (e) {
+        // If parsing fails, use the original URL
+        log('⚠️ Could not parse image URL, using as-is: $imageUrl');
+      }
+
+      // Get token
+      final token = await _getToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('Authentication token not found.');
+      }
+
+      log('🗑️ Deleting image: $imagePath from product: $productId');
+
+      // Call API to delete image
+      final response = await _dio.delete(
+        '/seller/services/$productId/images',
+        data: {'imageUrl': imagePath},
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      log('✅ Delete image response status: ${response.statusCode}');
+      log('✅ Delete image response: ${response.data}');
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        // Update existingImageUrls from API response
+        final responseData = response.data;
+        log('📦 Delete response data: $responseData');
+
+        if (responseData != null && responseData['success'] == true) {
+          final data = responseData['data'];
+          if (data != null) {
+            final serviceData = data['service'] ?? data;
+            log('📦 Service data from delete response: $serviceData');
+
+            // Update existingImageUrls from the API response
+            _existingImageUrls.clear();
+
+            // Add featured image if exists
+            if (serviceData['featuredImage'] != null &&
+                serviceData['featuredImage'].toString().isNotEmpty) {
+              final featuredUrl = serviceData['featuredImage'].toString();
+              _existingImageUrls.add(featuredUrl);
+              log('📸 Added featured image: $featuredUrl');
+            }
+
+            // Add all images from the images array
+            if (serviceData['images'] != null &&
+                serviceData['images'] is List) {
+              final imagesList = serviceData['images'] as List;
+              log('📸 Images array from API: $imagesList');
+              for (var img in imagesList) {
+                final imgUrl = img.toString();
+                if (imgUrl.isNotEmpty && !_existingImageUrls.contains(imgUrl)) {
+                  _existingImageUrls.add(imgUrl);
+                  log('📸 Added image: $imgUrl');
+                }
+              }
+            }
+
+            log(
+              '✅ Updated existingImageUrls from API: ${_existingImageUrls.length} images',
+            );
+            log('📸 Current existingImageUrls: $_existingImageUrls');
+          } else {
+            log('⚠️ No data in response, using fallback');
+            // Fallback: just remove the deleted image from local list
+            _existingImageUrls.remove(imageUrl);
+          }
+        } else {
+          log('⚠️ Response success is false or null, using fallback');
+          // Fallback: just remove the deleted image from local list
+          _existingImageUrls.remove(imageUrl);
+        }
+
+        log('✅ Image deleted successfully from server');
+        notifyListeners();
+      } else {
+        throw Exception(response.data['message'] ?? 'Failed to delete image');
+      }
+    } on DioException catch (e) {
+      log('❌ === DIO ERROR deleting image ===');
+      log('   Type: ${e.type}');
+      log('   Status: ${e.response?.statusCode}');
+      log('   Response: ${e.response?.data}');
+
+      _errorMessage =
+          e.response?.data?['message']?.toString() ??
+          e.message ??
+          'Failed to delete image';
+
+      // Don't remove from UI if API call fails - let user retry
+      // The error message will be available via errorMessage getter
+      notifyListeners();
+      rethrow; // Re-throw so UI can show error
+    } catch (e) {
+      log('❌ === ERROR deleting image ===');
+      log('   $e');
+
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow; // Re-throw so UI can show error
+    }
   }
 
   void resetForm() {

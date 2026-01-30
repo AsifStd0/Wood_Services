@@ -4,13 +4,65 @@ import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_p
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
 
-class BasicTab extends StatelessWidget {
+class BasicTab extends StatefulWidget {
   const BasicTab({super.key});
+
+  @override
+  State<BasicTab> createState() => _BasicTabState();
+}
+
+class _BasicTabState extends State<BasicTab> {
+  late TextEditingController _titleController;
+  late TextEditingController _shortDescController;
+  late TextEditingController _descriptionController;
+  String _productType = '';
+  String _category = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController();
+    _shortDescController = TextEditingController();
+    _descriptionController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _shortDescController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  void _updateControllers(SellerProduct product) {
+    if (_titleController.text != product.title) {
+      _titleController.text = product.title;
+    }
+    if (_shortDescController.text != product.shortDescription) {
+      _shortDescController.text = product.shortDescription;
+    }
+    if (_descriptionController.text != product.description) {
+      _descriptionController.text = product.description;
+    }
+    if (_productType != product.productType) {
+      _productType = product.productType;
+    }
+    if (_category != product.category) {
+      _category = product.category;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final productProvider = context.watch<SellerProductProvider>();
     final product = productProvider.product;
+
+    // Update controllers when product data changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _updateControllers(product);
+      }
+    });
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -27,8 +79,8 @@ class BasicTab extends StatelessWidget {
           Text('Product Title *', style: _buildLabelStyle()),
           const SizedBox(height: 8),
           CustomTextFormField(
+            controller: _titleController,
             hintText: 'e.g., Handmade Leather Wallet',
-            initialValue: product.title,
             onChanged: (value) => productProvider.updateTitle(value),
           ),
           const SizedBox(height: 24),
@@ -39,10 +91,10 @@ class BasicTab extends StatelessWidget {
           Text('Briefly describe your product', style: _buildSubtitleStyle()),
           const SizedBox(height: 8),
           CustomTextFormField(
+            controller: _shortDescController,
             minline: 3,
             maxLines: 3,
             hintText: 'Enter short description...',
-            initialValue: product.shortDescription,
             onChanged: (value) => productProvider.updateShortDescription(value),
           ),
           const SizedBox(height: 24),
@@ -53,10 +105,10 @@ class BasicTab extends StatelessWidget {
           Text('Detailed product information', style: _buildSubtitleStyle()),
           const SizedBox(height: 8),
           CustomTextFormField(
+            controller: _descriptionController,
             minline: 6,
             maxLines: 6,
             hintText: 'Enter detailed description...',
-            initialValue: product.description,
             onChanged: (value) => productProvider.updateDescription(value),
           ),
           const SizedBox(height: 24),
@@ -70,9 +122,8 @@ class BasicTab extends StatelessWidget {
               border: Border.all(color: Colors.grey.withOpacity(0.5)),
             ),
             child: DropdownButtonFormField<String>(
-              value: product.productType.isNotEmpty
-                  ? product.productType
-                  : null,
+              key: ValueKey('productType_${_productType}'),
+              value: _productType.isNotEmpty ? _productType : null,
               decoration: InputDecoration(
                 hintText: 'Select a Product Type',
                 fillColor: Colors.white,
@@ -113,7 +164,8 @@ class BasicTab extends StatelessWidget {
               border: Border.all(color: Colors.grey.withOpacity(0.5)),
             ),
             child: DropdownButtonFormField<String>(
-              value: product.category.isNotEmpty ? product.category : null,
+              key: ValueKey('category_${_category}'),
+              value: _category.isNotEmpty ? _category : null,
               decoration: InputDecoration(
                 hintText: 'Select a category',
                 fillColor: Colors.white,
@@ -260,6 +312,7 @@ class BasicTab extends StatelessWidget {
     return TextStyle(fontSize: 14, color: Colors.grey[600]);
   }
 }
+
 // class BasicTab extends StatelessWidget {
 //   String readyProduct = 'Ready Product';
 //   String customizeProduct = 'Customize Product';
