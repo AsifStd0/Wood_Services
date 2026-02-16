@@ -662,6 +662,7 @@ class RegisterViewModel extends ChangeNotifier {
       if (result == null) {
         // Show error from viewModel
         showDialog(
+          // ignore: use_build_context_synchronously
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Registration Failed'),

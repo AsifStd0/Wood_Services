@@ -347,8 +347,8 @@ class _SellerLoginState extends State<SellerLogin>
                               fontSize: 14,
                             ),
                             textAlign: TextAlign.center,
+                          ),
                         ),
-                      ),
 
                       const SizedBox(height: 18),
 
