@@ -1,37 +1,16 @@
-class AppException implements Exception {
-  final String message;
-  final int code;
+// ========== DEPRECATED: Use app_exception.dart instead ==========
+// This file is kept for backward compatibility
+// All new code should use lib/core/error/app_exception.dart
 
-  AppException(this.message, this.code);
-
-  @override
-  String toString() => 'AppException: $message (Code: $code)';
-}
-
-class NetworkException extends AppException {
-  NetworkException() : super('No internet connection', 1000);
-}
-
-class BadRequestException extends AppException {
-  BadRequestException() : super('Bad request', 400);
-}
-
-class UnauthorizedException extends AppException {
-  UnauthorizedException() : super('Unauthorized', 401);
-}
-
-class ForbiddenException extends AppException {
-  ForbiddenException() : super('Forbidden', 403);
-}
-
-class NotFoundException extends AppException {
-  NotFoundException() : super('Not found', 404);
-}
-
-class ServerException extends AppException {
-  ServerException() : super('Server error', 500);
-}
-
-class UnknownException extends AppException {
-  UnknownException() : super('Unknown error', 0);
-}
+export 'package:wood_service/core/error/app_exception.dart' show
+    AppException,
+    NetworkException,
+    ApiException,
+    BadRequestException,
+    UnauthorizedException,
+    ForbiddenException,
+    NotFoundException,
+    ServerException,
+    ValidationException,
+    AuthenticationException,
+    UnknownException;

@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:wood_service/core/theme/app_colors.dart';
 
 enum OrderStatus {
   pending('pending'),
@@ -43,17 +44,17 @@ enum OrderStatus {
   Color get color {
     switch (this) {
       case OrderStatus.pending:
-        return const Color(0xFFFFA726);
+        return AppColors.warning;
       case OrderStatus.accepted:
-        return const Color(0xFF4CAF50);
+        return AppColors.success;
       case OrderStatus.inProgress:
-        return const Color(0xFF2196F3);
+        return AppColors.info;
       case OrderStatus.completed:
-        return const Color(0xFF66BB6A);
+        return AppColors.success;
       case OrderStatus.cancelled:
-        return const Color(0xFF9E9E9E);
+        return AppColors.textSecondary;
       case OrderStatus.rejected:
-        return const Color(0xFFEF5350);
+        return AppColors.error;
     }
   }
 }

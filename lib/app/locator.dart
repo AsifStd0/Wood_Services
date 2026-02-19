@@ -28,6 +28,8 @@ import 'package:wood_service/views/Seller/data/views/shop_setting/selller_settin
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository_impl.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/status/seller_stats_provider.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/SellerAds/seller_ad_provider.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/SellerAds/seller_ad_service.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_services.dart';
 import 'package:wood_service/views/visit_request_buyer_resp/visit_provider.dart';
@@ -308,6 +310,12 @@ Future<void> setupLocator() async {
   if (!locator.isRegistered<SellerStatsProvider>()) {
     locator.registerSingleton<SellerStatsProvider>(SellerStatsProvider());
   }
+  // Register Seller Ad Provider
+  locator.registerFactory<SellerAdProvider>(
+    () => SellerAdProvider(service: locator<SellerAdService>()),
+  );
+  // Register Seller Ad Service
+  locator.registerLazySingleton<SellerAdService>(() => SellerAdService());
 
   print('✅ Locator setup completed successfully!');
 }

@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/app/locator.dart';
+import 'package:wood_service/core/theme/app_colors.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/Seller_Ads_Own_Products/seller_own_ads_screen.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/my_product_widget.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
@@ -53,6 +55,23 @@ class _UploadedProductsScreenState extends State<UploadedProductsScreen> {
           title: 'My Uploaded Products',
           showBackButton: true,
           backgroundColor: Colors.white,
+          actions: [
+            IconButton(
+              icon: const Icon(
+                Icons.campaign_rounded,
+                color: AppColors.primary,
+              ),
+              tooltip: 'My Ads',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SellerOwnAdsScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
         body: Consumer<UploadedProductProvider>(
           builder: (context, provider, child) {

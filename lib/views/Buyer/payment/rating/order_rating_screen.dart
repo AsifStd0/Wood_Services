@@ -1,9 +1,15 @@
 import 'dart:developer' as developer;
+import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:wood_service/app/index.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
+import 'package:wood_service/views/Buyer/buyer_main/buyer_main.dart';
+import 'package:wood_service/views/Buyer/payment/rating/review_provider.dart';
 import 'package:wood_service/widgets/custom_button.dart';
+import 'package:wood_service/widgets/custom_textfield.dart';
 
 class OrderRatingScreen extends StatefulWidget {
   final String orderId;

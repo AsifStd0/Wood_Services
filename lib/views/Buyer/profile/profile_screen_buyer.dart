@@ -1,5 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:wood_service/app/index.dart';
+import 'package:wood_service/core/theme/app_colors.dart';
+import 'package:wood_service/views/Buyer/order_screen/order_screen.dart';
+import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
 import 'package:wood_service/views/Buyer/profile/profile_widget.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';
 import 'package:wood_service/views/visit_request_buyer_resp/visit_screen.dart';
@@ -101,7 +108,7 @@ class _ProfileScreenBuyerState extends State<ProfileScreenBuyer>
     final profileImageUrl = provider.profileImagePath ?? user.profileImage;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -192,23 +199,24 @@ class _ProfileScreenBuyerState extends State<ProfileScreenBuyer>
                     bottom: 5,
                     right: 5,
                     child: Container(
-                      width: 20,
-                      height: 20,
-                      decoration: const BoxDecoration(
-                        color: Colors.green,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 3,
-                            offset: Offset(0, 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            user.isActive == true
+                                ? Icons.verified_rounded
+                                : Icons.pending_rounded,
+                            size: 12,
+                            color: user.isActive == true
+                                ? AppColors.success
+                                : AppColors.warning,
                           ),
                         ],
-                      ),
-                      child: const Icon(
-                        Icons.pending,
-                        size: 12,
-                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -223,7 +231,7 @@ class _ProfileScreenBuyerState extends State<ProfileScreenBuyer>
                     Text(
                       provider.fullName,
                       style: const TextStyle(
-                        fontSize: 22,
+                        fontSize: 19,
                         fontWeight: FontWeight.bold,
                         color: Colors.brown,
                       ),
@@ -231,13 +239,12 @@ class _ProfileScreenBuyerState extends State<ProfileScreenBuyer>
                     const SizedBox(height: 5),
                     Text(
                       provider.email,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                     ),
                     if (provider.businessName.isNotEmpty)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 5),
                           Text(
                             provider.businessName,
                             style: TextStyle(

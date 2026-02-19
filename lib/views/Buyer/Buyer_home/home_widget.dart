@@ -1,6 +1,13 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:wood_service/core/theme/app_colors.dart';
+import 'package:wood_service/core/theme/app_text_style.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/favorite_button.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
+import 'package:wood_service/views/Buyer/product_detail/product_detail.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 
 import '../../../app/index.dart';

@@ -1,11 +1,16 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:wood_service/core/theme/app_colors.dart';
+import 'package:wood_service/core/theme/app_text_style.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
+import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/views/Buyer/payment/cart_data/car_bottom_sheet.dart';
 import 'package:wood_service/views/Buyer/product_detail/buy_now_bottom_sheet.dart';
 import 'package:wood_service/views/Buyer/product_detail/seller_shop_info.dart';
 import 'package:wood_service/widgets/custom_button.dart';
-
-import '../../../app/index.dart';
 
 class ProductBasicInfo extends StatelessWidget {
   final BuyerProductModel product;

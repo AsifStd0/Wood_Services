@@ -1,6 +1,7 @@
 // features/seller_settings/presentation/providers/seller_settings_provider.dart
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';
@@ -96,6 +97,7 @@ class SellerSettingsProvider extends ChangeNotifier {
       notifyListeners();
 
       _currentUser = await _repository.getSellerProfile();
+      log('🔍 Current user: ${_currentUser?.toJson()}');
       if (_currentUser != null) {
         _updateControllersFromUser();
       }

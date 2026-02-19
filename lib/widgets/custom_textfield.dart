@@ -476,11 +476,7 @@ class CustomTextFormField extends StatelessWidget {
       enabled: enabled,
       validate: validate,
       validator: validator,
-      prefixIcon: Icon(
-        Icons.email_outlined,
-        color: AppColors.color7a808a,
-        size: 20,
-      ),
+      prefixIcon: Icon(Icons.email_outlined, color: AppColors.grey, size: 20),
     );
   }
 
