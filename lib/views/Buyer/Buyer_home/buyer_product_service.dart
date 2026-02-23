@@ -14,18 +14,59 @@ class BuyerProductService {
       _storage = storage ?? locator<UnifiedLocalStorageServiceImpl>();
 
   /// Fetch services/products from API
-  /// GET /api/buyer/services?page=1&limit=10
+  /// GET /api/buyer/services?page=1&limit=10&category=...&search=...&minPrice=...&maxPrice=...&location=...&tags=...&inStock=...&sort=...
   Future<List<BuyerProductModel>> getProducts({
     int page = 1,
     int limit = 10,
+    String? category,
+    String? search,
+    double? minPrice,
+    double? maxPrice,
+    String? location,
+    List<String>? tags,
+    bool? inStock,
+    String? sort,
   }) async {
     try {
       log('🔄 Fetching products from API...');
       log('   Page: $page, Limit: $limit');
 
+      // Build query parameters
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'limit': limit,
+      };
+
+      if (category != null && category.isNotEmpty) {
+        queryParams['category'] = category;
+      }
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
+      if (minPrice != null) {
+        queryParams['minPrice'] = minPrice.toInt();
+      }
+      if (maxPrice != null) {
+        queryParams['maxPrice'] = maxPrice.toInt();
+      }
+      if (location != null && location.isNotEmpty) {
+        queryParams['location'] = location;
+      }
+      if (tags != null && tags.isNotEmpty) {
+        queryParams['tags'] = tags.join(',');
+      }
+      if (inStock != null) {
+        queryParams['inStock'] = inStock;
+      }
+      if (sort != null && sort.isNotEmpty) {
+        queryParams['sort'] = sort;
+      }
+
+      log('   Query params: $queryParams');
+
       final response = await _dio.get(
         '/buyer/services',
-        queryParameters: {'page': page, 'limit': limit},
+        queryParameters: queryParams,
       );
 
       log('✅ API Response received');

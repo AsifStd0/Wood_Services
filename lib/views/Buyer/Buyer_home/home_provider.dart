@@ -6,6 +6,7 @@ import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_product_service.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/product_filter_model.dart';
 import 'package:wood_service/views/Buyer/Favorite_Screen/favorite_provider.dart';
 
 class BuyerHomeViewProvider extends ChangeNotifier {
@@ -23,6 +24,10 @@ class BuyerHomeViewProvider extends ChangeNotifier {
   // Product State
   List<BuyerProductModel> _products = [];
   List<BuyerProductModel> get products => _products;
+
+  // Store all products (unfiltered) for cascading filters
+  List<BuyerProductModel> _allProducts = [];
+  List<BuyerProductModel> get allProducts => _allProducts;
 
   // Loading & Error State
   bool _isLoading = false;
@@ -85,8 +90,100 @@ class BuyerHomeViewProvider extends ChangeNotifier {
   String? get selectedProvider => _selectedProvider;
   String? get selectedColor => _selectedColor;
 
+  // ========== FILTER STATE ==========
+  ProductFilterModel _currentFilter = ProductFilterModel();
+
+  ProductFilterModel get currentFilter => _currentFilter;
+
+  // ========== EXTRACTED DATA FROM PRODUCTS ==========
+  /// Get unique categories from ALL products (for initial category dropdown)
+  List<String> getAllAvailableCategories() {
+    // Use all products if available, otherwise use current products
+    final productsToUse = _allProducts.isNotEmpty ? _allProducts : _products;
+    final categories = productsToUse
+        .map((p) => p.category)
+        .where((c) => c.isNotEmpty)
+        .toSet()
+        .toList();
+    categories.sort();
+    return categories;
+  }
+
+  /// Get unique categories from current products (filtered)
+  List<String> get availableCategories {
+    final categories = _products
+        .map((p) => p.category)
+        .where((c) => c.isNotEmpty)
+        .toSet()
+        .toList();
+    categories.sort();
+    return categories;
+  }
+
+  /// Get unique tags from products in the selected category (cascading filter)
+  List<String> getAvailableTagsForCategory(String? category) {
+    // If no category selected, show tags from all products
+    List<BuyerProductModel> productsToUse;
+    if (category == null || category.isEmpty) {
+      productsToUse = _allProducts.isNotEmpty ? _allProducts : _products;
+    } else {
+      // Filter products by category
+      productsToUse = (_allProducts.isNotEmpty ? _allProducts : _products)
+          .where((p) => p.category == category)
+          .toList();
+    }
+
+    final allTags = <String>[];
+    for (var product in productsToUse) {
+      allTags.addAll(product.tags);
+    }
+    final uniqueTags = allTags.toSet().toList();
+    uniqueTags.sort();
+    return uniqueTags;
+  }
+
+  /// Get unique tags from current products
+  List<String> get availableTags {
+    final allTags = <String>[];
+    for (var product in _products) {
+      allTags.addAll(product.tags);
+    }
+    final uniqueTags = allTags.toSet().toList();
+    uniqueTags.sort();
+    return uniqueTags;
+  }
+
+  /// Get user location from storage
+  String? get userLocation {
+    try {
+      final storage = locator<UnifiedLocalStorageServiceImpl>();
+      final user = storage.getUserModel();
+      if (user?.address != null) {
+        // If address is a Map, extract city/state
+        if (user!.address is Map) {
+          final addressMap = user.address as Map;
+          final city = addressMap['city']?.toString();
+          final state = addressMap['state']?.toString();
+          if (city != null && state != null) {
+            return '$city, $state';
+          } else if (city != null) {
+            return city;
+          }
+        } else if (user.address is String) {
+          return user.address as String;
+        }
+      }
+    } catch (e) {
+      log('Error getting user location: $e');
+    }
+    return null;
+  }
+
   // ========== PRODUCT METHODS ==========
-  Future<void> loadProducts() async {
+  Future<void> loadProducts({
+    bool applyFilters = true,
+    bool smartFallback = true,
+  }) async {
     if (_isLoading) return;
 
     _isLoading = true;
@@ -94,7 +191,231 @@ class BuyerHomeViewProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _products = await _productService.getProducts();
+      List<BuyerProductModel> products = [];
+
+      // Apply filters if enabled
+      if (applyFilters && _currentFilter.hasActiveFilters) {
+        // Try with all filters first
+        products = await _productService.getProducts(
+          page: _currentFilter.page,
+          limit: _currentFilter.limit,
+          category: _currentFilter.category,
+          search: _currentFilter.search,
+          minPrice: _currentFilter.minPrice,
+          maxPrice: _currentFilter.maxPrice,
+          location: _currentFilter.location,
+          tags: _currentFilter.tags,
+          inStock: _currentFilter.inStock,
+          sort: _currentFilter.sort,
+        );
+
+        // Smart fallback: If no results, try progressively removing filters
+        if (smartFallback &&
+            products.isEmpty &&
+            _currentFilter.hasActiveFilters) {
+          log('⚠️ No results with all filters. Trying smart fallback...');
+
+          // Try without search (most restrictive)
+          if (_currentFilter.search != null &&
+              _currentFilter.search!.isNotEmpty) {
+            log('   Trying without search filter...');
+            products = await _productService.getProducts(
+              page: _currentFilter.page,
+              limit: _currentFilter.limit,
+              category: _currentFilter.category,
+              search: null, // Remove search
+              minPrice: _currentFilter.minPrice,
+              maxPrice: _currentFilter.maxPrice,
+              location: _currentFilter.location,
+              tags: _currentFilter.tags,
+              inStock: _currentFilter.inStock,
+              sort: _currentFilter.sort,
+            );
+            if (products.isNotEmpty) {
+              log('✅ Found ${products.length} products without search filter');
+              // Auto-remove search from filter
+              _currentFilter = _currentFilter.copyWith(
+                search: null,
+                clearSearch: true,
+              );
+            }
+          }
+
+          // Try without tags
+          if (products.isEmpty &&
+              _currentFilter.tags != null &&
+              _currentFilter.tags!.isNotEmpty) {
+            log('   Trying without tags filter...');
+            products = await _productService.getProducts(
+              page: _currentFilter.page,
+              limit: _currentFilter.limit,
+              category: _currentFilter.category,
+              search: _currentFilter.search,
+              minPrice: _currentFilter.minPrice,
+              maxPrice: _currentFilter.maxPrice,
+              location: _currentFilter.location,
+              tags: null, // Remove tags
+              inStock: _currentFilter.inStock,
+              sort: _currentFilter.sort,
+            );
+            if (products.isNotEmpty) {
+              log('✅ Found ${products.length} products without tags filter');
+              _currentFilter = _currentFilter.copyWith(
+                tags: null,
+                clearTags: true,
+              );
+            }
+          }
+
+          // Try without location
+          if (products.isEmpty &&
+              _currentFilter.location != null &&
+              _currentFilter.location!.isNotEmpty) {
+            log('   Trying without location filter...');
+            products = await _productService.getProducts(
+              page: _currentFilter.page,
+              limit: _currentFilter.limit,
+              category: _currentFilter.category,
+              search: _currentFilter.search,
+              minPrice: _currentFilter.minPrice,
+              maxPrice: _currentFilter.maxPrice,
+              location: null, // Remove location
+              tags: _currentFilter.tags,
+              inStock: _currentFilter.inStock,
+              sort: _currentFilter.sort,
+            );
+            if (products.isNotEmpty) {
+              log(
+                '✅ Found ${products.length} products without location filter',
+              );
+              _currentFilter = _currentFilter.copyWith(
+                location: null,
+                clearLocation: true,
+              );
+            }
+          }
+
+          // Try without category
+          if (products.isEmpty &&
+              _currentFilter.category != null &&
+              _currentFilter.category!.isNotEmpty) {
+            log('   Trying without category filter...');
+            products = await _productService.getProducts(
+              page: _currentFilter.page,
+              limit: _currentFilter.limit,
+              category: null, // Remove category
+              search: _currentFilter.search,
+              minPrice: _currentFilter.minPrice,
+              maxPrice: _currentFilter.maxPrice,
+              location: _currentFilter.location,
+              tags: _currentFilter.tags,
+              inStock: _currentFilter.inStock,
+              sort: _currentFilter.sort,
+            );
+            if (products.isNotEmpty) {
+              log(
+                '✅ Found ${products.length} products without category filter',
+              );
+              _currentFilter = _currentFilter.copyWith(
+                category: null,
+                clearCategory: true,
+              );
+            }
+          }
+
+          // Try without price range
+          if (products.isEmpty &&
+              (_currentFilter.minPrice != null ||
+                  _currentFilter.maxPrice != null)) {
+            log('   Trying without price filter...');
+            products = await _productService.getProducts(
+              page: _currentFilter.page,
+              limit: _currentFilter.limit,
+              category: _currentFilter.category,
+              search: _currentFilter.search,
+              minPrice: null, // Remove price filters
+              maxPrice: null,
+              location: _currentFilter.location,
+              tags: _currentFilter.tags,
+              inStock: _currentFilter.inStock,
+              sort: _currentFilter.sort,
+            );
+            if (products.isNotEmpty) {
+              log('✅ Found ${products.length} products without price filter');
+              _currentFilter = _currentFilter.copyWith(
+                minPrice: null,
+                maxPrice: null,
+                clearMinPrice: true,
+                clearMaxPrice: true,
+              );
+            }
+          }
+
+          // Try without inStock
+          if (products.isEmpty && _currentFilter.inStock != null) {
+            log('   Trying without inStock filter...');
+            products = await _productService.getProducts(
+              page: _currentFilter.page,
+              limit: _currentFilter.limit,
+              category: _currentFilter.category,
+              search: _currentFilter.search,
+              minPrice: _currentFilter.minPrice,
+              maxPrice: _currentFilter.maxPrice,
+              location: _currentFilter.location,
+              tags: _currentFilter.tags,
+              inStock: null, // Remove inStock
+              sort: _currentFilter.sort,
+            );
+            if (products.isNotEmpty) {
+              log('✅ Found ${products.length} products without inStock filter');
+              _currentFilter = _currentFilter.copyWith(
+                inStock: null,
+                clearInStock: true,
+              );
+            }
+          }
+
+          // Last resort: Try with only sort (if any)
+          if (products.isEmpty &&
+              _currentFilter.sort != null &&
+              _currentFilter.sort!.isNotEmpty) {
+            log('   Trying with only sort filter...');
+            products = await _productService.getProducts(
+              page: _currentFilter.page,
+              limit: _currentFilter.limit,
+              category: null,
+              search: null,
+              minPrice: null,
+              maxPrice: null,
+              location: null,
+              tags: null,
+              inStock: null,
+              sort: _currentFilter.sort,
+            );
+          }
+
+          // Final fallback: Load all products
+          if (products.isEmpty) {
+            log('   Final fallback: Loading all products without filters');
+            products = await _productService.getProducts(
+              page: _currentFilter.page,
+              limit: _currentFilter.limit,
+            );
+          }
+        }
+
+        _products = products;
+      } else {
+        _products = await _productService.getProducts(
+          page: _currentFilter.page,
+          limit: _currentFilter.limit,
+        );
+      }
+
+      // Store all products for cascading filters (only if no filters applied)
+      if (!applyFilters || !_currentFilter.hasActiveFilters) {
+        _allProducts = List.from(_products);
+      }
 
       // Sync initial favorite status from product model
       for (var product in _products) {
@@ -124,6 +445,76 @@ class BuyerHomeViewProvider extends ChangeNotifier {
 
   Future<void> refreshProducts() async {
     await loadProducts();
+  }
+
+  // ========== FILTER METHODS ==========
+  void updateFilter(ProductFilterModel filter) {
+    _currentFilter = filter;
+    notifyListeners();
+  }
+
+  void applyFilters() {
+    _currentFilter = _currentFilter.copyWith(page: 1); // Reset to page 1
+    loadProducts(applyFilters: true, smartFallback: true);
+  }
+
+  void resetFilters() {
+    _currentFilter = ProductFilterModel();
+    notifyListeners();
+    loadProducts(applyFilters: false);
+  }
+
+  void setCategory(String? category) {
+    _currentFilter = _currentFilter.copyWith(category: category);
+    notifyListeners();
+  }
+
+  /// Called when category changes - resets dependent filters
+  void onCategoryChanged(String? category) {
+    // Reset tags when category changes (since tags are now category-specific)
+    if (category != null) {
+      _currentFilter = _currentFilter.copyWith(tags: null, clearTags: true);
+    }
+    notifyListeners();
+  }
+
+  void setSearch(String? search) {
+    _currentFilter = _currentFilter.copyWith(search: search);
+    // Don't notify listeners immediately - let debouncing handle it
+  }
+
+  /// Set search with debouncing (for real-time search)
+  void setSearchDebounced(String? search) {
+    _currentFilter = _currentFilter.copyWith(search: search);
+    notifyListeners();
+  }
+
+  void setPriceRange(double minPrice, double maxPrice) {
+    _currentFilter = _currentFilter.copyWith(
+      minPrice: minPrice > 0 ? minPrice : null,
+      maxPrice: maxPrice > 0 ? maxPrice : null,
+    );
+    notifyListeners();
+  }
+
+  void setLocation(String? location) {
+    _currentFilter = _currentFilter.copyWith(location: location);
+    notifyListeners();
+  }
+
+  void setTags(List<String>? tags) {
+    _currentFilter = _currentFilter.copyWith(tags: tags);
+    notifyListeners();
+  }
+
+  void setInStock(bool? inStock) {
+    _currentFilter = _currentFilter.copyWith(inStock: inStock);
+    notifyListeners();
+  }
+
+  void setSort(String? sort) {
+    _currentFilter = _currentFilter.copyWith(sort: sort);
+    notifyListeners();
   }
 
   // ========== FAVORITE METHODS ==========
@@ -165,6 +556,31 @@ class BuyerHomeViewProvider extends ChangeNotifier {
 
   void selectOption(String option) {
     _selectedOption = option;
+
+    // Filter by productType when Ready Product or Customize Product is selected
+    if (option == 'Ready Product' || option == 'Customize Product') {
+      _currentFilter = _currentFilter.copyWith(
+        // We'll use a custom field for productType filtering
+        // Since API might not support productType filter, we'll filter locally
+      );
+      // Apply local filtering by productType
+      notifyListeners();
+    } else {
+      // Reset productType filter
+      notifyListeners();
+    }
+  }
+
+  /// Filter products by productType (Ready Product or Customize Product)
+  void filterByProductType(String? productType) {
+    if (productType == null || productType.isEmpty) {
+      // Reset filter
+      notifyListeners();
+      return;
+    }
+
+    // This will be handled in the filtered products getter
+    _selectedOption = productType;
     notifyListeners();
   }
 
@@ -187,7 +603,7 @@ class BuyerHomeViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setPriceRange(double min, double max) {
+  void setAdvancedPriceRange(double min, double max) {
     _minPrice = min;
     _maxPrice = max;
     notifyListeners();
@@ -240,6 +656,18 @@ class BuyerHomeViewProvider extends ChangeNotifier {
   // ========== FILTERED PRODUCTS ==========
   List<BuyerProductModel> get filteredProducts {
     return _products.where((product) {
+      // ProductType filter (Ready Product / Customize Product)
+      if (_selectedOption != null) {
+        if (_selectedOption == 'Ready Product' &&
+            product.productType != 'Ready Product') {
+          return false;
+        }
+        if (_selectedOption == 'Customize Product' &&
+            product.productType != 'Customize Product') {
+          return false;
+        }
+      }
+
       // Price filter
       if (product.finalPrice < _minPrice || product.finalPrice > _maxPrice) {
         return false;

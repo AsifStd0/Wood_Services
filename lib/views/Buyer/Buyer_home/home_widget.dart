@@ -10,8 +10,6 @@ import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
 import 'package:wood_service/views/Buyer/product_detail/product_detail.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 
-import '../../../app/index.dart';
-
 Widget buildCategoryChip(
   String text, {
   bool isSelected = false,

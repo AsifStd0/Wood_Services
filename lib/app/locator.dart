@@ -14,6 +14,7 @@ import 'package:wood_service/views/Buyer/buyer_main/buyer_main_provider.dart';
 import 'package:wood_service/views/Buyer/order_screen/buyer_order_provider.dart';
 import 'package:wood_service/views/Buyer/order_screen/buyer_order_repository.dart';
 import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
+import 'package:wood_service/views/Buyer/profile/profile_service.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
 import 'package:wood_service/views/Seller/data/services/auth_service.dart';
 import 'package:wood_service/views/Seller/data/services/notification_service.dart';
@@ -243,11 +244,21 @@ Future<void> setupLocator() async {
     () => OrdersViewModel(locator<SellerOrderRepository>()),
   );
 
+  // Register BuyerProfileService FIRST (before provider)
+  if (!locator.isRegistered<BuyerProfileService>()) {
+    locator.registerSingleton<BuyerProfileService>(
+      BuyerProfileService(
+        dio: locator<Dio>(),
+        storage: locator<UnifiedLocalStorageServiceImpl>(),
+      ),
+    );
+  }
+
   // Register BuyerProfileViewProvider
   locator.registerFactory<BuyerProfileViewProvider>(
     () => BuyerProfileViewProvider(
       storage: locator<UnifiedLocalStorageServiceImpl>(),
-      dio: locator<Dio>(),
+      profileService: locator<BuyerProfileService>(),
     ),
   );
 
