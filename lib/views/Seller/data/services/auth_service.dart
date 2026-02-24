@@ -174,7 +174,33 @@ class AuthService {
       print('   Message: ${e.message}');
       print('   Response status: ${e.response?.statusCode}');
       print('   Response data: ${e.response?.data}');
-      throw e.response?.data['message'] ?? 'Login failed';
+
+      // Handle 302 redirects and other unexpected response types
+      String errorMsg = 'Login failed';
+
+      if (e.response?.statusCode == 302) {
+        errorMsg =
+            'Network redirect error. Please check your connection or contact support.';
+      } else if (e.response?.data != null) {
+        final errorData = e.response!.data;
+        if (errorData is Map) {
+          errorMsg =
+              errorData['message']?.toString() ??
+              errorData['error']?.toString() ??
+              'Login failed';
+        } else if (errorData is String) {
+          // If it's HTML or plain text, extract meaningful message
+          if (errorData.contains('302') || errorData.contains('redirect')) {
+            errorMsg = 'Network redirect error. Please check your connection.';
+          } else {
+            errorMsg = errorData;
+          }
+        }
+      } else if (e.message != null) {
+        errorMsg = e.message!;
+      }
+
+      throw errorMsg;
     } catch (e) {
       print('❌ Login error: $e');
       throw 'Login error: $e';

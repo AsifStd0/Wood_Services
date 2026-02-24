@@ -50,7 +50,7 @@ class UserModel {
     this.taxCertificate,
     this.identityProof,
     this.isVerified = false,
-    this.isActive = true,
+    this.isActive = false,
   });
 
   // factory UserModel.fromLoginResponse(Map<String, dynamic> response) {

@@ -39,10 +39,7 @@ class ProfileHeaderWidget extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.primary.withOpacity(0.2),
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withOpacity(0.1),
@@ -55,8 +52,8 @@ class ProfileHeaderWidget extends StatelessWidget {
         children: [
           // Profile Avatar
           Stack(
-    children: [
-      Container(
+            children: [
+              Container(
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -79,12 +76,14 @@ class ProfileHeaderWidget extends StatelessWidget {
                             return Container(
                               width: 80,
                               height: 80,
-        decoration: BoxDecoration(
+                              decoration: BoxDecoration(
                                 color: AppColors.extraLightGrey,
-          shape: BoxShape.circle,
-        ),
+                                shape: BoxShape.circle,
+                              ),
                               child: const Center(
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               ),
                             );
                           },
@@ -218,9 +217,9 @@ class ProfileHeaderWidget extends StatelessWidget {
       child: Center(
         child: Text(
           name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'U',
-        style: const TextStyle(
+          style: const TextStyle(
             fontSize: 32,
-          fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.bold,
             color: AppColors.primary,
           ),
         ),
@@ -264,11 +263,9 @@ class ProfileMenuSection extends StatelessWidget {
             title: 'My Orders',
             subtitle: 'Track your purchases',
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const OrdersScreen(),
-                ),
-              );
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const OrdersScreen()));
             },
           ),
           _buildMenuTile(
@@ -380,161 +377,154 @@ class ProfileMenuSection extends StatelessWidget {
   }
 
   Widget _buildMenuTile({
-  required IconData icon,
-  required String title,
-  required String subtitle,
+    required IconData icon,
+    required String title,
+    required String subtitle,
     VoidCallback? onTap,
     ValueChanged<bool>? onChanged,
     bool isToggle = false,
     Color? iconColor,
     Color? textColor,
   }) {
-  return Container(
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-    decoration: BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.extraLightGrey,
         borderRadius: BorderRadius.circular(12),
-    ),
-    child: ListTile(
-      leading: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
             color: (iconColor ?? AppColors.primary).withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: iconColor ?? AppColors.primary, size: 20),
         ),
-        child: Icon(
-          icon,
-            color: iconColor ?? AppColors.primary,
-          size: 20,
-        ),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
+        title: Text(
+          title,
+          style: TextStyle(
             color: textColor ?? AppColors.textPrimary,
-          fontWeight: FontWeight.w600,
-          fontSize: 15,
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+          ),
         ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(
-            color: AppColors.textSecondary,
-          fontSize: 12,
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
         ),
-      ),
         trailing: isToggle
-          ? Switch(
+            ? Switch(
                 value: subtitle == 'Enabled',
-              onChanged: onChanged,
+                onChanged: onChanged,
                 activeColor: AppColors.primary,
-                  )
-                : Icon(
+              )
+            : Icon(
                 Icons.chevron_right,
                 color: AppColors.textSecondary,
                 size: 20,
               ),
         onTap: isToggle ? null : onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    ),
-  );
-}
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      ),
+    );
+  }
 
   void _showLogoutDialog(
-  BuildContext context,
-  BuyerProfileViewProvider provider,
+    BuildContext context,
+    BuyerProfileViewProvider provider,
   ) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Dialog(
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
               color: AppColors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
                     color: AppColors.error.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.logout_rounded,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.logout_rounded,
                     color: AppColors.error,
-                  size: 30,
+                    size: 30,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Sign Out',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 16),
+                const Text(
+                  'Sign Out',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                     color: AppColors.error,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
-                'Are you sure you want to sign out?',
-                textAlign: TextAlign.center,
+                  'Are you sure you want to sign out?',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.textSecondary,
                   ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: OutlinedButton.styleFrom(
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.textSecondary,
                           side: BorderSide(color: AppColors.lightGrey),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: const Text('Cancel'),
                       ),
-                      child: const Text('Cancel'),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
                           Navigator.of(context).pop();
                           await _performLogout(context, provider);
-                      },
-                      style: ElevatedButton.styleFrom(
+                        },
+                        style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.error,
                           foregroundColor: AppColors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: const Text('Sign Out'),
                       ),
-                      child: const Text('Sign Out'),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
   }
 
   Future<void> _performLogout(
@@ -544,9 +534,7 @@ class ProfileMenuSection extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
     try {
@@ -564,9 +552,7 @@ class ProfileMenuSection extends StatelessWidget {
       } else if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              provider.errorMessage ?? 'Logout failed',
-            ),
+            content: Text(provider.errorMessage ?? 'Logout failed'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -593,9 +579,7 @@ class ProfileMenuSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Select Language'),
         content: SizedBox(
           width: double.maxFinite,
@@ -631,10 +615,7 @@ class ProfileMenuSection extends StatelessWidget {
 class EditProfileSheet extends StatefulWidget {
   final BuyerProfileViewProvider provider;
 
-  const EditProfileSheet({
-    super.key,
-    required this.provider,
-  });
+  const EditProfileSheet({super.key, required this.provider});
 
   @override
   State<EditProfileSheet> createState() => _EditProfileSheetState();
@@ -658,7 +639,9 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     final provider = widget.provider;
     _nameController = TextEditingController(text: provider.fullName);
     _emailController = TextEditingController(text: provider.email);
-    _businessNameController = TextEditingController(text: provider.businessName);
+    _businessNameController = TextEditingController(
+      text: provider.businessName,
+    );
     _addressController = TextEditingController(text: provider.address);
     _descriptionController = TextEditingController(text: provider.description);
     _ibanController = TextEditingController(text: provider.iban);
@@ -685,9 +668,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
         return Container(
           decoration: BoxDecoration(
             color: AppColors.white,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(24),
-            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: [
               BoxShadow(
                 color: AppColors.black.withOpacity(0.2),
@@ -789,13 +770,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                           ),
                         ],
                       ),
-                      _buildSection(
-                        'Bank Details',
-                        Icons.account_balance_outlined,
-                        [
-                          _buildField('IBAN', _ibanController),
-                        ],
-                      ),
+
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -831,22 +806,19 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
               ),
               child: _tempProfileImage != null
                   ? ClipOval(
-                      child: Image.file(
-                        _tempProfileImage!,
-                        fit: BoxFit.cover,
-                      ),
+                      child: Image.file(_tempProfileImage!, fit: BoxFit.cover),
                     )
                   : profileImageUrl != null
-                      ? ClipOval(
-                          child: Image.network(
-                            profileImageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return _buildImagePlaceholder();
-                            },
-                          ),
-                        )
-                      : _buildImagePlaceholder(),
+                  ? ClipOval(
+                      child: Image.network(
+                        profileImageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildImagePlaceholder();
+                        },
+                      ),
+                    )
+                  : _buildImagePlaceholder(),
             ),
             if (_isEditing)
               Positioned(
@@ -984,7 +956,9 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                     border: Border.all(color: AppColors.lightGrey),
                   ),
                   child: Text(
-                    controller.text.isNotEmpty ? controller.text : 'Not provided',
+                    controller.text.isNotEmpty
+                        ? controller.text
+                        : 'Not provided',
                     style: TextStyle(
                       fontSize: 16,
                       color: controller.text.isNotEmpty
