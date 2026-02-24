@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_provider.dart';
 import 'package:wood_service/views/Seller/data/views/order_data/order_widget.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
@@ -27,9 +28,8 @@ class _OrdersScreenState extends State<OrdersScreenSeller> {
 
   void _loadInitialData() {
     final ordersViewModel = context.read<OrdersViewModel>();
-    final statsProvider = context.read<OrdersViewModel>();
     ordersViewModel.loadOrders();
-    statsProvider.loadStats();
+    ordersViewModel.loadStats();
   }
 
   void _onSearchChanged() {
@@ -46,11 +46,11 @@ class _OrdersScreenState extends State<OrdersScreenSeller> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.background,
       appBar: CustomAppBar(
         title: 'Orders Management',
         showBackButton: false,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.white,
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -60,13 +60,14 @@ class _OrdersScreenState extends State<OrdersScreenSeller> {
             ordersViewModel.loadStats(),
           ]);
         },
+        color: AppColors.primary,
         child: Column(
           children: [
             // Statistics Bar
             const _StatisticsBar(),
 
             // Search Bar
-            SearchBar(searchController: _searchController),
+            _SearchBar(searchController: _searchController),
 
             // Status Filter Bar
             const StatusFilterBar(),
@@ -80,20 +81,21 @@ class _OrdersScreenState extends State<OrdersScreenSeller> {
   }
 }
 
+/// Statistics Bar Widget
 class _StatisticsBar extends StatelessWidget {
   const _StatisticsBar();
 
   @override
   Widget build(BuildContext context) {
     return Consumer<OrdersViewModel>(
-      builder: (context, statsProvider, child) {
+      builder: (context, viewModel, child) {
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: AppColors.shadowColor(0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -106,35 +108,29 @@ class _StatisticsBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatItem(
-                'Total',
-                '${statsProvider.totalServices}',
-                const Color(0xFF4F46E5), // Indigo
-                Icons.inventory_2_rounded,
+              _StatItem(
+                label: 'Total',
+                value: '${viewModel.totalServices}',
+                color: AppColors.primary,
+                icon: Icons.inventory_2_rounded,
               ),
-              _buildStatItem(
-                'Active',
-                '${statsProvider.activeServices}',
-                const Color(0xFF10B981), // Emerald
-                Icons.check_circle_outline_rounded,
+              _StatItem(
+                label: 'Active',
+                value: '${viewModel.activeServices}',
+                color: AppColors.success,
+                icon: Icons.check_circle_outline_rounded,
               ),
-              _buildStatItem(
-                'Pending',
-                '${statsProvider.pendingOrders}',
-                const Color(0xFFF59E0B), // Amber
-                Icons.schedule_rounded,
+              _StatItem(
+                label: 'Pending',
+                value: '${viewModel.pendingOrders}',
+                color: AppColors.warning,
+                icon: Icons.schedule_rounded,
               ),
-              // _buildStatItem(
-              //   'In Progress',
-              //   '${statsProvider.inProgressOrders}',
-              //   const Color(0xFF3B82F6), // Blue
-              //   Icons.autorenew_rounded,
-              // ),
-              _buildStatItem(
-                'Completed',
-                '${statsProvider.completedOrders}',
-                const Color(0xFF8B5CF6), // Violet
-                Icons.verified_outlined,
+              _StatItem(
+                label: 'Completed',
+                value: '${viewModel.completedOrders}',
+                color: AppColors.info,
+                icon: Icons.verified_outlined,
               ),
             ],
           ),
@@ -142,13 +138,23 @@ class _StatisticsBar extends StatelessWidget {
       },
     );
   }
+}
 
-  Widget _buildStatItem(
-    String label,
-    String value,
-    Color color,
-    IconData icon,
-  ) {
+class _StatItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  final IconData icon;
+
+  const _StatItem({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         Container(
@@ -167,10 +173,10 @@ class _StatisticsBar extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           value,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w800,
-            color: Colors.grey[900],
+            color: AppColors.textPrimary,
             height: 1.2,
           ),
         ),
@@ -180,7 +186,7 @@ class _StatisticsBar extends StatelessWidget {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w500,
-            color: Colors.grey[600],
+            color: AppColors.textSecondary,
             letterSpacing: 0.5,
           ),
         ),
@@ -189,27 +195,30 @@ class _StatisticsBar extends StatelessWidget {
   }
 }
 
-class SearchBar extends StatelessWidget {
+/// Search Bar Widget
+class _SearchBar extends StatelessWidget {
   final TextEditingController searchController;
 
-  const SearchBar({super.key, required this.searchController});
+  const _SearchBar({required this.searchController});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: CustomTextFormField(
         controller: searchController,
         hintText: 'Search by name or order #',
-        prefixIcon: const Icon(Icons.search_sharp, size: 24),
-        suffixIcon: IconButton(
-          icon: const Icon(Icons.clear_rounded),
-          onPressed: () {
-            searchController.clear();
-            final viewModel = context.read<OrdersViewModel>();
-            viewModel.searchOrders('');
-          },
-        ),
+        prefixIcon: Icon(Icons.search_rounded, color: AppColors.textSecondary),
+        suffixIcon: searchController.text.isNotEmpty
+            ? IconButton(
+                icon: Icon(Icons.clear_rounded, color: AppColors.textSecondary),
+                onPressed: () {
+                  searchController.clear();
+                  final viewModel = context.read<OrdersViewModel>();
+                  viewModel.searchOrders('');
+                },
+              )
+            : null,
       ),
     );
   }

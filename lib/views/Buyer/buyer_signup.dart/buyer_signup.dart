@@ -63,10 +63,6 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
                             _buildBusinessInfoSection(viewModel),
                             const SizedBox(height: 20),
 
-                            // Bank Details Section
-                            _buildBankDetailsSection(viewModel),
-                            const SizedBox(height: 30),
-
                             // Submit Button
                             _buildSubmitButton(viewModel, widget.role),
                           ],
@@ -357,55 +353,6 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
             minline: 4,
             maxLines: 4,
             hintText: 'A little about your business...',
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBankDetailsSection(RegisterViewModel viewModel) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(
-          'Bank Details (Optional)',
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: AppColors.brightOrange,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
-          child: CustomText(
-            'Where we should send your payments',
-            fontSize: 14,
-            color: AppColors.grayMedium,
-          ),
-        ),
-        // IBAN Field - Optional for buyer
-        CustomText('Bank Name *', type: CustomTextType.subtitleMedium),
-        Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
-          child: CustomTextFormField(
-            controller: viewModel.bankNameController, // Optional for buyer
-            hintText: 'Enter your bank name',
-          ),
-        ),
-        // IBAN Field - Optional for buyer
-        CustomText('Account Number *', type: CustomTextType.subtitleMedium),
-        Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
-          child: CustomTextFormField(
-            controller: viewModel.accountNumberController, // Optional for buyer
-            hintText: 'Enter your account number',
-          ),
-        ),
-        // IBAN Field - Optional for buyer
-        CustomText('IBAN (Optional)', type: CustomTextType.subtitleMedium),
-        Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
-          child: CustomTextFormField(
-            controller: viewModel.ibanController, // Optional for buyer
-            hintText: 'SA00 0000 0000 0000 0000 0000',
           ),
         ),
       ],

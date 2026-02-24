@@ -27,7 +27,7 @@ class UserModel {
   final String? taxCertificate;
   final String? identityProof;
   // ! *****
-  final bool isVerified;
+  final bool? isVerified;
   final bool isActive;
   UserModel({
     this.id,
@@ -50,7 +50,7 @@ class UserModel {
     this.taxCertificate,
     this.identityProof,
     this.isVerified = false,
-    this.isActive = true,
+    this.isActive = false,
   });
 
   // factory UserModel.fromLoginResponse(Map<String, dynamic> response) {
@@ -84,7 +84,7 @@ class UserModel {
       if (taxCertificate != null)
         'taxCertificate': _ensureString(taxCertificate!),
       if (identityProof != null) 'identityProof': _ensureString(identityProof!),
-      'isVerified': isVerified,
+      'isVerified': isVerified ?? false,
       'isActive': isActive,
     };
   }

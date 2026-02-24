@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wood_service/app/index.dart';
+import 'package:wood_service/core/theme/app_colors.dart';
+import 'package:wood_service/core/theme/app_text_style.dart';
+import 'package:wood_service/views/Buyer/forgot_password/forgot_password.dart';
+import 'package:wood_service/views/Buyer/login.dart/buyer_login_screen.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
+import 'package:wood_service/views/Seller/signup.dart/seller_signup.dart';
+import 'package:wood_service/widgets/custom_textfield.dart';
 
 class SellerLogin extends StatefulWidget {
   final String role;
@@ -347,8 +354,8 @@ class _SellerLoginState extends State<SellerLogin>
                               fontSize: 14,
                             ),
                             textAlign: TextAlign.center,
+                          ),
                         ),
-                      ),
 
                       const SizedBox(height: 18),
 

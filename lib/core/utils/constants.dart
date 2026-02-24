@@ -1,31 +1,18 @@
+/// App Constants
+/// NOTE: API endpoints are now in lib/app/ap_endpoint.dart
+/// NOTE: App strings are now in lib/core/constants/app_strings.dart
 class AppConstants {
-  static const String appName = 'Wood Service';
-  // NOTE: API URLs are now centralized in Config class
-  // Use Config.baseUrl and Config.apiBaseUrl instead
+  // ========== STORAGE KEYS ==========
   static const String userTokenKey = 'user_token';
   static const String userIdKey = 'user_id';
   static const String userEmailKey = 'user_email';
-  static const int connectionTimeout = 30000;
-  static const int receiveTimeout = 30000;
-}
+  static const String userRoleKey = 'user_role';
+  static const String languageKey = 'app_language';
+  static const String darkModeKey = 'dark_mode';
 
-class ApiEndpoints {
-  static const String login = '/auth/login';
-  static const String register = '/auth/register';
-  static const String products = '/products';
-  static const String orders = '/orders';
-}
-
-class AppStrings {
-  static const String welcome = 'Welcome to Wood Service';
-  static const String login = 'Login';
-  static const String register = 'Register';
-  static const String email = 'Email';
-  static const String password = 'Password';
-  static const String name = 'Name';
-  static const String forgotPassword = 'Forgot Password?';
-  static const String dontHaveAccount = 'Don\'t have an account?';
-  static const String alreadyHaveAccount = 'Already have an account?';
+  // ========== TIMEOUTS ==========
+  // NOTE: Timeouts are now in Config class
+  // Use Config.connectTimeout and Config.receiveTimeout
 }
 
 // // Or if you prefer extension methods for responsive design

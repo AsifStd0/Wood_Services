@@ -14,6 +14,7 @@ import 'package:wood_service/views/Buyer/buyer_main/buyer_main_provider.dart';
 import 'package:wood_service/views/Buyer/order_screen/buyer_order_provider.dart';
 import 'package:wood_service/views/Buyer/order_screen/buyer_order_repository.dart';
 import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
+import 'package:wood_service/views/Buyer/profile/profile_service.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
 import 'package:wood_service/views/Seller/data/services/auth_service.dart';
 import 'package:wood_service/views/Seller/data/services/notification_service.dart';
@@ -28,6 +29,8 @@ import 'package:wood_service/views/Seller/data/views/shop_setting/selller_settin
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository_impl.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/status/seller_stats_provider.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/SellerAds/seller_ad_provider.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/SellerAds/seller_ad_service.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_services.dart';
 import 'package:wood_service/views/visit_request_buyer_resp/visit_provider.dart';
@@ -241,11 +244,21 @@ Future<void> setupLocator() async {
     () => OrdersViewModel(locator<SellerOrderRepository>()),
   );
 
+  // Register BuyerProfileService FIRST (before provider)
+  if (!locator.isRegistered<BuyerProfileService>()) {
+    locator.registerSingleton<BuyerProfileService>(
+      BuyerProfileService(
+        dio: locator<Dio>(),
+        storage: locator<UnifiedLocalStorageServiceImpl>(),
+      ),
+    );
+  }
+
   // Register BuyerProfileViewProvider
   locator.registerFactory<BuyerProfileViewProvider>(
     () => BuyerProfileViewProvider(
       storage: locator<UnifiedLocalStorageServiceImpl>(),
-      dio: locator<Dio>(),
+      profileService: locator<BuyerProfileService>(),
     ),
   );
 
@@ -308,6 +321,12 @@ Future<void> setupLocator() async {
   if (!locator.isRegistered<SellerStatsProvider>()) {
     locator.registerSingleton<SellerStatsProvider>(SellerStatsProvider());
   }
+  // Register Seller Ad Provider
+  locator.registerFactory<SellerAdProvider>(
+    () => SellerAdProvider(service: locator<SellerAdService>()),
+  );
+  // Register Seller Ad Service
+  locator.registerLazySingleton<SellerAdService>(() => SellerAdService());
 
   print('✅ Locator setup completed successfully!');
 }

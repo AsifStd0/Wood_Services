@@ -1,8 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wood_service/app/index.dart';
+import 'package:wood_service/core/constants/app_strings.dart';
+import 'package:wood_service/core/theme/app_colors.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/status/seller_stats_screen.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/Seller_Ads_Own_Products/seller_own_ads_screen.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_products_screen.dart';
+import 'package:wood_service/views/splash/splash_screen.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 import 'package:wood_service/widgets/shop_widgets.dart';
 
@@ -23,18 +31,31 @@ class _SellerSettingsScreenContent extends StatelessWidget {
   const _SellerSettingsScreenContent();
 
   void _showLogoutDialog(BuildContext context) {
-    // Use Consumer to get the provider
     showDialog(
       context: context,
       builder: (context) => Consumer<SellerSettingsProvider>(
         builder: (context, provider, child) {
           return AlertDialog(
-            title: const Text('Logout'),
-            content: const Text('Are you sure you want to logout?'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(Icons.logout_rounded, color: AppColors.error, size: 24),
+                const SizedBox(width: 12),
+                const Text('Confirm Logout'),
+              ],
+            ),
+            content: const Text(
+              'Are you sure you want to logout? You will need to login again to access your account.',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: Text(
+                  AppStrings.cancel,
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
               ),
               ElevatedButton(
                 onPressed: provider.isLoading
@@ -52,16 +73,20 @@ class _SellerSettingsScreenContent extends StatelessWidget {
                           );
                         } else if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Logout failed'),
-                              backgroundColor: Colors.red,
+                            SnackBar(
+                              content: const Text('Logout failed'),
+                              backgroundColor: AppColors.error,
+                              behavior: SnackBarBehavior.floating,
                             ),
                           );
                         }
                       },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.error,
+                  foregroundColor: AppColors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 child: provider.isLoading
                     ? const SizedBox(
@@ -69,10 +94,10 @@ class _SellerSettingsScreenContent extends StatelessWidget {
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                       )
-                    : const Text('Logout'),
+                    : const Text(AppStrings.logout),
               ),
             ],
           );
@@ -84,23 +109,32 @@ class _SellerSettingsScreenContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.background,
       appBar: CustomAppBar(
-        title: 'Shop Settings',
+        title: AppStrings.settings,
         showBackButton: false,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.white,
         actions: [
           Consumer<SellerSettingsProvider>(
             builder: (context, provider, _) => IconButton(
               icon: Icon(
                 provider.isEditing ? Icons.close_rounded : Icons.edit_rounded,
-                color: Colors.grey[700],
+                color: AppColors.textPrimary,
               ),
-              onPressed: () => provider.setEditing(!provider.isEditing),
+              tooltip: provider.isEditing ? 'Cancel Editing' : 'Edit Profile',
+              onPressed: () {
+                if (provider.isEditing) {
+                  // Reset to original values
+                  provider.setEditing(false);
+                } else {
+                  provider.setEditing(true);
+                }
+              },
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.logout_rounded, color: Colors.red),
+            icon: const Icon(Icons.logout_rounded, color: AppColors.error),
+            tooltip: AppStrings.logout,
             onPressed: () => _showLogoutDialog(context),
           ),
         ],
@@ -112,78 +146,99 @@ class _SellerSettingsScreenContent extends StatelessWidget {
           }
 
           if (!provider.hasData) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: AppColors.primary),
+                  const SizedBox(height: 16),
+                  Text(
+                    AppStrings.loading,
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            );
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Shop Header
-                buildShopHeader(provider),
-                const SizedBox(height: 14),
+                // Quick Actions Section
+                _buildQuickActionsSection(context, provider),
+                const SizedBox(height: 16),
 
-                _buildUploadedProductsButton(
-                  context,
-                  'View Seller Statistics',
-                  'View your seller statistics',
-                  Icons.analytics_rounded,
-                  () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SellerStatsScreen(),
-                      ),
-                    );
-                  },
+                // My Ads Section
+                _buildMyAdsSection(context),
+                const SizedBox(height: 16),
+                // ElevatedButton(
+                //   onPressed: () {
+                //     Navigator.push(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (context) => const AdminAdsScreen(),
+                //       ),
+                //     );
+                //   },
+                //   child: const Text('Admin Ads'),
+                // ),
+                // Shop Header Card
+                _buildShopHeaderCard(provider),
+                const SizedBox(height: 16),
+
+                // Shop Banner Section
+                if (provider.isEditing || provider.shopBannerUrl != null)
+                  _buildShopBannerSection(provider),
+                if (provider.isEditing || provider.shopBannerUrl != null)
+                  const SizedBox(height: 16),
+
+                // Personal Information Section
+                _buildSectionCard(
+                  title: 'Personal Information',
+                  icon: Icons.person_rounded,
+                  child: _buildPersonalInfoSection(provider),
                 ),
-                const SizedBox(height: 14),
-                _buildUploadedProductsButton(
-                  context,
-                  'My Uploaded Products',
-                  'View and manage all your products',
-                  Icons.inventory_2_rounded,
-                  () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const UploadedProductsScreen(),
-                      ),
-                    );
-                  },
+                const SizedBox(height: 16),
+
+                // Business Information Section
+                _buildSectionCard(
+                  title: 'Business Information',
+                  icon: Icons.business_rounded,
+                  child: _buildBusinessInfoSection(provider),
                 ),
-                const SizedBox(height: 14),
-                Text(
-                  "Shop Details",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.grey[800],
-                  ),
+                const SizedBox(height: 16),
+
+                // Shop Branding Section
+                _buildSectionCard(
+                  title: 'Shop Branding',
+                  icon: Icons.palette_rounded,
+                  child: _buildShopBrandingSection(provider),
                 ),
-                // Shop Banner
-                buildShopBanner(provider),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
 
-                // Personal Information
-                _buildPersonalInfoSection(provider),
-                const SizedBox(height: 14),
+                // Bank Details Section
+                _buildSectionCard(
+                  title: 'Bank Details',
+                  icon: Icons.account_balance_rounded,
+                  child: _buildBankDetailsSection(provider),
+                ),
+                const SizedBox(height: 16),
 
-                // Business Information
-                _buildBusinessInfoSection(provider),
-                const SizedBox(height: 14),
+                // Documents Section
+                _buildSectionCard(
+                  title: 'Business Documents',
+                  icon: Icons.description_rounded,
+                  child: _buildDocumentsSection(provider),
+                ),
+                const SizedBox(height: 16),
 
-                // Shop Branding
-                buildShopBrandingSection(provider),
-                const SizedBox(height: 14),
+                // Save Button
+                if (provider.isEditing) _buildSaveButton(context, provider),
 
-                // Bank Details
-                buildBankDetailsSection(provider),
-                const SizedBox(height: 14),
-
-                // Action Buttons
-                saveChangesButton(provider, context),
+                // Bottom spacing
+                const SizedBox(height: 24),
               ],
             ),
           );
@@ -200,17 +255,13 @@ class _SellerSettingsScreenContent extends StatelessWidget {
           Container(
             width: 80,
             height: 80,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
               shape: BoxShape.circle,
             ),
             child: const CircularProgressIndicator(
               strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
             ),
           ),
           const SizedBox(height: 20),
@@ -218,7 +269,7 @@ class _SellerSettingsScreenContent extends StatelessWidget {
             'Loading Your Shop Data',
             style: TextStyle(
               fontSize: 18,
-              color: Colors.grey[700],
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -227,189 +278,857 @@ class _SellerSettingsScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildPersonalInfoSection(SellerSettingsProvider provider) {
+  Widget _buildQuickActionsSection(
+    BuildContext context,
+    SellerSettingsProvider provider,
+  ) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildQuickActionCard(
+            context: context,
+            title: 'Statistics',
+            subtitle: 'View analytics',
+            icon: Icons.analytics_rounded,
+            color: AppColors.info,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SellerStatsScreen(),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildQuickActionCard(
+            context: context,
+            title: 'Products',
+            subtitle: 'Manage items',
+            icon: Icons.inventory_2_rounded,
+            color: AppColors.primary,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const UploadedProductsScreen(),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionCard({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: AppColors.white,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.shadowColor(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShopHeaderCard(SellerSettingsProvider provider) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: AppColors.shadowColor(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          // Shop Logo
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              gradient:
+                  (provider.shopLogo == null && provider.shopLogoUrl == null)
+                  ? AppColors.primaryGradient
+                  : null,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border, width: 2),
+            ),
+            child: provider.shopLogo != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(35),
+                    child: Image.file(provider.shopLogo!, fit: BoxFit.cover),
+                  )
+                : provider.shopLogoUrl != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(35),
+                    child: Image.network(
+                      provider.shopLogoUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.store_rounded,
+                          color: AppColors.white,
+                          size: 35,
+                        );
+                      },
+                    ),
+                  )
+                : Icon(Icons.store_rounded, color: AppColors.white, size: 35),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  provider.currentUser?.shopName?.isNotEmpty == true
+                      ? provider.currentUser!.shopName!
+                      : 'Your Shop Name',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  provider.currentUser?.businessName?.isNotEmpty == true
+                      ? provider.currentUser!.businessName!
+                      : 'Business Name',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.email_rounded,
+                      size: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 3),
+                    Expanded(
+                      child: Text(
+                        provider.currentUser?.email ?? 'email@example.com',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: provider.currentUser?.isVerified == true
+                            ? AppColors.success.withOpacity(0.1)
+                            : AppColors.warning.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: provider.currentUser?.isVerified == true
+                              ? AppColors.success
+                              : AppColors.warning,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            provider.currentUser?.isVerified == true
+                                ? Icons.verified_rounded
+                                : Icons.pending_rounded,
+                            size: 14,
+                            color: provider.currentUser?.isVerified == true
+                                ? AppColors.success
+                                : AppColors.warning,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            provider.currentUser?.isActive == true
+                                ? 'Active'
+                                : 'Pending',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: provider.currentUser?.isVerified == true
+                                  ? AppColors.success
+                                  : AppColors.warning,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShopBannerSection(SellerSettingsProvider provider) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowColor(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Personal Information',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey[800],
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.image_rounded, color: AppColors.primary, size: 20),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Shop Banner',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              if (provider.isEditing)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Edit Mode',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: provider.isEditing ? () => provider.pickShopBanner() : null,
+            child: Container(
+              width: double.infinity,
+              height: 160,
+              decoration: BoxDecoration(
+                color:
+                    (provider.shopBanner == null &&
+                        provider.shopBannerUrl == null)
+                    ? AppColors.extraLightGrey
+                    : null,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border, width: 2),
+              ),
+              child: provider.shopBanner != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        provider.shopBanner!,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : provider.shopBannerUrl != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        provider.shopBannerUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildPlaceholderBanner();
+                        },
+                      ),
+                    )
+                  : _buildPlaceholderBanner(),
             ),
-          ),
-          const SizedBox(height: 16),
-          buildInfoField(
-            label: 'Full Name',
-            controller: provider.nameController,
-            icon: Icons.person_rounded,
-            isEditing: provider.isEditing,
-            // onChanged: (value) => provider.nameController.text = value,
-          ),
-          const SizedBox(height: 16),
-          buildInfoField(
-            label: 'Email Address',
-            controller: provider.emailController,
-            icon: Icons.email_rounded,
-            isEditing: provider.isEditing,
-            // onChanged: (value) => provider.emailController.text = value,
-            // keyboardType: TextInputType.emailAddress,
-          ),
-          const SizedBox(height: 16),
-          buildInfoField(
-            label: 'Phone Number',
-            controller: provider.phoneController,
-            icon: Icons.phone_rounded,
-            isEditing: provider.isEditing,
-            // onChanged: (value) => provider.phoneController.text = value,
-            // keyboardType: TextInputType.phone,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPlaceholderBanner() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.add_photo_alternate_rounded,
+          size: 40,
+          color: AppColors.textSecondary,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Upload Banner Image',
+          style: TextStyle(
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowColor(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPersonalInfoSection(SellerSettingsProvider provider) {
+    return Column(
+      children: [
+        buildInfoField(
+          label: AppStrings.name,
+          controller: provider.nameController,
+          icon: Icons.person_rounded,
+          isEditing: provider.isEditing,
+        ),
+        const SizedBox(height: 16),
+        buildInfoField(
+          label: AppStrings.email,
+          controller: provider.emailController,
+          icon: Icons.email_rounded,
+          isEditing: provider.isEditing,
+        ),
+        const SizedBox(height: 16),
+        buildInfoField(
+          label: AppStrings.phone,
+          controller: provider.phoneController,
+          icon: Icons.phone_rounded,
+          isEditing: provider.isEditing,
+        ),
+      ],
     );
   }
 
   Widget _buildBusinessInfoSection(SellerSettingsProvider provider) {
+    return Column(
+      children: [
+        buildInfoField(
+          label: 'Business Name',
+          controller: provider.businessNameController,
+          icon: Icons.business_rounded,
+          isEditing: provider.isEditing,
+        ),
+        const SizedBox(height: 16),
+        buildInfoField(
+          label: 'Shop Name',
+          controller: provider.shopNameController,
+          icon: Icons.store_rounded,
+          isEditing: provider.isEditing,
+        ),
+        const SizedBox(height: 16),
+        buildInfoTextArea(
+          label: 'Business Description',
+          controller: provider.descriptionController,
+          icon: Icons.description_rounded,
+          isEditing: provider.isEditing,
+        ),
+        const SizedBox(height: 16),
+        buildInfoField(
+          label: 'Business Address',
+          controller: provider.addressController,
+          icon: Icons.location_on_rounded,
+          isEditing: provider.isEditing,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildShopBrandingSection(SellerSettingsProvider provider) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildImageUploader(
+            label: 'Shop Logo',
+            image: provider.shopLogo,
+            imageUrl: provider.shopLogoUrl,
+            onTap: provider.isEditing ? () => provider.pickShopLogo() : null,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildImageUploader(
+            label: 'Shop Banner',
+            image: provider.shopBanner,
+            imageUrl: provider.shopBannerUrl,
+            onTap: provider.isEditing ? () => provider.pickShopBanner() : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageUploader({
+    required String label,
+    required File? image,
+    required String? imageUrl,
+    required VoidCallback? onTap,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            height: 120,
+            decoration: BoxDecoration(
+              color: AppColors.extraLightGrey,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: image != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.file(image, fit: BoxFit.cover),
+                  )
+                : imageUrl != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _buildPlaceholder(label);
+                      },
+                    ),
+                  )
+                : _buildPlaceholder(label),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPlaceholder(String label) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          label.contains('Logo')
+              ? Icons.add_photo_alternate
+              : Icons.add_to_photos,
+          color: AppColors.textSecondary,
+          size: 32,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label.contains('Logo') ? 'Upload Logo' : 'Upload Banner',
+          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBankDetailsSection(SellerSettingsProvider provider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.info.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.info.withOpacity(0.3)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.security_rounded, size: 16, color: AppColors.info),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Your information is encrypted and secure',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.info,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        buildInfoField(
+          label: 'IBAN',
+          controller: provider.ibanController,
+          icon: Icons.receipt_rounded,
+          isEditing: provider.isEditing,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDocumentsSection(SellerSettingsProvider provider) {
+    final user = provider.currentUser;
+    return Column(
+      children: [
+        _buildDocumentItem(
+          title: 'Business License',
+          url: user?.businessLicense,
+          icon: Icons.business_center_rounded,
+        ),
+        const SizedBox(height: 12),
+        _buildDocumentItem(
+          title: 'Tax Certificate',
+          url: user?.taxCertificate,
+          icon: Icons.receipt_long_rounded,
+        ),
+        const SizedBox(height: 12),
+        _buildDocumentItem(
+          title: 'Identity Proof',
+          url: user?.identityProof,
+          icon: Icons.badge_rounded,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDocumentItem({
+    required String title,
+    required String? url,
+    required IconData icon,
+  }) {
+    final hasDocument = url != null && url.isNotEmpty;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: hasDocument
+            ? AppColors.success.withOpacity(0.05)
+            : AppColors.extraLightGrey,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: hasDocument
+              ? AppColors.success.withOpacity(0.3)
+              : AppColors.border,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: hasDocument
+                  ? AppColors.success.withOpacity(0.1)
+                  : AppColors.textSecondary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              color: hasDocument ? AppColors.success : AppColors.textSecondary,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  hasDocument ? 'Document uploaded' : 'No document',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (hasDocument)
+            Icon(
+              Icons.check_circle_rounded,
+              color: AppColors.success,
+              size: 20,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMyAdsSection(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: AppColors.shadowColor(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.campaign_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'My Ads',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           Text(
-            'Business Information',
+            'Create and manage your advertising campaigns to reach more customers',
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey[800],
+              fontSize: 13,
+              color: AppColors.textSecondary,
+              height: 1.4,
             ),
           ),
           const SizedBox(height: 16),
-          buildInfoField(
-            label: 'Business Name',
-            controller: provider.businessNameController,
-            icon: Icons.business_rounded,
-            isEditing: provider.isEditing,
-            // onChanged: (value) => provider.businessNameController.text = value,
-          ),
-          const SizedBox(height: 16),
-          buildInfoField(
-            label: 'Shop Name',
-            controller: provider.shopNameController,
-            icon: Icons.store_rounded,
-            isEditing: provider.isEditing,
-            // onChanged: (value) => provider.shopNameController.text = value,
-          ),
-          const SizedBox(height: 16),
-          buildInfoTextArea(
-            label: 'Business Description',
-            controller: provider.descriptionController,
-            icon: Icons.description_rounded,
-            isEditing: provider.isEditing,
-            // onChanged: (value) => provider.descriptionController.text = value,
-          ),
-          const SizedBox(height: 16),
-          buildInfoField(
-            label: 'Business Address',
-            controller: provider.addressController,
-            icon: Icons.location_on_rounded,
-            isEditing: provider.isEditing,
-            // onChanged: (value) => provider.addressController.text = value,
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SellerOwnAdsScreen(),
+                    // SellerAdsScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.campaign_rounded, size: 20),
+              label: const Text('Manage Ads'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildUploadedProductsButton(
+  Widget _buildSaveButton(
     BuildContext context,
-    String title,
-    String description,
-    IconData icon,
-    VoidCallback onTap,
+    SellerSettingsProvider provider,
   ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: provider.isLoading
+            ? null
+            : () async {
+                final success = await provider.saveChanges();
+                if (success && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Profile updated successfully!'),
+                      backgroundColor: AppColors.success,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                } else if (context.mounted && provider.errorMessage != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(provider.errorMessage!),
+                      backgroundColor: AppColors.error,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.brown[50],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.inventory_2, color: Colors.brown, size: 28),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        // 'My Uploaded Products',
-                        '$title',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.brown,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        '$description',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(icon, color: Colors.grey, size: 24),
-              ],
-            ),
-          ),
+          elevation: 0,
         ),
+        child: provider.isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                ),
+              )
+            : const Text(
+                'Save Changes',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
       ),
     );
   }

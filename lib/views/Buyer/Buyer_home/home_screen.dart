@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:wood_service/app/index.dart';
+import 'package:provider/provider.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/filter_widget.dart';
+import 'package:wood_service/views/Buyer/Buyer_home/home_provider.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/home_widget.dart';
+import 'package:wood_service/views/Seller/data/views/noification_seller/seller_notificaion_screen.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
 
 class BuyerHomeScreen extends StatefulWidget {
@@ -15,6 +20,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   late PageController _pageController;
   int _currentPage = 0;
   Timer? _timer;
+  Timer? _searchDebounceTimer;
 
   @override
   void initState() {
@@ -27,6 +33,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   void dispose() {
     _pageController.dispose();
     _timer?.cancel();
+    _searchDebounceTimer?.cancel();
     super.dispose();
   }
 
@@ -53,6 +60,19 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
         title: 'Search',
         showBackButton: false,
         showSearch: true,
+        onSearchChanged: (value) {
+          // Debounce search input
+          _searchDebounceTimer?.cancel();
+          _searchDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+            final provider = Provider.of<BuyerHomeViewProvider>(
+              context,
+              listen: false,
+            );
+            provider.setSearchDebounced(value.isEmpty ? null : value);
+            // Apply filters when search changes
+            provider.applyFilters();
+          });
+        },
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
@@ -99,7 +119,14 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
                   buildNewSection(),
 
                   const SizedBox(height: 3),
+
                   _buildFilterSection(),
+                  const SizedBox(height: 3),
+
+                  // Filter Widget (Dropdown)
+                  const ProductFilterWidget(),
+
+                  const SizedBox(height: 3),
 
                   // Products Grid
                   _buildProductsGrid(),
@@ -149,12 +176,20 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
         }
 
         // Use BuyerProductModel DIRECTLY - NO CONVERSION
-        List<BuyerProductModel> filteredProducts = viewModel.products.where((
-          product,
-        ) {
-          final matchesCategory = selectedCategory == 'All';
-          return matchesCategory;
-        }).toList();
+        // Apply productType filter if Ready Product or Customize Product is selected
+        List<BuyerProductModel> filteredProducts;
+
+        if (viewModel.selectedOption == 'Ready Product' ||
+            viewModel.selectedOption == 'Customize Product') {
+          // Use filteredProducts from provider (which includes productType filtering)
+          filteredProducts = viewModel.filteredProducts;
+        } else {
+          // Use regular products
+          filteredProducts = viewModel.products.where((product) {
+            final matchesCategory = selectedCategory == 'All';
+            return matchesCategory;
+          }).toList();
+        }
 
         // Show empty state
         if (filteredProducts.isEmpty) {

@@ -662,6 +662,7 @@ class RegisterViewModel extends ChangeNotifier {
       if (result == null) {
         // Show error from viewModel
         showDialog(
+          // ignore: use_build_context_synchronously
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Registration Failed'),
@@ -822,10 +823,18 @@ class RegisterViewModel extends ChangeNotifier {
       return response;
     } on DioException catch (e) {
       log('❌ Login DioException: $e');
+      log('   Status Code: ${e.response?.statusCode}');
+      log('   Response Type: ${e.response?.data.runtimeType}');
       _isLoginLoading = false;
+
       // Extract error message from DioException
       String errorMsg = 'Login failed';
-      if (e.response?.data != null) {
+
+      // Handle 302 redirects specifically
+      if (e.response?.statusCode == 302) {
+        errorMsg =
+            'Network redirect error. Please check your connection or contact support.';
+      } else if (e.response?.data != null) {
         final errorData = e.response!.data;
         if (errorData is Map) {
           errorMsg =
@@ -833,11 +842,20 @@ class RegisterViewModel extends ChangeNotifier {
               errorData['error']?.toString() ??
               'Login failed';
         } else if (errorData is String) {
-          errorMsg = errorData;
+          // Handle HTML responses (like 302 redirects)
+          if (errorData.contains('302') ||
+              errorData.contains('redirect') ||
+              errorData.contains('<html>')) {
+            errorMsg = 'Network redirect error. Please check your connection.';
+          } else {
+            errorMsg = errorData;
+          }
         }
+        // Note: If errorData is a List, we skip it to avoid type errors
       } else if (e.message != null) {
         errorMsg = e.message!;
       }
+
       _loginErrorMessage = errorMsg;
       log('📝 Extracted error message: $_loginErrorMessage');
       notifyListeners();

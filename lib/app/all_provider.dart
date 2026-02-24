@@ -18,6 +18,7 @@ import 'package:wood_service/views/Seller/data/views/seller_home/visit_requests_
 import 'package:wood_service/views/Seller/data/views/seller_prduct.dart/seller_product_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/status/seller_stats_provider.dart';
+import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/SellerAds/seller_ad_provider.dart';
 import 'package:wood_service/views/visit_request_buyer_resp/visit_provider.dart';
 import 'package:wood_service/views/visit_request_buyer_resp/visit_services.dart';
 
@@ -81,5 +82,8 @@ List<SingleChildWidget> appProviders = [
   ),
   ChangeNotifierProvider<SellerStatsProvider>(
     create: (context) => locator<SellerStatsProvider>(),
+  ),
+  ChangeNotifierProvider<SellerAdProvider>(
+    create: (context) => locator<SellerAdProvider>(),
   ),
 ];

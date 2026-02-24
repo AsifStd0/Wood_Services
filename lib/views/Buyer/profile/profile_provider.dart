@@ -1,18 +1,17 @@
 // lib/providers/buyer_profile_viewmodel.dart
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
+import 'package:wood_service/views/Buyer/profile/profile_service.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';
 
 class BuyerProfileViewProvider extends ChangeNotifier {
   final UnifiedLocalStorageServiceImpl _storage;
-  final Dio _dio;
+  final BuyerProfileService _profileService;
 
   // Profile data from UserModel
   UserModel? _currentUser;
@@ -45,9 +44,11 @@ class BuyerProfileViewProvider extends ChangeNotifier {
   // add address
 
   // Constructor
-  BuyerProfileViewProvider({UnifiedLocalStorageServiceImpl? storage, Dio? dio})
-    : _storage = storage ?? locator<UnifiedLocalStorageServiceImpl>(),
-      _dio = dio ?? locator<Dio>() {
+  BuyerProfileViewProvider({
+    UnifiedLocalStorageServiceImpl? storage,
+    BuyerProfileService? profileService,
+  }) : _storage = storage ?? locator<UnifiedLocalStorageServiceImpl>(),
+       _profileService = profileService ?? BuyerProfileService() {
     loadProfile();
     initializeSettings();
   }
@@ -81,56 +82,15 @@ class BuyerProfileViewProvider extends ChangeNotifier {
       _errorMessage = null;
       notifyListeners();
 
-      final token = _storage.getToken();
-      if (token == null || token.isEmpty) {
-        _errorMessage = 'No token available';
-        return;
-      }
+      final user = await _profileService.getProfile();
+      await _storage.saveUserData(user.toJson());
+      _currentUser = user;
+      _successMessage = 'Profile refreshed successfully';
 
-      final response = await _dio.get(
-        '/auth/me',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Accept': 'application/json',
-          },
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        Map<String, dynamic> userData;
-
-        if (response.data['data'] != null &&
-            response.data['data']['user'] != null) {
-          userData = response.data['data']['user'] as Map<String, dynamic>;
-        } else if (response.data['user'] != null) {
-          userData = response.data['user'] as Map<String, dynamic>;
-        } else if (response.data['success'] == true &&
-            response.data['buyer'] != null) {
-          userData = response.data['buyer'] as Map<String, dynamic>;
-        } else {
-          userData = response.data as Map<String, dynamic>;
-        }
-
-        log('''
-================ USER DATA =================
-${const JsonEncoder.withIndent('  ').convert(userData)}
-==========================================
-''');
-
-        final user = UserModel.fromJson(userData);
-
-        await _storage.saveUserData(userData);
-        _currentUser = user;
-        _successMessage = 'Profile refreshed successfully';
-
-        log('✅ Profile refreshed successfully');
-      } else {
-        _errorMessage = 'Failed to refresh profile';
-      }
-    } catch (e, s) {
-      log('❌ Error refreshing profile', error: e, stackTrace: s);
-      _errorMessage = 'Failed to refresh profile: $e';
+      log('✅ Profile refreshed successfully');
+    } catch (e) {
+      log('❌ Error refreshing profile: $e');
+      _errorMessage = e.toString();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -148,11 +108,9 @@ ${const JsonEncoder.withIndent('  ').convert(userData)}
   Future<bool> updateProfileData({
     String? fullName,
     String? email,
-    String? contactName,
     String? businessName,
     String? address,
     String? description,
-    String? bankName,
     String? iban,
   }) async {
     try {
@@ -161,98 +119,30 @@ ${const JsonEncoder.withIndent('  ').convert(userData)}
       _successMessage = null;
       notifyListeners();
 
-      final token = _storage.getToken();
-      if (token == null) {
-        _errorMessage = 'Not authenticated';
-        return false;
-      }
+      log('🔄 Starting profile update...');
 
-      print('🔄 Starting profile update...');
-
-      final updates = <String, dynamic>{};
-      if (fullName != null && fullName.isNotEmpty) {
-        updates['name'] = fullName;
-      }
-      if (email != null && email.isNotEmpty) {
-        updates['email'] = email;
-      }
-      if (businessName != null) {
-        updates['businessName'] = businessName;
-      }
-      if (address != null) {
-        updates['address'] = address;
-      }
-      if (description != null) {
-        updates['businessDescription'] = description;
-      }
-      if (iban != null) {
-        updates['iban'] = iban;
-      }
-
-      FormData formData;
-      if (_newProfileImage != null) {
-        formData = FormData.fromMap({
-          ...updates,
-          'profileImage': await MultipartFile.fromFile(
-            _newProfileImage!.path,
-            filename: 'profile-${DateTime.now().millisecondsSinceEpoch}.jpg',
-          ),
-        });
-      } else {
-        formData = FormData.fromMap(updates);
-      }
-
-      final response = await _dio.put(
-        '/auth/profile',
-        data: formData,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Accept': 'application/json',
-          },
-          contentType: _newProfileImage != null
-              ? 'multipart/form-data'
-              : 'application/json',
-        ),
+      final user = await _profileService.updateProfile(
+        name: fullName,
+        email: email,
+        businessName: businessName,
+        address: address,
+        businessDescription: description,
+        iban: iban,
+        profileImagePath: _newProfileImage?.path,
       );
 
-      if (response.statusCode == 200) {
-        Map<String, dynamic> userData;
-        if (response.data['data'] != null &&
-            response.data['data']['user'] != null) {
-          userData = response.data['data']['user'] as Map<String, dynamic>;
-        } else if (response.data['user'] != null) {
-          userData = response.data['user'] as Map<String, dynamic>;
-        } else if (response.data['success'] == true &&
-            response.data['buyer'] != null) {
-          userData = response.data['buyer'] as Map<String, dynamic>;
-        } else {
-          userData = response.data as Map<String, dynamic>;
-        }
-        final user = UserModel.fromJson(userData);
+      await _storage.saveUserData(user.toJson());
+      _currentUser = user;
+      _successMessage = 'Profile updated successfully';
+      _isEditing = false;
+      _newProfileImage = null;
 
-        await _storage.saveUserData(userData);
-        _currentUser = user;
-        _successMessage =
-            response.data['message'] ?? 'Profile updated successfully';
-        _isEditing = false;
-        _newProfileImage = null;
-
-        print('✅ Profile updated successfully: ${_currentUser?.name}');
-        notifyListeners();
-        return true;
-      } else {
-        _errorMessage = response.data['message'] ?? 'Failed to update profile';
-        return false;
-      }
-    } on DioException catch (e) {
-      print('❌ Dio error updating profile: ${e.message}');
-      _errorMessage =
-          e.response?.data['message'] ?? 'Network error: ${e.message}';
-      return false;
+      log('✅ Profile updated successfully: ${_currentUser?.name}');
+      notifyListeners();
+      return true;
     } catch (e) {
-      print('❌ Error updating profile: $e');
-      _errorMessage = 'Failed to update profile: $e';
+      log('❌ Error updating profile: $e');
+      _errorMessage = e.toString();
       return false;
     } finally {
       _isLoading = false;
