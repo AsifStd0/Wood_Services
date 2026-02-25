@@ -1,7 +1,6 @@
 // views/seller_signup_view.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/app/index.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
 import 'package:wood_service/views/Seller/seller_login.dart/seller_login.dart';

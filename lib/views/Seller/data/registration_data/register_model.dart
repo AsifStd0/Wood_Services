@@ -53,12 +53,6 @@ class UserModel {
     this.isActive = false,
   });
 
-  // factory UserModel.fromLoginResponse(Map<String, dynamic> response) {
-  //   final userData = response['data']['user'] as Map<String, dynamic>;
-  //   return UserModel.fromJson(userData);
-  // }
-  // models/user_model.dart - Update toJson() method
-
   Map<String, dynamic> toJson() {
     return {
       if (id != null) 'id': id,
@@ -226,50 +220,4 @@ class UserModel {
   // Helper methods
   bool get isSeller => role == 'seller';
   bool get isBuyer => role == 'buyer';
-  bool get isAdmin => role == 'admin';
-
-  // Copy with method for updates
-  UserModel copyWith({
-    String? id,
-    String? name,
-    String? email,
-    String? password,
-    String? existingPassword,
-    int? phone,
-    String? role,
-    String? address,
-    String? businessName,
-    String? shopName,
-    String? businessDescription,
-    String? businessAddress,
-    String? iban,
-    String? profileImage,
-    String? shopLogo,
-    String? shopBanner,
-    String? businessLicense,
-    String? taxCertificate,
-    String? identityProof,
-  }) {
-    return UserModel(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      email: email ?? this.email,
-      password: password ?? this.password,
-      existingPassword: existingPassword ?? this.existingPassword,
-      phone: phone ?? this.phone,
-      role: role ?? this.role,
-      address: address ?? this.address,
-      businessName: businessName ?? this.businessName,
-      shopName: shopName ?? this.shopName,
-      businessDescription: businessDescription ?? this.businessDescription,
-      businessAddress: businessAddress ?? this.businessAddress,
-      iban: iban ?? this.iban,
-      profileImage: profileImage ?? this.profileImage,
-      shopLogo: shopLogo ?? this.shopLogo,
-      shopBanner: shopBanner ?? this.shopBanner,
-      businessLicense: businessLicense ?? this.businessLicense,
-      taxCertificate: taxCertificate ?? this.taxCertificate,
-      identityProof: identityProof ?? this.identityProof,
-    );
-  }
 }
