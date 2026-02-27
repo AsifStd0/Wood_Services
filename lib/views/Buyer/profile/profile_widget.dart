@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
@@ -624,11 +625,13 @@ class EditProfileSheet extends StatefulWidget {
 class _EditProfileSheetState extends State<EditProfileSheet> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
+  late TextEditingController _phoneController;
   late TextEditingController _businessNameController;
   late TextEditingController _addressController;
   late TextEditingController _descriptionController;
   late TextEditingController _ibanController;
 
+  String _countryCode = '+966';
   bool _isEditing = false;
   File? _tempProfileImage;
   final ImagePicker _imagePicker = ImagePicker();
@@ -637,8 +640,15 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
   void initState() {
     super.initState();
     final provider = widget.provider;
+    _countryCode = provider.countryCode;
+    final fullPhone = provider.phone;
+    final codeDigits = _countryCode.replaceAll(RegExp(r'[^0-9]'), '');
+    final localPhone = codeDigits.isNotEmpty && fullPhone.startsWith(codeDigits)
+        ? fullPhone.substring(codeDigits.length)
+        : fullPhone;
     _nameController = TextEditingController(text: provider.fullName);
     _emailController = TextEditingController(text: provider.email);
+    _phoneController = TextEditingController(text: localPhone);
     _businessNameController = TextEditingController(
       text: provider.businessName,
     );
@@ -651,6 +661,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _businessNameController.dispose();
     _addressController.dispose();
     _descriptionController.dispose();
@@ -751,6 +762,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                             _emailController,
                             keyboardType: TextInputType.emailAddress,
                           ),
+                          _buildPhoneField(),
                         ],
                       ),
                       _buildSection(
@@ -900,6 +912,82 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     );
   }
 
+  Widget _buildPhoneField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Phone',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          _isEditing
+              ? TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    prefixIcon: CountryCodePicker(
+                      onChanged: (CountryCode code) {
+                        setState(() => _countryCode = code.dialCode ?? '+966');
+                      },
+                      initialSelection: _countryCode == '+966'
+                          ? 'SA'
+                          : (_countryCode == '+1' ? 'US' : 'SA'),
+                      favorite: const ['+966', 'SA', '+1', 'US'],
+                      showCountryOnly: false,
+                      showOnlyCountryWhenClosed: false,
+                      showFlag: true,
+                      showFlagDialog: true,
+                      padding: EdgeInsets.zero,
+                      textStyle: const TextStyle(fontSize: 14),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.lightGrey),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.lightGrey),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppColors.primary),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                  ),
+                )
+              : Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.lightGrey),
+                  ),
+                  child: Text(
+                    _phoneController.text.isEmpty
+                        ? 'Not provided'
+                        : '$_countryCode ${_phoneController.text}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildField(
     String label,
     TextEditingController controller, {
@@ -997,10 +1085,21 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
         widget.provider.setNewProfileImage(_tempProfileImage!);
       }
 
-      // Update profile data (includes image if set)
+      // Build full phone: country digits + local digits
+      final phoneDigits = _phoneController.text.replaceAll(
+        RegExp(r'[^0-9]'),
+        '',
+      );
+      final codeDigits = _countryCode.replaceAll(RegExp(r'[^0-9]'), '');
+      final fullPhone = phoneDigits.isNotEmpty
+          ? '$codeDigits$phoneDigits'
+          : null;
+
       final success = await widget.provider.updateProfileData(
         fullName: _nameController.text,
         email: _emailController.text,
+        phone: fullPhone,
+        countryCode: _countryCode,
         businessName: _businessNameController.text,
         address: _addressController.text,
         description: _descriptionController.text,

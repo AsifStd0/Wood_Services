@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wood_service/Responsive/responsive_context_extensions.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_text_style.dart';
 import 'package:wood_service/views/Buyer/buyer_signup.dart/buyer_signup.dart';
@@ -90,17 +91,68 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                vertical: 28.0,
+          child: Stack(
+            children: [
+              // Main content
+              Center(
+                child: SingleChildScrollView(
+                  padding: context.paddingSym(
+                    horizontal: context.responsiveValue(
+                      mobile: 20,
+                      tablet: 40,
+                      desktop: 60,
+                    ),
+                    vertical: context.h(28),
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: context.responsiveValue(
+                        mobile: double.infinity,
+                        tablet: 520,
+                        desktop: 600,
+                      ),
+                    ),
+                    child: _buildAnimatedContent(slide, fade),
+                  ),
+                ),
               ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
-                child: _buildAnimatedContent(slide, fade),
+
+              // Custom back button in top-left corner
+              Positioned(
+                top: context.h(16),
+                left: context.w(16),
+                child: _buildBackButton(context),
               ),
-            ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackButton(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => Navigator.of(context).pop(),
+        borderRadius: BorderRadius.circular(context.r(12)),
+        child: Container(
+          padding: context.paddingAll(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(context.r(12)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: Offset(0, context.h(2)),
+              ),
+            ],
+          ),
+          child: Icon(
+            Icons.arrow_back_ios_new,
+            size: context.sp(20),
+            color: AppColors.brightOrange,
           ),
         ),
       ),
@@ -122,7 +174,7 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
           left: 0,
           right: 0,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14.0),
+            padding: EdgeInsets.symmetric(vertical: context.h(14)),
             child: AuthBottomText(
               questionText: "Don't have an account? ",
               actionText: "Sign Up",
@@ -152,19 +204,16 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
   Widget _buildLoginCard() {
     return Consumer<RegisterViewModel>(
       builder: (context, viewModel, child) {
-        // Set the login role to buyer
-        if (viewModel.loginRole != widget.role) {
-          viewModel.loginRole = widget.role; // Sets to 'buyer'
-        }
-
+        // Note: loginRole is set in _initializeViewModel() to avoid setState during build
         return Card(
           elevation: 18,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: context.borderRadius(16)),
           shadowColor: Colors.black.withOpacity(0.06),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 56),
+            padding: context.paddingSym(
+              horizontal: context.w(22),
+              vertical: context.h(56),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -173,8 +222,8 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
-                      height: 54,
-                      width: 54,
+                      height: context.h(54),
+                      width: context.w(54),
                       decoration: BoxDecoration(
                         color: AppColors.brightOrange,
                         shape: BoxShape.circle,
@@ -182,7 +231,7 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                           BoxShadow(
                             color: AppColors.brightOrange.withOpacity(0.18),
                             blurRadius: 10,
-                            offset: const Offset(0, 6),
+                            offset: Offset(0, context.h(6)),
                           ),
                         ],
                       ),
@@ -190,11 +239,11 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                         child: Icon(
                           Icons.shopping_cart_outlined,
                           color: Colors.white,
-                          size: 28,
+                          size: context.sp(28),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: context.w(12)),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,12 +252,12 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                             'Welcome Buyer',
                             type: CustomTextType.headingLittleLarge,
                           ),
-                          const SizedBox(height: 2),
+                          SizedBox(height: context.h(2)),
                           Text(
                             'Login to continue your shopping journey',
                             style: AppCustomTextStyle.appSubtitle(
                               context,
-                            ).copyWith(fontSize: 13),
+                            ).copyWith(fontSize: context.sp(13)),
                           ),
                         ],
                       ),
@@ -216,7 +265,7 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                   ],
                 ),
 
-                const SizedBox(height: 22),
+                SizedBox(height: context.h(22)),
 
                 Form(
                   key: _formKey,
@@ -236,7 +285,7 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                           return null;
                         },
                       ),
-                      const SizedBox(height: 14),
+                      SizedBox(height: context.h(14)),
 
                       // Password Field
                       CustomTextFormField.password(
@@ -263,7 +312,7 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                         ),
                       ),
 
-                      const SizedBox(height: 10),
+                      SizedBox(height: context.h(10)),
 
                       // Forgot Password
                       Align(
@@ -281,12 +330,13 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                             style: TextStyle(
                               color: AppColors.brightOrange,
                               fontWeight: FontWeight.w600,
+                              fontSize: context.sp(14),
                             ),
                           ),
                         ),
                       ),
 
-                      const SizedBox(height: 6),
+                      SizedBox(height: context.h(6)),
 
                       // Login Button
                       SizedBox(
@@ -305,39 +355,41 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                       // Error Message
                       if (viewModel.loginErrorMessage != null)
                         Padding(
-                          padding: const EdgeInsets.only(top: 12),
+                          padding: EdgeInsets.only(top: context.h(12)),
                           child: Text(
                             viewModel.loginErrorMessage!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.red,
-                              fontSize: 14,
+                              fontSize: context.sp(14),
                             ),
                             textAlign: TextAlign.center,
                           ),
                         ),
 
-                      const SizedBox(height: 18),
+                      SizedBox(height: context.h(18)),
 
                       // Divider with text
                       Row(
                         children: [
                           Expanded(child: Divider(color: AppColors.grey)),
                           Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12.0,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: context.w(12),
                             ),
                             child: Text(
                               'Or continue with',
-                              style: AppCustomTextStyle.inputHint(
-                                context,
-                              ).copyWith(color: AppColors.grey),
+                              style: AppCustomTextStyle.inputHint(context)
+                                  .copyWith(
+                                    color: AppColors.grey,
+                                    fontSize: context.sp(12),
+                                  ),
                             ),
                           ),
                           Expanded(child: Divider(color: AppColors.grey)),
                         ],
                       ),
 
-                      const SizedBox(height: 16),
+                      SizedBox(height: context.h(16)),
 
                       // Social buttons
                       Row(
@@ -349,7 +401,7 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                               },
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: context.w(12)),
                           Expanded(
                             child: CustomButtonUtils.appleSignIn(
                               onPressed: () {
@@ -363,7 +415,7 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                   ),
                 ),
 
-                const SizedBox(height: 12),
+                SizedBox(height: context.h(12)),
               ],
             ),
           ),
@@ -432,7 +484,7 @@ class AuthBottomText extends StatelessWidget {
             style: TextStyle(
               color: AppColors.brightOrange,
               fontWeight: FontWeight.w600,
-              fontSize: 14,
+              fontSize: context.sp(14),
             ),
           ),
         ),

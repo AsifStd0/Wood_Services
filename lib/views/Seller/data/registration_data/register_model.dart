@@ -8,7 +8,8 @@ class UserModel {
   final String email;
   final String? password;
   final String? existingPassword;
-  final int? phone; // Changed from String? to int?
+  final int? phone; // Full number with country digits (e.g. 966501234567)
+  final String? countryCode; // e.g. +966, +1 - stored in DB for display/edit
   final String role;
   final String? address;
 
@@ -36,6 +37,7 @@ class UserModel {
     this.password,
     this.existingPassword,
     this.phone,
+    this.countryCode,
     required this.role,
     this.address,
     this.businessName,
@@ -61,6 +63,7 @@ class UserModel {
       if (password != null) 'password': password,
       if (existingPassword != null) 'existingPassword': existingPassword,
       if (phone != null) 'phone': phone,
+      if (countryCode != null && countryCode!.isNotEmpty) 'countryCode': countryCode,
       'role': role,
       if (address != null) 'address': address,
       if (businessName != null) 'businessName': businessName,
@@ -154,8 +157,9 @@ class UserModel {
         email: json['email']?.toString() ?? '',
         password: json['password']?.toString(),
         existingPassword: json['existingPassword']?.toString(),
-        phone: parsePhone(json['phone']), // Use helper
-        role: parseRole(json['roles'] ?? json['role']), // Use helper
+        phone: parsePhone(json['phone']),
+        countryCode: extractString(json['countryCode']),
+        role: parseRole(json['roles'] ?? json['role']),
         address: parsedAddress,
         businessName: extractString(json['businessName']),
         shopName: extractString(json['shopName']),
@@ -201,6 +205,7 @@ class UserModel {
       data['existingPassword'] = existingPassword!;
     }
     if (phone != null) data['phone'] = phone!;
+    if (countryCode != null && countryCode!.isNotEmpty) data['countryCode'] = countryCode!;
     if (address != null && address!.isNotEmpty) data['address'] = address!;
     if (businessName != null && businessName!.isNotEmpty) {
       data['businessName'] = businessName!;

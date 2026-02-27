@@ -71,6 +71,8 @@ class BuyerProfileService {
   Future<UserModel> updateProfile({
     String? name,
     String? email,
+    String? phone,
+    String? countryCode,
     String? businessName,
     String? address,
     String? businessDescription,
@@ -88,6 +90,8 @@ class BuyerProfileService {
       final updates = <String, dynamic>{};
       if (name != null && name.isNotEmpty) updates['name'] = name;
       if (email != null && email.isNotEmpty) updates['email'] = email;
+      if (phone != null) updates['phone'] = phone;
+      if (countryCode != null && countryCode.isNotEmpty) updates['countryCode'] = countryCode;
       if (businessName != null) updates['businessName'] = businessName;
       if (address != null) updates['address'] = address;
       if (businessDescription != null) {

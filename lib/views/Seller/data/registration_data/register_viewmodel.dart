@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
@@ -51,7 +52,7 @@ class RegisterViewModel extends ChangeNotifier {
   String? _errorMessage;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  String _countryCode = '+1';
+  String _countryCode = '+966';
   final List<String> _categories = [];
   final Map<String, File?> _documents = {
     'businessLicense': null,
@@ -333,23 +334,6 @@ class RegisterViewModel extends ChangeNotifier {
       return false;
     }
 
-    // Buyer specific validation
-    if (_role == 'buyer') {
-      if (bankNameController.text.trim().isEmpty) {
-        _errorMessage = 'Bank name is required';
-        notifyListeners();
-        return false;
-      }
-
-      if (accountNumberController.text.trim().isEmpty) {
-        _errorMessage = 'Account number is required';
-        notifyListeners();
-        return false;
-      }
-      // Note: IBAN is optional for buyers
-      // Business Name, Address, and Description are also optional for buyers
-    }
-
     // Seller specific validation
     if (_role == 'seller') {
       if (businessNameController.text.trim().isEmpty) {
@@ -421,37 +405,108 @@ class RegisterViewModel extends ChangeNotifier {
   // Helper method to create UserModel
   // view_models/register_viewmodel.dart - Update _createUserModel method
 
+  // UserModel _createUserModel(String role) {
+  //   // Parse phone: country code (digits only) + local digits, store as int for API
+  // final phoneDigits = phoneController.text.replaceAll(RegExp(r'[^0-9]'), '');
+  // final codeDigits = _countryCode.replaceAll(RegExp(r'[^0-9]'), '');
+  // final phoneNumber = int.tryParse('$codeDigits$phoneDigits') ?? 0;
+
+  //   final addressValue = addressController.text.trim();
+  //   final businessAddressValue = businessAddressController.text.trim();
+  //   // Signup "Business Address *" uses addressController; backend often expects businessAddress for seller
+  //   final effectiveAddress = addressValue.isNotEmpty ? addressValue : businessAddressValue;
+  //   final effectiveBusinessAddress = businessAddressValue.isNotEmpty ? businessAddressValue : addressValue;
+
+  //   return UserModel(
+  //     name: nameController.text.trim(),
+  //     email: emailController.text.trim(),
+  //     password: passwordController.text,
+  //     phone: phoneNumber,
+  //     countryCode: _countryCode.trim().isNotEmpty ? _countryCode : null,
+  //     role: role,
+  //     address: effectiveAddress.isNotEmpty ? effectiveAddress : null,
+  //     businessName: businessNameController.text.trim().isNotEmpty
+  //         ? businessNameController.text.trim()
+  //         : null,
+  //     shopName: shopNameController.text.trim().isNotEmpty
+  //         ? shopNameController.text.trim()
+  //         : null,
+  //     businessDescription: businessDescriptionController.text.trim().isNotEmpty
+  //         ? businessDescriptionController.text.trim()
+  //         : null,
+  //     businessAddress: effectiveBusinessAddress.isNotEmpty ? effectiveBusinessAddress : null,
+  //     iban: ibanController.text.trim().isNotEmpty
+  //         ? ibanController.text.trim()
+  //         : null,
+  //   );
+  // }
   UserModel _createUserModel(String role) {
-    // Parse phone to int (remove non-numeric characters)
+    // Parse phone...
+
+    log('🔄 _createUserModel  ${businessAddressController.text.trim()}');
+
+    final addressValue = addressController.text.trim();
+    log('🔄 _createUserModel  ${addressValue}');
+    final businessAddressValue = businessAddressController.text.trim();
     final phoneDigits = phoneController.text.replaceAll(RegExp(r'[^0-9]'), '');
-    final phoneNumber = int.tryParse('$_countryCode$phoneDigits') ?? 0;
-
-    return UserModel(
-      name: nameController.text.trim(),
-      email: emailController.text.trim(),
-      password: passwordController.text,
-      phone: phoneNumber, // Now int
-      role: role,
-
-      address: addressController.text.trim().isNotEmpty
-          ? addressController.text.trim()
-          : null,
-      businessName: businessNameController.text.trim().isNotEmpty
-          ? businessNameController.text.trim()
-          : null,
-      shopName: shopNameController.text.trim().isNotEmpty
-          ? shopNameController.text.trim()
-          : null,
-      businessDescription: businessDescriptionController.text.trim().isNotEmpty
-          ? businessDescriptionController.text.trim()
-          : null,
-      businessAddress: businessAddressController.text.trim().isNotEmpty
-          ? businessAddressController.text.trim()
-          : null,
-      iban: ibanController.text.trim().isNotEmpty
-          ? ibanController.text.trim()
-          : null,
-    );
+    final codeDigits = _countryCode.replaceAll(RegExp(r'[^0-9]'), '');
+    final phoneNumber =
+        int.tryParse('$codeDigits$phoneDigits') ??
+        0; // For seller: send both address and businessAddress separately
+    if (role == 'seller') {
+      return UserModel(
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+        password: passwordController.text,
+        phone: phoneNumber,
+        countryCode: _countryCode.trim().isNotEmpty ? _countryCode : null,
+        role: role,
+        // This goes to 'address' field in API
+        address: addressValue.isNotEmpty ? addressValue : null,
+        // This goes to 'businessAddress' field in API
+        businessAddress: businessAddressValue.isNotEmpty
+            ? businessAddressValue
+            : null,
+        businessName: businessNameController.text.trim().isNotEmpty
+            ? businessNameController.text.trim()
+            : null,
+        shopName: shopNameController.text.trim().isNotEmpty
+            ? shopNameController.text.trim()
+            : null,
+        businessDescription:
+            businessDescriptionController.text.trim().isNotEmpty
+            ? businessDescriptionController.text.trim()
+            : null,
+        iban: ibanController.text.trim().isNotEmpty
+            ? ibanController.text.trim()
+            : null,
+      );
+    } else {
+      log(
+        'address ------------------ Calling User Model seller side $businessAddressValue asifffffffff    $addressValue  ----------------------------------------------------------🔄 _createUserModel  ${addressValue}',
+      );
+      // For non-seller: only send address
+      return UserModel(
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+        password: passwordController.text,
+        phone: phoneNumber,
+        countryCode: _countryCode.trim().isNotEmpty ? _countryCode : null,
+        role: role,
+        address: businessAddressValue,
+        businessName: businessNameController.text.trim().isNotEmpty
+            ? businessNameController.text.trim()
+            : null,
+        shopName: shopNameController.text.trim().isNotEmpty
+            ? shopNameController.text.trim()
+            : null,
+        businessDescription:
+            businessDescriptionController.text.trim().isNotEmpty
+            ? businessDescriptionController.text.trim()
+            : null,
+        // Don't set businessAddress for non-sellers
+      );
+    }
   }
 
   // Prepare files for upload
@@ -472,12 +527,14 @@ class RegisterViewModel extends ChangeNotifier {
   Future<Map<String, dynamic>?> submitRegistration({
     required String role,
   }) async {
-    log('🚀 ========== REGISTRATION STARTED ==========');
-    log('👤 Role: $role');
-    log('🔍 Validating form...');
+    if (kDebugMode) {
+      log('🚀 ========== REGISTRATION STARTED ==========');
+      log('👤 Role: $role');
+      log('🔍 Validating form...');
+    }
 
     if (!validateForm()) {
-      log('❌ Form validation failed: $_errorMessage');
+      if (kDebugMode) log('❌ Form validation failed: $_errorMessage');
       return null;
     }
 
@@ -491,69 +548,102 @@ class RegisterViewModel extends ChangeNotifier {
 
       final files = _prepareFiles();
 
-      files.forEach((key, value) {
-        log('   $key: ${value?.path ?? "No file"}');
-      });
-
-      log('   Role: $role');
+      if (kDebugMode) {
+        files.forEach((key, value) {
+          log('   $key: ${value?.path ?? "No file"}');
+        });
+        log('   Role: $role');
+      }
 
       // Call API
       final response = await _authService.register(user, files, role);
 
       // ✅ SUCCESS: Save user data and token to storage
-      log('💾 Saving user data to storage... ${response.toString()}');
-      await _saveUserData(response);
-      log('✅ UserModel created:');
-      log('   ID: ${user.id}');
-      log('   Name: ${user.name}');
-      log('   Email: ${user.email}');
-      log('   Address --------------------------------------: ${user.address}');
-      log(
-        '   Phone: ${user.phone} (Type: ${user.phone.runtimeType})',
-      ); // Should show int
-      log('   Role: ${user.role}');
+      if (kDebugMode) {
+        log('💾 Saving user data to storage... ${response.toString()}');
+      }
+      await _saveUserData(response, submittedUser: user);
+      if (kDebugMode) {
+        log('✅ UserModel created:');
+        log('   ID: ${user.id}');
+        log('   Name: ${user.name}');
+        log('   Email: ${user.email}');
+        log(
+          '   Address --------------------------------------: ${user.address}',
+        );
+        log('   Phone: ${user.phone} (Type: ${user.phone.runtimeType})');
+        log('   Role: ${user.role}');
+      }
       _isLoading = false;
 
       // ✅ Clear the form after successful registration
       clearForm();
-      log('🎉 ========== REGISTRATION COMPLETED SUCCESSFULLY ==========');
+      if (kDebugMode)
+        log('🎉 ========== REGISTRATION COMPLETED SUCCESSFULLY ==========');
 
       notifyListeners();
       return response;
     } catch (e) {
-      log('❌11111 ========== REGISTRATION FAILED ==========');
-      log('   Error: $e');
+      if (kDebugMode) {
+        log('❌11111 ========== REGISTRATION FAILED ==========');
+        log('   Error: $e');
+        log('❌ Registration failed with error: $_errorMessage');
+        log('===========================================');
+      }
       _isLoading = false;
       _errorMessage = e.toString();
-
-      log('❌ Registration failed with error: $_errorMessage');
-      log('===========================================');
 
       notifyListeners();
       return null;
     }
   }
 
-  Future<void> _saveUserData(Map<String, dynamic> response) async {
+  static bool _isEmpty(dynamic value) {
+    if (value == null) return true;
+    if (value is String) return value.trim().isEmpty;
+    return false;
+  }
+
+  Future<void> _saveUserData(
+    Map<String, dynamic> response, {
+    UserModel? submittedUser,
+  }) async {
     try {
-      log('💾 ========== SAVING USER DATA TO STORAGE ==========');
+      if (kDebugMode) {
+        log('💾 ========== SAVING USER DATA TO STORAGE ==========');
+        log('📄 Full response structure:');
+        log('   Response keys: ${response.keys.toList()}');
+        if (response['data'] != null) {
+          log('   Data keys: ${(response['data'] as Map).keys.toList()}');
+        }
+      }
 
       final storage = locator<UnifiedLocalStorageServiceImpl>();
 
-      // Debug the response structure
-      log('📄 Full response structure:');
-      log('   Response keys: ${response.keys.toList()}');
-
-      if (response['data'] != null) {
-        log('   Data keys: ${(response['data'] as Map).keys.toList()}');
-      }
-
-      // // Extract user data from response
-      // Map<String, dynamic> userData =
-      //     response['data']['user'] as Map<String, dynamic>;
-      Map<String, dynamic> userData =
-          response['data']['user'] as Map<String, dynamic>;
+      Map<String, dynamic> userData = Map<String, dynamic>.from(
+        response['data']['user'] as Map<String, dynamic>,
+      );
       final token = response['data']['token'] as String;
+
+      // When API doesn't return address/businessAddress, use submitted form values so local storage has them
+      if (submittedUser != null) {
+        if (_isEmpty(userData['address']) &&
+            submittedUser.address != null &&
+            submittedUser.address!.trim().isNotEmpty) {
+          userData['address'] = submittedUser.address;
+          if (kDebugMode)
+            log('   ✅ Merged address into saved user (API did not return it)');
+        }
+        if (_isEmpty(userData['businessAddress']) &&
+            submittedUser.businessAddress != null &&
+            submittedUser.businessAddress!.trim().isNotEmpty) {
+          userData['businessAddress'] = submittedUser.businessAddress;
+          if (kDebugMode)
+            log(
+              '   ✅ Merged businessAddress into saved user (API did not return it)',
+            );
+        }
+      }
 
       // ✅ FIX: Ensure shopLogo and other image fields are strings, not arrays
       const imageFields = [
@@ -570,84 +660,98 @@ class RegisterViewModel extends ChangeNotifier {
           final list = userData[field] as List;
           if (list.isNotEmpty) {
             userData[field] = list[0].toString();
-            log('   ✅ Fixed $field: Array converted to string');
+            if (kDebugMode) log('   ✅ Fixed $field: Array converted to string');
           } else {
             userData[field] = null;
-            log('   ✅ Fixed $field: Empty array set to null');
+            if (kDebugMode) log('   ✅ Fixed $field: Empty array set to null');
           }
         }
       }
 
-      log('👤 User data extracted (after fixing arrays):');
-      userData.forEach((key, value) {
-        log('   $key: $value (Type: ${value.runtimeType})');
-      });
-
-      // Create UserModel from API response
-      log('🔄 Creating UserModel...');
-      final user = UserModel.fromJson(userData);
-
-      log('✅ UserModel created:');
-      log('   ID: ${user.id}');
-      log('   Name: ${user.name}');
-      log('   Email: ${user.email}');
-      log('   Role: ${user.role}');
-      log(
-        '   Profile Image: ${user.profileImage} (Type: ${user.profileImage.runtimeType})',
-      );
-      log(
-        '   Shop Logo: ${user.shopLogo} (Type: ${user.shopLogo.runtimeType})',
-      );
-      log('   Business Name: ${user.businessName}');
-
-      // Save user data
-      log('💾 Saving UserModel to storage...');
-      await storage.saveUserModel(user);
-
-      // Save token
-      log('💾 Saving token to storage...');
-      await storage.saveToken(token);
-
-      // Verify save
-      log('🔍 Verifying storage save...');
-      final savedUser = storage.getUserModel();
-      final savedToken = storage.getToken();
-
-      log('✅ Storage verification:');
-      log('   Is logged in: ${storage.isLoggedIn()}');
-      log('   User role from storage: ${storage.getUserRole()}');
-      log('   User ID from storage: ${savedUser?.id}');
-      log('   User name from storage: ${savedUser?.name}');
-      log(
-        '   Shop logo from storage: ${savedUser?.shopLogo} (Type: ${savedUser?.shopLogo.runtimeType})',
-      );
-      log('   Token exists: ${savedToken != null}');
-      log('   Token length: ${savedToken?.length ?? 0}');
-
-      log('🎉 User data saved successfully to storage!');
-      log('💾 ============================================');
-    } catch (e) {
-      log('❌ ========== ERROR SAVING USER DATA ==========');
-      log('   Error: $e');
-      log('   Error type: ${e.runtimeType}');
-      log('   Stack trace: ${e.toString()}');
-
-      if (e is TypeError) {
-        log('   ⚠️ This is a type casting error!');
-        log(
-          '   ⚠️ Likely cause: Field expecting String but got something else',
-        );
+      if (kDebugMode) {
+        log('👤 User data extracted (after fixing arrays):');
+        userData.forEach((key, value) {
+          log('   $key: $value (Type: ${value.runtimeType})');
+        });
+        log('🔄 Creating UserModel...');
       }
 
-      log('❌ ============================================');
+      final user = UserModel.fromJson(userData);
+
+      if (kDebugMode) {
+        log('✅ UserModel created:');
+        log('   ID: ${user.id}');
+        log('   Name: ${user.name}');
+        log('   Email: ${user.email}');
+        log('   Role: ${user.role}');
+        log(
+          '   Profile Image: ${user.profileImage} (Type: ${user.profileImage.runtimeType})',
+        );
+        log(
+          '   Shop Logo: ${user.shopLogo} (Type: ${user.shopLogo.runtimeType})',
+        );
+        log('   Business Name: ${user.businessName}');
+        log('💾 Saving UserModel to storage...');
+      }
+
+      await storage.saveUserModel(user);
+
+      if (kDebugMode) log('💾 Saving token to storage...');
+      await storage.saveToken(token);
+
+      if (kDebugMode) {
+        log('🔍 Verifying storage save...');
+        final savedUser = storage.getUserModel();
+        final savedToken = storage.getToken();
+        log('✅ Storage verification:');
+        log('   Is logged in: ${storage.isLoggedIn()}');
+        log('   User role from storage: ${storage.getUserRole()}');
+        log('   User ID from storage: ${savedUser?.id}');
+        log('   User name from storage: ${savedUser?.name}');
+        log(
+          '   Shop logo from storage: ${savedUser?.shopLogo} (Type: ${savedUser?.shopLogo.runtimeType})',
+        );
+        log('   Token exists: ${savedToken != null}');
+        log('   Token length: ${savedToken?.length ?? 0}');
+        log('🎉 User data saved successfully to storage!');
+        log('💾 ============================================');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        log('❌ ========== ERROR SAVING USER DATA ==========');
+        log('   Error: $e');
+        log('   Error type: ${e.runtimeType}');
+        log('   Stack trace: ${e.toString()}');
+        if (e is TypeError) {
+          log('   ⚠️ This is a type casting error!');
+          log(
+            '   ⚠️ Likely cause: Field expecting String but got something else',
+          );
+        }
+        log('❌ ============================================');
+      }
       rethrow;
     }
   }
 
   // Helper function
   Future<void> handleSubmission(BuildContext context, String role) async {
+    if (kDebugMode) {
+      log(
+        '[RegisterSeller] Step 1: handleSubmission started, role=$role',
+        name: 'RegisterSeller',
+      );
+    }
     final viewModel = context.read<RegisterViewModel>();
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.maybeOf(context);
 
+    if (kDebugMode) {
+      log(
+        '[RegisterSeller] Step 2: Showing loading dialog',
+        name: 'RegisterSeller',
+      );
+    }
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -655,21 +759,44 @@ class RegisterViewModel extends ChangeNotifier {
     );
 
     try {
+      if (kDebugMode) {
+        log(
+          '[RegisterSeller] Step 3: Calling submitRegistration...',
+          name: 'RegisterSeller',
+        );
+      }
       final result = await viewModel.submitRegistration(role: role);
 
-      Navigator.of(context).pop(); // Close loading
+      if (kDebugMode) {
+        log(
+          '[RegisterSeller] Step 4: submitRegistration returned, result is ${result == null ? "null (failure)" : "non-null (success)"}',
+          name: 'RegisterSeller',
+        );
+      }
+
+      // After async gap: context may be disposed (e.g. in debug after hot reload)
+      if (!context.mounted) {
+        navigator.pop(); // Close loading dialog
+        return;
+      }
+
+      navigator.pop(); // Close loading
 
       if (result == null) {
-        // Show error from viewModel
+        if (kDebugMode) {
+          log(
+            '[RegisterSeller] Step 4a: Showing error dialog: ${viewModel.errorMessage}',
+            name: 'RegisterSeller',
+          );
+        }
         showDialog(
-          // ignore: use_build_context_synchronously
           context: context,
-          builder: (context) => AlertDialog(
+          builder: (dialogContext) => AlertDialog(
             title: const Text('Registration Failed'),
             content: Text(viewModel.errorMessage ?? 'Unknown error'),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => Navigator.of(dialogContext).pop(),
                 child: const Text('OK'),
               ),
             ],
@@ -678,9 +805,13 @@ class RegisterViewModel extends ChangeNotifier {
         return;
       }
 
-      // ✅ SUCCESS: Data is already saved in storage
-      // Now navigate based on role
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (kDebugMode) {
+        log(
+          '[RegisterSeller] Step 5: Registration success - showing SnackBar',
+          name: 'RegisterSeller',
+        );
+      }
+      messenger?.showSnackBar(
         const SnackBar(
           content: Text('Registration Successful!'),
           backgroundColor: Colors.green,
@@ -690,39 +821,60 @@ class RegisterViewModel extends ChangeNotifier {
 
       await Future.delayed(const Duration(seconds: 1));
 
-      // ✅ Clear the form BEFORE navigation
+      if (!context.mounted) return;
+      if (kDebugMode)
+        log('[RegisterSeller] Step 6: Clearing form', name: 'RegisterSeller');
       viewModel.clearForm();
 
-      // Navigate based on role
+      if (kDebugMode) {
+        log(
+          '[RegisterSeller] Step 7: Navigating to home, role=$role',
+          name: 'RegisterSeller',
+        );
+      }
       if (role == 'seller') {
-        Navigator.of(context).pushReplacement(
+        navigator.pushReplacement(
           MaterialPageRoute(builder: (_) => MainSellerScreen()),
         );
       } else if (role == 'buyer') {
-        Navigator.of(
-          // ignore: use_build_context_synchronously
-          context,
-        ).pushReplacement(MaterialPageRoute(builder: (_) => BuyerMainScreen()));
+        navigator.pushReplacement(
+          MaterialPageRoute(builder: (_) => BuyerMainScreen()),
+        );
       } else {
-        Navigator.of(context).pushReplacement(
+        navigator.pushReplacement(
           MaterialPageRoute(builder: (_) => MainSellerScreen()),
         );
       }
-    } catch (error) {
-      Navigator.of(context).pop(); // Close loading
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Error'),
-          content: Text(error.toString()),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+      if (kDebugMode) {
+        log(
+          '[RegisterSeller] Step 8: handleSubmission completed successfully',
+          name: 'RegisterSeller',
+        );
+      }
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        log(
+          '[RegisterSeller] Step ERROR: handleSubmission catch - $error',
+          name: 'RegisterSeller',
+        );
+        log('[RegisterSeller] StackTrace: $stackTrace', name: 'RegisterSeller');
+      }
+      navigator.pop(); // Close loading
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Error'),
+            content: Text(error.toString()),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
     }
   }
 
@@ -1095,7 +1247,7 @@ class RegisterViewModel extends ChangeNotifier {
     _taxCertificate = null;
     _identityProof = null;
     _errorMessage = null;
-    _countryCode = '+1';
+    _countryCode = '+966';
     _categories.clear();
     _documents.clear();
     _documents['businessLicense'] = null;

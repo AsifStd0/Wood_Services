@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wood_service/Responsive/screen_utils.dart';
 import 'package:wood_service/app/all_provider.dart';
 import 'package:wood_service/app/helper.dart';
 import 'package:wood_service/app/locator.dart';
@@ -27,7 +28,10 @@ class AppWithProviders extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(providers: appProviders, child: const MyApp());
+    return MultiProvider(
+      providers: appProviders,
+      child: ScreenUtils.initWidget(child: const MyApp()),
+    );
   }
 }
 
@@ -38,6 +42,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        // Initialize responsive system
+        ScreenUtils.init(context);
+        return child ?? const SizedBox();
+      },
       home: _getInitialScreen(),
     );
   }

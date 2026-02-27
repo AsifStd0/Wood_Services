@@ -38,6 +38,8 @@ class BuyerProfileViewProvider extends ChangeNotifier {
   String get address => _currentUser?.address ?? '';
   String get description => _currentUser?.businessDescription ?? '';
   String get iban => _currentUser?.iban ?? '';
+  String get phone => _currentUser?.phone?.toString() ?? '';
+  String get countryCode => _currentUser?.countryCode ?? '+966';
   String? get profileImagePath => _currentUser?.profileImage;
   bool get hasData => _currentUser != null;
   bool get isLoggedIn => hasData;
@@ -108,6 +110,8 @@ class BuyerProfileViewProvider extends ChangeNotifier {
   Future<bool> updateProfileData({
     String? fullName,
     String? email,
+    String? phone,
+    String? countryCode,
     String? businessName,
     String? address,
     String? description,
@@ -124,6 +128,8 @@ class BuyerProfileViewProvider extends ChangeNotifier {
       final user = await _profileService.updateProfile(
         name: fullName,
         email: email,
+        phone: phone,
+        countryCode: countryCode,
         businessName: businessName,
         address: address,
         businessDescription: description,
