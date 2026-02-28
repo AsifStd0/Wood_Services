@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/selller_setting_provider.dart';
@@ -165,6 +166,90 @@ Widget buildInfoField({
         prefixIcon: Icon(icon, color: AppColors.grey),
         controller: controller,
       ),
+    ],
+  );
+}
+
+/// Phone field with country code/flag (like signup). When not editing, shows code + number read-only.
+Widget buildPhoneFieldWithCountryCode({
+  required BuildContext context,
+  required String label,
+  required TextEditingController controller,
+  required bool isEditing,
+  required String countryCode,
+  required ValueChanged<String> onCountryCodeChanged,
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey[700],
+        ),
+      ),
+      const SizedBox(height: 8),
+      isEditing
+          ? CustomTextFormField(
+              enabled: true,
+              prefixIcon: CountryCodePicker(
+                onChanged: (CountryCode code) {
+                  onCountryCodeChanged(code.dialCode ?? '+966');
+                },
+                initialSelection: countryCode == '+966' ? 'SA' : (countryCode == '+1' ? 'US' : 'SA'),
+                favorite: const ['+966', 'SA', '+1', 'US'],
+                showCountryOnly: false,
+                showOnlyCountryWhenClosed: false,
+                alignLeft: false,
+                showFlag: true,
+                showFlagDialog: true,
+                padding: EdgeInsets.zero,
+                textStyle: TextStyle(fontSize: 14, color: Colors.grey[800]),
+              ),
+              controller: controller,
+              hintText: 'Phone number',
+              textInputType: TextInputType.phone,
+            )
+          : Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.extraLightGrey,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(color: AppColors.border),
+                      ),
+                    ),
+                    child: Text(
+                      countryCode,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      controller.text.isEmpty ? '—' : controller.text,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
     ],
   );
 }

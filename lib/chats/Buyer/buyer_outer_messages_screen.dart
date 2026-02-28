@@ -33,11 +33,17 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Messages'),
+        title: Text(
+          'Messages',
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+        ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(
+              Icons.refresh,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
             onPressed: () {
               final chatProvider = context.read<BuyerChatProvider>();
               chatProvider.loadChats();
@@ -53,7 +59,11 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
 
           // Show loading only when truly loading and empty
           if (chatProvider.isLoading && chatProvider.chats.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            );
           }
 
           // Handle error state
@@ -62,17 +72,28 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error, size: 60, color: Colors.red),
+                  Icon(
+                    Icons.error,
+                    size: 60,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Error: ${chatProvider.error}',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.red),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => chatProvider.loadChats(),
-                    child: const Text('Retry'),
+                    child: Text(
+                      'Retry',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -94,27 +115,44 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.chat_bubble_outline, size: 100, color: Colors.grey[300]),
-          const SizedBox(height: 16),
-          const Text(
-            'No conversations yet',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return Builder(
+      builder: (context) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.chat_bubble_outline,
+                size: 100,
+                color: colorScheme.onSurface.withOpacity(0.4),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'No conversations yet',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              SizedBox(height: 8),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 40),
+                child: Text(
+                  'Your conversations with sellers will appear here',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40),
-            child: Text(
-              'Your conversations with sellers will appear here',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -144,10 +182,10 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
         }
 
         return Card(
-          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: Colors.blue,
+              backgroundColor: Theme.of(context).colorScheme.primary,
               backgroundImage:
                   sellerParticipant.profileImage != null &&
                       sellerParticipant.profileImage!.isNotEmpty
@@ -160,13 +198,21 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
                       sellerParticipant.name.isNotEmpty
                           ? sellerParticipant.name[0].toUpperCase()
                           : 'S',
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     )
                   : null,
             ),
             title: Text(
               sellerParticipant.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             subtitle: Text(
               chat.lastMessageText ?? 'Start conversation',
@@ -174,8 +220,8 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: chat.lastMessageText != null
-                    ? Colors.grey[700]
-                    : Colors.grey[500],
+                    ? Theme.of(context).colorScheme.onSurfaceVariant
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             trailing: Column(
@@ -184,24 +230,24 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
               children: [
                 Text(
                   _formatTime(chat.updatedAt),
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 if (chat.orderDetails?['status'] != null) ...[
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: _getStatusColor(chat.orderDetails!['status']),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       '${chat.orderDetails!['status']}'.toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -230,22 +276,22 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'completed':
-        return Colors.green;
+        return Theme.of(context).colorScheme.primary;
       case 'pending':
-        return Colors.orange;
+        return Theme.of(context).colorScheme.primary;
       case 'cancelled':
-        return Colors.red;
+        return Theme.of(context).colorScheme.primary;
       case 'accepted':
-        return Colors.blue;
+        return Theme.of(context).colorScheme.primary;
       default:
-        return Colors.grey;
+        return Theme.of(context).colorScheme.onSurfaceVariant;
     }
   }
 
   String _formatTime(DateTime time) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
+    final yesterday = today.subtract(Duration(days: 1));
     final chatDate = DateTime(time.year, time.month, time.day);
 
     if (chatDate == today) {
@@ -253,7 +299,15 @@ class _BuyerOuterMessagesScreenState extends State<BuyerOuterMessagesScreen> {
     } else if (chatDate == yesterday) {
       return 'Yesterday';
     } else if (now.difference(time).inDays < 7) {
-      final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      final weekdays = [
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday',
+      ];
       return weekdays[chatDate.weekday - 1];
     } else {
       return '${time.day}/${time.month}/${time.year % 100}';

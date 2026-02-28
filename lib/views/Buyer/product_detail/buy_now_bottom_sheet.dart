@@ -226,11 +226,12 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
@@ -288,17 +289,24 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
   }
 
   Widget _buildHeader() {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+        color: theme.colorScheme.surface,
+        // color: AppColors.brightOrange,
+        border: Border(
+          bottom: BorderSide(color: theme.colorScheme.outline.withOpacity(0.3)),
+        ),
       ),
       child: Row(
         children: [
-          const Text(
+          Text(
             'Place Order',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
           const Spacer(),
           IconButton(
@@ -314,7 +322,7 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -329,12 +337,15 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
               width: 80,
               height: 80,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                width: 80,
-                height: 80,
-                color: Colors.grey[200],
-                child: const Icon(Icons.image, color: Colors.grey),
-              ),
+              errorBuilder: (context, error, stackTrace) {
+                final cs = Theme.of(context).colorScheme;
+                return Container(
+                  width: 80,
+                  height: 80,
+                  color: cs.surfaceContainerHighest,
+                  child: Icon(Icons.image, color: cs.onSurfaceVariant),
+                );
+              },
             ),
           ),
           const SizedBox(width: 12),
@@ -346,8 +357,9 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
               children: [
                 Text(
                   widget.product.title,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
                   maxLines: 2,
@@ -356,15 +368,18 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
                 const SizedBox(height: 4),
                 Text(
                   'Quantity: ${widget.quantity}',
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '\$${unitPrice.toStringAsFixed(2)} each',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.brown,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ],
@@ -385,9 +400,13 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Selected Options',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 8),
           if (widget.selectedSize != null) Text('Size: ${widget.selectedSize}'),
@@ -402,9 +421,13 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Order Details',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 12),
 
@@ -418,7 +441,7 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
           textInputAction: TextInputAction.newline,
           textAlign: TextAlign.start,
           minline: 3,
-          fillcolor: Colors.white,
+          fillcolor: Theme.of(context).colorScheme.surfaceContainerHighest,
         ),
 
         const SizedBox(height: 12),
@@ -430,7 +453,7 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
           textInputType: TextInputType.streetAddress,
           textInputAction: TextInputAction.next,
           textAlign: TextAlign.start,
-          fillcolor: Colors.white,
+          fillcolor: Theme.of(context).colorScheme.surfaceContainerHighest,
         ),
 
         const SizedBox(height: 12),
@@ -481,7 +504,7 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
           textInputType: TextInputType.text,
           textInputAction: TextInputAction.next,
           textAlign: TextAlign.start,
-          fillcolor: Colors.white,
+          fillcolor: Theme.of(context).colorScheme.surfaceContainerHighest,
         ),
 
         const SizedBox(height: 12),
@@ -494,7 +517,7 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
           textInputType: TextInputType.multiline,
           textInputAction: TextInputAction.newline,
           textAlign: TextAlign.start,
-          fillcolor: Colors.white,
+          fillcolor: Theme.of(context).colorScheme.surfaceContainerHighest,
         ),
       ],
     );
@@ -504,15 +527,22 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Payment Options',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 12),
 
         // Use Sale Price
         CheckboxListTile(
-          title: const Text('Use Sale Price'),
+          title: Text(
+            'Use Sale Price',
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+          ),
           subtitle: Text(
             _useSalePrice && widget.product.salePrice != null
                 ? 'Sale Price: \$${widget.product.salePrice!.toStringAsFixed(2)}'
@@ -526,22 +556,31 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
                   });
                 }
               : null,
-          activeColor: AppColors.brightOrange,
+          activeColor: Theme.of(context).colorScheme.primary,
         ),
 
         const SizedBox(height: 8),
 
         // Payment Method
-        const Text(
+        Text(
           'Payment Method:',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
               child: RadioListTile<String>(
-                title: const Text('Card'),
+                title: Text(
+                  'Card',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
                 value: 'card',
                 groupValue: _paymentMethod,
                 onChanged: (value) {
@@ -549,7 +588,7 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
                     _paymentMethod = value;
                   });
                 },
-                activeColor: AppColors.brightOrange,
+                activeColor: Theme.of(context).colorScheme.primary,
               ),
             ),
             // Expanded(
@@ -562,7 +601,7 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
             //         _paymentMethod = value;
             //       });
             //     },
-            //     activeColor: AppColors.brightOrange,
+            //     activeColor: Theme.of(context).colorScheme.primary,
             //   ),
             // ),
           ],
@@ -575,16 +614,22 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Price Summary',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 12),
           _buildPriceRow('Unit Price', '\$${unitPrice.toStringAsFixed(2)}'),
@@ -616,7 +661,9 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
             style: TextStyle(
               fontSize: isTotal ? 18 : 14,
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              color: isTotal ? Colors.brown : Colors.black,
+              color: isTotal
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurface,
             ),
           ),
           Text(
@@ -624,7 +671,9 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
             style: TextStyle(
               fontSize: isTotal ? 18 : 14,
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              color: isTotal ? Colors.brown : Colors.black,
+              color: isTotal
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ],
@@ -633,14 +682,18 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
   }
 
   Widget _buildFooter() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        color: colorScheme.surface,
+        border: Border(
+          top: BorderSide(color: colorScheme.outline.withOpacity(0.3)),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: theme.shadowColor.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -649,27 +702,26 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Total Price
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Total:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
               ),
               Text(
                 '\$${total.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontSize: 24,
+                style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.brown,
+                  color: colorScheme.primary,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-
-          // Place Order Button
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -682,26 +734,28 @@ class _BuyNowBottomSheetState extends State<BuyNowBottomSheet> {
                   : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.brightOrange,
+                foregroundColor: colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 elevation: 2,
               ),
               child: _isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.white,
+                        ),
                       ),
                     )
-                  : const Text(
-                      'Place Order',
-                      style: TextStyle(
-                        fontSize: 18,
+                  : Text(
+                      'Buy Now',
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                     ),
             ),

@@ -132,11 +132,6 @@ class _SellerSettingsScreenContent extends StatelessWidget {
               },
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout_rounded, color: AppColors.error),
-            tooltip: AppStrings.logout,
-            onPressed: () => _showLogoutDialog(context),
-          ),
         ],
       ),
       body: Consumer<SellerSettingsProvider>(
@@ -166,49 +161,21 @@ class _SellerSettingsScreenContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Shop Header Card
+                _buildShopHeaderCard(provider),
+                const SizedBox(height: 20),
+
                 // Quick Actions Section
                 _buildQuickActionsSection(context, provider),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // My Ads Section
                 _buildMyAdsSection(context),
-                const SizedBox(height: 16),
-                // ElevatedButton(
-                //   onPressed: () {
-                //     Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //         builder: (context) => const AdminAdsScreen(),
-                //       ),
-                //     );
-                //   },
-                //   child: const Text('Admin Ads'),
-                // ),
-                // Shop Header Card
-                _buildShopHeaderCard(provider),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
-                // Shop Banner Section
-                if (provider.isEditing || provider.shopBannerUrl != null)
-                  _buildShopBannerSection(provider),
-                if (provider.isEditing || provider.shopBannerUrl != null)
-                  const SizedBox(height: 16),
-
-                // Personal Information Section
-                _buildSectionCard(
-                  title: 'Personal Information',
-                  icon: Icons.person_rounded,
-                  child: _buildPersonalInfoSection(provider),
-                ),
-                const SizedBox(height: 16),
-
-                // Business Information Section
-                _buildSectionCard(
-                  title: 'Business Information',
-                  icon: Icons.business_rounded,
-                  child: _buildBusinessInfoSection(provider),
-                ),
-                const SizedBox(height: 16),
+                // Shop Information Container
+                _buildMainInfoContainer(context, provider),
+                const SizedBox(height: 20),
 
                 // Shop Branding Section
                 _buildSectionCard(
@@ -216,7 +183,7 @@ class _SellerSettingsScreenContent extends StatelessWidget {
                   icon: Icons.palette_rounded,
                   child: _buildShopBrandingSection(provider),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // Bank Details Section
                 _buildSectionCard(
@@ -224,18 +191,24 @@ class _SellerSettingsScreenContent extends StatelessWidget {
                   icon: Icons.account_balance_rounded,
                   child: _buildBankDetailsSection(provider),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // Documents Section
                 _buildSectionCard(
                   title: 'Business Documents',
                   icon: Icons.description_rounded,
-                  child: _buildDocumentsSection(provider),
+                  child: _buildDocumentsSection(context, provider),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // Save Button
-                if (provider.isEditing) _buildSaveButton(context, provider),
+                if (provider.isEditing) ...[
+                  _buildSaveButton(context, provider),
+                  const SizedBox(height: 20),
+                ],
+
+                // Logout Section at Bottom
+                _buildLogoutSection(context, provider),
 
                 // Bottom spacing
                 const SizedBox(height: 24),
@@ -444,7 +417,7 @@ class _SellerSettingsScreenContent extends StatelessWidget {
                       ? provider.currentUser!.shopName!
                       : 'Your Shop Name',
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
@@ -461,7 +434,7 @@ class _SellerSettingsScreenContent extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Row(
                   children: [
                     Icon(
@@ -706,7 +679,10 @@ class _SellerSettingsScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildPersonalInfoSection(SellerSettingsProvider provider) {
+  Widget _buildPersonalInfoSection(
+    BuildContext context,
+    SellerSettingsProvider provider,
+  ) {
     return Column(
       children: [
         buildInfoField(
@@ -723,11 +699,13 @@ class _SellerSettingsScreenContent extends StatelessWidget {
           isEditing: provider.isEditing,
         ),
         const SizedBox(height: 16),
-        buildInfoField(
+        buildPhoneFieldWithCountryCode(
+          context: context,
           label: AppStrings.phone,
           controller: provider.phoneController,
-          icon: Icons.phone_rounded,
           isEditing: provider.isEditing,
+          countryCode: provider.countryCode,
+          onCountryCodeChanged: (code) => provider.countryCode = code,
         ),
       ],
     );
@@ -900,23 +878,29 @@ class _SellerSettingsScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildDocumentsSection(SellerSettingsProvider provider) {
+  Widget _buildDocumentsSection(
+    BuildContext context,
+    SellerSettingsProvider provider,
+  ) {
     final user = provider.currentUser;
     return Column(
       children: [
         _buildDocumentItem(
+          context: context,
           title: 'Business License',
           url: user?.businessLicense,
           icon: Icons.business_center_rounded,
         ),
         const SizedBox(height: 12),
         _buildDocumentItem(
+          context: context,
           title: 'Tax Certificate',
           url: user?.taxCertificate,
           icon: Icons.receipt_long_rounded,
         ),
         const SizedBox(height: 12),
         _buildDocumentItem(
+          context: context,
           title: 'Identity Proof',
           url: user?.identityProof,
           icon: Icons.badge_rounded,
@@ -925,72 +909,202 @@ class _SellerSettingsScreenContent extends StatelessWidget {
     );
   }
 
+  void _showDocumentViewer(BuildContext context, String title, String url) {
+    final isImage =
+        url.toLowerCase().contains('.jpg') ||
+        url.toLowerCase().contains('.jpeg') ||
+        url.toLowerCase().contains('.png') ||
+        url.toLowerCase().contains('.gif') ||
+        url.toLowerCase().contains('.webp');
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Flexible(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(ctx).size.height * 0.7,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: isImage
+                      ? InteractiveViewer(
+                          minScale: 0.5,
+                          maxScale: 4,
+                          child: Image.network(
+                            url,
+                            fit: BoxFit.contain,
+                            loadingBuilder: (_, child, progress) =>
+                                progress == null
+                                ? child
+                                : const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(24),
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                            errorBuilder: (_, __, ___) => const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(24),
+                                child: Text(
+                                  'Failed to load image',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.description_rounded,
+                                color: Colors.white70,
+                                size: 48,
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Document available at link',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              SelectableText(
+                                url,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDocumentItem({
+    required BuildContext context,
     required String title,
     required String? url,
     required IconData icon,
   }) {
     final hasDocument = url != null && url.isNotEmpty;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: hasDocument
-            ? AppColors.success.withOpacity(0.05)
-            : AppColors.extraLightGrey,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: hasDocument
+            ? () => _showDocumentViewer(context, title, url)
+            : null,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: hasDocument
-              ? AppColors.success.withOpacity(0.3)
-              : AppColors.border,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: hasDocument
+                ? AppColors.success.withOpacity(0.05)
+                : AppColors.extraLightGrey,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
               color: hasDocument
-                  ? AppColors.success.withOpacity(0.1)
-                  : AppColors.textSecondary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              color: hasDocument ? AppColors.success : AppColors.textSecondary,
-              size: 20,
+                  ? AppColors.success.withOpacity(0.3)
+                  : AppColors.border,
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: hasDocument
+                      ? AppColors.success.withOpacity(0.1)
+                      : AppColors.textSecondary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  hasDocument ? 'Document uploaded' : 'No document',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
+                child: Icon(
+                  icon,
+                  color: hasDocument
+                      ? AppColors.success
+                      : AppColors.textSecondary,
+                  size: 20,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hasDocument ? 'Tap to view' : 'No document',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (hasDocument)
+                Icon(
+                  Icons.visibility_rounded,
+                  color: AppColors.success,
+                  size: 20,
+                ),
+            ],
           ),
-          if (hasDocument)
-            Icon(
-              Icons.check_circle_rounded,
-              color: AppColors.success,
-              size: 20,
-            ),
-        ],
+        ),
       ),
     );
   }
@@ -1063,7 +1177,7 @@ class _SellerSettingsScreenContent extends StatelessWidget {
               icon: const Icon(Icons.campaign_rounded, size: 20),
               label: const Text('Manage Ads'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppColors.brightOrange,
                 foregroundColor: AppColors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -1073,6 +1187,146 @@ class _SellerSettingsScreenContent extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMainInfoContainer(
+    BuildContext context,
+    SellerSettingsProvider provider,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowColor(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.info_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Shop Information',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // Shop Banner Section
+          if (provider.isEditing || provider.shopBannerUrl != null)
+            _buildShopBannerSection(provider),
+          if (provider.isEditing || provider.shopBannerUrl != null)
+            const SizedBox(height: 20),
+          // Personal Information Section
+          _buildPersonalInfoSection(context, provider),
+          const SizedBox(height: 20),
+          // Business Information Section
+          _buildBusinessInfoSection(provider),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLogoutSection(
+    BuildContext context,
+    SellerSettingsProvider provider,
+  ) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 0),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowColor(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            child: Text(
+              'Account',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+                letterSpacing: -0.2,
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.extraLightGrey,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ListTile(
+              leading: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.logout_rounded,
+                  color: AppColors.error,
+                  size: 22,
+                ),
+              ),
+              title: Text(
+                'Sign Out',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.error,
+                ),
+              ),
+              subtitle: Text(
+                'Logout from your account',
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              ),
+              trailing: Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondary,
+              ),
+              onTap: () => _showLogoutDialog(context),
+            ),
+          ),
+          const SizedBox(height: 12),
         ],
       ),
     );
@@ -1108,7 +1362,7 @@ class _SellerSettingsScreenContent extends StatelessWidget {
                 }
               },
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.brightOrange,
           foregroundColor: AppColors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(

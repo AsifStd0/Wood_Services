@@ -3,7 +3,6 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/app/index.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/favorite_button.dart';
@@ -118,18 +117,27 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear All Favorites'),
+        title: Text(
+          'Clear All Favorites',
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+        ),
         content: Text(
           'Remove all ${_favoriteProducts.length} items from favorites?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+            ),
           ),
           TextButton(
             onPressed: () => _clearAllFavorites(),
-            child: const Text('Clear All', style: TextStyle(color: Colors.red)),
+            child: Text(
+              'Clear All',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ),
         ],
       ),
@@ -165,13 +173,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   // Helper methods
   void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(content: Text(message), backgroundColor: AppColors.error),
     );
   }
 
   void _showSuccessSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
+      SnackBar(content: Text(message), backgroundColor: AppColors.success),
     );
   }
 
@@ -183,7 +191,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         final isLoading = provider.isLoading;
 
         return Scaffold(
-          backgroundColor: Colors.grey[50],
           appBar: CustomAppBar(title: 'My Favorites', showBackButton: false),
           body: isLoading && _favoriteProducts.isEmpty
               ? const Center(child: CircularProgressIndicator())
@@ -204,12 +211,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           Icon(
             Icons.favorite_border_rounded,
             size: 80,
-            color: Colors.grey[400],
+            color: Theme.of(context).colorScheme.onSurface,
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'No Favorites Yet',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
         ],
       ),
@@ -225,23 +236,29 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     '$totalFavorites ${totalFavorites == 1 ? 'Item' : 'Items'}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
-                      color: Colors.brown,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   TextButton.icon(
                     onPressed: _showClearAllDialog,
-                    icon: const Icon(Icons.delete_outline, size: 18),
+                    icon: Icon(
+                      Icons.delete_outline,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                     label: const Text('Clear All'),
-                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ],
               ),
@@ -273,10 +290,17 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Center(
                   child: _isLoadingMore
-                      ? const CircularProgressIndicator()
+                      ? CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.primary,
+                        )
                       : TextButton(
                           onPressed: () => _loadFavorites(),
-                          child: const Text('Load More'),
+                          child: Text(
+                            'Load More',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
                         ),
                 ),
               ),
@@ -293,11 +317,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -315,7 +339,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 // Product Image
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16),
@@ -345,13 +371,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.red,
+                        color: Theme.of(context).colorScheme.error,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         '${product.discountPercentage.toInt()}% OFF',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
                           fontSize: 9,
                           fontWeight: FontWeight.bold,
                         ),
@@ -383,11 +409,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   // Product image widget
   Widget _buildProductImage(FavoriteProduct product) {
     if (product.featuredImage == null) {
-      return const Center(
+      return Center(
         child: CircleAvatar(
           radius: 30,
-          backgroundColor: Colors.grey,
-          child: Icon(Icons.image, color: Colors.white),
+          backgroundColor: Theme.of(context).colorScheme.onSurface,
+          child: Icon(
+            Icons.image,
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
         ),
       );
     }
@@ -403,8 +432,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         width: double.infinity,
         height: double.infinity,
         errorBuilder: (context, error, stackTrace) {
-          return const Center(
-            child: Icon(Icons.image, size: 40, color: Colors.grey),
+          return Center(
+            child: Icon(
+              Icons.image,
+              size: 40,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           );
         },
       ),
@@ -426,10 +459,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           children: [
             Text(
               product.title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
                 height: 1.2,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -438,7 +472,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               product.shortDescription,
               style: TextStyle(
                 fontSize: 11,
-                color: Colors.grey[600],
+                color: Theme.of(context).colorScheme.onSurface,
                 height: 1.2,
               ),
               maxLines: 2,
@@ -460,18 +494,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   children: [
                     Text(
                       '\$${product.finalPrice.toStringAsFixed(2)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
-                        color: Colors.black,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     if (product.basePrice > product.finalPrice)
                       Text(
                         '\$${product.basePrice.toStringAsFixed(2)}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey,
+                          color: Theme.of(context).colorScheme.onSurface,
                           decoration: TextDecoration.lineThrough,
                         ),
                       ),
@@ -486,18 +520,25 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.star, size: 12, color: Colors.amber),
-                        const SizedBox(width: 2),
+                        Icon(
+                          Icons.star,
+                          size: 12,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        SizedBox(width: 2),
                         Text(
                           product.rating.toStringAsFixed(1),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ],
@@ -522,10 +563,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 ),
               );
             },
-            child: const Text(
+            child: Text(
               'Order Now',
               style: TextStyle(
-                color: Colors.black,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),

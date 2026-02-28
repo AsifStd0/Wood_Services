@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for API calls (registration, login, etc.) -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="wood_service"
         android:name="${applicationName}"

@@ -14,6 +14,7 @@ Widget buildCategoryChip(
   String text, {
   bool isSelected = false,
   VoidCallback? onTap,
+  required BuildContext context,
 }) {
   return GestureDetector(
     onTap: onTap,
@@ -23,15 +24,19 @@ Widget buildCategoryChip(
         color: isSelected ? Color(0xffEDC064) : Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isSelected ? Color(0xffEDC064) : Colors.black,
+          color: isSelected
+              ? Color(0xffEDC064)
+              : Theme.of(context).colorScheme.onSurface,
+          // color: isSelected ? Color(0xffEDC064) : Colors.black,
           width: 1,
         ),
       ),
       child: Text(
         text,
         style: TextStyle(
-          color: Colors.black,
+          // color: Colors.black,
           fontSize: 14,
+          color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -59,7 +64,11 @@ Widget buildNewSection() {
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 3),
-            child: CustomText('NEW', type: CustomTextType.subtitleMedium15bold),
+            child: CustomText(
+              'NEW',
+              color: Theme.of(context).colorScheme.onSurface,
+              type: CustomTextType.subtitleMedium15bold,
+            ),
           ),
           _buildImagesRow(),
 
@@ -79,6 +88,7 @@ Widget buildNewSection() {
                           option,
                           isSelected: viewModel.isSelected(option),
                           onTap: () => viewModel.selectOption(option),
+                          context: context,
                         ),
                       ),
                     );
@@ -97,21 +107,29 @@ Widget _buildProductCategoryChip(
   String text, {
   bool isSelected = false,
   VoidCallback? onTap,
+  required BuildContext context,
 }) {
   return GestureDetector(
     onTap: onTap,
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.yellowLight : Colors.transparent,
+        color: isSelected
+            ? AppColors.yellowLight
+            : Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey, width: 1),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.onSurface,
+          width: 1,
+        ),
       ),
       child: Text(
         text,
         textAlign: TextAlign.center,
         style: TextStyle(
-          color: isSelected ? Colors.white : Colors.black,
+          color: isSelected
+              ? Colors.white
+              : Theme.of(context).colorScheme.onSurface,
           fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
@@ -180,11 +198,11 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
 
   return Container(
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
           blurRadius: 6,
           offset: const Offset(0, 2),
         ),
@@ -201,7 +219,7 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
               // Product Image
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(16),
                     topRight: Radius.circular(16),
@@ -219,21 +237,26 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
                           width: double.infinity,
                           height: double.infinity,
                           errorBuilder: (context, error, stackTrace) {
-                            return const Center(
+                            return Center(
                               child: Icon(
                                 Icons.image,
                                 size: 40,
-                                color: Colors.grey,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             );
                           },
                         ),
                       )
-                    : const Center(
+                    : Center(
                         child: CircleAvatar(
                           radius: 30,
-                          backgroundColor: Colors.grey,
-                          child: Icon(Icons.image, color: Colors.white),
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onSurface,
+                          child: Icon(
+                            Icons.image,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
                         ),
                       ),
               ),
@@ -265,13 +288,13 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.red,
+                      color: Theme.of(context).colorScheme.error,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       '${discount.toInt()}% OFF',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
                       ),
@@ -303,10 +326,11 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
                     // Title
                     Text(
                       product.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         height: 1.2,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -317,7 +341,7 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
                       product.shortDescription,
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).colorScheme.onSurface,
                         height: 1.2,
                       ),
                       maxLines: 2,
@@ -342,19 +366,23 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
                               children: [
                                 Text(
                                   '\$${product.finalPrice.toStringAsFixed(2)}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 15,
-                                    color: Colors.black,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                   ),
                                 ),
                                 if (product.hasDiscount &&
                                     product.basePrice > product.finalPrice)
                                   Text(
                                     '\$${product.basePrice.toStringAsFixed(2)}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.grey,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
                                       decoration: TextDecoration.lineThrough,
                                     ),
                                   ),
@@ -369,20 +397,24 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey[100],
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       Icons.star,
                                       size: 12,
-                                      color: Colors.amber,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
                                     ),
                                     const SizedBox(width: 2),
                                     Text(
                                       '${product.rating}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -412,11 +444,12 @@ Widget buildProductCard(BuyerProductModel product, BuildContext context) {
                         ),
                       );
                     },
-                    child: const Text(
+                    child: Text(
                       'Order Now',
                       style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.onSurface,
+
+                        //                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

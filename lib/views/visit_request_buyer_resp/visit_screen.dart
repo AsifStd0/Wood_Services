@@ -1,4 +1,3 @@
-// screens/buyer_visit_request_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -21,8 +20,6 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
-
-    // Load initial data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
     });
@@ -36,10 +33,9 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
   void _loadTabRequests(int index) {
     final provider = context.read<BuyerVisitRequestProvider>();
     BuyerVisitRequestStatus? status;
-
     switch (index) {
       case 0:
-        status = null; // All
+        status = null;
         break;
       case 1:
         status = BuyerVisitRequestStatus.pending;
@@ -54,29 +50,65 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
         status = BuyerVisitRequestStatus.rejected;
         break;
     }
-
     provider.loadVisitRequests(status: status, refresh: true);
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Consumer<BuyerVisitRequestProvider>(
       builder: (context, provider, child) {
         return Scaffold(
           appBar: AppBar(
+            backgroundColor: colorScheme.surface,
+            elevation: 0,
             centerTitle: true,
-            title: const Text('My Visit Requests'),
-            bottom: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              tabs: [
-                Tab(text: 'All (${provider.totalCount})'),
-                Tab(text: 'Pending (${provider.pendingCount})'),
-                Tab(text: 'Accepted (${provider.acceptedCount})'),
-                Tab(text: 'Completed (${provider.completedCount})'),
-                Tab(text: 'Rejected (${provider.rejectedCount})'),
-              ],
-              onTap: _loadTabRequests,
+            leading: IconButton(
+              icon: Icon(
+                Icons.arrow_back_ios_new,
+                color: colorScheme.onSurface,
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            title: Text(
+              'Visit Requests',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(48),
+              child: Container(
+                color: colorScheme.surface,
+                child: TabBar(
+                  controller: _tabController,
+                  onTap: _loadTabRequests,
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  labelColor: colorScheme.primary,
+                  unselectedLabelColor: colorScheme.onSurfaceVariant,
+                  indicatorColor: colorScheme.primary,
+                  indicatorWeight: 3,
+                  labelStyle: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  tabs: [
+                    Tab(text: 'All (${provider.totalCount})'),
+                    Tab(text: 'Pending (${provider.pendingCount})'),
+                    Tab(text: 'Accepted (${provider.acceptedCount})'),
+                    Tab(text: 'Completed (${provider.completedCount})'),
+                    Tab(text: 'Rejected (${provider.rejectedCount})'),
+                  ],
+                ),
+              ),
             ),
           ),
           body: TabBarView(
@@ -119,49 +151,105 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
     List<BuyerVisitRequest> requests,
     BuyerVisitRequestProvider provider,
   ) {
-    if (provider.isLoading && requests.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    if (provider.hasError && requests.isEmpty) {
+    if (provider.isLoading && requests.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 60, color: Colors.red),
+            CircularProgressIndicator(color: colorScheme.primary),
             const SizedBox(height: 16),
             Text(
-              provider.errorMessage ?? 'Failed to load visit requests',
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => provider.refresh(),
-              child: const Text('Retry'),
+              'Loading visit requests...',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
       );
     }
 
+    if (provider.hasError && requests.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                size: 64,
+                color: colorScheme.error,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                provider.errorMessage ?? 'Failed to load visit requests',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: colorScheme.onSurface,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () => provider.refresh(),
+                icon: const Icon(Icons.refresh_rounded, size: 20),
+                label: const Text('Retry'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (requests.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              'No visit requests',
-              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Your visit requests will appear here',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.event_available_rounded,
+                  size: 64,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'No visit requests',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Your visit requests will appear here when you request a seller visit.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -169,7 +257,7 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
     return RefreshIndicator(
       onRefresh: () => provider.refresh(),
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         itemCount: requests.length,
         itemBuilder: (context, index) {
           return _buildVisitRequestCard(requests[index], provider);
@@ -182,40 +270,34 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
     BuyerVisitRequest request,
     BuyerVisitRequestProvider provider,
   ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
+            color: theme.shadowColor.withOpacity(0.08),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status indicator bar
-          Container(
-            height: 4,
-            decoration: BoxDecoration(
-              color: request.statusColor,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-            ),
-          ),
+          Container(height: 4, color: request.statusColor),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with status
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Column(
@@ -223,24 +305,24 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
                         children: [
                           Text(
                             request.serviceTitle,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colorScheme.onSurface,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 6),
                           Text(
                             'Seller: ${request.sellerName}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(width: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -252,9 +334,8 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
                       ),
                       child: Text(
                         request.statusText,
-                        style: TextStyle(
+                        style: theme.textTheme.labelMedium?.copyWith(
                           color: request.statusColor,
-                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -263,118 +344,102 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
                 ),
                 const SizedBox(height: 16),
 
-                // Service Image
-                if (request.serviceImage != null)
+                if (request.serviceImage != null) ...[
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
                       request.serviceImage!,
-                      height: 150,
+                      height: 160,
                       width: double.infinity,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Container(
-                        height: 150,
-                        color: Colors.grey[200],
-                        child: Icon(Icons.image, color: Colors.grey[400]),
+                        height: 160,
+                        color: colorScheme.surfaceContainerHighest,
+                        child: Icon(
+                          Icons.image_outlined,
+                          size: 48,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ),
-                if (request.serviceImage != null) const SizedBox(height: 16),
+                  const SizedBox(height: 16),
+                ],
 
-                // Request Details
                 _buildDetailRow(
-                  Icons.description,
+                  theme,
+                  colorScheme,
+                  Icons.description_outlined,
                   'Description',
                   request.description ?? 'No description',
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 _buildDetailRow(
-                  Icons.location_on,
+                  theme,
+                  colorScheme,
+                  Icons.location_on_outlined,
                   'Address',
                   request.formattedAddress,
                 ),
                 if (request.preferredDate != null) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   _buildDetailRow(
-                    Icons.calendar_today,
+                    theme,
+                    colorScheme,
+                    Icons.calendar_today_outlined,
                     'Preferred Date',
                     _formatDate(request.preferredDate!),
                   ),
                 ],
                 if (request.preferredTime != null) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   _buildDetailRow(
-                    Icons.access_time,
+                    theme,
+                    colorScheme,
+                    Icons.access_time_rounded,
                     'Preferred Time',
                     request.preferredTime!,
                   ),
                 ],
 
-                // Estimated Cost (if accepted)
                 if (request.status == BuyerVisitRequestStatus.accepted &&
                     request.estimatedCostAmount != null) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue[200]!),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.attach_money, color: Colors.blue[700]),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Estimated Cost: ${request.estimatedCostAmount}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.blue[700],
-                          ),
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 14),
+                  _buildCostChip(
+                    theme,
+                    colorScheme,
+                    Icons.attach_money_rounded,
+                    'Estimated Cost',
+                    request.estimatedCostAmount!,
+                    colorScheme.primary,
                   ),
                 ],
 
-                // Actual Cost (if completed)
                 if (request.status == BuyerVisitRequestStatus.completed &&
                     request.actualCostAmount != null) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green[200]!),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.green[700]),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Final Cost: ${request.actualCostAmount}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.green[700],
-                          ),
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 14),
+                  _buildCostChip(
+                    theme,
+                    colorScheme,
+                    Icons.check_circle_outline_rounded,
+                    'Final Cost',
+                    request.actualCostAmount!,
+                    colorScheme.tertiary,
                   ),
                 ],
 
-                // Seller Notes
                 if (request.notes.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.orange[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.orange[200]!),
+                      color: colorScheme.surfaceContainerHighest.withOpacity(
+                        0.6,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: colorScheme.outline.withOpacity(0.2),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,22 +447,21 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
                         Row(
                           children: [
                             Icon(
-                              Icons.note,
-                              color: Colors.orange[700],
+                              Icons.note_alt_outlined,
                               size: 18,
+                              color: colorScheme.primary,
                             ),
                             const SizedBox(width: 8),
                             Text(
                               'Seller Notes',
-                              style: TextStyle(
-                                fontSize: 14,
+                              style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: Colors.orange[700],
+                                color: colorScheme.onSurface,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         ...request.notes.map((note) {
                           final message = note['message']?.toString() ?? '';
                           final createdAt = note['createdAt']?.toString();
@@ -408,15 +472,16 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
                               children: [
                                 Text(
                                   message,
-                                  style: const TextStyle(fontSize: 13),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.onSurface,
+                                  ),
                                 ),
                                 if (createdAt != null) ...[
                                   const SizedBox(height: 4),
                                   Text(
                                     _formatDate(createdAt),
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey[600],
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -429,31 +494,35 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
                   ),
                 ],
 
-                // Timeline
                 if (request.requestedAt != null) ...[
                   const SizedBox(height: 16),
-                  Divider(color: Colors.grey[300]),
-                  const SizedBox(height: 8),
+                  Divider(color: colorScheme.outline.withOpacity(0.3)),
+                  const SizedBox(height: 10),
                   Text(
                     'Requested: ${_formatDateTime(request.requestedAt!)}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   if (request.acceptedAt != null)
                     Text(
                       'Accepted: ${_formatDateTime(request.acceptedAt!)}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   if (request.completedAt != null)
                     Text(
                       'Completed: ${_formatDateTime(request.completedAt!)}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                 ],
 
-                // Action Buttons
-                const SizedBox(height: 16),
                 if (request.status == BuyerVisitRequestStatus.pending ||
-                    request.status == BuyerVisitRequestStatus.accepted)
+                    request.status == BuyerVisitRequestStatus.accepted) ...[
+                  const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -461,12 +530,13 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
                       icon: const Icon(Icons.cancel_outlined, size: 18),
                       label: const Text('Cancel Request'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: BorderSide(color: Colors.red[300]!),
+                        foregroundColor: colorScheme.error,
+                        side: BorderSide(color: colorScheme.error),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
                   ),
+                ],
               ],
             ),
           ),
@@ -475,36 +545,96 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value) {
+  Widget _buildDetailRow(
+    ThemeData theme,
+    ColorScheme colorScheme,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: Colors.grey[600]),
-        const SizedBox(width: 8),
+        Icon(icon, size: 18, color: colorScheme.primary),
+        const SizedBox(width: 10),
         Expanded(
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
+              // if address it will be two lines
+              if (label == 'Address' && value.isNotEmpty) ...[
+                Text(
+                  "$label: ",
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                Expanded(
+                  // Add Expanded here to allow wrapping
+                  child: Text(
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    value ?? 'N/A',
+                    textAlign: TextAlign.start,
+                    // Remove maxLines and overflow constraints
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
-              ),
+              ] else ...[
+                Text(
+                  "${label}: ",
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  value ?? 'N/A',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildCostChip(
+    ThemeData theme,
+    ColorScheme colorScheme,
+    IconData icon,
+    String label,
+    String value,
+    Color accent,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: accent.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accent.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: accent, size: 20),
+          const SizedBox(width: 10),
+          Text(
+            '$label: $value',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: accent,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -518,28 +648,35 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
   }
 
   String _formatDateTime(DateTime dateTime) {
-    return DateFormat('MMM dd, yyyy • hh:mm a').format(dateTime);
+    return DateFormat('MMM dd, yyyy · hh:mm a').format(dateTime);
   }
 
   Future<void> _cancelRequest(
     BuyerVisitRequest request,
     BuyerVisitRequestProvider provider,
   ) async {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Cancel Visit Request'),
         content: const Text(
-          'Are you sure you want to cancel this visit request?',
+          'Are you sure you want to cancel this visit request? This action cannot be undone.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('No'),
+            child: Text('Keep', style: TextStyle(color: colorScheme.primary)),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(
+              backgroundColor: colorScheme.error,
+              foregroundColor: colorScheme.onError,
+            ),
             child: const Text('Yes, Cancel'),
           ),
         ],
@@ -553,10 +690,11 @@ class _BuyerVisitRequestScreenState extends State<BuyerVisitRequestScreen>
           SnackBar(
             content: Text(
               success
-                  ? 'Visit request cancelled successfully'
+                  ? 'Visit request cancelled'
                   : 'Failed to cancel visit request',
             ),
-            backgroundColor: success ? Colors.green : Colors.red,
+            backgroundColor: success ? colorScheme.tertiary : colorScheme.error,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }

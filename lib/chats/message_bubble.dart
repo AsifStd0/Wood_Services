@@ -26,7 +26,11 @@ class MessageBubble extends StatelessWidget {
           margin: const EdgeInsets.symmetric(vertical: 4),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isSentByMe ? Colors.blue[50] : Colors.grey[100],
+            color: isSentByMe
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                : Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant.withOpacity(0.1),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -44,14 +48,20 @@ class MessageBubble extends StatelessWidget {
               if (message.message.isNotEmpty)
                 Text(
                   message.message,
-                  style: TextStyle(color: Colors.grey[800], fontSize: 14),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 14,
+                  ),
                 ),
 
               // Timestamp
               const SizedBox(height: 4),
               Text(
                 _formatTime(message.createdAt),
-                style: TextStyle(color: Colors.grey[500], fontSize: 10),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 10,
+                ),
               ),
             ],
           ),
@@ -86,13 +96,20 @@ class MessageBubble extends StatelessWidget {
                 width: double.infinity,
                 height: 200,
                 color: Colors.grey[200],
-                child: const Center(child: CircularProgressIndicator()),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
               ),
               errorWidget: (context, url, error) => Container(
                 width: double.infinity,
                 height: 200,
                 color: Colors.grey[200],
-                child: const Icon(Icons.broken_image),
+                child: Icon(
+                  Icons.broken_image,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             ),
           ),
@@ -103,13 +120,21 @@ class MessageBubble extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant.withOpacity(0.3),
+          ),
         ),
         child: Row(
           children: [
-            Icon(_getFileIcon(attachment.type), color: Colors.blue, size: 24),
+            Icon(
+              _getFileIcon(attachment.type),
+              color: Theme.of(context).colorScheme.primary,
+              size: 24,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -117,22 +142,26 @@ class MessageBubble extends StatelessWidget {
                 children: [
                   Text(
                     attachment.name,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     '${(attachment.size / 1024).toStringAsFixed(1)} KB',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.download, size: 20),
+              icon: Icon(
+                Icons.download,
+                size: 20,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               onPressed: () {
                 // Download file
                 _downloadFile(attachment.url, attachment.name);
@@ -163,14 +192,31 @@ class MessageBubble extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
         insetPadding: EdgeInsets.zero,
         child: GestureDetector(
           onTap: () => Navigator.pop(context),
           child: Container(
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.surfaceContainerLowest,
             child: Center(
-              child: CachedNetworkImage(imageUrl: url, fit: BoxFit.contain),
+              child: CachedNetworkImage(
+                imageUrl: url,
+                fit: BoxFit.contain,
+                placeholder: (context, url) => Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Icon(
+                  Icons.broken_image,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
             ),
           ),
         ),

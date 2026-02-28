@@ -27,126 +27,118 @@ class OrderCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
+            color: theme.shadowColor.withOpacity(0.08),
+            blurRadius: 12,
             offset: const Offset(0, 4),
             spreadRadius: 0,
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          children: [
-            // Status indicator bar at top
-            Container(
-              height: 4,
-              decoration: BoxDecoration(
-                color: order.statusColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Order Header
-                  _buildOrderHeader(),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          Container(height: 4, color: order.statusColor),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildOrderHeader(context),
+                const SizedBox(height: 16),
+
+                _buildProductInfo(context),
+                const SizedBox(height: 16),
+
+                // Custom Content (timeline, progress, review, etc.)
+                if (customContent != null) ...[
+                  customContent!,
                   const SizedBox(height: 16),
-
-                  // Product Info Section
-                  _buildProductInfo(),
-                  const SizedBox(height: 16),
-
-                  // Custom Content (timeline, progress, review, etc.)
-                  if (customContent != null) ...[
-                    customContent!,
-                    const SizedBox(height: 16),
-                  ],
-
-                  // Progress Bar (for accepted orders)
-                  if (showProgressBar) ...[
-                    _buildProgressBar(),
-                    const SizedBox(height: 16),
-                  ],
-
-                  // Review Section (for completed orders)
-                  if (showReviewSection) ...[
-                    _buildReviewSection(context),
-                    const SizedBox(height: 16),
-                  ],
-
-                  // Decline Reason (for declined orders)
-                  if (showDeclineReason) ...[
-                    _buildDeclineReason(),
-                    const SizedBox(height: 16),
-                  ],
-
-                  // Order Date & Price Row
-                  _buildOrderDetailsRow(),
-                  const SizedBox(height: 16),
-
-                  // Divider
-                  const Divider(height: 1),
-                  const SizedBox(height: 16),
-
-                  // Action Buttons
-                  if (actionButtons != null && actionButtons!.isNotEmpty)
-                    _buildActionButtons(),
                 ],
-              ),
+
+                if (showProgressBar) ...[
+                  _buildProgressBar(context),
+                  const SizedBox(height: 16),
+                ],
+
+                // Review Section (for completed orders)
+                if (showReviewSection) ...[
+                  _buildReviewSection(context),
+                  const SizedBox(height: 16),
+                ],
+
+                if (showDeclineReason) ...[
+                  _buildDeclineReason(context),
+                  const SizedBox(height: 16),
+                ],
+
+                _buildOrderDetailsRow(context),
+                const SizedBox(height: 14),
+
+                Divider(
+                  height: 1,
+                  color: theme.colorScheme.outline.withOpacity(0.2),
+                ),
+                const SizedBox(height: 14),
+
+                if (actionButtons != null && actionButtons!.isNotEmpty)
+                  _buildActionButtons(context),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildOrderHeader() {
+  Widget _buildOrderHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.brown[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.brown[200]!),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.receipt_long_rounded,
+                size: 16,
+                color: colorScheme.primary,
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.receipt_long, size: 14, color: Colors.brown[700]),
-                  const SizedBox(width: 6),
-                  Text(
-                    '#${order.orderId}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.brown[700],
-                    ),
-                  ),
-                ],
+              const SizedBox(width: 8),
+              Text(
+                '#${order.orderId}',
+
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: colorScheme.onSurface,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
-            color: order.statusColor.withOpacity(0.15),
+            color: order.statusColor.withOpacity(0.12),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
@@ -160,7 +152,7 @@ class OrderCardWidget extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 3),
+              const SizedBox(width: 6),
               Text(
                 order.statusText,
                 style: TextStyle(
@@ -176,41 +168,44 @@ class OrderCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildProductInfo() {
-    if (order.items.isEmpty) {
-      return const SizedBox.shrink();
-    }
+  Widget _buildProductInfo(BuildContext context) {
+    if (order.items.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: colorScheme.surfaceContainerHighest.withOpacity(0.6),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: colorScheme.outline.withOpacity(0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: order.items.first.productImage != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  color: colorScheme.surfaceContainerHighest,
+                  child: order.items.first.productImage != null
+                      ? Image.network(
                           order.items.first.productImage!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              Icon(Icons.image, color: Colors.grey[400]),
+                          errorBuilder: (_, __, ___) => Icon(
+                            Icons.image_outlined,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        )
+                      : Icon(
+                          Icons.image_outlined,
+                          color: colorScheme.onSurfaceVariant,
                         ),
-                      )
-                    : Icon(Icons.image, color: Colors.grey[400]),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -219,10 +214,9 @@ class OrderCardWidget extends StatelessWidget {
                   children: [
                     Text(
                       order.items.first.productName,
-                      style: const TextStyle(
-                        fontSize: 15,
+                      style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: colorScheme.onSurface,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -231,7 +225,9 @@ class OrderCardWidget extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         '+ ${order.items.length - 1} more item${order.items.length > 2 ? 's' : ''}',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ],
@@ -239,38 +235,45 @@ class OrderCardWidget extends StatelessWidget {
               ),
             ],
           ),
-          if (order.items.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.store, size: 14, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(
-                  'Seller: ${order.items.first.sellerName}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(Icons.store_outlined, size: 14, color: colorScheme.primary),
+              const SizedBox(width: 6),
+              Text(
+                order.items.first.sellerName,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
                 ),
-                const SizedBox(width: 12),
-                Icon(Icons.shopping_bag, size: 14, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(
-                  '${order.itemsCount} item${order.itemsCount != 1 ? 's' : ''}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+              const SizedBox(width: 16),
+              Icon(
+                Icons.shopping_bag_outlined,
+                size: 14,
+                color: colorScheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${order.itemsCount} item${order.itemsCount != 1 ? 's' : ''}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildProgressBar() {
+  Widget _buildProgressBar(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     double progress = 0.0;
     if (order.status == OrderStatusBuyer.accepted) progress = 0.3;
-    if (order.processedAt != null && order.deliveredAt == null)
-      progress = 0.6; // In Progress
+    if (order.processedAt != null && order.deliveredAt == null) progress = 0.6;
     if (order.shippedAt != null) progress = 0.8;
-    if (order.deliveredAt != null) progress = 1.0; // Completed
+    if (order.deliveredAt != null) progress = 1.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,18 +283,16 @@ class OrderCardWidget extends StatelessWidget {
           children: [
             Text(
               'Order Progress',
-              style: TextStyle(
-                fontSize: 13,
+              style: theme.textTheme.labelLarge?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[800],
+                color: colorScheme.onSurface,
               ),
             ),
             Text(
               '${(progress * 100).toInt()}%',
-              style: TextStyle(
-                fontSize: 13,
+              style: theme.textTheme.labelLarge?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: Colors.green[700],
+                color: colorScheme.primary,
               ),
             ),
           ],
@@ -302,8 +303,8 @@ class OrderCardWidget extends StatelessWidget {
           child: LinearProgressIndicator(
             value: progress,
             minHeight: 8,
-            backgroundColor: Colors.grey[200],
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.green[400]!),
+            backgroundColor: colorScheme.surfaceContainerHighest,
+            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
           ),
         ),
       ],
@@ -311,29 +312,31 @@ class OrderCardWidget extends StatelessWidget {
   }
 
   Widget _buildReviewSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isReviewed = order.reviewed;
 
     if (isReviewed) {
       return Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.green[50]!, Colors.green[100]!],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: colorScheme.primaryContainer.withOpacity(0.4),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.green[200]!),
+          border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.green[400],
+                color: colorScheme.primary,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.star, color: Colors.white, size: 20),
+              child: Icon(
+                Icons.star_rounded,
+                color: colorScheme.onPrimary,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -342,9 +345,8 @@ class OrderCardWidget extends StatelessWidget {
                 children: [
                   Text(
                     'Thank you for your review!',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.green[800],
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -355,11 +357,11 @@ class OrderCardWidget extends StatelessWidget {
                       children: List.generate(
                         5,
                         (index) => Icon(
-                          Icons.star,
+                          Icons.star_rounded,
                           size: 14,
                           color: index < order.review!['rating']
-                              ? Colors.amber[700]
-                              : Colors.grey[300],
+                              ? colorScheme.tertiary
+                              : colorScheme.outline,
                         ),
                       ),
                     ),
@@ -374,25 +376,21 @@ class OrderCardWidget extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.orange[50]!, Colors.orange[100]!],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: colorScheme.tertiaryContainer.withOpacity(0.4),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange[200]!),
+          border: Border.all(color: colorScheme.tertiary.withOpacity(0.3)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.orange[400],
+                color: colorScheme.tertiary,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.star_border,
-                color: Colors.white,
+              child: Icon(
+                Icons.star_border_rounded,
+                color: colorScheme.onTertiary,
                 size: 20,
               ),
             ),
@@ -403,33 +401,32 @@ class OrderCardWidget extends StatelessWidget {
                 children: [
                   Text(
                     'How was your experience?',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.orange[800],
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
                     'Rate this order to help other buyers',
-                    style: TextStyle(fontSize: 12, color: Colors.orange[700]),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
             ),
-            ElevatedButton(
+            FilledButton(
               onPressed: onRateOrder,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[600],
-                foregroundColor: Colors.white,
+              style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 8,
+                  vertical: 10,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text('Rate Now', style: TextStyle(fontSize: 12)),
+              child: const Text('Rate Now'),
             ),
           ],
         ),
@@ -437,7 +434,9 @@ class OrderCardWidget extends StatelessWidget {
     }
   }
 
-  Widget _buildDeclineReason() {
+  Widget _buildDeclineReason(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isCancelled = order.status == OrderStatusBuyer.cancelled;
     final declinedDate = isCancelled
         ? (order.cancelledAt ?? order.requestedAt)
@@ -447,25 +446,21 @@ class OrderCardWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.red[50]!, Colors.red[100]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: colorScheme.errorContainer.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red[200]!),
+        border: Border.all(color: colorScheme.error.withOpacity(0.3)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.red[400],
+              color: colorScheme.error,
               shape: BoxShape.circle,
             ),
             child: Icon(
-              isCancelled ? Icons.cancel : Icons.block,
-              color: Colors.white,
+              isCancelled ? Icons.cancel_rounded : Icons.block_rounded,
+              color: colorScheme.onError,
               size: 20,
             ),
           ),
@@ -476,16 +471,17 @@ class OrderCardWidget extends StatelessWidget {
               children: [
                 Text(
                   'Reason: $reason',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.red[800],
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '${isCancelled ? 'Cancelled' : 'Rejected'} on: ${DateFormat('MMM dd, yyyy').format(declinedDate)}',
-                  style: TextStyle(fontSize: 12, color: Colors.red[700]),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -495,33 +491,41 @@ class OrderCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildOrderDetailsRow() {
+  Widget _buildOrderDetailsRow(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
-            Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-            const SizedBox(width: 6),
+            Icon(
+              Icons.calendar_today_rounded,
+              size: 16,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
             Text(
               'Ordered: ${order.formattedDate}',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.green[50],
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.green[200]!),
+            color: colorScheme.primaryContainer.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
           ),
           child: Text(
             order.formattedTotal,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.green[700],
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: colorScheme.primary,
             ),
           ),
         ),
@@ -529,8 +533,13 @@ class OrderCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons() {
-    return Wrap(spacing: 8, runSpacing: 8, children: actionButtons!);
+  Widget _buildActionButtons(BuildContext context) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      alignment: WrapAlignment.end,
+      children: actionButtons!,
+    );
   }
 }
 
@@ -542,38 +551,47 @@ class OrderEmptyState extends StatelessWidget {
   const OrderEmptyState({
     super.key,
     required this.message,
-    this.icon = Icons.inbox,
+    this.icon = Icons.inbox_rounded,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              shape: BoxShape.circle,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withOpacity(0.6),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 56, color: colorScheme.onSurfaceVariant),
             ),
-            child: Icon(icon, size: 64, color: Colors.grey[400]),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
+            const SizedBox(height: 24),
+            Text(
+              message,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface,
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Your orders will appear here',
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              'Orders in this tab will show up here',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -587,30 +605,36 @@ class OrderTimelineWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.blue[50],
+        color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue[100]!),
+        border: Border.all(color: colorScheme.outline.withOpacity(0.15)),
       ),
       child: Column(
         children: [
           _buildTimelineItem(
+            context,
             'Order Placed',
             DateFormat('MMM dd, yyyy').format(order.requestedAt),
-            Icons.shopping_cart,
+            Icons.shopping_cart_rounded,
             true,
           ),
           _buildTimelineItem(
+            context,
             'Accepted',
             order.acceptedAt != null
                 ? DateFormat('MMM dd, yyyy').format(order.acceptedAt!)
                 : 'Pending',
-            Icons.check_circle,
+            Icons.check_circle_rounded,
             order.acceptedAt != null,
           ),
           _buildTimelineItem(
+            context,
             order.processedAt != null && order.deliveredAt == null
                 ? 'In Progress'
                 : 'Processing',
@@ -618,23 +642,27 @@ class OrderTimelineWidget extends StatelessWidget {
                 ? DateFormat('MMM dd, yyyy').format(order.processedAt!)
                 : 'Pending',
             order.processedAt != null && order.deliveredAt == null
-                ? Icons.build
-                : Icons.settings,
+                ? Icons.build_rounded
+                : Icons.settings_rounded,
             order.processedAt != null,
           ),
           if (order.shippedAt != null)
             _buildTimelineItem(
+              context,
               'Shipped',
               DateFormat('MMM dd, yyyy').format(order.shippedAt!),
-              Icons.local_shipping,
+              Icons.local_shipping_rounded,
               true,
             ),
           _buildTimelineItem(
+            context,
             order.deliveredAt != null ? 'Completed' : 'Delivered',
             order.deliveredAt != null
                 ? DateFormat('MMM dd, yyyy').format(order.deliveredAt!)
                 : 'Estimated: ${_getEstimatedDelivery(order.requestedAt)}',
-            order.deliveredAt != null ? Icons.check_circle : Icons.home,
+            order.deliveredAt != null
+                ? Icons.check_circle_rounded
+                : Icons.home_rounded,
             order.deliveredAt != null,
           ),
         ],
@@ -643,11 +671,15 @@ class OrderTimelineWidget extends StatelessWidget {
   }
 
   Widget _buildTimelineItem(
+    BuildContext context,
     String title,
     String subtitle,
     IconData icon,
     bool isCompleted,
   ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -656,13 +688,17 @@ class OrderTimelineWidget extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: isCompleted ? Colors.green[400] : Colors.grey[300],
+              color: isCompleted
+                  ? colorScheme.primary
+                  : colorScheme.surfaceContainerHighest,
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
               size: 16,
-              color: isCompleted ? Colors.white : Colors.grey[600],
+              color: isCompleted
+                  ? colorScheme.onPrimary
+                  : colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(width: 12),
@@ -672,19 +708,19 @@ class OrderTimelineWidget extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 13,
+                  style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: isCompleted
                         ? FontWeight.w600
                         : FontWeight.normal,
-                    color: isCompleted ? Colors.green[700] : Colors.grey[600],
+                    color: isCompleted
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
                   ),
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isCompleted ? Colors.green[600] : Colors.grey[500],
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],

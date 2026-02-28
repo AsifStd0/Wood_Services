@@ -19,7 +19,7 @@ class CompletedOrdersTab extends StatelessWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       itemCount: orders.length,
       itemBuilder: (context, index) {
         return _buildOrderCard(context, orders[index]);

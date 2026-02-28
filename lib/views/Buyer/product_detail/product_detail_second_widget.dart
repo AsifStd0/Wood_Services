@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 
 import '../../../app/index.dart';
@@ -93,18 +92,14 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Top Main Slider
-        _buildMainSlider(),
-
+        _buildMainSlider(context),
         const SizedBox(height: 16),
-
-        // Bottom Thumbnail Strip
-        _buildThumbnailStrip(),
+        _buildThumbnailStrip(context),
       ],
     );
   }
 
-  Widget _buildMainSlider() {
+  Widget _buildMainSlider(BuildContext context) {
     return SizedBox(
       height: 200,
       child: Stack(
@@ -119,14 +114,18 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
               });
             },
             itemBuilder: (context, index) {
+              final theme = Theme.of(context);
+              final colorScheme = theme.colorScheme;
+              final surfaceContainer = colorScheme.surfaceContainerHighest;
+              final onSurfaceVariant = colorScheme.onSurfaceVariant;
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  color: Colors.grey[100],
+                  color: surfaceContainer.withOpacity(0.5),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black12,
+                      color: theme.shadowColor.withOpacity(0.12),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -136,11 +135,11 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
                   borderRadius: BorderRadius.circular(16),
                   child: productImages[index] == 'placeholder'
                       ? Container(
-                          color: Colors.grey[200],
-                          child: const Icon(
+                          color: surfaceContainer,
+                          child: Icon(
                             Icons.image,
                             size: 80,
-                            color: Colors.grey,
+                            color: onSurfaceVariant,
                           ),
                         )
                       : Image.network(
@@ -149,7 +148,7 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
                             return Container(
-                              color: Colors.grey[200],
+                              color: surfaceContainer,
                               child: Center(
                                 child: CircularProgressIndicator(
                                   value:
@@ -157,18 +156,18 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
                                       ? loadingProgress.cumulativeBytesLoaded /
                                             loadingProgress.expectedTotalBytes!
                                       : null,
-                                  color: AppColors.brightOrange,
+                                  color: colorScheme.primary,
                                 ),
                               ),
                             );
                           },
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
-                              color: Colors.grey[200],
-                              child: const Icon(
+                              color: surfaceContainer,
+                              child: Icon(
                                 Icons.broken_image,
                                 size: 80,
-                                color: Colors.grey,
+                                color: onSurfaceVariant,
                               ),
                             );
                           },
@@ -178,28 +177,32 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
             },
           ),
 
-          // Page Indicator (only show if more than 1 image)
           if (productImages.length > 1)
             Positioned(
               bottom: 16,
               right: 16,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '${_currentPage + 1}/${productImages.length}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+              child: Builder(
+                builder: (context) {
+                  final colorScheme = Theme.of(context).colorScheme;
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.inverseSurface,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${_currentPage + 1}/${productImages.length}',
+                      style: TextStyle(
+                        color: colorScheme.onInverseSurface,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
         ],
@@ -207,12 +210,14 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
     );
   }
 
-  Widget _buildThumbnailStrip() {
-    // Hide thumbnail strip if only 1 image or no images
+  Widget _buildThumbnailStrip(BuildContext context) {
     if (productImages.length <= 1) {
       return const SizedBox.shrink();
     }
-
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final surfaceContainer = colorScheme.surfaceContainerHighest;
+    final onSurfaceVariant = colorScheme.onSurfaceVariant;
     return SizedBox(
       height: 70,
       child: ListView.builder(
@@ -226,19 +231,19 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
               height: 70,
               margin: EdgeInsets.only(
                 right: 12,
-                left: index == 0 ? 16 : 0, // First item left margin
+                left: index == 0 ? 16 : 0,
               ),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: _currentPage == index
-                      ? AppColors.brightOrange
+                      ? colorScheme.primary
                       : Colors.transparent,
                   width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black12,
+                    color: theme.shadowColor.withOpacity(0.12),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -248,14 +253,13 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
                 borderRadius: BorderRadius.circular(10),
                 child: Stack(
                   children: [
-                    // Thumbnail Image
                     productImages[index] == 'placeholder'
                         ? Container(
-                            color: Colors.grey[200],
+                            color: surfaceContainer,
                             child: Icon(
                               Icons.image,
                               size: 30,
-                              color: Colors.grey[400],
+                              color: onSurfaceVariant,
                             ),
                           )
                         : Image.network(
@@ -266,7 +270,7 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
                             loadingBuilder: (context, child, loadingProgress) {
                               if (loadingProgress == null) return child;
                               return Container(
-                                color: Colors.grey[200],
+                                color: surfaceContainer,
                                 child: Center(
                                   child: SizedBox(
                                     width: 20,
@@ -288,27 +292,25 @@ class _ProductImageGalleryState extends State<ProductImageGallery> {
                             },
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
-                                color: Colors.grey[200],
+                                color: surfaceContainer,
                                 child: Icon(
                                   Icons.broken_image,
                                   size: 30,
-                                  color: Colors.grey[400],
+                                  color: onSurfaceVariant,
                                 ),
                               );
                             },
                           ),
-
-                    // Selection Overlay
                     if (_currentPage == index)
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.3),
+                          color: colorScheme.scrim.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Icon(
                             Icons.check,
-                            color: Colors.white,
+                            color: colorScheme.surface,
                             size: 20,
                           ),
                         ),

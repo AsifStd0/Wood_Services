@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wood_service/app/config.dart';
 import 'package:wood_service/views/Buyer/Buyer_home/buyer_home_model.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_model.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
@@ -120,29 +121,29 @@ class _QuantityStepperState extends State<QuantityStepper> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-      onTap: isEnabled ? onTap : null,
+        onTap: isEnabled ? onTap : null,
         borderRadius: BorderRadius.only(
           topLeft: isLeft ? const Radius.circular(25) : Radius.zero,
           bottomLeft: isLeft ? const Radius.circular(25) : Radius.zero,
           topRight: !isLeft ? const Radius.circular(25) : Radius.zero,
           bottomRight: !isLeft ? const Radius.circular(25) : Radius.zero,
         ),
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: isEnabled ? Colors.white : Colors.grey[100],
-          borderRadius: BorderRadius.only(
-            topLeft: isLeft ? const Radius.circular(25) : Radius.zero,
-            bottomLeft: isLeft ? const Radius.circular(25) : Radius.zero,
-            topRight: !isLeft ? const Radius.circular(25) : Radius.zero,
-            bottomRight: !isLeft ? const Radius.circular(25) : Radius.zero,
+        child: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: isEnabled ? Colors.white : Colors.grey[100],
+            borderRadius: BorderRadius.only(
+              topLeft: isLeft ? const Radius.circular(25) : Radius.zero,
+              bottomLeft: isLeft ? const Radius.circular(25) : Radius.zero,
+              topRight: !isLeft ? const Radius.circular(25) : Radius.zero,
+              bottomRight: !isLeft ? const Radius.circular(25) : Radius.zero,
+            ),
           ),
-        ),
-        child: Icon(
-          icon,
-          size: 18,
-          color: isEnabled ? Colors.brown : Colors.grey,
+          child: Icon(
+            icon,
+            size: 18,
+            color: isEnabled ? Colors.brown : Colors.grey,
           ),
         ),
       ),
@@ -152,13 +153,19 @@ class _QuantityStepperState extends State<QuantityStepper> {
 
 String _getProductImageUrl(BuyerProductModel? product) {
   if (product == null) return 'https://via.placeholder.com/80';
+  String? url;
   if (product.featuredImage != null && product.featuredImage!.isNotEmpty) {
-    return product.featuredImage!;
+    url = product.featuredImage!;
+  } else if (product.imageGallery.isNotEmpty) {
+    url = product.imageGallery.first;
   }
-  if (product.imageGallery.isNotEmpty) {
-    return product.imageGallery.first;
+  if (url == null || url.isEmpty) return 'https://via.placeholder.com/80';
+  // API may return localhost URLs; replace with app base URL so images load on device
+  if (url.contains('localhost:')) {
+    final uri = Uri.parse(url);
+    url = '${Config.baseUrl}${uri.path}';
   }
-  return 'https://via.placeholder.com/80';
+  return url;
 }
 
 Widget buildCartItemCard(BuildContext context, BuyerCartItem item, int index) {
@@ -174,20 +181,23 @@ Widget buildCartItemCard(BuildContext context, BuyerCartItem item, int index) {
         color: Colors.red.shade600,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Padding(
+      child: Padding(
         padding: EdgeInsets.only(right: 20),
-        child: Icon(Icons.delete_forever, color: Colors.white),
+        child: Icon(
+          Icons.delete_forever,
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
     ),
     onDismissed: (_) => _removeItemWithUndo(context, item, index),
     child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -213,7 +223,9 @@ Widget buildCartItemCard(BuildContext context, BuyerCartItem item, int index) {
                     errorBuilder: (context, error, stackTrace) => Container(
                       width: 80,
                       height: 80,
-                      color: Colors.grey[200],
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.2),
                       child: const Icon(Icons.image, color: Colors.grey),
                     ),
                   ),
@@ -222,7 +234,9 @@ Widget buildCartItemCard(BuildContext context, BuyerCartItem item, int index) {
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(
@@ -232,14 +246,14 @@ Widget buildCartItemCard(BuildContext context, BuyerCartItem item, int index) {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.red,
+                            color: Theme.of(context).colorScheme.error,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             'OUT OF STOCK',
                             style: TextStyle(
                               fontSize: 8,
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.onPrimary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -280,7 +294,9 @@ Widget buildCartItemCard(BuildContext context, BuyerCartItem item, int index) {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  color: Colors.grey.shade600,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.6),
                                   fontSize: 12,
                                 ),
                               ),
@@ -299,7 +315,9 @@ Widget buildCartItemCard(BuildContext context, BuyerCartItem item, int index) {
                         child: Icon(
                           Icons.delete_outline,
                           size: 16,
-                          color: Colors.grey.shade500,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.5),
                         ),
                       ),
                     ],
@@ -314,23 +332,28 @@ Widget buildCartItemCard(BuildContext context, BuyerCartItem item, int index) {
                         children: [
                           Text(
                             '\$${item.subtotal.toStringAsFixed(2)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w800,
                               fontSize: 16,
-                              color: Colors.brown,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                           Text(
                             '\$${item.price.toStringAsFixed(2)} × ${item.quantity}',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.grey.shade600,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.6),
                             ),
                           ),
                           if (isOutOfStock)
                             Text(
                               'Only ${product?.stockQuantity ?? 0} available',
-                              style: TextStyle(fontSize: 10, color: Colors.red),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
                             ),
                         ],
                       ),
@@ -402,15 +425,15 @@ void _removeItemWithUndo(
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Failed to undo: $error'),
-                backgroundColor: Colors.red,
+                backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );
           }
         },
-        textColor: Colors.white,
+        textColor: Theme.of(context).colorScheme.onPrimary,
       ),
       duration: const Duration(seconds: 4),
-      backgroundColor: Colors.brown,
+      backgroundColor: Theme.of(context).colorScheme.primary,
     );
 
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -418,7 +441,7 @@ void _removeItemWithUndo(
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Failed to remove item: $error'),
-        backgroundColor: Colors.red,
+        backgroundColor: Theme.of(context).colorScheme.error,
       ),
     );
   }
@@ -435,26 +458,35 @@ void updateQuantity(
     await cartViewModel.updateCartItem(itemId, newQuantity);
   } catch (error) {
     if (context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Failed to update quantity: $error'),
-        backgroundColor: Colors.red,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to update quantity: $error',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
           duration: const Duration(seconds: 2),
-      ),
-    );
+        ),
+      );
     }
   }
 }
 
-Widget buildSummaryLine(String label, double amount) {
+Widget buildSummaryLine(String label, double amount, BuildContext context) {
   return Row(
     children: [
-      Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+      Text(
+        label,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+          fontSize: 12,
+        ),
+      ),
       const Spacer(),
       Text(
         '\$${amount.toStringAsFixed(2)}',
         style: TextStyle(
-          color: Colors.grey.shade800,
+          color: Theme.of(context).colorScheme.onSurface,
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
@@ -469,12 +501,25 @@ void clearCartConfirm(BuildContext context, BuyerCartViewModel cartViewModel) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Clear Cart'),
-      content: const Text('Remove all items from your cart?'),
+      title: Text(
+        'Clear Cart',
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+      ),
+      content: Text(
+        'Remove all items from your cart?',
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        ),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            ),
+          ),
         ),
         TextButton(
           onPressed: () async {
@@ -482,21 +527,34 @@ void clearCartConfirm(BuildContext context, BuyerCartViewModel cartViewModel) {
             try {
               await cartViewModel.clearCart();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Cart cleared successfully'),
-                  backgroundColor: Colors.green,
+                SnackBar(
+                  content: Text(
+                    'Cart cleared successfully',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                 ),
               );
             } catch (error) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Failed to clear cart: $error'),
-                  backgroundColor: Colors.red,
+                  content: Text(
+                    'Failed to clear cart: $error',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                  backgroundColor: Theme.of(context).colorScheme.error,
                 ),
               );
             }
           },
-          child: const Text('Clear', style: TextStyle(color: Colors.red)),
+          child: Text(
+            'Clear',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+          ),
         ),
       ],
     ),
@@ -513,12 +571,16 @@ Center emptyCart(context) {
           Icon(
             Icons.shopping_cart_outlined,
             size: 86,
-            color: Colors.grey.shade300,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
           ),
           const SizedBox(height: 18),
           Text(
             'Your cart is empty',
-            style: Theme.of(context).textTheme.titleLarge,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -528,7 +590,7 @@ Center emptyCart(context) {
 
 Widget buildHeaderBar(BuyerCartViewModel cartViewModel, context) {
   return Container(
-    color: Colors.white,
+    color: Theme.of(context).colorScheme.surface,
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     child: Row(
       children: [
@@ -536,13 +598,20 @@ Widget buildHeaderBar(BuyerCartViewModel cartViewModel, context) {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${cartViewModel.cartCount} ${cartViewModel.cartCount == 1 ? "Item" : "Items"}',
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              '${cartViewModel.cartItems.length} ${cartViewModel.cartItems.length == 1 ? "product" : "products"} · ${cartViewModel.cartCount} ${cartViewModel.cartCount == 1 ? "item" : "items"}',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             if (cartViewModel.outOfStockItems.isNotEmpty)
               Text(
                 '${cartViewModel.outOfStockItems.length} out of stock',
-                style: const TextStyle(fontSize: 11, color: Colors.red),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Theme.of(context).colorScheme.error,
+                ),
               ),
           ],
         ),
@@ -554,12 +623,16 @@ Widget buildHeaderBar(BuyerCartViewModel cartViewModel, context) {
           icon: Icon(
             Icons.delete_outline,
             size: 18,
-            color: cartViewModel.cartItems.isEmpty ? Colors.grey : Colors.red,
+            color: cartViewModel.cartItems.isEmpty
+                ? Theme.of(context).colorScheme.onSurface
+                : Theme.of(context).colorScheme.error,
           ),
           label: Text(
             'Clear',
             style: TextStyle(
-              color: cartViewModel.cartItems.isEmpty ? Colors.grey : Colors.red,
+              color: cartViewModel.cartItems.isEmpty
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).colorScheme.error,
             ),
           ),
         ),
@@ -582,11 +655,15 @@ void showOutOfStockDialog(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, color: Colors.orange.shade700, size: 44),
+            Icon(
+              Icons.error_outline,
+              color: Theme.of(context).colorScheme.error,
+              size: 44,
+            ),
             const SizedBox(height: 5),
             Text(
               'Some items are out of stock',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             const SizedBox(height: 12),
             ...outOfStockItems.map(
@@ -615,7 +692,7 @@ void showOutOfStockDialog(
                 ),
                 subtitle: Text(
                   'Available: ${item.product?.stockQuantity ?? 0}',
-                  style: TextStyle(color: Colors.red),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ),
             ),
@@ -638,9 +715,11 @@ void showOutOfStockDialog(
                           proceedToCheckout(context, cartViewModel);
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content: Text('All items were out of stock'),
-                              backgroundColor: Colors.orange,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.error,
                             ),
                           );
                         }
@@ -648,13 +727,15 @@ void showOutOfStockDialog(
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Failed to remove items: $error'),
-                            backgroundColor: Colors.red,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.error,
                           ),
                         );
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.brown,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                     ),
                     child: const Text('Remove & Checkout'),
                   ),
@@ -678,9 +759,9 @@ void proceedToCheckout(BuildContext context, BuyerCartViewModel cartViewModel) {
 
   if (cartViewModel.cartItems.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text('Your cart is empty'),
-        backgroundColor: Colors.orange,
+        backgroundColor: Theme.of(context).colorScheme.error,
       ),
     );
     return;
@@ -689,10 +770,10 @@ void proceedToCheckout(BuildContext context, BuyerCartViewModel cartViewModel) {
   showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.white,
+    backgroundColor: Theme.of(context).colorScheme.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (_) => const CartCheckoutBottomSheet(),
+    builder: (_) => CartCheckoutBottomSheet(),
   );
 }

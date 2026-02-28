@@ -16,7 +16,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
 
   final List<OnboardingItem> _onboardingItems = [
-    OnboardingItem(title: "Giga Home", image: "assets/images/sofa.jpg"),
+    OnboardingItem(title: "GIGA Home", image: "assets/images/sofa.jpg"),
     OnboardingItem(title: "Quality Furniture", image: "assets/images/sofa.jpg"),
     OnboardingItem(
       title: "Explore Curated\nCollection",

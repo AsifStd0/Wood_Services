@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:wood_service/app/config.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_model.dart';
 
@@ -21,21 +22,53 @@ class AuthService {
     String role,
   ) async {
     try {
+      log(
+        '[RegisterSeller] AuthService.register started, role=$role',
+        name: 'RegisterSeller',
+      );
       // Create form data WITHOUT role initially
       final formDataMap = user.toFormData();
       formDataMap.removeWhere((key, value) => value == null);
 
-      // IMPORTANT: Add role as a field, not in files
+      // Seller: backend stores address in businessAddress; ensure we send it
+      if (role == 'seller') {
+        if (!formDataMap.containsKey('businessAddress') ||
+            formDataMap['businessAddress'] == null ||
+            formDataMap['businessAddress'].toString().trim().isEmpty) {
+          final addressVal =
+              user.address?.trim() ?? formDataMap['address']?.toString().trim();
+          if (addressVal != null && addressVal.isNotEmpty) {
+            formDataMap['businessAddress'] = addressVal;
+            if (kDebugMode) {
+              log(
+                '[RegisterSeller] Added businessAddress to form: $addressVal',
+                name: 'RegisterSeller',
+              );
+            }
+          }
+        }
+      }
+      if (role == 'buyer') {
+        if (!formDataMap.containsKey('businessAddress') ||
+            formDataMap['businessAddress'] == null ||
+            formDataMap['businessAddress'].toString().trim().isEmpty) {
+          final addressVal =
+              user.address?.trim() ?? formDataMap['address']?.toString().trim();
+          if (addressVal != null && addressVal.isNotEmpty) {
+            formDataMap['businessAddress'] = addressVal;
+          }
+        }
+      }
+
       final formData = FormData();
 
-      // Add all fields except role first
-      formDataMap.forEach((key, value) {
-        if (key != 'role') {
-          formData.fields.add(MapEntry(key, value.toString()));
+      // Add all fields except role
+      for (final entry in formDataMap.entries) {
+        if (entry.key != 'role' && entry.value != null) {
+          formData.fields.add(MapEntry(entry.key, entry.value.toString()));
         }
-      });
-
-      // Add role as a separate field
+      }
+      // Add role last
       formData.fields.add(MapEntry('role', role));
 
       // Add files
@@ -52,21 +85,6 @@ class AuthService {
         }
       }
 
-      // Debug log
-      log('📤 FormData created:');
-      log('   Fields count: ${formData.fields.length}');
-      log('   Files count: ${formData.files.length}');
-
-      // Log all fields to debug
-      for (final field in formData.fields) {
-        log('   Field: ${field.key} = ${field.value}');
-      }
-
-      // Log all files to debug
-      for (final file in formData.files) {
-        log('   File: ${file.key} = ${file.value.filename}');
-      }
-
       final response = await _dio.post(
         '/auth/register',
         data: formData,
@@ -79,6 +97,10 @@ class AuthService {
         ),
       );
 
+      log(
+        '[RegisterSeller] AuthService.register: API response received status=${response.statusCode}',
+        name: 'RegisterSeller',
+      );
       log('✅ API Response received');
       log('   Status: ${response.statusCode}');
       log('   Data: ${response.data}');
@@ -92,8 +114,16 @@ class AuthService {
       }
 
       // ✅ MUST RETURN HERE - This was missing!
+      log(
+        '[RegisterSeller] AuthService.register: returning success response',
+        name: 'RegisterSeller',
+      );
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
+      log(
+        '[RegisterSeller] AuthService.register: DioException - ${e.message}',
+        name: 'RegisterSeller',
+      );
       log('❌ Registration DioError:');
       log('   Type: ${e.type}');
       log('   Message: ${e.message}');
@@ -116,7 +146,15 @@ class AuthService {
       }
 
       throw errorMsg; // This is okay because it throws, doesn't return null
-    } catch (e) {
+    } catch (e, stackTrace) {
+      log(
+        '[RegisterSeller] AuthService.register: catch - $e',
+        name: 'RegisterSeller',
+      );
+      log(
+        '[RegisterSeller] AuthService.register: StackTrace - $stackTrace',
+        name: 'RegisterSeller',
+      );
       log('❌ Registration error: $e');
       throw 'Registration error: $e'; // This throws, doesn't return null
     }

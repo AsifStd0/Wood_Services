@@ -20,7 +20,6 @@ class ProductDetailScreen extends StatelessWidget {
     // Get cartViewModel from Provider
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: const CustomAppBar(title: 'Product Details'),
       body: Stack(
         children: [

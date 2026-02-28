@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wood_service/Responsive/responsive_context_extensions.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_text_style.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
@@ -109,7 +110,7 @@ Widget buildShopBrandingSection(BuildContext context) {
         image: viewModel.shopBanner,
         onTap: viewModel.pickShopBanner,
         onRemove: viewModel.clearShopBanner,
-        size: const Size(double.infinity, 120),
+        size: Size(double.infinity, context.h(160)),
         hintText: 'Upload Banner (1200x400 recommended)',
       ),
     ],
@@ -132,8 +133,11 @@ Widget buildImageUploader({
       GestureDetector(
         onTap: onTap,
         child: Container(
-          width: size.width,
+          width: size.width == double.infinity ? double.infinity : size.width,
           height: size.height,
+          constraints: size.width == double.infinity
+              ? BoxConstraints.expand(height: size.height)
+              : null,
           decoration: BoxDecoration(
             color: Colors.grey[100],
             borderRadius: BorderRadius.circular(12),
@@ -141,14 +145,20 @@ Widget buildImageUploader({
           ),
           child: image != null
               ? Stack(
+                  fit: StackFit.expand,
                   children: [
                     ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(image, fit: BoxFit.cover),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        image,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
                     ),
                     Positioned(
-                      top: 4,
-                      right: 4,
+                      top: 8,
+                      right: 8,
                       child: GestureDetector(
                         onTap: () {
                           if (onRemove != null) {
@@ -156,15 +166,15 @@ Widget buildImageUploader({
                           }
                         },
                         child: Container(
-                          padding: const EdgeInsets.all(4),
+                          padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
+                            color: Colors.black.withOpacity(0.7),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
                             Icons.close,
                             color: Colors.white,
-                            size: 16,
+                            size: 18,
                           ),
                         ),
                       ),
@@ -179,9 +189,17 @@ Widget buildImageUploader({
                           ? Icons.add_photo_alternate
                           : Icons.add_to_photos,
                       color: Colors.grey[400],
+                      size: 40,
                     ),
                     const SizedBox(height: 8),
-                    Text(hintText, style: const TextStyle(fontSize: 12)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        hintText,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ],
                 ),
         ),
@@ -306,21 +324,21 @@ Widget buildPhoneField(BuildContext context) {
     children: [
       CustomText('Contact Number *', type: CustomTextType.subtitleMedium),
       Padding(
-        padding: const EdgeInsets.only(top: 4, bottom: 12),
+        padding: EdgeInsets.only(top: context.h(4), bottom: context.h(12)),
         child: CustomTextFormField(
           prefixIcon: CountryCodePicker(
             onChanged: (CountryCode countryCode) {
-              viewModel.countryCode = countryCode.dialCode ?? '+1';
+              viewModel.countryCode = countryCode.dialCode ?? '+966';
             },
-            initialSelection: 'US',
-            favorite: const ['+1', 'US'],
+            initialSelection: 'SA', // Saudi Arabia
+            favorite: const ['+966', 'SA', '+1', 'US'], // Saudi Arabia, USA
             showCountryOnly: false,
             showOnlyCountryWhenClosed: false,
             alignLeft: false,
             showFlag: true,
             showFlagDialog: true,
             padding: EdgeInsets.zero,
-            textStyle: const TextStyle(fontSize: 14),
+            textStyle: TextStyle(fontSize: context.sp(14)),
           ),
           controller: viewModel.phoneController,
           hintText: 'Enter your phone number',
@@ -440,7 +458,8 @@ Widget buildDocumentUploader(
         onTap: () => viewModel.pickDocument(documentType),
         child: Container(
           width: double.infinity,
-          height: 100,
+          height: 120,
+          constraints: const BoxConstraints.expand(height: 120),
           decoration: BoxDecoration(
             color: Colors.grey[100],
             borderRadius: BorderRadius.circular(12),
@@ -448,26 +467,32 @@ Widget buildDocumentUploader(
           ),
           child: file != null
               ? Stack(
+                  fit: StackFit.expand,
                   children: [
                     ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(file, fit: BoxFit.cover),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        file,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
                     ),
                     Positioned(
-                      top: 4,
-                      right: 4,
+                      top: 8,
+                      right: 8,
                       child: GestureDetector(
                         onTap: () => viewModel.clearDocument(documentType),
                         child: Container(
-                          padding: const EdgeInsets.all(4),
+                          padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
+                            color: Colors.black.withOpacity(0.7),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
                             Icons.close,
                             color: Colors.white,
-                            size: 16,
+                            size: 18,
                           ),
                         ),
                       ),
@@ -477,12 +502,32 @@ Widget buildDocumentUploader(
               : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.upload_file, color: Colors.grey[400], size: 30),
+                    Icon(Icons.upload_file, color: Colors.grey[400], size: 40),
                     const SizedBox(height: 8),
-                    Text('Upload $title', style: const TextStyle(fontSize: 12)),
-                    Text(
-                      'Image or PDF',
-                      style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Upload $title',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Image or PDF',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey[500],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -520,11 +565,11 @@ Widget buildDocumentsSection(BuildContext context) {
   );
 }
 
-Widget buildHeader() {
+Widget buildHeader(BuildContext context) {
   return Padding(
-    padding: const EdgeInsets.only(top: 20, bottom: 5),
+    padding: EdgeInsets.only(top: context.h(20), bottom: context.h(5)),
     child: CustomText(
-      'Start Your Furniture Business with Giga Home',
+      'Start Your Furniture Business with GIGA Home',
       type: CustomTextType.headingLittleLarge,
     ),
   );

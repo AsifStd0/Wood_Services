@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
@@ -84,43 +85,42 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
         );
       },
       child: SafeArea(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
+        child: Builder(
+          builder: (context) {
+            final theme = Theme.of(context);
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.shadowColor.withOpacity(0.15),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Compact price row
-              Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'Total :  ',
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
                         '\$${cartViewModel.total.toStringAsFixed(2)}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
-                          color: Colors.brown,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -132,7 +132,7 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
                               : () => proceedToCheckout(context, cartViewModel),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: cartViewModel.cartItems.isEmpty
-                                ? Colors.grey
+                                ? Theme.of(context).colorScheme.onSurface
                                 : AppColors.brightOrange,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -143,6 +143,9 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
                             cartViewModel.cartItems.isEmpty
                                 ? 'Cart Empty'
                                 : 'Proceed to Checkout',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
                           ),
                         ),
                       ),
@@ -150,8 +153,8 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
                   ),
                 ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -160,11 +163,13 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: const CustomAppBar(title: 'My Cart', showBackButton: false),
+      appBar: CustomAppBar(
+        title: 'My Cart',
+        showBackButton: false,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+      ),
       body: Consumer<BuyerCartViewModel>(
         builder: (context, cartViewModel, child) {
-          // Update sheet animation based on cart items
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (cartViewModel.cartItems.isNotEmpty &&
                 _sheetController.status != AnimationStatus.forward) {
@@ -176,13 +181,6 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
           });
 
           return _buildBody(cartViewModel);
-        },
-      ),
-      bottomSheet: Consumer<BuyerCartViewModel>(
-        builder: (context, cartViewModel, child) {
-          return cartViewModel.cartItems.isNotEmpty
-              ? _buildCheckoutSheet(cartViewModel)
-              : const SizedBox.shrink();
         },
       ),
     );
@@ -209,6 +207,7 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
             onRefresh: () => cartViewModel.refreshCart(),
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(bottom: 16),
               itemCount: cartViewModel.cartItems.length,
               itemBuilder: (context, index) => buildCartItemCard(
                 context,
@@ -218,6 +217,8 @@ class _BuyerCartScreenState extends State<BuyerCartScreen>
             ),
           ),
         ),
+        // Checkout bar inside body so list scrolls in the space above it (no overflow)
+        if (cartViewModel.cartItems.isNotEmpty) _buildCheckoutSheet(cartViewModel),
       ],
     );
   }

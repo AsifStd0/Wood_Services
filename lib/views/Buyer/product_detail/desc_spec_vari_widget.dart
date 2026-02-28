@@ -29,12 +29,11 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
 
     return Column(
       children: [
-        // Tab Headers
         Row(
           children: [
-            _buildTab('Description', 0),
-            _buildTab('Specifications', 1),
-            _buildTab('Variants', 2),
+            _buildTab(context, 'Description', 0),
+            _buildTab(context, 'Specifications', 1),
+            _buildTab(context, 'Variants', 2),
           ],
         ),
         const SizedBox(height: 16),
@@ -45,7 +44,9 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
     );
   }
 
-  Widget _buildTab(String title, int index) {
+  Widget _buildTab(BuildContext context, String title, int index) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isSelected = _selectedTab == index;
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -58,7 +59,9 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: _selectedTab == index ? Colors.blue : Colors.transparent,
+                color: isSelected
+                    ? colorScheme.primary
+                    : Colors.transparent.withOpacity(0),
                 width: 2,
               ),
             ),
@@ -67,10 +70,10 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
             title,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontWeight: _selectedTab == index
-                  ? FontWeight.bold
-                  : FontWeight.normal,
-              color: _selectedTab == index ? Colors.blue : Colors.grey,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
               fontSize: 12,
             ),
           ),
@@ -85,16 +88,17 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
   ) {
     switch (_selectedTab) {
       case 0: // Description
-        return _buildDescriptionTab();
+        return _buildDescriptionTab(context);
 
       case 1: // Specifications
-        return _buildSpecificationsTab(widget.product);
+        return _buildSpecificationsTab(context, widget.product);
 
       case 2: // Variants
         return _buildVariantsTab(
           cartViewModel,
           selectedVariant,
           widget.product,
+          context,
         );
 
       default:
@@ -103,23 +107,22 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
   }
 
   // ========== DESCRIPTION TAB (Using your model data) ==========
-  Widget _buildDescriptionTab() {
+  Widget _buildDescriptionTab(BuildContext context) {
     final shortDescription = widget.product.shortDescription.trim();
     final longDescription = widget.product.longDescription.trim();
 
-    // Check if both descriptions are empty
     if (shortDescription.isEmpty && longDescription.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey[50],
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
           child: Text(
             'No description available',
             style: TextStyle(
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -131,7 +134,7 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
       padding: EdgeInsets.symmetric(horizontal: 10),
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -145,14 +148,14 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[800],
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             Text(
               shortDescription,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[700],
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 height: 1.6,
               ),
             ),
@@ -166,7 +169,7 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[800],
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             _buildFormattedText(longDescription),
@@ -179,7 +182,7 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[800],
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             Wrap(
@@ -192,13 +195,22 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.blue[50],
+                    color: Theme.of(context).colorScheme.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.blue[100]!),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.1),
+                    ),
                   ),
                   child: Text(
                     '#$tag',
-                    style: TextStyle(fontSize: 12, color: Colors.blue[700]),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.7),
+                    ),
                   ),
                 );
               }).toList(),
@@ -228,14 +240,20 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.circle, size: 6, color: Colors.grey[600]),
+              Icon(
+                Icons.circle,
+                size: 6,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   trimmedLine.substring(2).trim(),
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey[700],
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
                     height: 1.6,
                   ),
                 ),
@@ -256,7 +274,9 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
                     '${match.group(1)}.',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[700],
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -265,7 +285,9 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
                       match.group(2)!,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[700],
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
                         height: 1.6,
                       ),
                     ),
@@ -283,7 +305,7 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
             trimmedLine,
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[700],
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               height: 1.6,
             ),
           ),
@@ -294,7 +316,7 @@ class _ProductTabsSectionState extends State<ProductTabsSection> {
 }
 
 // ========== SPECIFICATIONS TAB (Using your model data) ==========
-Widget _buildSpecificationsTab(product) {
+Widget _buildSpecificationsTab(BuildContext context, product) {
   final dimensions = product.dimensions;
   final weight = product.weight;
   final dimensionSpec = product.dimensionSpec;
@@ -313,14 +335,14 @@ Widget _buildSpecificationsTab(product) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Center(
         child: Text(
           'No specifications available',
           style: TextStyle(
-            color: Colors.grey[600],
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             fontStyle: FontStyle.italic,
           ),
         ),
@@ -342,7 +364,7 @@ Widget _buildSpecificationsTab(product) {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.grey[800],
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 16),
@@ -379,7 +401,7 @@ Widget _buildSpecificationsTab(product) {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[700],
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
@@ -555,12 +577,13 @@ Widget _buildVariantsTab(
   BuyerCartViewModel cartViewModel,
   String? selectedVariant,
   BuyerProductModel product,
+  BuildContext context,
 ) {
   if (product.variants.isEmpty) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Center(
@@ -571,14 +594,17 @@ Widget _buildVariantsTab(
             Text(
               'No variants available',
               style: TextStyle(
-                color: Colors.grey[600],
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 fontStyle: FontStyle.italic,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'This product comes in standard configuration only',
-              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -598,21 +624,21 @@ Widget _buildVariantsTab(
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[800],
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.blue[50],
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               '${product.variants.length} options',
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.blue[700],
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -628,7 +654,9 @@ Widget _buildVariantsTab(
           children: product.variantTypes.map((type) {
             return Chip(
               label: Text(type, style: const TextStyle(fontSize: 12)),
-              backgroundColor: Colors.grey[100],
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerLow,
             );
           }).toList(),
         ),
@@ -647,7 +675,9 @@ Widget _buildVariantsTab(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
             side: BorderSide(
-              color: isSelected ? Colors.blue : Colors.grey[200]!,
+              color: isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.surfaceContainerLow,
               width: isSelected ? 2 : 1,
             ),
           ),
@@ -656,17 +686,25 @@ Widget _buildVariantsTab(
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: isSelected ? Colors.blue[50] : Colors.grey[50],
+                color: isSelected
+                    ? Theme.of(context).colorScheme.surfaceContainerLow
+                    : Theme.of(context).colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: isSelected ? Colors.blue : Colors.grey[300]!,
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.surfaceContainerLow,
                 ),
               ),
               child: Center(
                 child: Text(
                   variant.type[0].toUpperCase(),
                   style: TextStyle(
-                    color: isSelected ? Colors.blue : Colors.grey[600],
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.6),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -676,7 +714,9 @@ Widget _buildVariantsTab(
               '${variant.type}: ${variant.name}',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.blue : Colors.grey[800],
+                color: isSelected
+                    ? Theme.of(context).colorScheme.onSurface
+                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
             subtitle: Column(
@@ -686,7 +726,9 @@ Widget _buildVariantsTab(
                 Text(
                   isVariantInStock ? '$variantStock in stock' : 'Out of stock',
                   style: TextStyle(
-                    color: isVariantInStock ? Colors.green : Colors.red,
+                    color: isVariantInStock
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.error,
                     fontSize: 12,
                   ),
                 ),
@@ -700,7 +742,7 @@ Widget _buildVariantsTab(
                         : 'Discount: -\$${(variant.priceAdjustment * -1).toStringAsFixed(2)}',
                     style: TextStyle(
                       color: variant.priceAdjustment > 0
-                          ? Colors.red
+                          ? Theme.of(context).colorScheme.error
                           : Colors.green,
                       fontSize: 12,
                     ),
@@ -713,13 +755,21 @@ Widget _buildVariantsTab(
               children: [
                 // Selection indicator
                 if (isSelected)
-                  Icon(Icons.check_circle_rounded, color: Colors.green),
+                  Icon(
+                    Icons.check_circle_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
 
                 // SKU if available
                 if (variant.sku != null && variant.sku!.isNotEmpty)
                   Text(
                     variant.sku!,
-                    style: const TextStyle(fontSize: 10, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
+                    ),
                   ),
               ],
             ),
@@ -738,13 +788,18 @@ Widget _buildVariantsTab(
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.green[50],
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.green[100]!),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
+            ),
           ),
           child: Row(
             children: [
-              Icon(Icons.check_circle_rounded, color: Colors.green),
+              Icon(
+                Icons.check_circle_rounded,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -754,13 +809,18 @@ Widget _buildVariantsTab(
                       'Variant selected',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[800],
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Price will be adjusted accordingly',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
+                      ),
                     ),
                   ],
                 ),
@@ -769,7 +829,12 @@ Widget _buildVariantsTab(
                 onPressed: () {
                   cartViewModel.updateVariant(null);
                 },
-                child: const Text('Clear'),
+                child: Text(
+                  'Clear',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
               ),
             ],
           ),

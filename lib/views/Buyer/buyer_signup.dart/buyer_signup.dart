@@ -1,13 +1,16 @@
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wood_service/Responsive/responsive_context_extensions.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_text_style.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
+import 'package:wood_service/widgets/custom_appbar.dart';
 import 'package:wood_service/widgets/custom_button.dart';
 import 'package:wood_service/widgets/custom_text_style.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
 
+// ignore: must_be_immutable
 class BuyerSignupScreen extends StatefulWidget {
   String role;
   BuyerSignupScreen({super.key, required this.role});
@@ -20,19 +23,18 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
   // Add this to both SellerSignupScreen and BuyerSignupScreen
 
   @override
-  void dispose() {
-    // Clear form when screen is disposed (when user navigates away)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final viewModel = context.read<RegisterViewModel>();
-      viewModel.clearForm();
-    });
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: CustomAppBar(
+        title: 'Buyer Signup',
+        fontSize: context.sp(22),
+        backgroundColor: AppColors.brightOrange,
+        showBackButton: true,
+        onBackPressed: () {
+          Navigator.of(context).pop();
+        },
+      ),
       body: SafeArea(
         child: Consumer<RegisterViewModel>(
           builder: (context, viewModel, child) {
@@ -43,29 +45,48 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
                     /// Scrollable content
                     Expanded(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Header Section
-                            _buildHeaderSection(),
-                            const SizedBox(height: 20),
+                        padding: context.paddingAll(
+                          context.responsiveValue(
+                            mobile: 24,
+                            tablet: 40,
+                            desktop: 60,
+                          ),
+                        ),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: context.responsiveValue(
+                              mobile: double.infinity,
+                              tablet: 700,
+                              desktop: 900,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header Section
+                              _buildHeaderSection(context),
+                              SizedBox(height: context.h(20)),
 
-                            // Profile Image Section
-                            _buildProfileImageSection(viewModel),
-                            const SizedBox(height: 20),
+                              // Profile Image Section
+                              _buildProfileImageSection(context, viewModel),
+                              SizedBox(height: context.h(20)),
 
-                            // Personal Information Section
-                            _buildPersonalInfoSection(viewModel),
-                            const SizedBox(height: 20),
+                              // Personal Information Section
+                              _buildPersonalInfoSection(context, viewModel),
+                              SizedBox(height: context.h(20)),
 
-                            // Business Information Section
-                            _buildBusinessInfoSection(viewModel),
-                            const SizedBox(height: 20),
+                              // Business Information Section
+                              _buildBusinessInfoSection(context, viewModel),
+                              SizedBox(height: context.h(20)),
 
-                            // Submit Button
-                            _buildSubmitButton(viewModel, widget.role),
-                          ],
+                              // Submit Button
+                              _buildSubmitButton(
+                                context,
+                                viewModel,
+                                widget.role,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -85,10 +106,13 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
                               AppColors.brightOrange,
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: context.h(16)),
                           Text(
                             'Registering...',
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: context.sp(14),
+                            ),
                           ),
                         ],
                       ),
@@ -102,43 +126,48 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
     );
   }
 
-  Widget _buildHeaderSection() {
+  Widget _buildHeaderSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 20, bottom: 5),
+          padding: context.paddingOnly(
+            top: context.h(20),
+            bottom: context.h(5),
+          ),
           child: Text(
             'Buyer Registration',
             style: AppCustomTextStyle.headlineMedium(context).copyWith(
               color: AppColors.brightOrange,
               fontWeight: FontWeight.bold,
+              fontSize: context.sp(24),
             ),
           ),
         ),
         CustomText(
           'Complete your profile to start buying',
-          fontSize: 14,
+          fontSize: context.sp(14),
           color: AppColors.grayMedium,
         ),
       ],
     );
   }
 
-  Widget _buildProfileImageSection(RegisterViewModel viewModel) {
+  Widget _buildProfileImageSection(
+    BuildContext context,
+    RegisterViewModel viewModel,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CustomText('Profile Picture', type: CustomTextType.subtitleMedium),
-        const SizedBox(height: 8),
+        SizedBox(height: context.h(8)),
         Center(
           child: GestureDetector(
-            onTap: () => viewModel.pickImage(
-              'profile',
-            ), // Use RegisterViewModel's method
+            onTap: () => viewModel.pickImage('profile'),
             child: Container(
-              width: 120,
-              height: 120,
+              width: context.w(120),
+              height: context.h(120),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.greyLight,
@@ -152,23 +181,23 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
                       child: Image.file(
                         viewModel.profileImage!,
                         fit: BoxFit.cover,
-                        width: 120,
-                        height: 120,
+                        width: context.w(120),
+                        height: context.h(120),
                       ),
                     )
                   : Icon(
                       Icons.camera_alt_outlined,
-                      size: 40,
+                      size: context.sp(40),
                       color: AppColors.grayMedium,
                     ),
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: context.h(8)),
         Center(
           child: CustomText(
             'Tap to upload profile picture',
-            fontSize: 12,
+            fontSize: context.sp(12),
             color: AppColors.grayMedium,
           ),
         ),
@@ -176,24 +205,30 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
     );
   }
 
-  Widget _buildPersonalInfoSection(RegisterViewModel viewModel) {
+  Widget _buildPersonalInfoSection(
+    BuildContext context,
+    RegisterViewModel viewModel,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CustomText(
           'Personal Information',
-          fontSize: 18,
+          fontSize: context.sp(18),
           fontWeight: FontWeight.bold,
           color: AppColors.brightOrange,
         ),
-        const SizedBox(height: 15),
+        SizedBox(height: context.h(15)),
 
         // Full Name Field - Using RegisterViewModel
         CustomText('Full Name *', type: CustomTextType.subtitleMedium),
         Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
+          padding: context.paddingOnly(
+            top: context.h(4),
+            bottom: context.h(12),
+          ),
           child: CustomTextFormField(
-            controller: viewModel.nameController, // Use viewModel's controller
+            controller: viewModel.nameController,
             validator: (value) => value?.isEmpty == true ? 'Required' : null,
             hintText: 'e.g. John Doe',
           ),
@@ -202,9 +237,12 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
         // Email Field - Using RegisterViewModel
         CustomText('Email Address *', type: CustomTextType.subtitleMedium),
         Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
+          padding: context.paddingOnly(
+            top: context.h(4),
+            bottom: context.h(12),
+          ),
           child: CustomTextFormField(
-            controller: viewModel.emailController, // Use viewModel's controller
+            controller: viewModel.emailController,
             validator: (value) {
               if (value?.isEmpty == true) return 'Required';
               if (!value!.contains('@')) return 'Invalid email';
@@ -218,10 +256,12 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
         // Password Field - Using RegisterViewModel
         CustomText('Password *', type: CustomTextType.subtitleMedium),
         Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
+          padding: context.paddingOnly(
+            top: context.h(4),
+            bottom: context.h(12),
+          ),
           child: CustomTextFormField(
-            controller:
-                viewModel.passwordController, // Use viewModel's controller
+            controller: viewModel.passwordController,
             validator: (value) {
               if (value?.isEmpty == true) return 'Required';
               if (value!.length < 6) return 'At least 6 characters';
@@ -236,8 +276,7 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
                     : Icons.visibility,
                 color: AppColors.grayMedium,
               ),
-              onPressed:
-                  viewModel.togglePasswordVisibility, // Use viewModel's method
+              onPressed: viewModel.togglePasswordVisibility,
             ),
           ),
         ),
@@ -245,10 +284,12 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
         // Confirm Password Field - Using RegisterViewModel
         CustomText('Confirm Password *', type: CustomTextType.subtitleMedium),
         Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
+          padding: context.paddingOnly(
+            top: context.h(4),
+            bottom: context.h(12),
+          ),
           child: CustomTextFormField(
-            controller: viewModel
-                .confirmPasswordController, // Use viewModel's controller
+            controller: viewModel.confirmPasswordController,
             validator: (value) {
               if (value?.isEmpty == true) return 'Required';
               if (value != viewModel.passwordController.text) {
@@ -265,8 +306,7 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
                     : Icons.visibility,
                 color: AppColors.grayMedium,
               ),
-              onPressed: viewModel
-                  .toggleConfirmPasswordVisibility, // Use viewModel's method
+              onPressed: viewModel.toggleConfirmPasswordVisibility,
             ),
           ),
         ),
@@ -274,7 +314,10 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
     );
   }
 
-  Widget _buildBusinessInfoSection(RegisterViewModel viewModel) {
+  Widget _buildBusinessInfoSection(
+    BuildContext context,
+    RegisterViewModel viewModel,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -283,21 +326,29 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
           children: [
             CustomText('Contact Number *', type: CustomTextType.subtitleMedium),
             Padding(
-              padding: const EdgeInsets.only(top: 4, bottom: 12),
+              padding: context.paddingOnly(
+                top: context.h(4),
+                bottom: context.h(12),
+              ),
               child: CustomTextFormField(
                 prefixIcon: CountryCodePicker(
                   onChanged: (CountryCode countryCode) {
-                    viewModel.countryCode = countryCode.dialCode ?? '+1';
+                    viewModel.countryCode = countryCode.dialCode ?? '+966';
                   },
-                  initialSelection: 'US',
-                  favorite: const ['+1', 'US'],
+                  initialSelection: 'SA', // Saudi Arabia
+                  favorite: const [
+                    '+966',
+                    'SA',
+                    '+1',
+                    'US',
+                  ], // Saudi Arabia, USA
                   showCountryOnly: false,
                   showOnlyCountryWhenClosed: false,
                   alignLeft: false,
                   showFlag: true,
                   showFlagDialog: true,
                   padding: EdgeInsets.zero,
-                  textStyle: const TextStyle(fontSize: 14),
+                  textStyle: TextStyle(fontSize: context.sp(14)),
                 ),
                 controller: viewModel.phoneController,
                 hintText: 'Enter your phone number',
@@ -308,11 +359,11 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
         ),
         CustomText(
           'Business Information (Optional)',
-          fontSize: 18,
+          fontSize: context.sp(18),
           fontWeight: FontWeight.bold,
           color: AppColors.brightOrange,
         ),
-        const SizedBox(height: 15),
+        SizedBox(height: context.h(15)),
 
         // Business Name Field - Optional for buyer
         CustomText(
@@ -320,9 +371,12 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
           type: CustomTextType.subtitleMedium,
         ),
         Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
+          padding: context.paddingOnly(
+            top: context.h(4),
+            bottom: context.h(12),
+          ),
           child: CustomTextFormField(
-            controller: viewModel.businessNameController, // Optional for buyer
+            controller: viewModel.businessNameController,
             hintText: 'e.g. Modern Design Co.',
           ),
         ),
@@ -330,11 +384,13 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
         // Address Field - Optional for buyer
         CustomText('Address *', type: CustomTextType.subtitleMedium),
         Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
+          padding: context.paddingOnly(
+            top: context.h(4),
+            bottom: context.h(12),
+          ),
           child: CustomTextFormField(
-            controller: viewModel.addressController, // Optional for buyer
+            controller: viewModel.businessAddressController,
             hintText: 'Enter your full address',
-
             validator: (value) => value?.isEmpty == true ? 'Required' : null,
           ),
         ),
@@ -346,10 +402,12 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
         ),
 
         Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
+          padding: context.paddingOnly(
+            top: context.h(4),
+            bottom: context.h(12),
+          ),
           child: CustomTextFormField(
-            controller:
-                viewModel.businessDescriptionController, // Optional for buyer
+            controller: viewModel.businessDescriptionController,
             minline: 4,
             maxLines: 4,
             hintText: 'A little about your business...',
@@ -359,27 +417,34 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
     );
   }
 
-  Widget _buildSubmitButton(RegisterViewModel viewModel, String role) {
+  Widget _buildSubmitButton(
+    BuildContext context,
+    RegisterViewModel viewModel,
+    String role,
+  ) {
     // Show error message if exists
     Widget? errorWidget;
     if (viewModel.errorMessage != null) {
       errorWidget = Padding(
-        padding: const EdgeInsets.only(bottom: 16),
+        padding: EdgeInsets.only(bottom: context.h(16)),
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: context.paddingAll(12),
           decoration: BoxDecoration(
             color: Colors.red[50],
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: context.borderRadius(8),
             border: Border.all(color: Colors.red),
           ),
           child: Row(
             children: [
               Icon(Icons.error_outline, color: Colors.red[800]),
-              const SizedBox(width: 8),
+              SizedBox(width: context.w(8)),
               Expanded(
                 child: Text(
                   viewModel.errorMessage!,
-                  style: TextStyle(color: Colors.red[800]),
+                  style: TextStyle(
+                    color: Colors.red[800],
+                    fontSize: context.sp(14),
+                  ),
                 ),
               ),
             ],
@@ -390,12 +455,21 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
     return Column(
       children: [
         if (errorWidget != null) errorWidget,
-        CustomButtonUtils.login(
-          title: 'Complete Registration',
-          backgroundColor: AppColors.brightOrange,
-          onPressed: viewModel.isLoading
-              ? null
-              : () => viewModel.handleSubmission(context, role),
+        // Hide button's loading state completely - only show overlay
+        Opacity(
+          opacity: viewModel.isLoading ? 0.6 : 1.0,
+          child: IgnorePointer(
+            ignoring: viewModel.isLoading,
+            child: CustomButtonUtils.login(
+              title: 'Complete Registration',
+              backgroundColor: AppColors.brightOrange,
+              isLoading: false, // Never show button's loading indicator
+              disabled: false, // Let opacity handle visual state
+              onPressed: viewModel.isLoading
+                  ? null
+                  : () => viewModel.handleSubmission(context, role),
+            ),
+          ),
         ),
       ],
     );

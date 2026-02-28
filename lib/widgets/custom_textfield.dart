@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/utils/debouncer.dart';
 
 enum TextFieldType {
@@ -230,6 +229,7 @@ class CustomTextFormField extends StatelessWidget {
     // FIXED: For dialog fields, use simple TextFormField without wrappers
     if (isDialogField) {
       return TextFormField(
+        // color
         controller: controller,
         focusNode: focusNode,
         onChanged: onChanged,
@@ -239,7 +239,7 @@ class CustomTextFormField extends StatelessWidget {
         obscureText: obscureText ?? false,
         style: theme.textTheme.bodyMedium?.copyWith(
           fontSize: 14,
-          color: Colors.black,
+          color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.w400,
         ),
         inputFormatters: inputFormatters ?? [],
@@ -257,7 +257,7 @@ class CustomTextFormField extends StatelessWidget {
 
           isDense: true, // THIS FIXES THE HEIGHT
           filled: fillcolor != null,
-          fillColor: fillcolor ?? AppColors.white,
+          fillColor: fillcolor ?? Theme.of(context).colorScheme.surface,
           contentPadding: effectiveContentPadding,
           hintText: hintText,
           hintStyle: theme.textTheme.bodyMedium!.copyWith(
@@ -267,29 +267,35 @@ class CustomTextFormField extends StatelessWidget {
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide(
-              color: AppColors.grey.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               width: 1,
             ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide(
-              color: AppColors.grey.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               width: 1,
             ),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.error, width: 1.0),
+            borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.error,
+              width: 1.0,
+            ),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+            borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.error,
+              width: 1.5,
+            ),
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide(
-              color: AppColors.grey.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               width: 1,
             ),
           ),
@@ -321,7 +327,7 @@ class CustomTextFormField extends StatelessWidget {
               obscureText: obscureText ?? false,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontSize: isCompact ? 14 : 15,
-                color: Colors.black,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w400,
               ),
               inputFormatters: inputFormatters ?? [],
@@ -334,7 +340,7 @@ class CustomTextFormField extends StatelessWidget {
               decoration: InputDecoration(
                 isDense: true, // Added this
                 filled: true,
-                fillColor: fillcolor ?? AppColors.white,
+                fillColor: fillcolor ?? Theme.of(context).colorScheme.surface,
                 contentPadding: effectiveContentPadding,
                 hintText: hintText,
                 hintStyle: theme.textTheme.bodyMedium!.copyWith(
@@ -346,28 +352,32 @@ class CustomTextFormField extends StatelessWidget {
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(isCompact ? 10 : 12),
                   borderSide: BorderSide(
-                    color: AppColors.grey.withOpacity(0.6),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
                     width: 1,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(isCompact ? 10 : 12),
                   borderSide: BorderSide(
-                    color: AppColors.grey.withOpacity(0.6),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
                     width: 1,
                   ),
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(isCompact ? 10 : 12),
-                  borderSide: const BorderSide(
-                    color: AppColors.error,
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.error,
                     width: 1.0,
                   ),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(isCompact ? 10 : 12),
-                  borderSide: const BorderSide(
-                    color: AppColors.error,
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.error,
                     width: 1.5,
                   ),
                 ),
@@ -400,7 +410,9 @@ class CustomTextFormField extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(isCompact ? 10 : 12),
                   borderSide: BorderSide(
-                    color: AppColors.grey.withOpacity(0.6),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
                     width: 1,
                   ),
                 ),
@@ -412,7 +424,7 @@ class CustomTextFormField extends StatelessWidget {
                 child: Text(
                   fieldState.errorText!,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.error,
+                    color: Theme.of(context).colorScheme.error,
                     fontSize: 12,
                   ),
                 ),
@@ -435,6 +447,7 @@ class CustomTextFormField extends StatelessWidget {
     String? Function(String?)? validator,
     Widget? suffixIcon, // ADD THIS
     bool? obscureText, // ADD THIS
+    required BuildContext context,
   }) {
     return CustomTextFormField(
       key: key,
@@ -448,7 +461,11 @@ class CustomTextFormField extends StatelessWidget {
       obscureText: obscureText ?? true, // USE PROVIDED VALUE OR DEFAULT TO TRUE
       validate: validate,
       validator: validator,
-      prefixIcon: Icon(Icons.lock_outline, color: AppColors.grey, size: 20),
+      prefixIcon: Icon(
+        Icons.lock_outline,
+        color: Theme.of(context).colorScheme.onSurface,
+        size: 20,
+      ),
       suffixIcon: suffixIcon, // PASS THE SUFFIX ICON
     );
   }
@@ -464,6 +481,7 @@ class CustomTextFormField extends StatelessWidget {
     bool enabled = true,
     bool validate = true,
     String? Function(String?)? validator,
+    required BuildContext context,
   }) {
     return CustomTextFormField(
       key: key,
@@ -476,7 +494,11 @@ class CustomTextFormField extends StatelessWidget {
       enabled: enabled,
       validate: validate,
       validator: validator,
-      prefixIcon: Icon(Icons.email_outlined, color: AppColors.grey, size: 20),
+      prefixIcon: Icon(
+        Icons.email_outlined,
+        color: Theme.of(context).colorScheme.onSurface,
+        size: 20,
+      ),
     );
   }
 

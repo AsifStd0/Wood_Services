@@ -309,7 +309,8 @@ Future<bool> updateUserProfile(Map<String, dynamic> updates) async {
     final currentUser = storage.getUserModel();
 
     if (currentUser != null) {
-      final updatedUser = currentUser.copyWith(
+      final updatedUser = UserModel(
+        id: currentUser.id,
         name: updates['name'] ?? currentUser.name,
         email: updates['email'] ?? currentUser.email,
         phone: updates['phone'] ?? currentUser.phone,
@@ -324,6 +325,13 @@ Future<bool> updateUserProfile(Map<String, dynamic> updates) async {
         profileImage: updates['profileImage'] ?? currentUser.profileImage,
         shopLogo: updates['shopLogo'] ?? currentUser.shopLogo,
         shopBanner: updates['shopBanner'] ?? currentUser.shopBanner,
+        businessLicense:
+            updates['businessLicense'] ?? currentUser.businessLicense,
+        taxCertificate: updates['taxCertificate'] ?? currentUser.taxCertificate,
+        identityProof: updates['identityProof'] ?? currentUser.identityProof,
+        role: currentUser.role,
+        isActive: currentUser.isActive,
+        isVerified: currentUser.isVerified,
       );
 
       await storage.saveUserModel(updatedUser);
@@ -367,8 +375,6 @@ bool isProfileComplete() {
         user.shopName!.isNotEmpty &&
         user.businessLicense != null &&
         user.businessLicense!.isNotEmpty;
-  } else if (user.isAdmin) {
-    return true; // Admins might not need extra fields
   }
 
   return false;

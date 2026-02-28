@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/app/index.dart';
+import 'package:wood_service/Responsive/responsive_context_extensions.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/core/theme/app_text_style.dart';
 import 'package:wood_service/views/Buyer/forgot_password/forgot_password.dart';
-import 'package:wood_service/views/Buyer/login.dart/buyer_login_screen.dart';
 import 'package:wood_service/views/Seller/data/registration_data/register_viewmodel.dart';
 import 'package:wood_service/views/Seller/signup.dart/seller_signup.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
@@ -99,18 +98,6 @@ class _SellerLoginState extends State<SellerLogin>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Login'),
-        centerTitle: true,
-        backgroundColor: AppColors.brightOrange,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-        ),
-      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -120,50 +107,103 @@ class _SellerLoginState extends State<SellerLogin>
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                vertical: 28.0,
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
-                child: Stack(
-                  children: [
-                    // Main content
-                    SlideTransition(
-                      position: _slideAnim,
-                      child: FadeTransition(
-                        opacity: _fadeAnim,
-                        child: _buildCard(context),
+          child: Stack(
+            children: [
+              // Main content
+              Center(
+                child: SingleChildScrollView(
+                  padding: context.paddingSym(
+                    horizontal: context.responsiveValue(
+                      mobile: 20,
+                      tablet: 40,
+                      desktop: 60,
+                    ),
+                    vertical: context.h(28),
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: context.responsiveValue(
+                        mobile: double.infinity,
+                        tablet: 520,
+                        desktop: 600,
                       ),
                     ),
-
-                    // Bottom signup text
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 14.0),
-                        child: AuthBottomText(
-                          questionText: "Don't have an account? ",
-                          actionText: "Sign Up",
-                          onPressed: () {
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    SellerSignupScreen(role: widget.role),
-                              ),
-                            );
-                          },
+                    child: Stack(
+                      children: [
+                        // Main content
+                        SlideTransition(
+                          position: _slideAnim,
+                          child: FadeTransition(
+                            opacity: _fadeAnim,
+                            child: _buildCard(context),
+                          ),
                         ),
-                      ),
+
+                        // Bottom signup text
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: context.h(14),
+                            ),
+                            child: AuthBottomTextData(
+                              questionText: "Don't have an account? ",
+                              actionText: "Sign Up",
+                              onPressed: () {
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        SellerSignupScreen(role: widget.role),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+
+              // Custom back button in top-left corner
+              Positioned(
+                top: context.h(16),
+                left: context.w(16),
+                child: _buildBackButton(context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackButton(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => Navigator.of(context).pop(),
+        borderRadius: BorderRadius.circular(context.r(12)),
+        child: Container(
+          padding: context.paddingAll(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(context.r(12)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: Offset(0, context.h(2)),
+              ),
+            ],
+          ),
+          child: Icon(
+            Icons.arrow_back_ios_new,
+            size: context.sp(20),
+            color: AppColors.brightOrange,
           ),
         ),
       ),
@@ -175,12 +215,13 @@ class _SellerLoginState extends State<SellerLogin>
       builder: (context, viewModel, child) {
         return Card(
           elevation: 18,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: context.borderRadius(16)),
           shadowColor: Colors.black.withOpacity(0.06),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 56),
+            padding: context.paddingSym(
+              horizontal: context.w(22),
+              vertical: context.h(56),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -189,8 +230,8 @@ class _SellerLoginState extends State<SellerLogin>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
-                      height: 54,
-                      width: 54,
+                      height: context.h(54),
+                      width: context.w(54),
                       decoration: BoxDecoration(
                         color: AppColors.brightOrange,
                         shape: BoxShape.circle,
@@ -198,19 +239,19 @@ class _SellerLoginState extends State<SellerLogin>
                           BoxShadow(
                             color: AppColors.brightOrange.withOpacity(0.18),
                             blurRadius: 10,
-                            offset: const Offset(0, 6),
+                            offset: Offset(0, context.h(6)),
                           ),
                         ],
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Icon(
                           Icons.storefront_outlined,
                           color: Colors.white,
-                          size: 28,
+                          size: context.sp(28),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: context.w(12)),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,11 +260,11 @@ class _SellerLoginState extends State<SellerLogin>
                             'Welcome Seller',
                             type: CustomTextType.headingLittleLarge,
                           ),
-                          const SizedBox(height: 2),
+                          SizedBox(height: context.h(2)),
                           Text(
                             'Login to continue your future journey',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: context.sp(13),
                               color: Colors.grey[600],
                             ),
                           ),
@@ -233,7 +274,7 @@ class _SellerLoginState extends State<SellerLogin>
                   ],
                 ),
 
-                const SizedBox(height: 22),
+                SizedBox(height: context.h(22)),
 
                 Form(
                   key: _formKey,
@@ -255,7 +296,7 @@ class _SellerLoginState extends State<SellerLogin>
                           return null;
                         },
                       ),
-                      const SizedBox(height: 14),
+                      SizedBox(height: context.h(14)),
 
                       // Password
                       CustomTextFormField(
@@ -285,7 +326,7 @@ class _SellerLoginState extends State<SellerLogin>
                         ),
                       ),
 
-                      const SizedBox(height: 10),
+                      SizedBox(height: context.h(10)),
 
                       // Forgot password
                       Align(
@@ -300,12 +341,15 @@ class _SellerLoginState extends State<SellerLogin>
                           },
                           child: Text(
                             'Forgot Password?',
-                            style: TextStyle(color: AppColors.brightOrange),
+                            style: TextStyle(
+                              color: AppColors.brightOrange,
+                              fontSize: context.sp(14),
+                            ),
                           ),
                         ),
                       ),
 
-                      const SizedBox(height: 6),
+                      SizedBox(height: context.h(6)),
 
                       // Login button
                       SizedBox(
@@ -317,15 +361,17 @@ class _SellerLoginState extends State<SellerLogin>
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.brightOrange,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: EdgeInsets.symmetric(
+                              vertical: context.h(16),
+                            ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: context.borderRadius(12),
                             ),
                           ),
                           child: viewModel.isLoginLoading
                               ? SizedBox(
-                                  height: 20,
-                                  width: 20,
+                                  height: context.h(20),
+                                  width: context.w(20),
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(
@@ -336,7 +382,7 @@ class _SellerLoginState extends State<SellerLogin>
                               : Text(
                                   'Login',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: context.sp(16),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -346,32 +392,32 @@ class _SellerLoginState extends State<SellerLogin>
                       // Error Message
                       if (viewModel.loginErrorMessage != null)
                         Padding(
-                          padding: const EdgeInsets.only(top: 12),
+                          padding: EdgeInsets.only(top: context.h(12)),
                           child: Text(
                             viewModel.loginErrorMessage!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.red,
-                              fontSize: 14,
+                              fontSize: context.sp(14),
                             ),
                             textAlign: TextAlign.center,
                           ),
                         ),
 
-                      const SizedBox(height: 18),
+                      SizedBox(height: context.h(18)),
 
                       // Divider with text
                       Row(
                         children: [
                           Expanded(child: Divider(color: AppColors.grey)),
                           Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12.0,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: context.w(12),
                             ),
                             child: Text(
                               'Or continue with',
                               style: TextStyle(
                                 color: AppColors.grey,
-                                fontSize: 12,
+                                fontSize: context.sp(12),
                               ),
                             ),
                           ),
@@ -379,7 +425,7 @@ class _SellerLoginState extends State<SellerLogin>
                         ],
                       ),
 
-                      const SizedBox(height: 16),
+                      SizedBox(height: context.h(16)),
                     ],
                   ),
                 ),
@@ -388,6 +434,41 @@ class _SellerLoginState extends State<SellerLogin>
           ),
         );
       },
+    );
+  }
+}
+
+// Helper widget for bottom text
+class AuthBottomTextData extends StatelessWidget {
+  final String questionText;
+  final String actionText;
+  final VoidCallback onPressed;
+
+  const AuthBottomTextData({
+    super.key,
+    required this.questionText,
+    required this.actionText,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(questionText, style: TextStyle(fontSize: context.sp(14))),
+        GestureDetector(
+          onTap: onPressed,
+          child: Text(
+            actionText,
+            style: TextStyle(
+              color: AppColors.brightOrange,
+              fontWeight: FontWeight.w600,
+              fontSize: context.sp(14),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

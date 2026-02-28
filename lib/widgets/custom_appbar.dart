@@ -7,12 +7,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onBackPressed;
   final bool showSearch;
   final ValueChanged<String>? onSearchChanged;
+  /// Optional. When set, the search [TextField] is controlled so it doesn't reset on rebuild.
+  final TextEditingController? searchController;
   final bool showNotification;
   final int? notificationCount;
-  final Color backgroundColor;
+
+  /// When null, uses [Theme.appBarTheme.backgroundColor] or [ColorScheme.surface].
+  final Color? backgroundColor;
   final bool centerTitle;
   final bool automaticallyImplyLeading;
-
+  final double? fontSize;
   const CustomAppBar({
     super.key,
     required this.title,
@@ -21,11 +25,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onBackPressed,
     this.showSearch = false,
     this.onSearchChanged,
+    this.searchController,
     this.showNotification = false,
     this.notificationCount,
-    this.backgroundColor = Colors.white,
+    this.backgroundColor,
     this.centerTitle = true,
     this.automaticallyImplyLeading = false,
+    this.fontSize,
   });
 
   @override
@@ -33,13 +39,19 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final appBarBg =
+        backgroundColor ??
+        theme.appBarTheme.backgroundColor ??
+        colorScheme.surface;
     return AppBar(
-      backgroundColor: backgroundColor,
+      backgroundColor: appBarBg,
       automaticallyImplyLeading: automaticallyImplyLeading,
       elevation: 0.5,
       centerTitle: centerTitle,
       leading: showBackButton ? _buildBackButton(context) : null,
-      title: showSearch ? _buildSearchBar(context) : _buildTitle(),
+      title: showSearch ? _buildSearchBar(context) : _buildTitle(context),
       actions: [
         if (showNotification) _buildNotificationButton(),
         ...?_buildActionButtons(),
@@ -47,82 +59,93 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  Widget _buildTitle() {
+  Widget _buildTitle(BuildContext context) {
+    final theme = Theme.of(context);
+    final color =
+        theme.appBarTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface;
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 18,
+      style: TextStyle(
+        fontSize: fontSize ?? 18,
         fontWeight: FontWeight.w700,
-        color: Colors.black87,
+        color: color,
         letterSpacing: -0.5,
       ),
     );
   }
 
   Widget _buildSearchBar(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final surface = colorScheme.surface;
+    final borderColor = colorScheme.outline.withOpacity(0.5);
+    final hintColor = colorScheme.onSurface.withOpacity(0.5);
     return Row(
       children: [
-        // Dropdown area
-        Row(
-          children: const [
-            Text(
-              "All",
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-            SizedBox(width: 4),
-            Icon(Icons.arrow_drop_down, size: 18),
-          ],
-        ),
+        // // Dropdown area
+        // Row(
+        //   children: [
+        //     Text(
+        //       "All",
+        //       style: TextStyle(
+        //         fontWeight: FontWeight.w600,
+        //         fontSize: 14,
+        //         color: colorScheme.onSurface,
+        //       ),
+        //     ),
+        //     const SizedBox(width: 4),
+        //     Icon(Icons.arrow_drop_down, size: 18, color: colorScheme.onSurface),
+        //   ],
+        // ),
 
         // Search field
         Expanded(
           child: Container(
             height: 35,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: surface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey.shade400, width: 0.5),
+              border: Border.all(color: borderColor, width: 0.5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: theme.shadowColor.withOpacity(0.08),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
             child: Row(
-              crossAxisAlignment:
-                  CrossAxisAlignment.center, // Ensure row items are centered
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: TextField(
+                    controller: searchController,
                     onChanged: onSearchChanged,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       height: 1.0,
-                    ), // Control text height
-                    decoration: const InputDecoration(
+                      color: colorScheme.onSurface,
+                    ),
+                    decoration: InputDecoration(
                       hintText: "Search products...",
-                      hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
+                      hintStyle: TextStyle(fontSize: 14, color: hintColor),
                       border: InputBorder.none,
-                      fillColor: Colors.white,
+                      fillColor: surface,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.only(
+                      contentPadding: const EdgeInsets.only(
                         left: 12,
                         right: 8,
                         bottom: 5,
-                      ), // Adjust bottom padding
+                      ),
                       isDense: true,
                     ),
                   ),
                 ),
-
-                // Search icon - centered vertically
                 Container(
                   margin: const EdgeInsets.only(right: 10),
-                  alignment: Alignment.center, // Center the icon
-                  child: const Icon(Icons.search, color: Colors.grey, size: 18),
+                  alignment: Alignment.center,
+                  child: Icon(Icons.search, color: hintColor, size: 18),
                 ),
               ],
             ),
@@ -133,7 +156,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _buildBackButton(BuildContext context) {
-    // Circular back button with subtle shadow and ripple effect
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.only(left: 12),
       child: Material(
@@ -141,24 +165,28 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         child: InkWell(
           onTap: onBackPressed ?? () => Navigator.of(context).pop(),
           customBorder: const CircleBorder(),
-          splashColor: Colors.black12,
+          splashColor: colorScheme.onSurface.withOpacity(0.12),
           child: Container(
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: Colors.white, // background of the circle
+              color: colorScheme.surface,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: theme.shadowColor.withOpacity(0.06),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
             alignment: Alignment.center,
-            child: Icon(Icons.arrow_back, size: 20, color: Colors.black87),
+            child: Icon(
+              Icons.arrow_back,
+              size: 20,
+              color: colorScheme.onSurface,
+            ),
           ),
         ),
       ),

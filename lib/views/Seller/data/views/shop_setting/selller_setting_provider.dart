@@ -16,6 +16,7 @@ class SellerSettingsProvider extends ChangeNotifier {
   bool _isEditing = false;
   String? _errorMessage;
   String? _successMessage;
+  String _countryCode = '+966';
 
   // Categories
   final List<String> _categories = [];
@@ -51,6 +52,11 @@ class SellerSettingsProvider extends ChangeNotifier {
   String? get shopLogoUrl => _currentUser?.shopLogo;
   String? get shopBannerUrl => _currentUser?.shopBanner;
   List<String> get categories => List.unmodifiable(_categories);
+  String get countryCode => _countryCode;
+  set countryCode(String value) {
+    _countryCode = value;
+    notifyListeners();
+  }
 
   // Initialize
   // SellerSettingsProvider(SellerSettingsRepository repository) : _repository = repository {
@@ -77,15 +83,19 @@ class SellerSettingsProvider extends ChangeNotifier {
     if (_currentUser != null) {
       nameController.text = _currentUser!.name;
       emailController.text = _currentUser!.email;
-      phoneController.text = _currentUser!.phone?.toString() ?? '';
+      _countryCode = _currentUser!.countryCode ?? '+966';
+      final fullPhone = _currentUser!.phone?.toString() ?? '';
+      final codeDigits = _countryCode.replaceAll(RegExp(r'[^0-9]'), '');
+      if (codeDigits.isNotEmpty && fullPhone.startsWith(codeDigits)) {
+        phoneController.text = fullPhone.substring(codeDigits.length);
+      } else {
+        phoneController.text = fullPhone;
+      }
       shopNameController.text = _currentUser!.shopName ?? '';
       businessNameController.text = _currentUser!.businessName ?? '';
       descriptionController.text = _currentUser!.businessDescription ?? '';
-      addressController.text = _currentUser!.address ?? '';
+      addressController.text = _currentUser!.businessAddress ?? '';
       ibanController.text = _currentUser!.iban ?? '';
-
-      // TODO: Load categories from API if available in user model
-      // For now, categories are managed locally
     }
   }
 
@@ -130,9 +140,13 @@ class SellerSettingsProvider extends ChangeNotifier {
           RegExp(r'[^0-9]'),
           '',
         );
+        final codeDigits = _countryCode.replaceAll(RegExp(r'[^0-9]'), '');
         if (phoneDigits.isNotEmpty) {
-          updates['phone'] = int.tryParse(phoneDigits);
+          updates['phone'] = int.tryParse('$codeDigits$phoneDigits');
         }
+      }
+      if (_countryCode.trim().isNotEmpty) {
+        updates['countryCode'] = _countryCode;
       }
       if (shopNameController.text.isNotEmpty) {
         updates['shopName'] = shopNameController.text.trim();
