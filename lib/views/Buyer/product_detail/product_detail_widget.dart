@@ -47,7 +47,7 @@ class ProductBasicInfo extends StatelessWidget {
                 '${product.currency} ${product.basePrice.toStringAsFixed(2)}',
                 type: CustomTextType.headingMedium,
                 fontWeight: FontWeight.bold,
-                color: AppColors.grey,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 decoration: TextDecoration.lineThrough,
                 fontSize: 16,
               ),
@@ -55,13 +55,15 @@ class ProductBasicInfo extends StatelessWidget {
           ],
         ),
 
-        // Discount percentage
         if (product.hasDiscount)
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               '${product.discountPercentage.toStringAsFixed(0)}% OFF',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
 
@@ -104,32 +106,42 @@ class MinimalQuantityStockWidget extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Quantity',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Available: $maxQuantity',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
-
-            // Quantity Selector
-            Spacer(),
-            Text("\$${unitPrice.toStringAsFixed(2)}"),
-            SizedBox(width: 5),
+            const Spacer(),
+            Text(
+              "\$${unitPrice.toStringAsFixed(2)}",
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+            ),
+            const SizedBox(width: 5),
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xffF6DCC9),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(25),
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                ),
               ),
               child: Row(
                 children: [
-                  // Decrement
                   _buildButton(
+                    context: context,
                     icon: Icons.remove,
                     isEnabled: selectedQuantity > 1,
                     onTap: () {
@@ -145,16 +157,17 @@ class MinimalQuantityStockWidget extends StatelessWidget {
                     child: Center(
                       child: Text(
                         '$selectedQuantity',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ),
                   ),
 
-                  // Increment
                   _buildButton(
+                    context: context,
                     icon: Icons.add,
                     isEnabled: selectedQuantity < maxQuantity,
                     onTap: () {
@@ -170,21 +183,24 @@ class MinimalQuantityStockWidget extends StatelessWidget {
 
         const SizedBox(height: 10),
 
-        // Price Breakdown
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey[50],
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[200]!),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+            ),
           ),
           child: Column(
             children: [
-              // Show total preview
               Container(
                 margin: const EdgeInsets.only(top: 12),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue[50],
+                  color: AppColors.brightOrange.withOpacity(0.5),
+                  // color: Theme.of(
+                  //   context,
+                  // ).colorScheme.primaryContainer.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -194,16 +210,16 @@ class MinimalQuantityStockWidget extends StatelessWidget {
                       'Total for $selectedQuantity item${selectedQuantity > 1 ? 's' : ''}:',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.blue[800],
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     Text(
                       '\$${totalPrice.toStringAsFixed(2)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.green,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ],
@@ -217,11 +233,13 @@ class MinimalQuantityStockWidget extends StatelessWidget {
   }
 
   Widget _buildButton({
+    required BuildContext context,
     required IconData icon,
     required bool isEnabled,
     required VoidCallback onTap,
     required bool isLeft,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -234,12 +252,16 @@ class MinimalQuantityStockWidget extends StatelessWidget {
           width: 40,
           height: 36,
           decoration: BoxDecoration(
-            color: isEnabled ? Colors.transparent : Colors.grey[200],
+            color: isEnabled
+                ? Colors.transparent
+                : colorScheme.surfaceContainerHighest,
           ),
           child: Icon(
             icon,
             size: 18,
-            color: isEnabled ? Colors.black : Colors.grey[400],
+            color: isEnabled
+                ? colorScheme.onSurface
+                : colorScheme.onSurfaceVariant,
           ),
         ),
       ),
@@ -305,35 +327,32 @@ class _ProductActionButtonsState extends State<ProductActionButtons> {
     );
   }
 
-  // Build Request Visit button for Customize Products
   Widget _buildRequestVisitButton(BuildContext context) {
     return CustomButtonUtils.login(
       height: 45,
       title: 'Request Visit',
       backgroundColor: AppColors.brightOrange,
-      color: Colors.white,
+      color: AppColors.white,
       borderRadius: 6,
       onPressed: () => _showVisitRequestDialog(context),
     );
   }
 
-  // Build Add to Cart and Buy Now buttons for Ready Products
   Widget _buildCartButtons(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final inCart = widget.cartViewModel.isProductInCart(widget.product.id);
     return Row(
       children: [
         Expanded(
           child: CustomButtonUtils.login(
             height: 45,
-            title: widget.cartViewModel.isProductInCart(widget.product.id)
-                ? 'Added to Cart'
-                : 'Add to Cart',
-            backgroundColor:
-                widget.cartViewModel.isProductInCart(widget.product.id)
-                ? Colors.green
-                : AppColors.orangeLight,
-            color: widget.cartViewModel.isProductInCart(widget.product.id)
-                ? Colors.white
-                : AppColors.brightOrange,
+            title: inCart ? 'Added to Cart' : 'Add to Cart',
+            backgroundColor: inCart
+                ? AppColors.brightOrange
+                : colorScheme.primaryContainer,
+            color: inCart
+                ? colorScheme.onTertiary
+                : colorScheme.onPrimaryContainer,
             borderRadius: 6,
             onPressed: () async {
               try {
@@ -386,6 +405,8 @@ class _ProductActionButtonsState extends State<ProductActionButtons> {
             height: 45,
             title: 'Buy Now',
             backgroundColor: AppColors.brightOrange,
+            color: AppColors.white,
+
             borderRadius: 6,
             onPressed: () {
               showBuyNowBottomSheet(
@@ -412,123 +433,139 @@ class _ProductActionButtonsState extends State<ProductActionButtons> {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(Icons.schedule, color: AppColors.brightOrange, size: 24),
-            const SizedBox(width: 8),
-            const Expanded(
-              child: Text(
-                'Request Shop Visit',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      builder: (dialogContext) {
+        final theme = Theme.of(dialogContext);
+        final colorScheme = theme.colorScheme;
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
             children: [
-              Text(
-                'Request to visit: $shopName',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Message field
-              TextField(
-                controller: _messageController,
-                decoration: const InputDecoration(
-                  labelText: 'Message (Optional)',
-                  hintText: 'Tell the seller why you want to visit...',
-                  border: OutlineInputBorder(),
-                  fillColor: Colors.white,
-                ),
-                maxLines: 3,
-              ),
-
-              const SizedBox(height: 16),
-
-              // Date picker
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final selectedDate = await showDatePicker(
-                    context: dialogContext,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 365)),
-                  );
-                  if (selectedDate != null && mounted) {
-                    setState(() {
-                      _selectedDate =
-                          '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
-                    });
-                  }
-                },
-                icon: const Icon(Icons.calendar_today),
-                label: Text(_selectedDate ?? 'Select Preferred Date'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[100],
-                  foregroundColor: Colors.black87,
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Time picker
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final selectedTime = await showTimePicker(
-                    context: dialogContext,
-                    initialTime: TimeOfDay.now(),
-                  );
-                  if (selectedTime != null && mounted) {
-                    setState(() {
-                      _selectedTime =
-                          '${selectedTime.hour}:${selectedTime.minute.toString().padLeft(2, '0')}';
-                    });
-                  }
-                },
-                icon: const Icon(Icons.access_time),
-                label: Text(_selectedTime ?? 'Select Preferred Time'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[100],
-                  foregroundColor: Colors.black87,
+              Icon(Icons.schedule, color: colorScheme.primary, size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Request Shop Visit',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Request to visit: $shopName',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Message field
+                TextField(
+                  // dark light mode
+                  controller: _messageController,
+                  decoration: InputDecoration(
+                    labelText: 'Message (Optional)',
+                    hintText: 'Tell the seller why you want to visit...',
+                    border: OutlineInputBorder(),
+                    // fillColor: AppColors.white,
+                    fillColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                    filled: true,
+                  ),
+                  maxLines: 3,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Date picker
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final selectedDate = await showDatePicker(
+                      context: dialogContext,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (selectedDate != null && mounted) {
+                      setState(() {
+                        _selectedDate =
+                            '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.calendar_today),
+                  label: Text(_selectedDate ?? 'Select Preferred Date'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    foregroundColor: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final selectedTime = await showTimePicker(
+                      context: dialogContext,
+                      initialTime: TimeOfDay.now(),
+                    );
+                    if (selectedTime != null && mounted) {
+                      setState(() {
+                        _selectedTime =
+                            '${selectedTime.hour}:${selectedTime.minute.toString().padLeft(2, '0')}';
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.access_time),
+                  label: Text(_selectedTime ?? 'Select Preferred Time'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    foregroundColor: colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
           ),
-          ElevatedButton(
-            onPressed: _isRequestingVisit
-                ? null
-                : () => _requestVisit(context, dialogContext),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.brightOrange,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
               ),
             ),
-            child: _isRequestingVisit
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(color: Colors.white),
-                  )
-                : const Text('Send Request'),
-          ),
-        ],
-      ),
+            ElevatedButton(
+              onPressed: _isRequestingVisit
+                  ? null
+                  : () => _requestVisit(context, dialogContext),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.brightOrange,
+                foregroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: _isRequestingVisit
+                  ? SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: colorScheme.onPrimary,
+                      ),
+                    )
+                  : const Text('Send Request'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -663,17 +700,18 @@ class _ProductActionButtonsState extends State<ProductActionButtons> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              // TODO: Implement cancel existing request if needed
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Please cancel the existing request first'),
-                  backgroundColor: Colors.orange,
+                SnackBar(
+                  content: const Text(
+                    'Please cancel the existing request first',
+                  ),
+                  backgroundColor: Theme.of(context).colorScheme.errorContainer,
                 ),
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.brightOrange,
-              foregroundColor: Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
             ),
             child: const Text('Cancel & Retry'),
           ),

@@ -1,6 +1,7 @@
 // app/providers.dart
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
+import 'package:wood_service/app/app_theme_provider.dart';
 import 'package:wood_service/app/locator.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_provider.dart';
 import 'package:wood_service/core/services/new_storage/unified_local_storage_service_impl.dart';
@@ -23,6 +24,10 @@ import 'package:wood_service/views/visit_request_buyer_resp/visit_provider.dart'
 import 'package:wood_service/views/visit_request_buyer_resp/visit_services.dart';
 
 List<SingleChildWidget> appProviders = [
+  // App theme (dark mode) – must be high so MaterialApp can use it
+  ChangeNotifierProvider<AppThemeProvider>(
+    create: (context) => locator<AppThemeProvider>(),
+  ),
   // Services
   Provider<UnifiedLocalStorageServiceImpl>(
     create: (context) => locator<UnifiedLocalStorageServiceImpl>(),

@@ -284,6 +284,7 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                           }
                           return null;
                         },
+                        context: context,
                       ),
                       SizedBox(height: context.h(14)),
 
@@ -310,6 +311,7 @@ class _BuyerLoginScreenState extends State<BuyerLoginScreen>
                           ),
                           onPressed: viewModel.togglePasswordVisibility,
                         ),
+                        context: context,
                       ),
 
                       SizedBox(height: context.h(10)),

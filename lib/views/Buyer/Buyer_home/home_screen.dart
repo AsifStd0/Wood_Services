@@ -21,6 +21,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   int _currentPage = 0;
   Timer? _timer;
   Timer? _searchDebounceTimer;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -32,6 +33,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   @override
   void dispose() {
     _pageController.dispose();
+    _searchController.dispose();
     _timer?.cancel();
     _searchDebounceTimer?.cancel();
     super.dispose();
@@ -55,21 +57,28 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: CustomAppBar(
         title: 'Search',
         showBackButton: false,
         showSearch: true,
+        searchController: _searchController,
         onSearchChanged: (value) {
-          // Debounce search input
           _searchDebounceTimer?.cancel();
-          _searchDebounceTimer = Timer(const Duration(milliseconds: 500), () {
-            final provider = Provider.of<BuyerHomeViewProvider>(
-              context,
-              listen: false,
-            );
-            provider.setSearchDebounced(value.isEmpty ? null : value);
-            // Apply filters when search changes
+          final trimmed = value.trim();
+          final isEmpty = trimmed.isEmpty;
+
+          if (isEmpty) {
+            // Clear search immediately so list shows all products right away
+            final provider = context.read<BuyerHomeViewProvider>();
+            provider.setSearchDebounced(null);
+            provider.applyFilters();
+            return;
+          }
+
+          _searchDebounceTimer = Timer(const Duration(milliseconds: 400), () {
+            if (!mounted) return;
+            final provider = context.read<BuyerHomeViewProvider>();
+            provider.setSearchDebounced(trimmed);
             provider.applyFilters();
           });
         },
@@ -86,19 +95,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
             },
           ),
         ],
-        // actions: [
-        //   IconButton(
-        //     icon: Icon(Icons.notifications),
-        //     onPressed: () {
-        //       // Navigator.push(
-        //       //   context,
-        //       //   MaterialPageRoute(
-        //       //     builder: (context) => const NotificationsScreen(),
-        //       //   ),
-        //       // );
-        //     },
-        //   ),
-        // ],
+      
       ),
       body: GestureDetector(
         onTap: () {
@@ -117,7 +114,6 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
 
                   // NEW Section
                   buildNewSection(),
-
                   const SizedBox(height: 3),
 
                   _buildFilterSection(),
@@ -153,7 +149,11 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
 
         // Show loading state
         if (viewModel.isLoading && viewModel.products.isEmpty) {
-          return Center(child: CircularProgressIndicator());
+          return Center(
+            child: CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          );
         }
 
         // Show error state
@@ -162,13 +162,27 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, color: Colors.red, size: 50),
+                Icon(
+                  Icons.error_outline,
+                  color: Theme.of(context).colorScheme.error,
+                  size: 50,
+                ),
                 SizedBox(height: 10),
-                Text('Failed to load products'),
+                Text(
+                  'Failed to load products',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
                 SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: () => viewModel.refreshProducts(),
-                  child: Text('Try Again'),
+                  child: Text(
+                    'Try Again',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -181,13 +195,25 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
 
         if (viewModel.selectedOption == 'Ready Product' ||
             viewModel.selectedOption == 'Customize Product') {
-          // Use filteredProducts from provider (which includes productType filtering)
           filteredProducts = viewModel.filteredProducts;
         } else {
-          // Use regular products
           filteredProducts = viewModel.products.where((product) {
             final matchesCategory = selectedCategory == 'All';
             return matchesCategory;
+          }).toList();
+        }
+
+        // Local search filter (fallback when API search is not applied or for instant feedback)
+        final searchQuery = viewModel.currentFilter.search?.trim();
+        if (searchQuery != null && searchQuery.isNotEmpty) {
+          final lowerQuery = searchQuery.toLowerCase();
+          filteredProducts = filteredProducts.where((product) {
+            final title = (product.title).toLowerCase();
+            final short = (product.shortDescription).toLowerCase();
+            final long = (product.longDescription).toLowerCase();
+            return title.contains(lowerQuery) ||
+                short.contains(lowerQuery) ||
+                long.contains(lowerQuery);
           }).toList();
         }
 
@@ -197,9 +223,18 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.inventory_outlined, size: 50, color: Colors.grey),
+                Icon(
+                  Icons.inventory_outlined,
+                  size: 50,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 SizedBox(height: 10),
-                Text('No products available'),
+                Text(
+                  'No products available',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
               ],
             ),
           );
@@ -252,6 +287,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
                       viewModel.filter[index].name,
                       isSelected: viewModel.filter[index].isSelected,
                       onTap: () => viewModel.selectFilter(index),
+                      context: context,
                     ),
                   ),
                 ),
@@ -322,11 +358,14 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: index == currentIndex
-                ? Colors.white
-                : Colors.white.withOpacity(0.5),
+                ? Theme.of(context).colorScheme.onPrimary
+                : Theme.of(context).colorScheme.onPrimary.withOpacity(0.5),
             border: index == currentIndex
                 ? null
-                : Border.all(color: Colors.white, width: 1),
+                : Border.all(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    width: 1,
+                  ),
           ),
         );
       }),
@@ -353,6 +392,7 @@ class _SellerHomeScreenState extends State<BuyerHomeScreen> {
                       viewModel.categories[index].name,
                       isSelected: viewModel.categories[index].isSelected,
                       onTap: () => viewModel.selectCategory(index),
+                      context: context,
                     ),
                   ),
                 ),

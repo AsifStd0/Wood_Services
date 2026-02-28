@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/Responsive/screen_utils.dart';
 import 'package:wood_service/app/all_provider.dart';
+import 'package:wood_service/app/app_theme_provider.dart';
 import 'package:wood_service/app/helper.dart';
 import 'package:wood_service/app/locator.dart';
+import 'package:wood_service/core/theme/app_theme.dart';
 import 'package:wood_service/views/Buyer/buyer_main/buyer_main.dart';
 import 'package:wood_service/views/Seller/main_seller_screen.dart';
 import 'package:wood_service/views/splash/splash_screen.dart';
@@ -40,14 +42,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      builder: (context, child) {
-        // Initialize responsive system
-        ScreenUtils.init(context);
-        return child ?? const SizedBox();
+    return Consumer<AppThemeProvider>(
+      builder: (context, themeProvider, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          builder: (context, child) {
+            // Initialize responsive system
+            ScreenUtils.init(context);
+            return child ?? const SizedBox();
+          },
+          home: _getInitialScreen(),
+        );
       },
-      home: _getInitialScreen(),
     );
   }
 

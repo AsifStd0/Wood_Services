@@ -56,7 +56,7 @@ class _SelectionScreenState extends State<SelectionScreen>
 
   ButtonStyle _filledButtonStyle(BuildContext context) {
     return ElevatedButton.styleFrom(
-      backgroundColor: AppColors.bluePrimary,
+      backgroundColor: AppColors.brightOrange,
       foregroundColor: Colors.white,
       elevation: 6,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
@@ -67,14 +67,14 @@ class _SelectionScreenState extends State<SelectionScreen>
 
   ButtonStyle _outlinedButtonStyle(BuildContext context) {
     return OutlinedButton.styleFrom(
-      foregroundColor: AppColors.bluePrimary,
-      side: BorderSide(color: AppColors.bluePrimary, width: 1.8),
+      foregroundColor: AppColors.brightOrange,
+      side: BorderSide(color: AppColors.brightOrange, width: 1.8),
       backgroundColor: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       textStyle: AppCustomTextStyle.buttonText(
         context,
-      ).copyWith(color: AppColors.bluePrimary),
+      ).copyWith(color: AppColors.brightOrange),
     );
   }
 
@@ -86,7 +86,7 @@ class _SelectionScreenState extends State<SelectionScreen>
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppColors.bluePrimary.withOpacity(0.14), Colors.white],
+            colors: [AppColors.brightOrange.withOpacity(0.14), Colors.white],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -131,11 +131,11 @@ class _SelectionScreenState extends State<SelectionScreen>
                                 height: 64,
                                 width: 64,
                                 decoration: BoxDecoration(
-                                  color: AppColors.bluePrimary,
+                                  color: AppColors.brightOrange,
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.bluePrimary.withOpacity(
+                                      color: AppColors.brightOrange.withOpacity(
                                         0.28,
                                       ),
                                       blurRadius: 12,
@@ -156,7 +156,7 @@ class _SelectionScreenState extends State<SelectionScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   CustomText(
-                                    'FurniFind',
+                                    'GIGA Home',
                                     type: CustomTextType.headingLarge,
                                   ),
                                   const SizedBox(height: 2),
@@ -175,7 +175,7 @@ class _SelectionScreenState extends State<SelectionScreen>
 
                           // friendly instruction
                           Text(
-                            'Choose how you want to use FurniFind:',
+                            'Choose how you want to use GIGA Home:',
                             style: AppCustomTextStyle.appSubtitle(
                               context,
                             ).copyWith(fontSize: 14),
@@ -260,7 +260,7 @@ class _SelectionScreenState extends State<SelectionScreen>
                                               AppCustomTextStyle.buttonText(
                                                 context,
                                               ).copyWith(
-                                                color: AppColors.bluePrimary,
+                                                color: AppColors.brightOrange,
                                               ),
                                         ),
                                       ],
@@ -268,20 +268,12 @@ class _SelectionScreenState extends State<SelectionScreen>
                                     const Icon(
                                       Icons.arrow_forward_ios,
                                       size: 16,
-                                      color: AppColors.bluePrimary,
+                                      color: AppColors.brightOrange,
                                     ),
                                   ],
                                 ),
                               ),
                             ],
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // small extra action (optional)
-                          TextButton(
-                            onPressed: () {},
-                            child: const Text('Learn more'),
                           ),
                         ],
                       ),

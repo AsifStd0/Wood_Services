@@ -10,6 +10,7 @@ import 'package:wood_service/widgets/custom_button.dart';
 import 'package:wood_service/widgets/custom_text_style.dart';
 import 'package:wood_service/widgets/custom_textfield.dart';
 
+// ignore: must_be_immutable
 class BuyerSignupScreen extends StatefulWidget {
   String role;
   BuyerSignupScreen({super.key, required this.role});

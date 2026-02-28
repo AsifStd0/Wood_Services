@@ -2,7 +2,6 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/app/index.dart';
 import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Buyer/Cart/buyer_cart_provider.dart';
 import 'package:wood_service/widgets/app_input_decoration.dart';
@@ -166,31 +165,41 @@ class _CartCheckoutBottomSheetState extends State<CartCheckoutBottomSheet> {
             children: [
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Checkout',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ),
                   IconButton(
                     onPressed: _isLoading ? null : () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
+                    icon: Icon(
+                      Icons.close,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 ],
               ),
 
-              const Text(
+              Text(
                 'Order Details',
-                style: TextStyle(fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
               const SizedBox(height: 8),
               CustomTextFormField(
                 controller: _descriptionController,
                 hintText: 'Description ',
-                prefixIcon: Icon(Icons.description),
+                prefixIcon: Icon(
+                  Icons.description,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 textInputAction: TextInputAction.next,
                 onChanged: (_) => setState(() {}),
                 minline: 2,
@@ -201,7 +210,10 @@ class _CartCheckoutBottomSheetState extends State<CartCheckoutBottomSheet> {
               CustomTextFormField(
                 controller: _locationController,
                 hintText: 'Location ',
-                prefixIcon: Icon(Icons.location_on),
+                prefixIcon: Icon(
+                  Icons.location_on,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 textInputAction: TextInputAction.next,
                 onChanged: (_) => setState(() {}),
               ),
@@ -228,7 +240,11 @@ class _CartCheckoutBottomSheetState extends State<CartCheckoutBottomSheet> {
                                   .split(' ')[0],
                         ),
                       ),
-                      const Icon(Icons.calendar_today, size: 18),
+                      Icon(
+                        Icons.calendar_today,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ],
                   ),
                 ),
@@ -246,7 +262,10 @@ class _CartCheckoutBottomSheetState extends State<CartCheckoutBottomSheet> {
               CustomTextFormField(
                 controller: _estimatedDurationController,
                 hintText: 'Estimated Duration (optional)',
-                prefixIcon: Icon(Icons.schedule),
+                prefixIcon: Icon(
+                  Icons.schedule,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 textInputAction: TextInputAction.next,
                 onChanged: (_) => setState(() {}),
                 minline: 1,
@@ -256,7 +275,10 @@ class _CartCheckoutBottomSheetState extends State<CartCheckoutBottomSheet> {
               CustomTextFormField(
                 controller: _specialRequirementsController,
                 hintText: 'Special Requirements (optional)',
-                prefixIcon: Icon(Icons.info),
+                prefixIcon: Icon(
+                  Icons.info,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 textInputAction: TextInputAction.done,
                 onChanged: (_) => setState(() {}),
                 minline: 1,
@@ -264,19 +286,30 @@ class _CartCheckoutBottomSheetState extends State<CartCheckoutBottomSheet> {
               ),
               const SizedBox(height: 12),
 
-              const Text(
+              Text(
                 'Payment Method',
-                style: TextStyle(fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: _paymentMethod,
-                items: const [
-                  DropdownMenuItem(value: 'card', child: Text('Card')),
+                items: [
+                  DropdownMenuItem(
+                    value: 'card',
+                    child: Text(
+                      'Card',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
                   // DropdownMenuItem(value: 'cod', child: Text('Cash on Delivery')),
                   // DropdownMenuItem(value: 'mada', child: Text('Mada/SADAD')),
-                  // DropdownMenuItem(value: 'apple_pay', child: Text('Apple Pay')),
-                ],
+                  // DropdownMenuItem(value: 'apple_pay', child: Text('Apple Pay', style: TextStyle(color: Theme.of(context).colorScheme.onSurface,),),),
+                ].map((e) => e).toList(),
                 onChanged: _isLoading
                     ? null
                     : (v) => setState(() => _paymentMethod = v ?? 'card'),
@@ -287,7 +320,7 @@ class _CartCheckoutBottomSheetState extends State<CartCheckoutBottomSheet> {
                 ),
               ),
 
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -305,22 +338,22 @@ class _CartCheckoutBottomSheetState extends State<CartCheckoutBottomSheet> {
                     ),
                   ),
                   child: _isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
+                              Theme.of(context).colorScheme.onPrimary,
                             ),
                           ),
                         )
-                      : const Text(
+                      : Text(
                           'Place Order',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         ),
                 ),

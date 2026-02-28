@@ -20,7 +20,7 @@ class AcceptedOrdersTab extends StatelessWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       itemCount: orders.length,
       itemBuilder: (context, index) {
         return _buildOrderCard(context, orders[index]);
@@ -40,23 +40,21 @@ class AcceptedOrdersTab extends StatelessWidget {
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () => _trackOrder(context, order),
-            icon: const Icon(Icons.track_changes, size: 18),
+            icon: const Icon(Icons.track_changes_rounded, size: 18),
             label: const Text('Track'),
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             ),
           ),
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: ElevatedButton.icon(
+          child: FilledButton.icon(
             onPressed: () => provider.startChat(context, order),
-            icon: const Icon(Icons.chat, size: 18),
+            icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
             label: const Text('Chat'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue[600],
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             ),
           ),
         ),

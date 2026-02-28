@@ -29,6 +29,7 @@ import 'package:wood_service/views/Seller/data/views/shop_setting/selller_settin
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/setting_data/seller_settings_repository_impl.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/status/seller_stats_provider.dart';
+import 'package:wood_service/app/app_theme_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/SellerAds/seller_ad_provider.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/SellerAds/seller_ad_service.dart';
 import 'package:wood_service/views/Seller/data/views/shop_setting/uploaded_product/uploaded_product_provider.dart';
@@ -327,6 +328,13 @@ Future<void> setupLocator() async {
   );
   // Register Seller Ad Service
   locator.registerLazySingleton<SellerAdService>(() => SellerAdService());
+
+  // App theme (dark mode) – single source of truth for app-wide theme
+  if (!locator.isRegistered<AppThemeProvider>()) {
+    locator.registerSingleton<AppThemeProvider>(
+      AppThemeProvider(locator<UnifiedLocalStorageServiceImpl>()),
+    );
+  }
 
   print('✅ Locator setup completed successfully!');
 }

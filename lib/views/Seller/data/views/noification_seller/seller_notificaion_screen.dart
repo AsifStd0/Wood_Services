@@ -17,20 +17,23 @@ class SellerNotificaionScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<SellerNotificaionScreen> {
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return ChangeNotifierProvider(
       create: (_) =>
           NotificationsViewModel(service: locator<NotificationService>()),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
         appBar: CustomAppBar(
           title: 'Notifications',
           showBackButton: true,
-          backgroundColor: Colors.white,
           actions: [
             Builder(
               builder: (context) {
                 return IconButton(
-                  icon: Icon(Icons.more_vert_rounded, color: Colors.grey[700]),
+                  icon: Icon(
+                    Icons.more_vert_rounded,
+                    color: colorScheme.onSurface,
+                  ),
                   onPressed: () {
                     final viewModel = context.read<NotificationsViewModel>();
                     _showMoreOptions(context, viewModel);
@@ -81,42 +84,61 @@ class _NotificationsScreenState extends State<SellerNotificaionScreen> {
   }
 
   Widget _buildErrorState(NotificationsViewModel viewModel) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 60, color: Colors.red),
-          const SizedBox(height: 16),
-          Text(
-            viewModel.errorMessage ?? 'Failed to load notifications',
-            style: const TextStyle(color: Colors.red),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => viewModel.loadNotifications(),
-            child: const Text('Retry'),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 56,
+              color: colorScheme.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              viewModel.errorMessage ?? 'Failed to load notifications',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: colorScheme.error,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: () => viewModel.loadNotifications(),
+              icon: const Icon(Icons.refresh_rounded, size: 20),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildFilterTabs(NotificationsViewModel viewModel) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 24, 20, 16),
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerHighest.withOpacity(0.6),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: theme.shadowColor.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
+        border: Border.all(
+          color: colorScheme.outline.withOpacity(0.15),
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
@@ -134,6 +156,8 @@ class _NotificationsScreenState extends State<SellerNotificaionScreen> {
     NotificationType type,
     NotificationsViewModel viewModel,
   ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isSelected = viewModel.selectedFilter == type;
 
     return Expanded(
@@ -142,14 +166,9 @@ class _NotificationsScreenState extends State<SellerNotificaionScreen> {
         curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          gradient: isSelected
-              ? const LinearGradient(
-                  colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          color: isSelected ? null : Colors.transparent,
+          color: isSelected
+              ? colorScheme.primary
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
         ),
         child: GestureDetector(
@@ -157,10 +176,11 @@ class _NotificationsScreenState extends State<SellerNotificaionScreen> {
           child: Text(
             text,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.grey[600],
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: isSelected
+                  ? colorScheme.onPrimary
+                  : colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
-              fontSize: 13,
             ),
           ),
         ),
@@ -169,39 +189,35 @@ class _NotificationsScreenState extends State<SellerNotificaionScreen> {
   }
 
   Widget _buildLoadingState() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: const CircularProgressIndicator(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: colorScheme.primary,
             ),
           ),
           const SizedBox(height: 20),
           Text(
             'Loading Notifications',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[700],
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: colorScheme.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Please wait while we fetch your notifications',
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -209,6 +225,9 @@ class _NotificationsScreenState extends State<SellerNotificaionScreen> {
   }
 
   Widget _buildEmptyState(NotificationsViewModel viewModel) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40.0),
@@ -216,16 +235,16 @@ class _NotificationsScreenState extends State<SellerNotificaionScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 150,
-              height: 150,
+              width: 120,
+              height: 120,
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: colorScheme.surfaceContainerHighest,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.notifications_off_rounded,
-                size: 60,
-                color: Colors.grey[400],
+                size: 56,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 24),
@@ -233,11 +252,11 @@ class _NotificationsScreenState extends State<SellerNotificaionScreen> {
               viewModel.selectedFilter == NotificationType.all
                   ? 'No Notifications'
                   : 'No ${_getFilterName(viewModel.selectedFilter)} Notifications',
-              style: const TextStyle(
-                fontSize: 20,
+              style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: Colors.grey,
+                color: colorScheme.onSurface,
               ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
@@ -245,28 +264,25 @@ class _NotificationsScreenState extends State<SellerNotificaionScreen> {
                   ? 'When you receive notifications, they will appear here'
                   : 'No ${_getFilterName(viewModel.selectedFilter).toLowerCase()} notifications found',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.grey[500],
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
                 height: 1.4,
               ),
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
+            FilledButton.icon(
               onPressed: () => viewModel.loadNotifications(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF667EEA),
-                foregroundColor: Colors.white,
+              icon: const Icon(Icons.refresh_rounded, size: 20),
+              label: const Text('Refresh'),
+              style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              icon: const Icon(Icons.refresh_rounded, size: 20),
-              label: const Text('Refresh'),
             ),
           ],
         ),
@@ -309,36 +325,40 @@ class _NotificationsScreenState extends State<SellerNotificaionScreen> {
   }
 
   Widget _buildNotificationIcon(SellerNotificaionModel notification) {
+    final colorScheme = Theme.of(context).colorScheme;
     Color iconColor;
     Color backgroundColor;
     IconData icon;
 
     switch (notification.type) {
       case NotificationType.visits:
-        iconColor = Color(0xFF4D96FF);
-        backgroundColor = Color(0xFF4D96FF).withOpacity(0.1);
+        iconColor = colorScheme.primary;
+        backgroundColor = colorScheme.primaryContainer.withOpacity(0.6);
         icon = Icons.assignment_turned_in_rounded;
         break;
       case NotificationType.contracts:
-        iconColor = Color(0xFF9C27B0);
-        backgroundColor = Color(0xFF9C27B0).withOpacity(0.1);
+        iconColor = colorScheme.tertiary;
+        backgroundColor = colorScheme.tertiaryContainer.withOpacity(0.6);
         icon = Icons.control_camera_outlined;
         break;
       case NotificationType.unread:
-        iconColor = Color(0xFFFF6B6B);
-        backgroundColor = Color(0xFFFF6B6B).withOpacity(0.1);
+        iconColor = colorScheme.error;
+        backgroundColor = colorScheme.errorContainer.withOpacity(0.6);
         icon = Icons.mark_email_unread_rounded;
         break;
       default:
-        iconColor = Color(0xFF6BCF7F);
-        backgroundColor = Color(0xFF6BCF7F).withOpacity(0.1);
+        iconColor = colorScheme.primary;
+        backgroundColor = colorScheme.primaryContainer.withOpacity(0.6);
         icon = Icons.notifications_rounded;
     }
 
     return Container(
       width: 44,
       height: 44,
-      decoration: BoxDecoration(color: backgroundColor, shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        shape: BoxShape.circle,
+      ),
       child: Icon(icon, color: iconColor, size: 20),
     );
   }
@@ -359,75 +379,64 @@ class _NotificationsScreenState extends State<SellerNotificaionScreen> {
   }
 
   void _showNotificationDetails(SellerNotificaionModel notification) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     showDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  _buildNotificationIcon(notification),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      notification.title,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.grey[800],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                notification.description,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey[600],
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Received ${notification.timeAgo}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[500],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF667EEA),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
+        backgroundColor: colorScheme.surface,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _buildNotificationIcon(notification),
+                const SizedBox(width: 12),
+                Expanded(
                   child: Text(
-                    'Close',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                    notification.title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.onSurface,
+                    ),
                   ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              notification.description,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                height: 1.4,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Received ${notification.timeAgo}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Close'),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -439,12 +448,13 @@ class _NotificationsScreenState extends State<SellerNotificaionScreen> {
   ) async {
     final success = await viewModel.deleteNotification(notificationId);
     if (context.mounted) {
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             success ? 'Notification deleted' : 'Failed to delete notification',
           ),
-          backgroundColor: success ? Colors.green : Colors.red,
+          backgroundColor: success ? colorScheme.tertiary : colorScheme.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -458,59 +468,86 @@ class _NotificationsScreenState extends State<SellerNotificaionScreen> {
     BuildContext context,
     NotificationsViewModel viewModel,
   ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     showModalBottomSheet(
       context: context,
+      backgroundColor: colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(
-                Icons.mark_email_read_rounded,
-                color: Color(0xFF667EEA),
-              ),
-              title: const Text('Mark all as read'),
-              onTap: () async {
-                Navigator.pop(context);
-                final success = await viewModel.markAllAsRead();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        success
-                            ? 'All notifications marked as read'
-                            : 'Failed to mark as read',
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(
+                  Icons.mark_email_read_rounded,
+                  color: colorScheme.primary,
+                ),
+                title: Text(
+                  'Mark all as read',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final success = await viewModel.markAllAsRead();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          success
+                              ? 'All notifications marked as read'
+                              : 'Failed to mark as read',
+                        ),
+                        backgroundColor: success
+                            ? colorScheme.tertiary
+                            : colorScheme.error,
+                        behavior: SnackBarBehavior.floating,
                       ),
-                      backgroundColor: success ? Colors.green : Colors.red,
-                    ),
-                  );
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.delete_outline_rounded,
-                color: Colors.red,
+                    );
+                  }
+                },
               ),
-              title: const Text('Clear all notifications'),
-              onTap: () {
-                Navigator.pop(context);
-                viewModel.clearAllNotifications();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.refresh_rounded, color: Colors.grey),
-              title: const Text('Refresh'),
-              onTap: () {
-                Navigator.pop(context);
-                viewModel.loadNotifications();
-              },
-            ),
-          ],
+              ListTile(
+                leading: Icon(
+                  Icons.delete_outline_rounded,
+                  color: colorScheme.error,
+                ),
+                title: Text(
+                  'Clear all notifications',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  viewModel.clearAllNotifications();
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.refresh_rounded,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                title: Text(
+                  'Refresh',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  viewModel.loadNotifications();
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -530,33 +567,39 @@ class _NotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Dismissible(
       key: Key(notification.id),
       direction: DismissDirection.endToStart,
       background: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.1),
+          color: colorScheme.errorContainer.withOpacity(0.5),
           borderRadius: BorderRadius.circular(16),
         ),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: Icon(Icons.delete_rounded, color: Colors.red),
+        child: Icon(Icons.delete_rounded, color: colorScheme.error),
       ),
       onDismissed: (direction) => onDismiss(),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.08),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
+              color: theme.shadowColor.withOpacity(0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
+          border: Border.all(
+            color: colorScheme.outline.withOpacity(0.12),
+            width: 1,
+          ),
         ),
         child: Material(
           color: Colors.transparent,
@@ -567,7 +610,7 @@ class _NotificationCard extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  _buildNotificationIcon(notification),
+                  _buildNotificationIcon(context, notification),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -578,12 +621,11 @@ class _NotificationCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 notification.title,
-                                style: TextStyle(
+                                style: theme.textTheme.titleSmall?.copyWith(
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 15,
                                   color: notification.isRead
-                                      ? Colors.grey[600]
-                                      : Colors.grey[800],
+                                      ? colorScheme.onSurfaceVariant
+                                      : colorScheme.onSurface,
                                 ),
                               ),
                             ),
@@ -592,7 +634,7 @@ class _NotificationCard extends StatelessWidget {
                                 width: 8,
                                 height: 8,
                                 decoration: BoxDecoration(
-                                  color: Color(0xFF667EEA),
+                                  color: colorScheme.primary,
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -601,9 +643,8 @@ class _NotificationCard extends StatelessWidget {
                         const SizedBox(height: 6),
                         Text(
                           notification.description,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 13,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
                             height: 1.3,
                           ),
                           maxLines: 2,
@@ -612,9 +653,8 @@ class _NotificationCard extends StatelessWidget {
                         const SizedBox(height: 8),
                         Text(
                           notification.timeAgo,
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 11,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -630,37 +670,44 @@ class _NotificationCard extends StatelessWidget {
     );
   }
 
-  Widget _buildNotificationIcon(SellerNotificaionModel notification) {
+  Widget _buildNotificationIcon(
+    BuildContext context,
+    SellerNotificaionModel notification,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
     Color iconColor;
     Color backgroundColor;
     IconData icon;
 
     switch (notification.type) {
       case NotificationType.visits:
-        iconColor = Color(0xFF4D96FF);
-        backgroundColor = Color(0xFF4D96FF).withOpacity(0.1);
+        iconColor = colorScheme.primary;
+        backgroundColor = colorScheme.primaryContainer.withOpacity(0.6);
         icon = Icons.assignment_turned_in_rounded;
         break;
       case NotificationType.contracts:
-        iconColor = Color(0xFF9C27B0);
-        backgroundColor = Color(0xFF9C27B0).withOpacity(0.1);
+        iconColor = colorScheme.tertiary;
+        backgroundColor = colorScheme.tertiaryContainer.withOpacity(0.6);
         icon = Icons.control_camera_outlined;
         break;
       case NotificationType.unread:
-        iconColor = Color(0xFFFF6B6B);
-        backgroundColor = Color(0xFFFF6B6B).withOpacity(0.1);
+        iconColor = colorScheme.error;
+        backgroundColor = colorScheme.errorContainer.withOpacity(0.6);
         icon = Icons.mark_email_unread_rounded;
         break;
       default:
-        iconColor = Color(0xFF6BCF7F);
-        backgroundColor = Color(0xFF6BCF7F).withOpacity(0.1);
+        iconColor = colorScheme.primary;
+        backgroundColor = colorScheme.primaryContainer.withOpacity(0.6);
         icon = Icons.notifications_rounded;
     }
 
     return Container(
       width: 44,
       height: 44,
-      decoration: BoxDecoration(color: backgroundColor, shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        shape: BoxShape.circle,
+      ),
       child: Icon(icon, color: iconColor, size: 20),
     );
   }

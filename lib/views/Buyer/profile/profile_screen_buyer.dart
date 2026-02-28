@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wood_service/app/index.dart';
-import 'package:wood_service/core/theme/app_colors.dart';
 import 'package:wood_service/views/Buyer/profile/profile_provider.dart';
 import 'package:wood_service/views/Buyer/profile/profile_widget.dart';
 import 'package:wood_service/widgets/custom_appbar.dart';
@@ -44,12 +43,7 @@ class _ProfileScreenBuyerState extends State<ProfileScreenBuyer>
     return ChangeNotifierProvider(
       create: (context) => locator<BuyerProfileViewProvider>(),
       child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: CustomAppBar(
-          title: 'Profile',
-          showBackButton: false,
-          backgroundColor: AppColors.white,
-        ),
+        appBar: CustomAppBar(title: 'Profile', showBackButton: false),
         body: Consumer<BuyerProfileViewProvider>(
           builder: (context, provider, child) {
             if (provider.isLoading && provider.currentUser == null) {
@@ -77,7 +71,7 @@ class _ProfileScreenBuyerState extends State<ProfileScreenBuyer>
       onRefresh: () async {
         await provider.refreshProfile();
       },
-      color: AppColors.primary,
+      color: Theme.of(context).colorScheme.primary,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),

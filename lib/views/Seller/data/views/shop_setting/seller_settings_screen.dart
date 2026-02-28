@@ -417,7 +417,7 @@ class _SellerSettingsScreenContent extends StatelessWidget {
                       ? provider.currentUser!.shopName!
                       : 'Your Shop Name',
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
@@ -434,7 +434,7 @@ class _SellerSettingsScreenContent extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Row(
                   children: [
                     Icon(
@@ -1177,7 +1177,7 @@ class _SellerSettingsScreenContent extends StatelessWidget {
               icon: const Icon(Icons.campaign_rounded, size: 20),
               label: const Text('Manage Ads'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppColors.brightOrange,
                 foregroundColor: AppColors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -1362,7 +1362,7 @@ class _SellerSettingsScreenContent extends StatelessWidget {
                 }
               },
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.brightOrange,
           foregroundColor: AppColors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(

@@ -5,10 +5,26 @@ import 'package:wood_service/core/theme/app_colors.dart';
 /// All theme-related configurations should be defined here
 class AppTheme {
   // ========== LIGHT THEME ==========
+  // primaryDark
+  // it want were i set the color
+  //  Stack(
+  //             children: [
+  //               Container(
+  //                 padding: const EdgeInsets.all(3),
+  //                 decoration: BoxDecoration(
+  //                   shape: BoxShape.circle,
+  //                   gradient: LinearGradient(
+  //                     colors: [
+  //                       Theme.of(context).colorScheme.primary,
+  //                       Theme.of(context).colorScheme.primaryDark,
+  //                     ],
+  //                   ),
+  //                 ),
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      
+
       // ========== COLOR SCHEME ==========
       colorScheme: ColorScheme.light(
         primary: AppColors.primary,
@@ -26,6 +42,7 @@ class AppTheme {
       // ========== SCAFFOLD ==========
       scaffoldBackgroundColor: AppColors.scaffoldBackground,
       primaryColor: AppColors.primary,
+      primaryColorDark: AppColors.primaryDark,
 
       // ========== APP BAR THEME ==========
       appBarTheme: AppBarTheme(
@@ -87,18 +104,9 @@ class AppTheme {
           fontWeight: FontWeight.w500,
           color: AppColors.textPrimary,
         ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          color: AppColors.textPrimary,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          color: AppColors.textPrimary,
-        ),
-        bodySmall: TextStyle(
-          fontSize: 12,
-          color: AppColors.textSecondary,
-        ),
+        bodyLarge: TextStyle(fontSize: 16, color: AppColors.textPrimary),
+        bodyMedium: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+        bodySmall: TextStyle(fontSize: 12, color: AppColors.textSecondary),
         labelLarge: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
@@ -109,10 +117,7 @@ class AppTheme {
           fontWeight: FontWeight.w500,
           color: AppColors.textSecondary,
         ),
-        labelSmall: TextStyle(
-          fontSize: 10,
-          color: AppColors.textSecondary,
-        ),
+        labelSmall: TextStyle(fontSize: 10, color: AppColors.textSecondary),
       ),
 
       // ========== ELEVATED BUTTON THEME ==========
@@ -122,13 +127,8 @@ class AppTheme {
           foregroundColor: AppColors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
 
@@ -137,13 +137,8 @@ class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
 
@@ -153,13 +148,8 @@ class AppTheme {
           foregroundColor: AppColors.primary,
           side: const BorderSide(color: AppColors.primary),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
 
@@ -167,7 +157,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.border),
@@ -192,27 +185,19 @@ class AppTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
         ),
-        hintStyle: const TextStyle(
-          color: AppColors.textHint,
-          fontSize: 14,
-        ),
+        hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 14),
         labelStyle: const TextStyle(
           color: AppColors.textSecondary,
           fontSize: 14,
         ),
-        errorStyle: const TextStyle(
-          color: AppColors.error,
-          fontSize: 12,
-        ),
+        errorStyle: const TextStyle(color: AppColors.error, fontSize: 12),
       ),
 
       // ========== CARD THEME ==========
       cardTheme: CardThemeData(
         color: AppColors.white,
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
 
@@ -224,19 +209,14 @@ class AppTheme {
       ),
 
       // ========== ICON THEME ==========
-      iconTheme: const IconThemeData(
-        color: AppColors.textPrimary,
-        size: 24,
-      ),
+      iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 24),
 
       // ========== FLOATING ACTION BUTTON THEME ==========
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
 
       // ========== BOTTOM NAVIGATION BAR THEME ==========
@@ -259,13 +239,8 @@ class AppTheme {
       // ========== SNACKBAR THEME ==========
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.darkGrey,
-        contentTextStyle: const TextStyle(
-          color: AppColors.white,
-          fontSize: 14,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        contentTextStyle: const TextStyle(color: AppColors.white, fontSize: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         behavior: SnackBarBehavior.floating,
       ),
 
@@ -273,9 +248,7 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.white,
         elevation: 8,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         titleTextStyle: const TextStyle(
           color: AppColors.textPrimary,
           fontSize: 20,
@@ -299,7 +272,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      
+
       colorScheme: ColorScheme.dark(
         primary: AppColors.primaryLight,
         secondary: AppColors.secondaryLight,

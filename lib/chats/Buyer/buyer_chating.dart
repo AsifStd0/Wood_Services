@@ -3,11 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:wood_service/app/index.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_model.dart';
 import 'package:wood_service/chats/Buyer/buyer_chat_provider.dart';
 import 'package:wood_service/chats/message_bubble.dart' show MessageBubble;
-import 'package:wood_service/core/theme/app_colors.dart';
 
 class BuyerChatScreen extends StatefulWidget {
   final String sellerId;
@@ -287,7 +285,7 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
         final currentChat = chatProvider.currentChat;
 
         return Scaffold(
-          backgroundColor: Colors.grey[50],
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
           appBar: _buildAppBar(context, chatProvider),
           body: Column(
             children: [
@@ -298,7 +296,11 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
 
               Expanded(
                 child: chatProvider.isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      )
                     : _buildChatMessages(chatProvider),
               ),
             ],
@@ -315,7 +317,7 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.05),
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
         border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
       ),
       child: Row(
@@ -324,7 +326,7 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.blue[100],
+              color: Theme.of(context).colorScheme.surfaceContainerLowest,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -335,7 +337,7 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
                   : fileType == 'document'
                   ? Icons.description
                   : Icons.insert_drive_file,
-              color: Colors.blue,
+              color: Theme.of(context).colorScheme.primary,
               size: 20,
             ),
           ),
@@ -355,13 +357,20 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
                 ),
                 Text(
                   '${(_selectedFile!.lengthSync() / 1024).toStringAsFixed(1)} KB',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close, size: 20),
+            icon: Icon(
+              Icons.close,
+              size: 20,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
             onPressed: () {
               setState(() {
                 _selectedFile = null;
@@ -378,19 +387,27 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.05),
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+          ),
+        ),
       ),
       child: Row(
         children: [
-          Icon(Icons.shopping_bag_rounded, color: AppColors.primary, size: 20),
+          Icon(
+            Icons.shopping_bag_rounded,
+            color: Theme.of(context).colorScheme.primary,
+            size: 20,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Order: ${chat.orderId ?? 'Unknown'}',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[700],
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -404,9 +421,9 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
               ),
               child: Text(
                 '${chat.orderDetails!['status']}'.toUpperCase(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -419,13 +436,13 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'completed':
-        return Colors.green;
+        return Theme.of(context).colorScheme.primary;
       case 'pending':
-        return Colors.orange;
+        return Theme.of(context).colorScheme.primary;
       case 'cancelled':
-        return Colors.red;
+        return Theme.of(context).colorScheme.primary;
       default:
-        return Colors.grey;
+        return Theme.of(context).colorScheme.onSurfaceVariant;
     }
   }
 
@@ -437,20 +454,27 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.chat_bubble_outline, size: 60, color: Colors.grey[300]),
+            Icon(
+              Icons.chat_bubble_outline,
+              size: 60,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'No messages yet',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Start the conversation',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -486,7 +510,7 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surfaceContainerLowest,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -497,30 +521,55 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(25),
-                    border: Border.all(color: Colors.grey[300]!),
+                    color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outline.withOpacity(0.3),
+                    ),
                   ),
                   child: Row(
                     children: [
                       Expanded(
-                        child: TextField(
+                        child: TextFormField(
                           controller: _messageController,
                           focusNode: _messageFocusNode,
-                          decoration: const InputDecoration(
+                          // i dont want textfield border
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            errorBorder: InputBorder.none,
+                            focusedErrorBorder: InputBorder.none,
                             hintText: 'Type a message...',
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(vertical: 12),
+                            hintStyle: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                              fontSize: 14,
+                            ),
+
+                            filled: true,
+                            fillColor: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerLowest,
                           ),
                           maxLines: null,
                           onChanged: (value) {
                             setState(() {});
                           },
-                          onSubmitted: (_) => _sendMessage(),
+                          // onSubmitted: (_) => _sendMessage(),
+                          onFieldSubmitted: (_) => _sendMessage(),
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.attach_file, color: Colors.grey[600]),
+                        icon: Icon(
+                          Icons.attach_file,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                         onPressed: _showAttachmentOptions,
                       ),
                       if (_selectedFile != null)
@@ -528,7 +577,9 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
                           margin: const EdgeInsets.only(right: 4),
                           child: CircleAvatar(
                             radius: 12,
-                            backgroundColor: Colors.blue,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
                             child: Icon(
                               Icons.attachment,
                               size: 14,
@@ -546,18 +597,25 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
                 height: 50,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: hasContent ? AppColors.primary : Colors.grey[300],
+                  color: hasContent
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 child: _isUploading
-                    ? const Padding(
+                    ? Padding(
                         padding: EdgeInsets.all(12),
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                          valueColor: AlwaysStoppedAnimation(
+                            Theme.of(context).colorScheme.onSurface,
+                          ),
                         ),
                       )
                     : IconButton(
-                        icon: Icon(Icons.send, color: Colors.white),
+                        icon: Icon(
+                          Icons.send,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
                         onPressed: hasContent && !chatProvider.isSending
                             ? _sendMessage
                             : null,
@@ -576,14 +634,19 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
       child: Row(
         children: [
           const SizedBox(width: 8),
-          const CircularProgressIndicator(
+          CircularProgressIndicator(
             strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation(AppColors.primary),
+            valueColor: AlwaysStoppedAnimation(
+              Theme.of(context).colorScheme.primary,
+            ),
           ),
           const SizedBox(width: 12),
           Text(
             'Uploading...',
-            style: TextStyle(color: Colors.grey[700], fontSize: 14),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 14,
+            ),
           ),
         ],
       ),
@@ -594,10 +657,13 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
     final currentChat = chatProvider.currentChat;
 
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       elevation: 1,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black),
+        icon: Icon(
+          Icons.arrow_back,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
         onPressed: () {
           chatProvider.clearCurrentChat();
           Navigator.pop(context);
@@ -606,13 +672,13 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
       title: Row(
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.primary,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             child: Text(
               (currentChat?.otherUserName ?? widget.sellerName).isNotEmpty
                   ? (currentChat?.otherUserName ?? widget.sellerName)[0]
                         .toUpperCase()
                   : 'S',
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
             ),
           ),
           const SizedBox(width: 12),
@@ -621,15 +687,18 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
             children: [
               Text(
                 currentChat?.otherUserName ?? widget.sellerName,
-                style: const TextStyle(
-                  color: Colors.black,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const Text(
+              Text(
                 'Online',
-                style: TextStyle(color: Colors.green, fontSize: 12),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -651,7 +720,11 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
           children: [
             Text(
               'Send File',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: 20),
             Row(
@@ -694,10 +767,15 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
                   });
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.white,
                 ),
-                child: const Text('Clear Selected File'),
+                child: Text(
+                  'Clear Selected File',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
               ),
           ],
         ),
@@ -718,13 +796,23 @@ class _BuyerChatScreenState extends State<BuyerChatScreen> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 30, color: AppColors.primary),
+            child: Icon(
+              icon,
+              size: 30,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontSize: 12)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
         ],
       ),
     );

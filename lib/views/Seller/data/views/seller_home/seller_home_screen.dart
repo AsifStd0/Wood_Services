@@ -36,7 +36,7 @@ class _SellerHomeScreenState extends State<SellerHomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
-        title: 'Seller Dashboard',
+        title: 'Home',
         showBackButton: false,
         backgroundColor: AppColors.white,
         actions: [

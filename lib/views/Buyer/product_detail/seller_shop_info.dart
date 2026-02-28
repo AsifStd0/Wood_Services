@@ -28,199 +28,214 @@ class ShopPreviewCard extends StatelessWidget {
       onTap: () {
         _showShopDetailsDialog(context);
       },
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Shop Logo with verification badge
-            Stack(
-              children: [
-                Stack(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: shopLogo != null && shopLogo.isNotEmpty
-                          ? ClipOval(
-                              child: Image.network(
-                                shopLogo,
-                                fit: BoxFit.cover,
-                                width: 40,
-                                height: 40,
-                                errorBuilder: (context, error, stackTrace) {
-                                  // Show person icon when image fails to load
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade200,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.person,
-                                      color: Colors.grey,
-                                      size: 20,
-                                    ),
-                                  );
-                                },
-                                loadingBuilder:
-                                    (context, child, loadingProgress) {
-                                      if (loadingProgress == null) return child;
-                                      return const CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Colors.grey,
-                                            ),
-                                      );
-                                    },
-                              ),
-                            )
-                          : Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade200,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.person,
-                                color: Colors.grey,
-                                size: 20,
-                              ),
-                            ),
-                    ),
-                  ],
+      child: Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+          final colorScheme = theme.colorScheme;
+          return Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.shadowColor.withOpacity(0.05),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
-                if (verificationStatus == 'verified')
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.green),
-                      ),
-                      child: Icon(
-                        Icons.verified,
-                        color: Colors.green,
-                        size: 12,
-                      ),
-                    ),
-                  ),
               ],
             ),
-
-            const SizedBox(width: 12),
-
-            // Shop Name and Details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    shopName,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+            child: Row(
+              children: [
+                // Shop Logo with verification badge
+                Stack(
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: shopLogo != null && shopLogo.isNotEmpty
+                              ? ClipOval(
+                                  child: Image.network(
+                                    shopLogo,
+                                    fit: BoxFit.cover,
+                                    width: 40,
+                                    height: 40,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      // Show person icon when image fails to load
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade200,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.person,
+                                          color: Colors.grey,
+                                          size: 20,
+                                        ),
+                                      );
+                                    },
+                                    loadingBuilder:
+                                        (context, child, loadingProgress) {
+                                          if (loadingProgress == null)
+                                            return child;
+                                          return const CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Colors.grey,
+                                                ),
+                                          );
+                                        },
+                                  ),
+                                )
+                              : Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade200,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.person,
+                                    color: Colors.grey,
+                                    size: 20,
+                                  ),
+                                ),
+                        ),
+                      ],
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  // Seller Name
-                  Text(
-                    sellerName,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Row(
-                    children: [
-                      // Products count
-                      Icon(
-                        Icons.inventory,
-                        size: 12,
-                        color: Colors.blue.shade600,
+                    if (verificationStatus == 'verified')
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.green),
+                          ),
+                          child: Icon(
+                            Icons.verified,
+                            color: Colors.green,
+                            size: 12,
+                          ),
+                        ),
                       ),
-                      const SizedBox(width: 4),
+                  ],
+                ),
+
+                const SizedBox(width: 12),
+
+                // Shop Name and Details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        '$totalProducts products',
+                        shopName,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      // Seller Name
+                      Text(
+                        sellerName,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 12,
                           color: Colors.grey.shade600,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
 
-                      const SizedBox(width: 12),
+                      const SizedBox(height: 4),
 
-                      // Verification status badge
-                      if (verificationStatus != 'verified')
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 1,
+                      Row(
+                        children: [
+                          // Products count
+                          Icon(
+                            Icons.inventory,
+                            size: 12,
+                            color: Colors.blue.shade600,
                           ),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.shade50,
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: Colors.orange.shade200),
-                          ),
-                          child: Text(
-                            verificationStatus.toUpperCase(),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$totalProducts products',
                             style: TextStyle(
-                              fontSize: 9,
-                              color: Colors.orange.shade800,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
                             ),
                           ),
-                        ),
 
-                      if (verificationStatus == 'verified')
-                        Row(
-                          children: [
-                            Icon(Icons.verified, size: 12, color: Colors.green),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Verified',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.green.shade700,
-                                fontWeight: FontWeight.w500,
+                          const SizedBox(width: 12),
+
+                          // Verification status badge
+                          if (verificationStatus != 'verified')
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade50,
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: Colors.orange.shade200,
+                                ),
+                              ),
+                              child: Text(
+                                verificationStatus.toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: Colors.orange.shade800,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
-                          ],
-                        ),
+
+                          if (verificationStatus == 'verified')
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.verified,
+                                  size: 12,
+                                  color: Colors.green,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Verified',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.green.shade700,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
-            ),
+                ),
 
-            // Arrow icon
-            Icon(Icons.chevron_right, color: Colors.grey.shade500),
-          ],
-        ),
+                Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -493,11 +508,13 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
               // Message field
               TextField(
                 controller: _messageController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Message (Optional)',
                   hintText: 'Tell the seller why you want to visit...',
                   border: OutlineInputBorder(),
-                  fillColor: Colors.white,
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                 ),
                 maxLines: 3,
               ),
@@ -520,8 +537,16 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
                     });
                   }
                 },
-                icon: const Icon(Icons.calendar_today),
-                label: Text(_selectedDate ?? 'Select Preferred Date'),
+                icon: Icon(
+                  Icons.calendar_today,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                label: Text(
+                  _selectedDate ?? 'Select Preferred Date',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
               ),
 
               const SizedBox(height: 12),
@@ -540,8 +565,16 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
                     });
                   }
                 },
-                icon: const Icon(Icons.access_time),
-                label: Text(_selectedTime ?? 'Select Preferred Time'),
+                icon: Icon(
+                  Icons.access_time,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                label: Text(
+                  _selectedTime ?? 'Select Preferred Time',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
               ),
             ],
           ),
@@ -549,21 +582,34 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
           ),
           ElevatedButton(
             onPressed: _isRequestingVisit ? null : _requestVisit,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue.shade600,
-              foregroundColor: Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: _isRequestingVisit
-                ? const SizedBox(
+                ? SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(color: Colors.white),
+                    child: CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                   )
-                : const Text('Send Request'),
+                : Text(
+                    'Send Request',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -584,32 +630,54 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Visit Approved!'),
+        title: Text(
+          'Visit Approved!',
+          style: TextStyle(color: Theme.of(context).colorScheme.primary),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Your visit request to $shopName has been approved!'),
+            Text(
+              'Your visit request to $shopName has been approved!',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
             const SizedBox(height: 16),
             if (acceptedRequest['visitDate'] != null)
-              Text('📅 Date: ${acceptedRequest['visitDate']}'),
+              Text(
+                '📅 Date: ${acceptedRequest['visitDate']}',
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              ),
             if (acceptedRequest['visitTime'] != null)
-              Text('⏰ Time: ${acceptedRequest['visitTime']}'),
+              Text(
+                '⏰ Time: ${acceptedRequest['visitTime']}',
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              ),
             if (acceptedRequest['location'] != null)
-              Text('📍 Location: ${acceptedRequest['location']}'),
+              Text(
+                '📍 Location: ${acceptedRequest['location']}',
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              ),
             if (acceptedRequest['duration'] != null)
-              Text('⏱️ Duration: ${acceptedRequest['duration']}'),
+              Text(
+                '⏱️ Duration: ${acceptedRequest['duration']}',
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              ),
             const SizedBox(height: 12),
             if (acceptedRequest['sellerResponse']?['message'] != null)
               Text(
                 '💬 Seller Message: ${acceptedRequest['sellerResponse']['message']}',
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
               ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(
+              'Close',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
           ),
         ],
       ),
@@ -617,6 +685,12 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
   }
 
   Widget _buildVisitButton() {
+    // Show Request Visit only for Customize Product; hide for Ready Product
+    final productType = widget.product.productType ?? '';
+    if (productType != 'Customize Product') {
+      return const SizedBox.shrink();
+    }
+
     final sellerId = widget.product.sellerId?.toString();
 
     if (sellerId == null) {
@@ -639,17 +713,25 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
       return ElevatedButton(
         onPressed: _isRequestingVisit ? null : _showVisitRequestForm,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue.shade600,
-          foregroundColor: Colors.white,
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: _isRequestingVisit
-            ? const SizedBox(
+            ? SizedBox(
                 height: 20,
                 width: 20,
-                child: CircularProgressIndicator(color: Colors.white),
+                child: CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
               )
-            : const Text('Request Visit'),
+            : Text(
+                'Request Visit',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
       );
     }
 
@@ -659,40 +741,68 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
           onPressed: () {
             _showPendingRequestOptions();
           },
-          icon: const Icon(Icons.pending, size: 18),
-          label: const Text('Pending Approval'),
+          icon: Icon(
+            Icons.pending,
+            size: 16,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          label: Text(
+            'Pending Approval',
+
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontSize: 14,
+            ),
+          ),
           style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.orange,
-            side: const BorderSide(color: Colors.orange),
+            foregroundColor: Theme.of(context).colorScheme.primary,
+            side: BorderSide(color: Theme.of(context).colorScheme.primary),
           ),
         );
 
       case 'accepted':
         return ElevatedButton.icon(
           onPressed: _showVisitDetails,
-          icon: const Icon(Icons.check_circle, size: 18),
-          label: const Text('Visit Approved'),
+          icon: Icon(
+            Icons.check_circle,
+            size: 18,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          label: Text(
+            'Visit Approved',
+            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+          ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            foregroundColor: Colors.white,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
           ),
         );
 
       case 'declined':
         return OutlinedButton.icon(
           onPressed: _showVisitRequestForm,
-          icon: const Icon(Icons.cancel, size: 18),
-          label: const Text('Request Declined'),
+          icon: Icon(
+            Icons.cancel,
+            size: 18,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          label: Text(
+            'Request Declined',
+            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+          ),
           style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.red,
-            side: const BorderSide(color: Colors.red),
+            foregroundColor: Theme.of(context).colorScheme.primary,
+            side: BorderSide(color: Theme.of(context).colorScheme.primary),
           ),
         );
 
       default:
         return ElevatedButton(
           onPressed: _showVisitRequestForm,
-          child: const Text('Request Visit'),
+          child: Text(
+            'Request Visit',
+            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+          ),
         );
     }
   }
@@ -707,7 +817,10 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Pending Visit Request'),
+        title: Text(
+          'Pending Visit Request',
+          style: TextStyle(color: Theme.of(context).colorScheme.primary),
+        ),
         content: Text(
           'You have a pending visit request for $shopName.\n\n'
           'What would you like to do?',
@@ -715,7 +828,10 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Wait'),
+            child: Text(
+              'Wait',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
           ),
           OutlinedButton(
             onPressed: () {
@@ -723,7 +839,10 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
               // Show details of pending request
               _showRequestDetails();
             },
-            child: const Text('View Details'),
+            child: Text(
+              'View Details',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -731,10 +850,16 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
               await _cancelPendingRequest();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: const Text('Cancel Request'),
+            child: Text(
+              'Cancel Request',
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            ),
           ),
         ],
       ),
@@ -754,32 +879,54 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Request Details'),
+        title: Text(
+          'Request Details',
+          style: TextStyle(color: Theme.of(context).colorScheme.primary),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Shop: $shopName'),
+            Text(
+              'Shop: $shopName',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
             const SizedBox(height: 8),
-            Text('Status: ${myRequest['status']?.toUpperCase() ?? 'Unknown'}'),
+            Text(
+              'Status: ${myRequest['status']?.toUpperCase() ?? 'Unknown'}',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
             const SizedBox(height: 8),
             if (myRequest['message'] != null && myRequest['message'].isNotEmpty)
-              Text('Your Message: ${myRequest['message']}'),
+              Text(
+                'Your Message: ${myRequest['message']}',
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              ),
             const SizedBox(height: 8),
             if (myRequest['preferredDate'] != null)
-              Text('Preferred Date: ${myRequest['preferredDate']}'),
+              Text(
+                'Preferred Date: ${myRequest['preferredDate']}',
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              ),
             if (myRequest['preferredTime'] != null)
-              Text('Preferred Time: ${myRequest['preferredTime']}'),
+              Text(
+                'Preferred Time: ${myRequest['preferredTime']}',
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              ),
             const SizedBox(height: 8),
             Text(
               'Requested: ${myRequest['requestedDate'] != null ? DateTime.parse(myRequest['requestedDate']).toString().split(' ')[0] : 'N/A'}',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(
+              'Close',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
           ),
         ],
       ),
@@ -821,7 +968,13 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $error'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(
+              'Error: $error',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
         );
       }
     }
@@ -855,8 +1008,15 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
                   height: 100,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade300, width: 2),
-                    color: Colors.grey.shade100,
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outline.withOpacity(0.3),
+                      width: 2,
+                    ),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                   ),
                   child: shopLogo != null && shopLogo.isNotEmpty
                       ? ClipOval(
@@ -864,41 +1024,58 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
                             _getFullImageUrl(shopLogo),
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
-                              return const Icon(
+                              return Icon(
                                 Icons.store,
                                 size: 40,
-                                color: Colors.grey,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant.withOpacity(0.6),
                               );
                             },
                           ),
                         )
-                      : const Icon(Icons.store, size: 40, color: Colors.grey),
-                ),
-                if (verificationStatus == 'verified')
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+                      : Icon(
+                          Icons.store,
+                          size: 40,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant.withOpacity(0.6),
                         ),
-                      ],
-                    ),
-                    child: Icon(Icons.verified, color: Colors.green, size: 18),
-                  ),
+                ),
               ],
             ),
+            if (verificationStatus == 'verified')
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.shadow.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.verified,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 18,
+                ),
+              ),
 
             const SizedBox(height: 16),
 
             // Shop Name
             Text(
               shopName,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
               textAlign: TextAlign.center,
             ),
 
@@ -907,7 +1084,12 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
             // Seller Name
             Text(
               sellerName,
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withOpacity(0.6),
+              ),
               textAlign: TextAlign.center,
             ),
 
@@ -916,18 +1098,24 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
             // Contact Information
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: Theme.of(context).colorScheme.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Contact Information',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
 
                   const SizedBox(height: 12),
@@ -961,52 +1149,65 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
                       title: 'Location',
                       value: shopLocation,
                     ),
+
+                  // Visit Request Status
+                  if (_visitStatus != null)
+                    Container(
+                      margin: const EdgeInsets.only(top: 16),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(_visitStatus!).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: _getStatusColor(
+                            _visitStatus!,
+                          ).withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _getStatusIcon(_visitStatus!),
+                            color: _getStatusColor(_visitStatus!),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _getStatusMessage(_visitStatus!, shopName),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: _getStatusColor(_visitStatus!),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          'Close',
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      Flexible(child: _buildVisitButton()),
+                    ],
+                  ),
                 ],
               ),
             ),
-
-            // Visit Request Status
-            if (_visitStatus != null)
-              Container(
-                margin: const EdgeInsets.only(top: 16),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(_visitStatus!).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: _getStatusColor(_visitStatus!).withOpacity(0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      _getStatusIcon(_visitStatus!),
-                      color: _getStatusColor(_visitStatus!),
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _getStatusMessage(_visitStatus!, shopName),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _getStatusColor(_visitStatus!),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
-        ),
-        _buildVisitButton(),
-      ],
     );
   }
 
@@ -1073,7 +1274,7 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: Colors.blue.shade600),
+        Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
@@ -1084,15 +1285,20 @@ class _SimpleShopDialogState extends State<SimpleShopDialog> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade600,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant.withOpacity(0.6),
                 ),
               ),
               const SizedBox(height: 2),
               SelectableText(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant.withOpacity(0.6),
                 ),
               ),
             ],

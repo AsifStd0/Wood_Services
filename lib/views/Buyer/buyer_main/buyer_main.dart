@@ -8,6 +8,8 @@ class BuyerMainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Scaffold(
       body: Consumer<MainScreenProvider>(
         builder: (context, provider, child) {
@@ -16,8 +18,9 @@ class BuyerMainScreen extends StatelessWidget {
             bottomNavigationBar: BottomNavigationBar(
               type: BottomNavigationBarType.fixed,
               currentIndex: provider.currentIndex,
-              selectedItemColor: Colors.blue,
-              unselectedItemColor: Colors.grey,
+              selectedItemColor: colorScheme.primary,
+              unselectedItemColor: colorScheme.onSurface.withOpacity(0.6),
+              backgroundColor: colorScheme.surface,
               onTap: (index) => provider.changeTab(index),
               items: const [
                 BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),

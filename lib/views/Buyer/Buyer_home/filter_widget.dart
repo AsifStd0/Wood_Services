@@ -66,14 +66,18 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
 
         return Container(
           decoration: BoxDecoration(
-            color: AppColors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: hasActiveFilters ? AppColors.primary : AppColors.lightGrey,
+              color: hasActiveFilters
+                  ? AppColors.primary
+                  : Theme.of(context).colorScheme.onSurface,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withOpacity(0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -100,7 +104,7 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
                         Icons.filter_list,
                         color: hasActiveFilters
                             ? AppColors.primary
-                            : AppColors.textSecondary,
+                            : Theme.of(context).colorScheme.onSurface,
                         size: 20,
                       ),
                       const SizedBox(width: 12),
@@ -112,7 +116,7 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
                             fontWeight: FontWeight.w600,
                             color: hasActiveFilters
                                 ? AppColors.primary
-                                : AppColors.textPrimary,
+                                : Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -123,7 +127,9 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -131,7 +137,9 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
+                              color:
+                                  // AppColors.black,
+                                  Theme.of(context).colorScheme.primary,
                             ),
                           ),
                         ),
@@ -140,7 +148,7 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
                         _isExpanded
                             ? Icons.keyboard_arrow_up
                             : Icons.keyboard_arrow_down,
-                        color: AppColors.textSecondary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ],
                   ),
@@ -153,7 +161,10 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     border: Border(
-                      top: BorderSide(color: AppColors.lightGrey, width: 1),
+                      top: BorderSide(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        width: 1,
+                      ),
                     ),
                   ),
                   child: Column(
@@ -217,7 +228,7 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 8),
@@ -225,18 +236,25 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
           value: filter.category ?? 'All Categories',
           decoration: InputDecoration(
             filled: true,
-            fillColor: AppColors.extraLightGrey,
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.lightGrey),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.lightGrey),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -275,7 +293,7 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 8),
@@ -289,18 +307,27 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
                   hintText: 'Min',
                   prefixText: '\$ ',
                   filled: true,
-                  fillColor: AppColors.extraLightGrey,
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColors.lightGrey),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColors.lightGrey),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColors.primary, width: 2),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -324,7 +351,10 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
             const SizedBox(width: 12),
             Text(
               'to',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 14,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -335,18 +365,27 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
                   hintText: 'Max',
                   prefixText: '\$ ',
                   filled: true,
-                  fillColor: AppColors.extraLightGrey,
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColors.lightGrey),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColors.lightGrey),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColors.primary, width: 2),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -390,7 +429,7 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 8),
@@ -410,7 +449,7 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
                   )
                 : null,
             filled: true,
-            fillColor: AppColors.extraLightGrey,
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: AppColors.lightGrey),
@@ -499,7 +538,7 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
                   )
                 : null,
             filled: true,
-            fillColor: AppColors.extraLightGrey,
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: AppColors.lightGrey),
@@ -588,7 +627,7 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 8),
@@ -596,18 +635,25 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
           value: filter.sort ?? 'None',
           decoration: InputDecoration(
             filled: true,
-            fillColor: AppColors.extraLightGrey,
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.lightGrey),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.lightGrey),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -654,7 +700,7 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
               side: BorderSide(
                 color: filter.hasActiveFilters
                     ? AppColors.error
-                    : AppColors.lightGrey,
+                    : Theme.of(context).colorScheme.onSurface,
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -665,7 +711,7 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
               style: TextStyle(
                 color: filter.hasActiveFilters
                     ? AppColors.error
-                    : AppColors.textSecondary,
+                    : Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -683,17 +729,17 @@ class _ProductFilterWidgetState extends State<ProductFilterWidget> {
               });
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: Theme.of(context).colorScheme.primary,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
               elevation: 0,
             ),
-            child: const Text(
+            child: Text(
               'Apply Filters',
               style: TextStyle(
-                color: AppColors.white,
+                color: Theme.of(context).colorScheme.onPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
